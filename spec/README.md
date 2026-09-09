@@ -2,9 +2,15 @@
 
 The normative specification. Empty until the epics below land.
 
-[`requirements.md`](./requirements.md) is the exception and comes first: it is
-not normative text but the list of what the normative text has to pin down,
-derived from the mechanism in chant core. Write the files below against it.
+Two files exist ahead of the normative text, neither of them normative:
+
+- [`inventory.md`](./inventory.md) — every decision point in chant core's fold
+  path, with the requirement that covers it or a GAP marker. 99 rows, 58 with
+  gaps. This is the coverage ledger; #44 gates on it.
+- [`requirements.md`](./requirements.md) — what the normative text has to pin
+  down. Currently incomplete and partly wrong; see its status block.
+
+Write the files below against both.
 
 Planned files, one per issue:
 
