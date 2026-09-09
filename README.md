@@ -14,9 +14,23 @@ says what must hold across that boundary for the two paths to agree.
 
 ## Status
 
-Skeleton. Nothing here is normative yet. Work is tracked in
-[issues](https://github.com/INTENTIUS/typescript-as-data/issues); the epics
-describe the intended shape.
+Skeleton. Nothing here is normative yet.
+
+Work is sequenced paper-first against Onward! 2027, so the two milestones are
+the thing to read before the epics:
+
+- [Onward! 2027](https://github.com/INTENTIUS/typescript-as-data/milestone/1) —
+  everything required to submit. The specification itself, the paper sections,
+  and only as much reference implementation as the figures and the generality
+  claim need.
+- [Post-submission](https://github.com/INTENTIUS/typescript-as-data/milestone/2) —
+  artifact work that strengthens the spec and reference implementation but does
+  not block the paper. Deliberately parked, not forgotten.
+
+Issue #31 gates everything: it checks whether the central claim is novel, which
+the rest of the plan assumes and nothing has yet verified.
+
+The five epics (#1-#5) describe the intended shape of each area.
 
 ## Layout
 
