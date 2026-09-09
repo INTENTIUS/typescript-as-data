@@ -2,6 +2,10 @@
 
 The normative specification. Empty until the epics below land.
 
+[`requirements.md`](./requirements.md) is the exception and comes first: it is
+not normative text but the list of what the normative text has to pin down,
+derived from the mechanism in chant core. Write the files below against it.
+
 Planned files, one per issue:
 
 - `grammar.md` — surface syntax of the subset
