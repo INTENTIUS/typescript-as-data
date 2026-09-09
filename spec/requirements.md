@@ -1,7 +1,29 @@
 # Folding: specification requirements
 
-What a specification of folding must define, derived from the mechanism as
-implemented in chant core at `e4074c17` (2026-09-09).
+> **Status: incomplete and known to be partly wrong. Do not treat as authoritative.**
+>
+> This document was derived from roughly 15% of `packages/core/src/discovery/fold-import.ts`,
+> the largest file in the mechanism it describes, and it originally claimed derivation from
+> the mechanism without qualifying that. A critical review found fourteen holes, three of
+> them whole subsystems that the unread portion contains.
+>
+> **Structurally missing:** statement-level admissibility (the `scanExports` gate, which
+> disqualifies whole files before any expression is classified); build parameters as an
+> input to folding, which falsify the equivalence objective as stated below; composite
+> factory interpretation, which is a third evaluation mode and not a case of revival;
+> key-ordering determinism, which byte-identical output depends on; operator and coercion
+> semantics.
+>
+> **Known wrong:** R1.2's split of envelopes into output versus internal — `__intrinsic`
+> is documented in core as revived, not passed through. R4.1 conflates two entry points
+> with different granularity. R5.1 states a property whose enforcement it omits.
+>
+> Tracked in #40 (complete the read, produce an inventory), #41-#43 (the fixes), #44 (a
+> CI gate so this cannot recur). #40 blocks the rest: revising from the same evidence base
+> would reproduce the same class of error.
+
+What a specification of folding must define, derived from a **partial** read of chant core
+at `e4074c17` (2026-09-09) — see the status block above for what that omits.
 
 This document is not the specification. It is the list of things the
 specification has to pin down, with the reason each one is load-bearing and a
@@ -288,3 +310,8 @@ places: the laziness divergence in R3.2, which the implementation itself calls a
 wart; the `.step` narrowing in R1, which is deliberately one idiom wide and has
 no principled boundary; and the eager-evaluation exception in R2.3, which exists
 because of how one result is coerced rather than because eagerness is right.
+
+It is also not complete, and the status block at the top of this file is the
+authoritative list of what it is missing and what it gets wrong. That list is
+itself provisional: it was produced by reading more of core than this document
+was, but still not all of it. #40 is what closes that.
