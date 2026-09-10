@@ -5,3 +5,5 @@ dist/
 .DS_Store
 docs/.astro/
 docs/dist/
+# generated from spec/*.md by docs/scripts/sync-spec.mjs
+docs/src/content/docs/spec/
