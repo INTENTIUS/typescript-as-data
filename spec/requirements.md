@@ -1,114 +1,124 @@
 # Folding: specification requirements
 
-> **Status: incomplete and known to be partly wrong. Do not treat as authoritative.**
->
-> This document was derived from roughly 15% of `packages/core/src/discovery/fold-import.ts`,
-> the largest file in the mechanism it describes, and it originally claimed derivation from
-> the mechanism without qualifying that. A critical review found fourteen holes, three of
-> them whole subsystems that the unread portion contains.
->
-> **Structurally missing:** statement-level admissibility (the `scanExports` gate, which
-> disqualifies whole files before any expression is classified); build parameters as an
-> input to folding, which falsify the equivalence objective as stated below; composite
-> factory interpretation, which is a third evaluation mode and not a case of revival;
-> key-ordering determinism, which byte-identical output depends on; operator and coercion
-> semantics.
->
-> **Known wrong:** R1.2's split of envelopes into output versus internal — `__intrinsic`
-> is documented in core as revived, not passed through. R4.1 conflates two entry points
-> with different granularity. R5.1 states a property whose enforcement it omits.
->
-> Tracked in #40 (complete the read, produce an inventory), #41-#43 (the fixes), #44 (a
-> CI gate so this cannot recur). #40 blocks the rest: revising from the same evidence base
-> would reproduce the same class of error.
-
-What a specification of folding must define, derived from a **partial** read of chant core
-at `e4074c17` (2026-09-09) — see the status block above for what that omits.
+What a specification of folding must define, derived from chant core's fold
+mechanism at `e4074c17` (2026-09-09). Second revision (#41); the first was
+derived from a partial read and its holes are recorded in
+[`inventory.md`](./inventory.md) and closed here.
 
 This document is not the specification. It is the list of things the
-specification has to pin down, with the reason each one is load-bearing and a
-pointer to where the current implementation settles it. It exists so that the
-spec can be written against the mechanism rather than against the prose that
-currently describes it, which has drifted at least once (INTENTIUS/chant#2306).
+specification has to pin down, with the reason each is load-bearing and the
+inventory row that settles it in the current implementation. Rows are cited
+as `L3.10`; the inventory is the coverage ledger and #44 gates on it.
 
 Scope is chant core: `packages/core/src/fold/{subset,fold,foldable-helpers}.ts`
 and `packages/core/src/discovery/fold-import.ts`. Nothing about consuming
 applications, and nothing about how much existing source happens to fall inside
-the subset — that is an adoption measurement, not a property of the mechanism.
+the subset — that is adoption, not mechanism.
+
+Not normative. Identifiers here (`R1.2`) are provisional pending #46; the
+normative text will carry `S-*`/`F-*` rule identifiers per #6.
 
 ## The objective the requirements serve
 
-**Folding a file and running it are observationally equivalent.**
+**At a fixed build-parameter binding, folding a file and running it are
+observationally equivalent.**
 
-A source file may be reduced directly from its AST to the entities it declares,
-or imported and executed, and the build cannot tell which happened from the
+A source file may be reduced from its AST to the entities it declares, or
+imported and executed, and the build cannot tell which happened from the
 output. In chant this is discharged by a differential over the example corpus
-asserting byte-identical serialized output for every file that folds
-(INTENTIUS/chant#1025).
+asserting identical errors and byte-identical serialized output
+(INTENTIUS/chant#1025) — with the caveat that the differential currently
+compares only entries where every file folded (INTENTIUS/chant#2345), so the
+mixed case, which is where the interesting requirements below actually fire,
+has no differential evidence yet.
+
+The binding is part of the statement, not a footnote. `params.<name>` folds to
+a literal supplied at build invocation (R8), so output is a function of source
+*and* binding; "same source, same output" is true only with the binding held
+fixed.
 
 Equivalence is what makes the fallback safe, and the fallback is what
 distinguishes this from a configuration language that rejects out-of-subset
-source outright. The five requirements below are the parts of the mechanism
-that equivalence rests on. A specification that states the objective without
-pinning all five does not constrain an implementation enough to inherit it.
+source. But — per [`prior-art.md`](./prior-art.md) — graceful fallback is not
+itself new. What is new is that the fallback coexists with shared object
+identity across the fold/run boundary, which is why R4 and R5 exist.
 
 ---
 
 ## R1 — The value domain is closed, and its symbolic cases are finished values
 
 The spec must define what a fold produces. Every other requirement quantifies
-over it, and it is currently defined only by a TypeScript union type
-(`FoldedValue`, `fold.ts:116`).
+over it, and it is currently defined only by a TypeScript union
+(`FoldedValue`, `fold.ts:116`; L4.1).
 
 Nine cases. Six are ordinary JSON — string, number, boolean, null, undefined,
-arrays and plain objects. The rest carry structure that the specification has to
-treat as **finished values, not deferred computation**:
+arrays and plain objects. The rest carry envelopes:
 
-| Case | Envelope key | Denotes |
-|---|---|---|
-| `AttrRefValue` | `__attrRef` | an attribute of another entity, resolved by the platform at apply |
-| `FoldedIntrinsicTag` | `__intrinsic` | a registered intrinsic in tagged-template form |
-| `FoldedIntrinsicCall` | `__intrinsic` | a registered intrinsic in call form, per-intrinsic opt-in |
-| `FoldedHelperCall` | `__helper` | a call to a registered authoring helper |
-| `FoldedResource` | `__resource` | a construction, including one nested as a value |
-| `FoldedCompositeStepCall` | `__compositeStep` | the `<Identifier>(...).step` idiom, member name fixed |
-| `SymbolicValue` | `__symbol` | source text preserved verbatim inside an intrinsic's interpolations |
+| Case | Envelope key | Denotes | Fate (R1.2) |
+|---|---|---|---|
+| `AttrRefValue` | `__attrRef` | an attribute of another entity, resolved at apply | survives |
+| `FoldedIntrinsicTag` | `__intrinsic` | registered intrinsic, tagged-template form | revived |
+| `FoldedIntrinsicCall` | `__intrinsic` | registered intrinsic, call form | revived |
+| `FoldedHelperCall` | `__helper` | registered authoring helper call | revived |
+| `FoldedResource` | `__resource` | a construction, top-level or nested as a value | revived |
+| `FoldedCompositeStepCall` | `__compositeStep` | `<Identifier>(...).step`, member fixed | revived |
+| `SymbolicValue` | `__symbol` | source text preserved inside an intrinsic interior | revived |
 
 ### R1.1 — Symbolic is not unevaluated
 
-An `__attrRef` is not a thunk. It is the same envelope
-`AttrRef.prototype.toJSON()` produces at runtime, and the serializer already
-accepts a plain envelope without requiring a live instance. A specification that
-describes these as "unevaluated" invites an implementation that tries to force
-them, which is precisely wrong: there is nothing to force, and the value they
-denote does not exist at build time in either path.
+An `__attrRef` is not a thunk. It is the envelope `AttrRef.prototype.toJSON()`
+produces at runtime, and the serializer accepts it without a live instance. A
+specification that describes these as "unevaluated" invites an implementation
+that tries to force them, which is precisely wrong: the denoted value does not
+exist at build time in either path.
 
-### R1.2 — Envelopes are an internal representation and must not escape
+### R1.2 — Exactly one envelope survives to serialization, and its validity is position-dependent
 
-`__resource` in particular must never reach a serializer; it is consumed by
-revival (R2) and replaced by a real instance. The spec must say which envelopes
-are internal to the fold-then-revive pipeline and which are legitimate output.
-`__attrRef` and `__intrinsic` are output. `__resource`, `__helper` and
-`__compositeStep` are not.
+This corrects the first revision, which had it backwards.
+
+`reviveFoldedValue` (L6.1–L6.9) resolves every envelope *except* `__attrRef`
+through the folding file's own imports and invokes the real function or
+constructor: `__intrinsic` in both forms (L6.3), `__helper` (L6.4),
+`__compositeStep` (L6.5), `__resource` (L6.6), `__symbol` via a dotted-chain
+regex (L6.2). None of those may reach a serializer.
+
+`__attrRef` passes through unrevived (L6.7) — **except** inside an intrinsic's
+or authoring helper's arguments, where it is rejected (L6.8, `requireLiveRefs`)
+because the receiver performs `instanceof` checks and `WeakRef` derefs and a
+look-alike plain object would produce wrong output rather than absent output.
+Composite-step arguments revive with `requireLiveRefs: false` because a
+composite stores its props rather than inspecting them (L6.9).
+
+So the spec must say: the same value is valid in one position and invalid in
+another, and which positions are which. A domain definition alone does not
+capture this.
 
 ### R1.3 — Callables are in the domain but are not values
 
-`FoldableFunction` (`fold.ts:378`) lets a call to a project-local function fold,
-by binding folded arguments and folding the callee's body. But a function cannot
-be serialized, so `{ resolver: myFn }` must not fold even though `myFn(x)` does.
+`FoldableFunction` (L4.4) lets a call to a project-local function fold, and is
+explicitly *not* a `FoldedValue`: it never appears inside a folded tree. A
+function used as a value is refused (L3.1), a `FoldableFunction` reached as a
+bare identifier is refused, and an eagerly-evaluated lexicon function
+referenced without calling it is refused with "call it instead" (L3.17).
 
 The specification must therefore define a **serializable sub-domain** and say
-which positions require it. This is not a quality-of-implementation detail; it
-is the difference between a spec that admits a coherent implementation and one
-that does not.
+which positions require it.
 
 ### R1.4 — Liveness is observable and the spec must say so
 
-The implementation distinguishes folded data from a live instance by testing for
-a prototype other than `Object`/`Array` (`fold.ts:411`). That test is what makes
-the identity rules in R5 statable at all — without a definition of "this value is
-a live entity rather than plain data," there is nothing for identity to be a
+`carriesLiveObject` (L4.5) distinguishes folded data from a live instance by
+prototype — anything other than `Object`/`Array`/`null` — and additionally
+treats `typeof value === "function"` as live. That predicate is what makes the
+identity rules in R4 and R5 statable: without a definition of "this value is a
+live entity rather than plain data," there is nothing for identity to be a
 property of.
+
+### R1.5 — Constructor arity is contractual
+
+`FoldedResource.args` (L4.2) is present when the argument list is not the
+classic `(props)` / `(props, attributes)` shape, and is then authoritative:
+the entity is constructed by spreading it. `props` is a view. The
+`undefined` case in the union (L4.3) has no rule today. Both are #42's.
 
 ---
 
@@ -117,201 +127,318 @@ property of.
 The claim is narrower than "no execution", and stating it loosely is the single
 easiest way to write a specification that is either false or useless.
 
-**What is guaranteed:** none of the top-level statements of the file being folded
-are executed. That is the whole of the guarantee, and it is what makes the build
-independent of module side effects.
+**Guaranteed:** none of the top-level statements of the file being folded are
+executed. That is the whole of the guarantee.
 
-**What still executes:** revival. A `__resource` envelope names a constructor;
-the bridge reads the folding file's own `import` declarations to learn which
-module that name came from, imports *that* module, and calls the real class with
-the folded arguments. Same for `__intrinsic`, `__helper` and `__compositeStep`.
-The implementation is explicit that this is not a regression, on the grounds
-that the run path imports the same module to obtain the same class, and the only
-thing skipped is the file's own statements (`fold-import.ts` module doc).
-
-This two-phase shape — **fold to envelopes with zero execution, then revive by
-resolving names through the folding file's imports** — is the mechanism's actual
-architecture and no current prose states it plainly. A specification that omits
-it will be read as claiming nothing executes, which is false, and an implementer
-who believes it cannot build a working folder.
+**Still executes:** revival (R1.2) and eager evaluation (R7.3). A `__resource`
+envelope names a constructor; the bridge reads the folding file's own `import`
+declarations, imports *that* module, and calls the real class with the folded
+arguments. The implementation's own justification: the run path imports the
+same module to obtain the same class, so the only thing skipped is the file's
+own statements (`fold-import.ts` module doc).
 
 ### R2.1 — Trust is decided by resolution, never by the text of a specifier
 
-A name is admitted for revival because it resolves to a module the build already
-trusts, not because it looks trusted. `isChantOwnedSpecifier`
-(`foldable-helpers.ts:247`) and the lexicon-package set are resolution checks;
-a specifier that merely reads as `@intentius/chant-lexicon-anything` is not
-sufficient, because an untrusted repository controls both its own source text
-and the contents of its own `node_modules`.
+Two arms (L9.1–L9.4). Arm 1: an active lexicon package of *this build*,
+matched by text against a closed set built from names the build already
+resolved — and its subpaths, by extracting the package root from the specifier
+text (L9.2). Arm 2: the specifier is *resolved* and the resulting path checked
+against chant-core's own tree; text is explicitly insufficient because an
+untrusted repository controls both its source and its `node_modules`.
+
+A build that supplies no lexicon list keeps only arm 2 — disabled, not loosened
+(L9.4). One documented, accepted unsoundness: the bare-specifier resolution
+cache is process-wide and assumes no nested `node_modules` version override
+(L9.6); the spec should state it as an assumption rather than inherit it
+silently.
 
 ### R2.2 — Isolation changes what folds, so it is part of the mechanism
 
-Under sandboxed execution a fold whose revival would invoke *project-owned* code
-is refused, and the file falls back to run instead (INTENTIUS/chant#1093). The
-fold/run decision is therefore not a pure function of the source: it is
-parameterized by whether project code may be executed in this process. Either
-the spec models that parameter or it describes a judgment that behaves
-differently in a real deployment. See #36.
+Under sandboxed execution a fold whose revival would invoke *project-owned*
+code is refused and the file falls back to run (L9.5,
+INTENTIUS/chant#1093). The fold/run decision is therefore parameterized by
+whether project code may execute in this process. Either the spec models that
+parameter or it describes a judgment that behaves differently in a real
+deployment. See #36.
 
-### R2.3 — One admitted call shape evaluates eagerly rather than enveloping
+### R2.3 — The observable
 
-A lexicon function registered with `intrinsicCallFoldsEagerly` is evaluated at
-fold time rather than deferred to revival, because its ordinary use coerces the
-result to string during folding, before any revival would run
-(INTENTIUS/chant#1966). The spec needs this as a stated exception, not as an
-implementation quirk, because it is a place where fold time and revival time are
-observably different.
+`FoldExecutionCounts` (L10.1) — `factoryInvocations`,
+`projectFactoryInvocations`, `factoryInterpretations` — is how this
+requirement is checked rather than trusted. #43 decides what a conforming
+implementation must expose.
 
 ---
 
 ## R3 — Membership is decided once, by a classifier permitted to err in one direction only
 
-The subset must have exactly one definition. In chant that is
-`findSubsetViolation` (`subset.ts:289`), shared by the folder and by the lint
-rules EVL001/EVL003 so the linted subset and the folded subset cannot drift.
+The subset has exactly one definition: `findSubsetViolation` (`subset.ts:289`),
+shared by the folder and by the lint rules EVL001/EVL003 so the linted subset
+and the folded subset cannot drift (L2.*).
 
 ### R3.1 — The direction is the requirement, not the agreement
 
-The two consumers do not have the same information. A lint pass has no binding
-resolver and no lexicon registry; the folder has both. So they will disagree, and
-the specification's job is to constrain *how*: the shape-only classifier may
-accept what the resolving evaluator rejects, and must never reject what it
-accepts.
-
-The enumerated divergences, all in that safe direction: identifier resolution,
-tagged-template tag registration, authoring-helper provenance, spread-source
-runtime type, and a bare identifier bound to a same-file construction.
+The two consumers have different information. A lint pass has no binding
+resolver and no lexicon registry; the folder has both. The shape-only
+classifier may accept what the resolving evaluator rejects, and must never
+reject what it accepts. Enumerated divergences in that direction: identifier
+resolution (L2.3), tag registration (L2.4), helper provenance (L2.11),
+spread-source runtime type (L3.4, L3.5), a bare identifier bound to a
+same-file construction (L3.8).
 
 ### R3.2 — The two exceptions must be stated, not tidied away
 
-Two cases run the other way and a specification that claims a clean
-one-directional property is weaker than one that names them:
-
-1. **Short-circuit laziness.** The folder evaluates `&&`, `||`, `??` and the
-   conditional lazily, so an unfoldable untaken branch does not reject. The
-   shape classifier has no notion of "taken" and requires every branch to be
+1. **Short-circuit laziness** (L2.9, L3.13). The folder evaluates `&&`, `||`,
+   `??` and the conditional lazily; the classifier requires every branch to be
    valid. The implementation's own module doc calls this a wart.
-2. **Intrinsic call-form registration.** The classifier takes the registry as an
-   optional parameter — exact with one, conservatively rejecting without. An
-   implementation that omits it is systematically wrong in the expensive
-   direction. The parameter exists so a downstream tool can ask "will this fold?"
+2. **Intrinsic call-form registration** (L2.12). The classifier takes the
+   registry as an optional parameter — exact with one, conservatively rejecting
+   without. The parameter exists so a downstream tool can ask "will this fold?"
    without running a fold.
 
 ### R3.3 — A call is structurally unrepresentable, with an enumerated set of exceptions
 
-The general rule is that a function call as a value has no evaluation case at
-all — it is not forbidden by a rule, it is absent from the mechanism. The spec
-must then enumerate the exceptions exhaustively, because each one is a hole
-deliberately cut:
+A function call as a value has no evaluation case — it is absent from the
+mechanism, not forbidden by a rule (L2.16). The spec must enumerate the
+exceptions exhaustively, and say which *kind* each is:
 
-- a registered authoring helper, by name **and** import provenance;
-- a lexicon intrinsic whose lexicon opted its call form in, per intrinsic;
-- a project-local function whose body is itself in the subset;
-- an eagerly-evaluated lexicon function (R2.3);
-- a method call whose receiver folds to a real value and is not one of the
-  folder's own symbolic envelopes.
+| Exception | Kind | Rows |
+|---|---|---|
+| registered authoring helper | closed allowlist, name **and** import provenance | L2.11 |
+| lexicon intrinsic, call form opted in | closed allowlist, per intrinsic | L2.12 |
+| project-local function with a foldable body | open, local | L5.4 |
+| eagerly-evaluated lexicon function | closed allowlist, evaluates at fold time | L2.13, R7.3 |
+| method call on a real receiver | receiver-type condition, method never checked by name | L2.14, L3.18, L3.19 |
+| `<Identifier>(...).step` | one idiom, member fixed, callee must be unclaimed | L2.15, L3.20 |
 
-Two of these are closed allowlists of names a human wrote down. One is open but
-local. One is a receiver-type condition. The specification must say which kind
-each is, because "the callee is admitted" and "the receiver is admitted" are
-different admissibility rules and an implementer will conflate them.
+"The callee is admitted" and "the receiver is admitted" are different
+admissibility rules and an implementer will conflate them.
 
 ---
 
 ## R4 — The decision is per file, total, and closed under a bidirectional fixpoint
 
-### R4.1 — All or nothing, per file
+### R4.1 — All or nothing, per file — at the normative entry point
 
-A file folds entirely or runs entirely. There is no partial fold, and a fallback
-is a normal outcome rather than an error (`FoldFileResult`,
-`fold-import.ts:104`, whose failure case carries a reason rather than throwing).
+Two entry points exist and the first revision conflated them. `tryFoldFile`
+returns a `FoldFileResult` (L8.1): ok with the complete export namespace, or a
+reason. One unrecognized export disqualifies the file (L8.2). `foldModule`
+(L8.3) is per-export, carries an ok/false entry per declaration, and silently
+skips non-`new` exports. **The per-file entry point is normative**; the
+per-export one is a diagnostic surface, and the spec must say so.
 
-### R4.2 — Contagion runs in both directions
+The reason fallback is per-module rather than per-declaration is stated in the
+statement gate itself (L1.7) and belongs in the spec: an unfoldable export can
+reference or be referenced by a foldable one in ways only running proves safe.
 
-This is the requirement most likely to be missed, and the one that makes
-per-file partial evaluation sound in the presence of object identity.
-`planFoldTaint` (`fold-import.ts:3890`) computes it:
+### R4.2 — Contagion runs in both directions, and through calls
+
+`planFoldTaint` (L8.6–L8.8):
 
 - **Forward.** A file that imports or re-exports from a file that will not fold
-  is itself tainted. Otherwise its real import of that module and the module's
-  own folded copy would be two different objects.
+  is tainted.
 - **Reverse.** A file whose *objects were captured* by an already-folded file
-  taints that consumer. If the source is forced back to run, the instance the
-  consumer captured is no longer the instance discovery collects, and
-  serialization fails on an entity with no logical name.
-
-The reverse edges are built from `liveSources`, which records only non-primitive
-values — a string has no identity to disagree about.
+  taints the capturer. `liveSources` records only non-primitive captures
+  (L8.5) — a primitive has no identity to disagree about.
+- **Through calls.** A project-local function whose call *returns* a live
+  object the body produced — not one merely passed through the arguments —
+  records the same taint edge (L5.9, `leakedIdentity`). Identity propagates
+  through invocation, not only through import, and the first revision missed
+  this entirely.
 
 ### R4.3 — The fixpoint and its termination
 
-Seed the tainted set with every file that would not fold on its own, then walk
-the union of forward and reverse edges to closure. Monotone over a finite file
-set, so it terminates. The spec should state it as a least fixpoint rather than
-describe the worklist, so an implementation is free to compute it differently.
+Seed with every file that would not fold on its own; walk the union of forward
+and reverse edges to closure. Monotone over a finite file set, so it
+terminates. State it as a least fixpoint, not as the worklist.
 
 ### R4.4 — Cycles are a located error, not divergence
 
-A genuine reference cycle is detected and reported with the cycle path, rather
-than recursing forever or awaiting a promise that never settles
-(`FoldSession.stack`, `fold-import.ts:167`).
+`FoldSession.stack` (L8.9) detects a genuine reference cycle and reports the
+path.
+
+### R4.5 — Three depth bounds, all of which decide fold versus run
+
+`MAX_FUNCTION_CALL_DEPTH = 32` (L5.8), `MAX_INTERPRETATION_DEPTH` (L7.8),
+`MAX_RESOLUTION_DEPTH` (L8.10). Each terminates a different recursion and each
+turns exhaustion into a fallback. No requirement in the first revision
+mentioned them. The spec must either fix the bounds or say they are
+implementation-defined and that exceeding one is a fallback, never wrong
+output.
+
+### R4.6 — Evaluation count is observable semantics
+
+A composite call reached through several member accesses or destructured names
+is invoked **exactly once** (L8.12, `ResolveCtx.memo`), explicitly "matching
+what actually running the file would do." A named same-file construction is
+built once, in source order, and every reference reads the same object (L3.8).
+These are not optimizations; an implementation that invoked twice would produce
+two entities where running produces one.
 
 ---
 
 ## R5 — A cross-file entity has exactly one instance per build
 
-Every referrer of a folded file must observe the same objects. In chant a
-per-build session memoizes each file's fold so a file imported by several others
-is folded exactly once, and every referrer resolves against the same result and
-therefore the same constructed instances (`FoldSession`, `fold-import.ts:167`).
+Every referrer of a folded file must observe the same objects. A per-build
+session memoizes each file's fold so a file imported by many is folded exactly
+once (L8.11), and revival passes live objects through unchanged rather than
+reconstructing them (L6.1) — the generic walk would destroy the identity it
+exists to preserve.
 
-### R5.1 — The exported namespace must be complete, not filtered
+### R5.1 — The exported namespace is complete, and the statement gate is why
 
-A successful fold yields every exported name's resolved value, not only the
-entity-valued ones — the same table the run path would obtain by importing the
-module. Completeness is what makes equivalence checkable: a fold that reported a
-subset would silently differ from a run.
+A successful fold yields every exported name's value, not only the
+entity-valued ones (L8.4). This holds *because* the statement gate (R6.1)
+disqualifies any file with an unrecognized export. The first revision stated
+the property without its enforcement.
 
 ### R5.2 — R5 is why R4.2 exists
 
-The reverse taint edge is not defensive programming. It is the consequence of
-this requirement: single-instance-per-build cannot hold if one side of a sharing
-relationship folds while the other runs. A specification that states R5 without
-R4.2 has stated a property it cannot maintain.
+The reverse and through-call taint edges are the consequence of this
+requirement: single-instance-per-build cannot hold if one side of a sharing
+relationship folds while the other runs.
+
+---
+
+## R6 — Admissibility is decided at two layers, and is scope-dependent
+
+The first revision specified only the expression layer.
+
+### R6.1 — The statement gate runs first and disqualifies whole files
+
+`scanExports` (L1.1–L1.6) recognizes exactly: `export const X = new Type(...)`,
+`export const X = <expr>`, `export const {a, b} = <expr>`, `export {a, b}`,
+`export {a, b} from "./m"`, and `export function f() {}`. Anything else
+disqualifies the file: `export default`, `export * from`, an exported class,
+`let`/`var`, a destructured export with a rest, nested or defaulted element.
+`export type {...}` and type-only re-export elements are erased, not
+disqualifiers (L1.6).
+
+### R6.2 — The expression layer is R3's subject and #12's grammar
+
+Every expression reachable from an admitted statement is classified by R3's
+single definition. The admissible forms — literals, templates with spans,
+object members with literal keys, element access with literal keys, the
+operator sets, positional `new` arguments — are enumerated by the grammar
+(#12), not here. Inventory rows L2.1, L2.2, L2.5–L2.8, L2.10 remain GAP until
+#12 lands.
+
+### R6.3 — Admissibility depends on where the expression sits
+
+Five constructs that fold at a file's top level are refused inside a folded
+function body: `new`, a tagged template, a helper call, an intrinsic call, and
+`.step` (L3.16, `functionBodyDepth`). Each produces an envelope revived against
+the *caller's* imports, which is not the scope the body was written in.
+`new ns.Type(...)` is refused everywhere: a namespace-qualified constructor
+cannot be resolved through named imports (L3.15).
+
+### R6.4 — Shadowing
+
+`consts` is consulted before `externals` (L5.3). A local `const` defeats a
+registered helper or intrinsic name — the file's own binding wins, so a local
+`Ref` is not the lexicon's. A parameter or body binding shadows a module-level
+const of the same name.
+
+### R6.5 — Two further statement-level subsets, and an asymmetry between them
+
+A **project-local function** is admissible (L5.4) when its parameters bind
+plainly, its body is a single expression or `const` declarations followed by
+one `return`, and it is not a generator, async, rest-parameter, early-return,
+or `let`/`var` function. Parameter defaults fold in the callee's scope (L5.6).
+A block body with no `return` evaluates to `undefined` (L5.7).
+
+A **composite factory** is admissible (R7.2) under rules 3–5 of the same
+shape — except that its body **must** end in `return` and an empty body is
+rejected (L7.4). The two subsets differ on exactly this point and the spec
+should say why, or fix one.
+
+---
+
+## R7 — There are three evaluation modes, not two
+
+The first revision described fold-to-envelope and revival. There is a third,
+and it is the one that makes folding under isolation possible.
+
+### R7.1 — Envelope, then revive
+
+The default for everything R1's table marks *revived*: `fold()` executes
+nothing and records what was named; the bridge resolves the name through the
+folding file's imports and invokes it (R1.2, R2).
+
+### R7.2 — Interpret, never importing the defining module
+
+A composite factory is *interpreted* (L7.1–L7.8) when: (1) the calling file
+imports it from a project file, by text, never a package; (2) the defining
+module has `export const N = Composite(<fn>, "N")` with `Composite` bound in
+*that* module to chant's own; (3) `<fn>` takes at most one plainly-bound
+parameter; (4) its body is a concise expression or `const`s then a final
+`return`; (5) every expression is in the subset, extended with `new` in value
+position and calls through a bare identifier. A body that references one of
+its module's own module-level resources declines (L7.6) — that resource is a
+singleton the run path shares, and interpretation would not — and
+`constResolvesToResource` follows alias chains so it cannot be smuggled in
+(L7.7). The defining module is never imported; members are built by the
+lexicon's constructors from the folded props.
+
+### R7.3 — Evaluate eagerly
+
+A lexicon function registered with `intrinsicCallFoldsEagerly` (L2.13) is
+called at fold time with folded arguments rather than enveloped, because its
+ordinary use coerces the result to string during folding, before any revival
+would run. A method call on a real receiver (L2.14) is the same mode: the
+receiver is the same object either way, so calling it is what running would
+do. Both are places where fold time and revival time are observably different,
+and the spec must name them as such.
+
+---
+
+## R8 — Build parameters are an input to folding
+
+`FoldSession.buildParams` (L5.11) is consulted for exactly one bare specifier:
+a named `params` import resolving to chant's `params` module. `params.<name>`
+folds to a literal. A bare `process` reference is refused with a message naming
+this mechanism as the alternative (L3.7). The `params` object is tracked by
+identity like an entity (`fold-import.ts:3141`).
+
+The objective is stated pointwise at a binding because of this requirement. An
+implementation without build parameters satisfies it trivially; one with them
+must say how the binding enters and that it is recorded.
 
 ---
 
 ## Requirements on the specification itself
 
-Four, and they are cheap to satisfy if adopted early and expensive to retrofit.
-
-1. **Every normative rule carries a stable identifier**, so an implementation
-   can cite what it implements and a conformance fixture can cite what it tests.
+1. **Every normative rule carries a stable identifier** (#6, #46).
 2. **Every identifier is exercised by at least one fixture, and every fixture
-   cites a real identifier.** Both directions, in CI. The first stops the spec
-   growing rules nothing checks; the second stops fixtures citing renamed rules.
-3. **Rejections are located.** An implementation must be able to name the node
-   that caused a rejection and the rule it violated, without the spec
-   constraining message wording. Anything weaker admits a conforming
-   implementation that answers "no" to everything.
-4. **The subset is versioned.** It has moved repeatedly — cross-file resolution,
-   lexicon package exports, nested constructions, intrinsic call forms,
-   project-local calls — and each move changed what conforming source could
-   contain.
+   cites a real identifier.** Both directions, in CI (#8, #44).
+3. **Rejections are located** — node and rule, wording unconstrained. Whether
+   message *stability* is also normative (L10.5) is #43's.
+4. **The subset is versioned** (#18).
 
 ---
 
+## Changes since the first revision
+
+| | First revision | This revision |
+|---|---|---|
+| Objective | source alone | source at a fixed parameter binding (R8) |
+| R1.2 | `__attrRef` and `__intrinsic` survive | only `__attrRef`; position-dependent |
+| R4.1 | one entry point | two; per-file is normative |
+| R4.2 | import edges only | plus through-call (`leakedIdentity`) |
+| R4.5, R4.6 | absent | depth bounds; evaluation count |
+| R5.1 | property only | plus its enforcement (R6.1) |
+| R6 | absent | statement gate, scope-dependence, shadowing, two more subsets |
+| R7 | two modes | three; interpretation's five rules |
+| R8 | absent | build parameters |
+
 ## What this list is not
 
-It is not a claim that the current implementation is correct, and it is not a
-transcription of it. Where the implementation settles a question by accident
-rather than by decision, the specification should say so and decide. Three known
-places: the laziness divergence in R3.2, which the implementation itself calls a
-wart; the `.step` narrowing in R1, which is deliberately one idiom wide and has
-no principled boundary; and the eager-evaluation exception in R2.3, which exists
-because of how one result is coerced rather than because eagerness is right.
+It is not a claim that the implementation is correct. Where the implementation
+settles a question by accident rather than decision, the specification should
+decide: the laziness divergence (R3.2), the `.step` narrowing (one idiom, no
+principled boundary), the eager-evaluation exception (exists because of one
+coercion), the return-required asymmetry (R6.5), and the null-access behaviour
+now under INTENTIUS/chant#2328.
 
-It is also not complete, and the status block at the top of this file is the
-authoritative list of what it is missing and what it gets wrong. That list is
-itself provisional: it was produced by reading more of core than this document
-was, but still not all of it. #40 is what closes that.
+It is also derived from a read that left two regions of `fold-import.ts`
+unvisited — named at the bottom of `inventory.md` and a precondition on #44.
