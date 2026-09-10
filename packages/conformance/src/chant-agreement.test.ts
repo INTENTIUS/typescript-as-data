@@ -17,10 +17,13 @@ describe("chant cross-check (#11)", () => {
     const dis = compareAdapters(referenceAdapter, chantAdapter, fixtures);
     expect(dis, dis.join("\n")).toEqual([]);
   });
-  test("reports whether chant's shape classifier was available", () => {
-    const s = chantAdapter.shape(fixtures[0].input, fixtures[0].exportName);
-    // Informational until INTENTIUS/chant#2362 ships; never a failure either way.
-    console.log(`[#11] chant shape classifier: ${s === "unavailable" ? "unavailable (awaiting chant#2362)" : "available"}`);
-    expect(true).toBe(true);
+  test("chant's shape classifier is available (chant-v0.64.0+, chant#2362) and agrees on every fixture", () => {
+    // The pinned chant carries the export, so "unavailable" would mean the adapter
+    // silently stopped comparing the shape half — a real regression, asserted.
+    for (const f of fixtures) {
+      const s = chantAdapter.shape(f.input, f.exportName);
+      expect(s, `${f.id}: chant shape classifier unavailable`).not.toBe("unavailable");
+      if (s !== "unavailable") expect(s.accepted, `${f.id}: chant shape ${s.accepted ? "accept" : "reject"} ≠ expected ${f.shape}`).toBe(f.shape === "accept");
+    }
   });
 });

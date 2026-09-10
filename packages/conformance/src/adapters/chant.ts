@@ -1,8 +1,8 @@
 /**
  * #11 — chant as an implementation under test, through its PUBLIC entry only:
- * `fold`, `collectConsts`, `FoldError` (exported today) and, once
- * INTENTIUS/chant#2362 ships, `findSubsetViolation` for the shape half.
- * Until then shape is reported "unavailable", never guessed.
+ * `fold`, `collectConsts`, `FoldError`, and — since chant-v0.64.0 (chant#2362)
+ * — `findSubsetViolation` for the shape half. If an older chant is pinned the
+ * adapter reports shape "unavailable" rather than guessing.
  */
 import * as ts from "typescript";
 import * as chant from "@intentius/chant";
@@ -19,7 +19,7 @@ const parse = (src: string) => ts.createSourceFile("fixture.ts", src, ts.ScriptT
 const shapeFn = (chant as unknown as { findSubsetViolation?: (n: ts.Node) => { node: ts.Node; ruleId: string; message: string } | undefined }).findSubsetViolation;
 
 export const chantAdapter: ConformanceAdapter = {
-  name: `chant@${(chant as unknown as { VERSION?: string }).VERSION ?? "0.63.0"}`,
+  name: `chant@${(chant as unknown as { VERSION?: string }).VERSION ?? "0.64.0"}`,
   shape(source, exportName) {
     if (!shapeFn) return "unavailable";
     const sf = parse(source); const init = exportInitializer(sf, exportName);
