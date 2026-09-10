@@ -1,7 +1,8 @@
 # Folding: specification requirements
 
 What a specification of folding must define, derived from chant core's fold
-mechanism at `e4074c17` (2026-09-09). Second revision (#41); the first was
+mechanism at `e4074c17` (2026-09-09), with R10.2 and R3.1 updated to
+chant-v0.63.0 (`11572c7a`, #2328). Second revision (#41); the first was
 derived from a partial read and its holes are recorded in
 [`inventory.md`](./inventory.md) and closed here.
 
@@ -184,7 +185,8 @@ classifier may accept what the resolving evaluator rejects, and must never
 reject what it accepts. Enumerated divergences in that direction: identifier
 resolution (L2.3), tag registration (L2.4), helper provenance (L2.11),
 spread-source runtime type (L3.4, L3.5), a bare identifier bound to a
-same-file construction (L3.8).
+same-file construction (L3.8), and — since chant-v0.63.0 — a member read whose
+object resolves to `null`/`undefined` (L3.10; shape-valid, folder refuses).
 
 ### R3.2 — The two exceptions must be stated, not tidied away
 
@@ -514,14 +516,22 @@ the host JavaScript operator to the folded values, so the semantics — includin
 spec should say so per operator and require an implementation in another
 language to reproduce ECMAScript coercion for these operators, not its host's.
 
-### R10.2 — Member access on `null`/`undefined` is *not* ECMAScript, and the spec must pick
+### R10.2 — Member access on `null`/`undefined` refuses; optional chaining short-circuits
 
-Both access branches return `undefined` where ECMAScript throws (L3.10,
-INTENTIUS/chant#2328). Two defensible rules: refuse and fall back, matching
-what chant#1535 chose for the sibling case; or keep optional-chaining
-semantics and state that fold is not equivalent to run for this shape. The
-spec must state one. Until chant resolves #2328, "as ECMAScript" is not
-available for member access.
+Resolved by chant-v0.63.0 (INTENTIUS/chant#2328, commit `8ce54e5e`). A plain
+property or element read whose object folds to `null`/`undefined` is
+**refused** with a located rejection naming the member and pointing at `?.`
+(L3.10); the file falls back to run, where the same expression throws a
+`TypeError`. Fold produces no output and run produces an error — equivalence
+in the sense of R4.1's "a fallback is not wrong output". `?.` is implemented
+with ECMAScript short-circuit semantics: a nullish object under `?.` yields a
+chain-short-circuit sentinel that propagates through the remainder of the
+chain — further member and element reads, `!` non-null assertions, and a
+`?.()` method call — and resolves to `undefined` where the chain ends (L3.21,
+L3.22). So "as ECMAScript" *is* now available for member access, and the
+departure the first revision of this clause recorded no longer exists. chant's
+shape classifier still admits both forms (the object's value is resolution),
+which is the R3.1 direction; it is added to R3.1's divergence list.
 
 ### R10.3 — Attribute references are produced by two rules and refused by a third
 

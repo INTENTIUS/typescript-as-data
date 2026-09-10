@@ -2,7 +2,7 @@
 
 Every decision point in chant core's fold path, with the requirement that covers
 it. Derived from a complete read of the four files below at commit `e4074c17`
-(2026-09-09).
+(2026-09-09); rows L3.10, L3.21, L3.22 updated to chant-v0.63.0 (`11572c7a`).
 
 A **decision point** is anywhere the mechanism chooses between admitting and
 rejecting, between evaluation modes, or between representations. One row each.
@@ -71,7 +71,7 @@ Shape only. No resolution, no evaluation.
 | L3.7 | bare `process` | pointed rejection naming build parameters | R8 |
 | L3.8 | identifier bound to same-file `new` | only `externals` may answer; else rejected, to avoid constructing a duplicate | R3.1, R4.6 |
 | L3.9 | property access on a resource-bound const | `{__attrRef}` keyed by the const's name | R10.3 |
-| L3.10 | property access on `null`/`undefined` | **returns `undefined`; JavaScript would throw** | R10.2 (pending chant#2328) |
+| L3.10 | property access on `null`/`undefined` | ~~returns `undefined`~~ **refused** since chant-v0.63.0 (#2328); a located rejection pointing at `?.`; file falls back to run, where it throws | R10.2 |
 | L3.11 | property access on a `{__resource}` envelope | `{__attrRef}` when the object is a plain identifier; **rejected otherwise** (chant#1535 — silent wrong output otherwise) | R10.3 |
 | L3.12 | `-x`, `!x` | JS coercion | R10.1 |
 | L3.13 | `&&`, `\|\|`, `??` | lazily evaluated, JS truthiness | R3.2, R10.1 |
@@ -82,6 +82,8 @@ Shape only. No resolution, no evaluation.
 | L3.18 | method call receiver is a symbolic envelope | rejected — else `toString` would answer with the placeholder's shape | R3.3 |
 | L3.19 | method call, named property not a function | rejected | R3.3 |
 | L3.20 | `.step` narrowing | only when the callee is not already a helper, intrinsic, `FoldableFunction`, or shadowed by a const (`isUnclaimedBareCall`) | R3.3 |
+| L3.21 | optional chain on nullish (added chant-v0.63.0) | `?.` on `null`/`undefined` yields a short-circuit sentinel that propagates through the rest of the chain — further `.`/`[]`, `!`, `?.()` — and becomes `undefined` at the chain's end (`continuesOptionalChain`) | R10.2 |
+| L3.22 | `?.()` method call on nullish (added chant-v0.63.0) | short-circuits like L3.21; a plain `.()` on nullish refuses | R10.2, R3.3 |
 
 ## L4 — Value domain
 
@@ -197,7 +199,7 @@ The first version of this file broke that rule on fourteen rows and reported
 |---|---|---|---|
 | L1 statement scan | 7 | 7 | 0 |
 | L2 shape classification | 16 | 16 | 0 |
-| L3 expression reduction | 20 | 20 | 0 |
+| L3 expression reduction | 22 | 22 | 0 |
 | L4 value domain | 5 | 5 | 0 |
 | L5 scope and local calls | 11 | 11 | 0 |
 | L6 revival | 9 | 9 | 0 |
@@ -205,7 +207,7 @@ The first version of this file broke that rule on fourteen rows and reported
 | L8 file decision and taint | 12 | 12 | 0 |
 | L9 trust and isolation | 6 | 6 | 0 |
 | L10 observables | 5 | 5 | 0 |
-| **total** | **99** | **99** | **0** |
+| **total** | **101** | **101** | **0** |
 
 **Row identifiers are stable and append-only.** `L3.10` names one decision
 point forever; a new row in a layer takes the next number and nothing is ever

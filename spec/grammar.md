@@ -10,7 +10,7 @@ folder.
 Derived from `findSubsetViolation` (`subset.ts:289`), `fold()`
 (`fold.ts:896`), `scanExports` (`fold-import.ts:591`),
 `findFunctionSubsetViolation` and `findFactorySubsetViolation`, at
-`e4074c17`. Node kinds are TypeScript's.
+`e4074c17`, with the `?.` forms from chant-v0.63.0 (`11572c7a`, #2328). Node kinds are TypeScript's.
 
 Notation: `⟨X⟩` is a nonterminal; `|` alternation; `*` zero or more; `+` one
 or more. Terminals are TypeScript tokens or node kinds. Each production cites
@@ -85,8 +85,8 @@ S-Object      ::= { ⟨Member⟩* }
   S-SpreadProp::= ... ⟨Expr⟩
   ⟨LiteralKey⟩::= ⟨Identifier⟩ | ⟨StringLiteral⟩ | ⟨NumericLiteral⟩
 S-Array       ::= [ ( ⟨Expr⟩ | ... ⟨Expr⟩ )* ]
-S-Member      ::= ⟨Expr⟩ . ⟨Identifier⟩
-S-Index       ::= ⟨Expr⟩ [ ⟨StringLiteral⟩ | ⟨NumericLiteral⟩ ]
+S-Member      ::= ⟨Expr⟩ ( . | ?. ) ⟨Identifier⟩
+S-Index       ::= ⟨Expr⟩ ( [ | ?.[ ) ⟨StringLiteral⟩ | ⟨NumericLiteral⟩ ]
 S-Unary       ::= ! ⟨Expr⟩ | - ⟨Expr⟩
 S-Binary      ::= ⟨Expr⟩ ⟨BinOp⟩ ⟨Expr⟩
   ⟨BinOp⟩     ::= && | || | ?? | + | - | * | / | === | !== | > | < | >= | <=
@@ -96,7 +96,7 @@ S-Call        ::= S-CallHelper | S-CallIntrinsic | S-CallEager | S-CallMethod | 
   S-CallHelper    ::= ⟨HelperName⟩ ( ⟨Expr⟩* )
   S-CallIntrinsic ::= ⟨Identifier⟩ ( ⟨Expr⟩* )        -- registry-gated
   S-CallEager     ::= ⟨Identifier⟩ ( ⟨Expr⟩* )        -- registry-gated
-  S-CallMethod    ::= ⟨Expr⟩ . ⟨Identifier⟩ ( ⟨Expr⟩* )
+  S-CallMethod    ::= ⟨Expr⟩ ( . | ?. ) ⟨Identifier⟩ ( ⟨Expr⟩* )
   S-CompositeStep ::= ⟨CallExpression⟩ . step
 S-Reject      ::= anything else
 ```
@@ -115,8 +115,8 @@ Per-production conditions and divergences:
 | S-Shorthand | L2.6 | always shape-valid | the name resolves as S-Ident |
 | S-SpreadProp | L2.6 | operand ∈ ⟨Expr⟩ | operand must fold to a non-null object (R10.6) |
 | S-Array | — | each element or spread operand ∈ ⟨Expr⟩ | spread operand must be an array (R10.6) |
-| S-Member | L2.15 | object ∈ ⟨Expr⟩; **S-CompositeStep takes precedence** when the member is `step` and the object is a call | on a resource-bound identifier → `{__attrRef}` (R10.3); on `null`/`undefined` → see R10.2 |
-| S-Index | L2.7 | key must be a string or numeric **literal** (EVL003); object ∈ ⟨Expr⟩ | same as S-Member |
+| S-Member | L2.15 | object ∈ ⟨Expr⟩, `.` or `?.`; **S-CompositeStep takes precedence** when the member is `step` and the object is a call | on a resource-bound identifier → `{__attrRef}` (R10.3); `.` on `null`/`undefined` → **refused** (R10.2, L3.10); `?.` on `null`/`undefined` → short-circuits the rest of the chain to `undefined` (L3.21) |
+| S-Index | L2.7 | key must be a string or numeric **literal** (EVL003); object ∈ ⟨Expr⟩, `[` or `?.[` | same as S-Member, including the `.`/`?.` distinction |
 | S-Unary | L2.8 | operator ∈ {`!`, `-`} | ECMAScript coercion (R10.1) |
 | S-Binary | L2.8, L2.9 | operator ∈ ⟨BinOp⟩; **both** sides ∈ ⟨Expr⟩ (flow-insensitive) | `&&`/`\|\|`/`??` evaluate lazily — the untaken side is never folded (R3.2) |
 | S-Conditional | L2.9 | all three ∈ ⟨Expr⟩ | only the taken branch is folded (R3.2) |
@@ -124,7 +124,7 @@ Per-production conditions and divergences:
 | S-CallHelper | L2.11 | name ∈ `FOLDABLE_AUTHORING_HELPERS`; args ∈ ⟨Expr⟩ | name must be bound by an import from chant (R3.3); not shadowed by a local `const`; refused inside a folded function body |
 | S-CallIntrinsic | L2.12 | with a registry: name registered with `foldsAsCall`; **without a registry: S-Reject** | name must resolve through the file's imports; refused inside a folded function body |
 | S-CallEager | L2.13 | with a registry: name registered with `foldsEagerly`; without: S-Reject | callee must resolve to a function; evaluated at fold time (R7.3) |
-| S-CallMethod | L2.14 | receiver ∈ ⟨Expr⟩, args ∈ ⟨Expr⟩; method name unconstrained | receiver must fold to a real value, not `null`/`undefined`, not a symbolic envelope; the named property must be a function (R3.3) |
+| S-CallMethod | L2.14 | receiver ∈ ⟨Expr⟩, `.` or `?.`; args ∈ ⟨Expr⟩; method name unconstrained | receiver must fold to a real value, not a symbolic envelope; the named property must be a function (R3.3). Receiver `null`/`undefined`: `.` refuses, `?.` short-circuits (L3.22) |
 | S-CompositeStep | L2.15 | any call, any arguments, member exactly `step` | callee must be an *unclaimed* bare identifier (L3.20); refused inside a folded function body |
 | S-Reject | L2.16 | EVL001 | — |
 
@@ -133,11 +133,11 @@ the folder): an arrow or function expression as a value (L3.1); class
 expressions; `await`, `yield`; assignment and compound assignment; the comma
 operator; `typeof`, `void`, `delete`, `++`, `--`; `==`, `!=`, `%`, `**`, the
 bitwise operators, `in`, `instanceof`; a computed property name; a
-non-literal element-access key; a call not matching any S-Call form. Not
-verified in this draft: optional chaining (`a?.b`) — it is a
-`PropertyAccessExpression` and so shape-admitted as S-Member; its folded
-semantics coincide with R10.2's current behaviour but that coincidence has
-not been checked.
+non-literal element-access key; a call not matching any S-Call form. Optional chaining is
+specified, not merely admitted: since chant-v0.63.0 a `?.` on a nullish object
+produces a chain-short-circuit value that propagates through the remaining
+`.`/`[]`/`!`/`?.()` of the same chain and becomes `undefined` at its end —
+ECMAScript's semantics, implemented rather than coincidental.
 
 ---
 
