@@ -34,9 +34,11 @@ shared between both. That is chant's revival argument — "the function that run
 is the one your `import` names" — made twenty years earlier in a general-purpose
 language.
 
-Where chant differs: CTFE decides per *call site*, and a compile-time context
-that cannot be evaluated is a compile error, not a fallback. chant decides per
-*file*, and a file that cannot be folded is run. More importantly, a CTFE'd
+Where chant differs: CTFE decides per *call site*, and — on the secondary
+sources read in this sweep — a context that *requires* compile-time evaluation
+and cannot get it is a compile error rather than a fallback; that distinction
+needs the spec's own wording (#47). chant decides per *file*, and a file that
+cannot be folded is run. More importantly, a CTFE'd
 value is *copied* into the compiled program; nothing at run time shares
 identity with a compile-time object. chant's folded entities are the same
 objects the run path would have built, and other files hold references to them.
@@ -135,8 +137,8 @@ explicit in the language rather than inferred.
    Precedented by CTFE's design principle. Not novel alone; worth citing as
    the same argument.
 3. **Byte-identical agreement as a discharged obligation over a real corpus.**
-   Not found elsewhere as a stated, tested property. A methodological
-   contribution, not a conceptual one.
+   Not found in this sweep as a stated, tested property; not searched for
+   specifically. A methodological contribution, not a conceptual one.
 4. **Bidirectional identity taint over the module graph, so that a shared
    entity is never two objects when one side folds and the other runs.** No
    precedent found. This is the contribution, and it exists *because* chant
