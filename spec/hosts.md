@@ -144,3 +144,24 @@ vocabularies**, not languages (`README.md`, Scope). A host is one
 instantiation; chant's lexicons are the reference instantiation, and the
 reference implementation (#19, #20) is meant to carry the interface without
 any of them.
+
+---
+
+## Rationale
+
+Non-normative. The reasoning that motivated each rule, carried over from the retired `requirements.md` (#46). Keyed by the rule(s) each note supports.
+
+**F-Host-Trust** *(was R2.1 — Trust is decided by resolution, never by the text of a specifier)*
+
+Two arms (L9.1–L9.4). Arm 1: an active lexicon package of *this build*,
+matched by text against a closed set built from names the build already
+resolved — and its subpaths, by extracting the package root from the specifier
+text (L9.2). Arm 2: the specifier is *resolved* and the resulting path checked
+against chant-core's own tree; text is explicitly insufficient because an
+untrusted repository controls both its source and its `node_modules`.
+
+A build that supplies no lexicon list keeps only arm 2 — disabled, not loosened
+(L9.4). One documented, accepted unsoundness: the bare-specifier resolution
+cache is process-wide and assumes no nested `node_modules` version override
+(L9.6); the spec should state it as an assumption rather than inherit it
+silently.

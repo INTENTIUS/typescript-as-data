@@ -16,8 +16,11 @@ mkdirSync(outDir, { recursive: true });
 
 // Only genuine identifiers: R<n>, R<n>.<m>, L<n>.<m>. A word starting with R
 // ("Requirements", "Read") must not become an anchor.
-const ID = /^(#{1,6})\s+((?:R\d+(?:\.\d+)?|L\d+\.\d+))\b(.*)$/;
-const ORDER = ["README", "requirements", "inventory", "prior-art"];
+const ID = /^(#{1,6})\s+((?:[SF]-[A-Za-z0-9-]+|L\d+\.\d+))\b(.*)$/;
+// Rules written as bold-leading paragraphs ("**F-Eval-Ident.**", "**S-Module.**")
+// get an anchor too, so a citation resolves whether the rule is a heading or not.
+const BOLD_ID = /^\*\*((?:[SF]-[A-Za-z0-9-]+))[.\s]/;
+const ORDER = ["README", "grammar", "judgments", "values", "divergence", "hosts", "inventory", "prior-art"];
 
 for (const file of readdirSync(specDir).filter((f) => f.endsWith(".md"))) {
   const name = basename(file, ".md");
@@ -28,8 +31,8 @@ for (const file of readdirSync(specDir).filter((f) => f.endsWith(".md"))) {
   let seenH1 = false;
   for (const ln of lines) {
     if (!seenH1 && /^#\s+/.test(ln)) { title = ln.replace(/^#\s+/, "").trim(); seenH1 = true; continue; }
-    const m = ID.exec(ln);
-    if (m) body.push(`<a id="${m[2]}"></a>`);
+    const m = ID.exec(ln) || BOLD_ID.exec(ln);
+    if (m) body.push(`<a id="${m[2] ?? m[1]}"></a>`);
     body.push(ln);
   }
   const desc = (body.find((l) => l.trim() && !l.startsWith("#") && !l.startsWith("<a") && !l.startsWith("|") && !l.startsWith(">")) ?? "").replace(/[`*_]/g, "").slice(0, 160);

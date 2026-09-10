@@ -120,3 +120,117 @@ Only inside an intrinsic's interior — a tag's interpolations or a call form's
 arguments (`foldIntrinsicValue`). Anywhere else an unresolved chain is a
 located rejection (F-Reference, J2). A `__symbol` therefore never appears at
 the top of a folded tree.
+
+---
+
+## Rationale
+
+Non-normative. The reasoning that motivated each rule, carried over from the retired `requirements.md` (#46). Keyed by the rule(s) each note supports.
+
+**F-Val-Domain** *(was R1 — The value domain is closed, and its symbolic cases are finished values)*
+
+The spec must define what a fold produces. Every other requirement quantifies
+over it, and it is currently defined only by a TypeScript union
+(`FoldedValue`, `fold.ts:116`; L4.1).
+
+Nine cases. Six are ordinary JSON — string, number, boolean, null, undefined,
+arrays and plain objects. The rest carry envelopes:
+
+| Case | Envelope key | Denotes | Fate (R1.2) |
+|---|---|---|---|
+| `AttrRefValue` | `__attrRef` | an attribute of another entity, resolved at apply | survives |
+| `FoldedIntrinsicTag` | `__intrinsic` | registered intrinsic, tagged-template form | revived |
+| `FoldedIntrinsicCall` | `__intrinsic` | registered intrinsic, call form | revived |
+| `FoldedHelperCall` | `__helper` | registered authoring helper call | revived |
+| `FoldedResource` | `__resource` | a construction, top-level or nested as a value | revived |
+| `FoldedCompositeStepCall` | `__compositeStep` | `<Identifier>(...).step`, member fixed | revived |
+| `SymbolicValue` | `__symbol` | source text preserved inside an intrinsic interior | revived |
+
+**F-Val-Envelope** *(was R1.1 — Symbolic is not unevaluated)*
+
+An `__attrRef` is not a thunk. It is the envelope `AttrRef.prototype.toJSON()`
+produces at runtime, and the serializer accepts it without a live instance. A
+specification that describes these as "unevaluated" invites an implementation
+that tries to force them, which is precisely wrong: the denoted value does not
+exist at build time in either path.
+
+**F-Val-Fate, F-Val-Position** *(was R1.2 — Exactly one envelope survives to serialization, and its validity is position-dependent)*
+
+This corrects the first revision, which had it backwards.
+
+`reviveFoldedValue` (L6.1–L6.9) resolves every envelope *except* `__attrRef`
+through the folding file's own imports and invokes the real function or
+constructor: `__intrinsic` in both forms (L6.3), `__helper` (L6.4),
+`__compositeStep` (L6.5), `__resource` (L6.6), `__symbol` via a dotted-chain
+regex (L6.2). None of those may reach a serializer.
+
+`__attrRef` passes through unrevived (L6.7) — **except** inside an intrinsic's
+or authoring helper's arguments, where it is rejected (L6.8, `requireLiveRefs`)
+because the receiver performs `instanceof` checks and `WeakRef` derefs and a
+look-alike plain object would produce wrong output rather than absent output.
+Composite-step arguments revive with `requireLiveRefs: false` because a
+composite stores its props rather than inspecting them (L6.9).
+
+So the spec must say: the same value is valid in one position and invalid in
+another, and which positions are which. A domain definition alone does not
+capture this.
+
+**F-Val-Callable** *(was R1.3 — Callables are in the domain but are not values)*
+
+`FoldableFunction` (L4.4) lets a call to a project-local function fold, and is
+explicitly *not* a `FoldedValue`: it never appears inside a folded tree. A
+function used as a value is refused (L3.1), a `FoldableFunction` reached as a
+bare identifier is refused, and an eagerly-evaluated lexicon function
+referenced without calling it is refused with "call it instead" (L3.17).
+
+The specification must therefore define a **serializable sub-domain** and say
+which positions require it.
+
+**F-Val-Live** *(was R1.4 — Liveness is observable and the spec must say so)*
+
+`carriesLiveObject` (L4.5) distinguishes folded data from a live instance by
+prototype — anything other than `Object`/`Array`/`null` — and additionally
+treats `typeof value === "function"` as live. That predicate is what makes the
+identity rules in R4 and R5 statable: without a definition of "this value is a
+live entity rather than plain data," there is nothing for identity to be a
+property of.
+
+**F-Val-Arity** *(was R1.5 — Constructor arity is contractual)*
+
+`FoldedResource.args` (L4.2) is present when the argument list is not the
+classic `(props)` / `(props, attributes)` shape, and is then authoritative:
+the entity is constructed by spreading it. `props` is a view. The
+`undefined` case in the union (L4.3) has no rule today. Both are #42's.
+
+---
+
+**F-Val-Fate** *(was R7.1 — Envelope, then revive)*
+
+The default for everything R1's table marks *revived*: `fold()` executes
+nothing and records what was named; the bridge resolves the name through the
+folding file's imports and invokes it (R1.2, R2).
+
+**F-Val-Undefined** *(was R10.7 — `undefined` is absent, not `null`, in a property; and is `null` in an array)*
+
+The domain admits `undefined` (L4.3). The serializer walker passes it through
+unchanged and keeps the key (`serializer-walker.ts:33`, `:117`); the drop
+happens at emission, and — verified — it happens for both formats because
+YAML is produced by round-tripping the sorted JSON (`build.ts:743–746`), so
+`JSON.stringify` has already removed an `undefined`-valued key and turned an
+`undefined` array element into `null` before any YAML exists. That is what
+makes chant's build-parameters documentation true ("dropped from the output
+in both JSON and YAML rather than shipped as `null`"). Both facts must be
+stated because they are the difference between "absent" and "null", which
+platforms treat differently — and for the six YAML-native lexicons above the
+walker's `undefined` reaches *their* emitter directly, so the rule there is
+each serializer's, not `JSON.stringify`'s.
+
+**F-Val-Arity** *(was R10.8 — Constructor arity)*
+
+`FoldedResource.args` (L4.2, R1.5): present when the argument list is not
+`(props)` or `(props, attributes)`, authoritative when present, the entity
+constructed by spreading it; `props` is a view, never re-passed. An
+implementation that assumed the props object is always first would construct
+`new Parameter("String", {...})` wrongly.
+
+---

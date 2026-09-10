@@ -185,3 +185,65 @@ Resolution (R6.6), registration (R3.2), trust (R2.1), the fold/run verdict and
 its taint (R4, judgments.md), and every semantic rule in R10. A string that
 parses under this grammar is *shape-admissible*; whether it folds is the
 judgments' question.
+
+---
+
+## Rationale
+
+Non-normative. The reasoning that motivated each rule, carried over from the retired `requirements.md` (#46). Keyed by the rule(s) each note supports.
+
+**S-Call** *(was R3.3 — A call is structurally unrepresentable, with an enumerated set of exceptions)*
+
+A function call as a value has no evaluation case — it is absent from the
+mechanism, not forbidden by a rule (L2.16). The spec must enumerate the
+exceptions exhaustively, and say which *kind* each is:
+
+| Exception | Kind | Rows |
+|---|---|---|
+| registered authoring helper | closed allowlist, name **and** import provenance | L2.11 |
+| lexicon intrinsic, call form opted in | closed allowlist, per intrinsic | L2.12 |
+| project-local function with a foldable body | open, local | L5.4 |
+| eagerly-evaluated lexicon function | closed allowlist, evaluates at fold time | L2.13, R7.3 |
+| method call on a real receiver | receiver-type condition, method never checked by name | L2.14, L3.18, L3.19 |
+| `<Identifier>(...).step` | one idiom, member fixed, callee must be unclaimed | L2.15, L3.20 |
+
+"The callee is admitted" and "the receiver is admitted" are different
+admissibility rules and an implementer will conflate them.
+
+---
+
+**S-Module** *(was R6 — Admissibility is decided at two layers, and is scope-dependent)*
+
+The first revision specified only the expression layer.
+
+**S-Module, S-Disqualify** *(was R6.1 — The statement gate runs first and disqualifies whole files)*
+
+`scanExports` (L1.1–L1.6) recognizes exactly: `export const X = new Type(...)`,
+`export const X = <expr>`, `export const {a, b} = <expr>`, `export {a, b}`,
+`export {a, b} from "./m"`, and `export function f() {}`. Anything else
+disqualifies the file: `export default`, `export * from`, an exported class,
+`let`/`var`, a destructured export with a rest, nested or defaulted element.
+`export type {...}` and type-only re-export elements are erased, not
+disqualifiers (L1.6).
+
+**§2** *(was R6.2 — The expression layer is R3's subject and #12's grammar)*
+
+Every expression reachable from an admitted statement is classified by R3's
+single definition. The admissible forms — literals, templates with spans,
+object members with literal keys, element access with literal keys, the
+operator sets, positional `new` arguments — are enumerated by the grammar
+(#12), not here. Inventory rows L2.1, L2.2, L2.5–L2.8, L2.10 remain GAP until
+#12 lands.
+
+**S-FnBody, S-FactoryBody** *(was R6.5 — Two further statement-level subsets, and an asymmetry between them)*
+
+A **project-local function** is admissible (L5.4) when its parameters bind
+plainly, its body is a single expression or `const` declarations followed by
+one `return`, and it is not a generator, async, rest-parameter, early-return,
+or `let`/`var` function. Parameter defaults fold in the callee's scope (L5.6).
+A block body with no `return` evaluates to `undefined` (L5.7).
+
+A **composite factory** is admissible (R7.2) under rules 3–5 of the same
+shape — except that its body **must** end in `return` and an empty body is
+rejected (L7.4). The two subsets differ on exactly this point and the spec
+should say why, or fix one.

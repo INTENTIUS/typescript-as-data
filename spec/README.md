@@ -2,15 +2,27 @@
 
 The normative specification. Empty until the epics below land.
 
-Two files exist ahead of the normative text, neither of them normative:
+The normative files, in reading order: [`grammar.md`](./grammar.md) (`S-*`),
+[`judgments.md`](./judgments.md) (`F-*`: J1 evaluation, J2 verdict, J3 taint,
+J4 properties and observables), [`values.md`](./values.md) (`F-Val-*`),
+[`divergence.md`](./divergence.md) (`F-Direction`, `F-Div-*`, `F-Exc-*`),
+[`hosts.md`](./hosts.md) (`F-Host-*`). Each ends with a non-normative
+Rationale section. [`inventory.md`](./inventory.md) is the coverage ledger:
+every decision point in chant core cites the rule that governs it; #44 gates
+on it. [`prior-art.md`](./prior-art.md) is the #31 finding.
 
-- [`inventory.md`](./inventory.md) — every decision point in chant core's fold
-  path, with the requirement that covers it or a GAP marker. 99 rows, 58 with
-  gaps. This is the coverage ledger; #44 gates on it.
-- [`requirements.md`](./requirements.md) — what the normative text has to pin
-  down. Currently incomplete and partly wrong; see its status block.
+`requirements.md` was the provisional "why" layer and was retired by #46; its
+content is the Rationale sections.
 
-Write the files below against both.
+## Process rules for the specification itself
+
+Not rules of the mechanism; rules of this document set. No fixture cites them — CI structure enforces them (#8, #44).
+
+- **Every normative rule carries a stable identifier**(#6, #46).
+- **Every identifier is exercised by at least one fixture, and every fixture
+   cites a real identifier.**Both directions, in CI (#8, #44).
+- **Rejections are located**— node and rule, wording unconstrained. Message stability is not normative (R9.4).
+- **The subset is versioned**(#18).
 
 ## Ownership — this repository is normative; chant implements it
 
@@ -78,16 +90,6 @@ text and validated against chant with the differential corpus. A partial
 reference implementation is fine; a reader assuming it is complete is not,
 which is why this sentence is here.
 
-Planned files, one per issue:
-
-- `grammar.md` — surface syntax of the subset
-- `judgments.md` — expression evaluation, the per-file fold-or-run decision,
-  and the identity-taint fixpoint over the module graph
-- `hosts.md` — the host-hook interface the subset is parameterized over
-- `divergence.md` — where a shape-only classifier and a resolving evaluator may
-  disagree, and in which direction
-- `conformance.md` — how the suite discharges the claims above
-- `CHANGELOG.md` — the subset moves; the spec is versioned
 
 Every normative rule carries an identifier (`S-*` for shape, `F-*` for fold and
 file-level decisions). CI asserts every identifier is exercised by at least one
@@ -99,5 +101,5 @@ provisional "why" layer and are retired in a single migration once the rule
 files exist (#13, #14, #16, #17, #39): each clause's rationale becomes a
 non-normative note under the rule that discharges it, the objective becomes
 `judgments.md`'s preamble, the four requirements-on-the-spec become process
-rules in this README, and `inventory.md` is re-cited to rules only. Until
-then, `R*` citations are legitimate and #44's gate is not built.
+rules in this README, and `inventory.md` is re-cited to rules only. Done: `R*` is retired and
+`inventory.md` cites `S-*`/`F-*` only.
