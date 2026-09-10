@@ -34,11 +34,15 @@ shared between both. That is chant's revival argument — "the function that run
 is the one your `import` names" — made twenty years earlier in a general-purpose
 language.
 
-Where chant differs: CTFE decides per *call site*, and — on the secondary
-sources read in this sweep — a context that *requires* compile-time evaluation
-and cannot get it is a compile error rather than a fallback; that distinction
-needs the spec's own wording (#47). chant decides per *file*, and a file that
-cannot be folded is run. More importantly, a CTFE'd
+Where chant differs: CTFE decides per *call site*, and a context that
+*requires* compile-time evaluation and cannot get it is a **compile error**,
+not a fallback — the compiler's own diagnostic is "cannot be interpreted at
+compile time" (DMD; e.g. dlang forum thread `kaejjbgiujdnqlmyzlup`, where a
+`static foreach` over a function with no available source fails the build).
+The specification's prose on this was not retrievable in this sweep (the
+rendered page and the raw `.dd` both truncated or 404'd), so the citation is
+to the compiler's behaviour rather than the spec's sentence; #47 keeps that
+open. chant decides per *file*, and a file that cannot be folded is run. More importantly, a CTFE'd
 value is *copied* into the compiled program; nothing at run time shares
 identity with a compile-time object. chant's folded entities are the same
 objects the run path would have built, and other files hold references to them.
@@ -75,8 +79,17 @@ model of `document` or `window` and such reads "evaluate to `undefined`" — the
 same silent-undefined hazard INTENTIUS/chant#2328 records in `fold()`'s
 property-access branch.
 
-Prepack is archived and was never declared production-ready. The related
-academic line is SPEjs (symbolic partial evaluation for JavaScript).
+On the identity question specifically: Prepack's `ResidualHeapVisitor`
+keeps a scope-indexed visited map (`values: Map<Value, Set<Scope>>`) and skips
+re-visiting a value already seen in a scope, so an object reachable from two
+places is emitted once and both references are linked to it. That is identity
+preservation *within one residual heap* — the easy case, and the one chant's
+per-file split forgoes. It is the right citation for "the JavaScript precedent
+handled sharing by never splitting the heap".
+
+Prepack was archived by its owner on 2022-02-12 and the team's last word was
+that work had been "temporarily set down". The related academic line is SPEjs
+(symbolic partial evaluation for JavaScript).
 
 ### Modular partial evaluation — Heldal & Hughes
 
@@ -160,10 +173,8 @@ explicit in the language rather than inferred.
 ## Must do before submission
 
 1. Read Heldal & Hughes 2000 in full. The novelty of item 4 depends on it.
-2. Check whether Prepack's heap serialization preserves identity of shared
-   objects in the residual program, and how — it is the nearest JavaScript
-   precedent for the identity question, even though it never falls back.
-3. Confirm the D specification's exact wording on what happens when a
-   compile-time context cannot be CTFE'd. Secondary sources say "same code,
-   both contexts"; the distinction that matters here is error versus
-   fallback, and it should be quoted from the spec, not paraphrased.
+2. ~~Prepack heap-serialization identity~~ — answered above from
+   `ResidualHeapVisitor`; a citation to the source file, not the marketing page.
+3. ~~D: error versus fallback~~ — answered above from the compiler's
+   diagnostic. Still wanted: the specification's own sentence, for the paper's
+   citation. Not blocking.
