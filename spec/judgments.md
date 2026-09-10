@@ -21,20 +21,139 @@ ranges over the value domain of R1.
 
 ## J2 — Per-file verdict `B, ι ⊢ f ⇓ fold(X, L) | run(reason)` (#14)
 
-Stub. Formalises R4.1, R6.1, R2.2, R9.3. `ι ∈ {open, isolated}` is the
-isolation mode (decided #36: an optional capability, modelled here rather
-than left to deployment). On `fold`, `X` is the complete export namespace
-(R5.1) and `L ⊆ F` the set of files whose objects `f` captured. This judgment
-is evaluated per file in isolation from the others; its verdict is
-*tentative*, and J3 is what makes it final.
+Formalises R4.1, R6.1, R6.6, R2.1, R2.2, R7, R8, R9.3. Derived from
+`tryFoldFileCore` (`fold-import.ts:3539`), `buildExternals` (`:3345`),
+`resolveDeclaratorValue` (`:3522`), `resolveLiveValue` (`:1331`),
+`resolveCallExpression` (`:1416`), at `e4074c17`.
 
-**F-IsolatedRefusal.** Under `ι = isolated`, if folding `f` would require
-resolving and invoking a binding that is not on the trust allowlist (R2.1) —
-a project-owned composite factory, constructor, or intrinsic — then
-`B, isolated ⊢ f ⇓ run("isolation")`, even where `B, open ⊢ f ⇓ fold(…)`. A
-factory that is *interpretable* (R7.2) is not an invocation and is unaffected.
-Observable: R9.2's `projectFactoryInvocations` is zero across every folded
-file under `isolated`.
+`ι ∈ {open, isolated}` is the isolation mode (#36). On `fold`, `X` is the
+complete export namespace (R5.1) and `L ⊆ F` the files whose objects `f`
+captured (F-Capture, J3). The verdict is evaluated per file, without regard
+to other files' verdicts except through F-Import; it is *tentative*, and J3
+makes it final. Every `run(reason)` carries a located reason (R9.3).
+
+### Preconditions on the file
+
+**F-NotProject.** A file inside chant's own module tree is not project source
+and is `run("chant's own module is not project source")`. Trust (R2.1) is
+about what may be *imported*; this is about what may be *folded*.
+
+**F-Scan.** The statement gate (grammar §1). If any exported statement matches
+S-Disqualify, `run(reason)` naming the construct. Otherwise the admitted
+declarators are, in source order: resource, single, destructure,
+named-export, re-export, function.
+
+**F-NoExports.** If the gate admits the module but yields **zero**
+declarators — a file with no exports, or only type-only ones — the verdict is
+`run("no foldable resource exports")`. A file has to export something for
+folding to have anything to produce; it is not folded to an empty namespace.
+
+### Scope
+
+**F-Bind.** `consts` is every top-level `const ⟨Identifier⟩ = e` (R6.6,
+exported or not); `locals` is every top-level binding the resolver may read
+by name — the same set, plus destructured locals from a composite call
+(`const { a } = C({…})`). Resolution consults `locals`/`consts` before
+`externals` (R6.6).
+
+**F-Import.** For each named import binding `n` of `f`:
+
+- *`params`* (R8): if the build has a binding `P` and `n` is `params` from
+  chant's params module — bare `@intentius/chant/params`, or a project path
+  that resolves to it — then `externals[n] = P`.
+- *bare specifier, active lexicon package* (R2.1 arm 1): `externals[n]` is
+  the package's real export, obtained by importing the already-loaded
+  package. A lexicon package is never a member of `F` and is never folded.
+- *bare specifier, anything else*: **not resolved**. `n` is absent from
+  `externals`; a reference to it is an unresolved identifier (F-Reference).
+- *project specifier* `g`: `g` is folded first (F-Memo: at most once per
+  build; F-Cycle if `g` is already on the resolution stack). If
+  `B, ι ⊢ g ⇓ fold(X_g, _)` then `externals[n] = X_g[imported]`, and if that
+  value has identity — `typeof` object **or function** — then `g ∈ L(f)`
+  (F-Capture). If `g`'s verdict is `run`, `n` is not resolved and the reason
+  is recorded against `n` for diagnostics only.
+
+**F-Namespace.** `import * as ns from "./g"` resolves to a *synthetic plain
+object* of `X_g`'s entries, so `ns.x` indexes it like any object; `g ∈ L(f)`
+if any entry has identity. `import * as ns from "<package>"` is **never
+resolved** — which is why `new ns.Type(...)` is rejected (R6.3, L3.15): the
+class is unreachable through a namespace of a package.
+
+**F-Reference.** An identifier absent from `consts`, `locals` and
+`externals` is a located rejection `unresolved identifier: n` — or the
+pointed `process` message (R8). An unresolved *import* that is never
+referenced does not by itself force `run`.
+
+### Producing the namespace
+
+**F-Declarator.** Each admitted declarator produces one or more entries of
+`X`. Any failure in any declarator is a failure of the file (F-Total).
+
+- *resource* `export const x = new T(…)`: `foldResource` (J1) yields a
+  `{__resource}` envelope, which is **revived** into a real instance by the
+  class `T` resolves to through `f`'s own imports (R1.2, R7.1). Under
+  `isolated`, a `T` from a project file is F-IsolatedRefusal.
+- *single* `export const x = e`: if `e` is a call, F-Call; if a member or
+  element access on a call's result, F-Call then index (base must be an
+  indexable object); otherwise J1 on `e`, revived.
+- *destructure* `export const { a, b: c } = e`: `e` must resolve to a
+  composite instance or an indexable object; each element indexes it.
+- *named-export* `export { a, b as c }`: each local name resolves through
+  `locals` then `externals`.
+- *re-export* `export { a } from "./g"`: `X_g[a]`, with `g ∈ L(f)` if it has
+  identity — a re-export is a capture.
+- *function* `export function φ`: `X[φ]` is a `FoldableFunction` marker
+  (R1.3); the body's own foldability is judged at the call, never here.
+
+**F-Call.** A call in declarator position, callee `c`:
+
+1. `c` must be a bare identifier; otherwise `run(callExpressionMessage)`.
+2. If `externals[c]` is a `FoldableFunction`, the call is J1's project-local
+   call (R6.5): evaluated statically, nothing imported.
+3. Otherwise `c` must be an import binding; else `run`.
+4. If the binding is *interpretable* (R7.2, rules 1–5): the factory body is
+   **interpreted** against the defining module's scope; the module is never
+   imported; `factoryInterpretations += 1` (R9.2).
+5. Otherwise, under `ι = isolated`, F-IsolatedRefusal unless the binding is
+   trusted (R2.1).
+6. Otherwise the module is imported (once per build) and `c` **invoked** with
+   the resolved arguments; `factoryInvocations += 1`, and
+   `projectFactoryInvocations += 1` if the specifier is a project file.
+   Arguments that are live objects pass through unchanged; a `{__attrRef}`
+   among them stays symbolic (R1.2, L6.9).
+7. The result must be a `CompositeInstance` or a `Declarable`; otherwise
+   `run`.
+
+**F-Count.** Within `f`, a composite call reached by several member accesses
+or destructured names is resolved once (`ResolveCtx.memo`); a same-file
+`new` bound to a `const` is constructed once, in source order (R4.6).
+
+**F-IsolatedRefusal.** Under `ι = isolated`, any step above that would
+resolve *and invoke or import* a binding not on the trust allowlist (R2.1) —
+a project-owned factory, constructor, or intrinsic — is
+`run("isolation")`, even where `B, open ⊢ f ⇓ fold(…)`. Interpretation (step
+4) is not an invocation and is unaffected. Observable: R9.2's
+`projectFactoryInvocations` is zero across every folded file under
+`isolated`.
+
+### The verdict
+
+**F-Total.** If every declarator succeeded, `fold(X, L)` where `X` maps every
+exported name to its value — plain values included — and `L` is the capture
+set accumulated by F-Import, F-Namespace, re-exports, and F-CallLeak (J3).
+If any declarator failed, `run(reason)` for the **whole file**: no partial
+namespace is ever produced (R4.1).
+
+**F-Reason.** `reason` names the declarator and carries the innermost located
+cause; for a failure inside a project-local call it is re-anchored at the
+call site with the callee's file and position in the message (R9.3).
+
+### What J2 does not decide
+
+Whether `f` *finally* folds. A file with `B, ι ⊢ f ⇓ fold(X, L)` may still be
+`run` after J3, because a file it imports runs (forward taint) or because a
+file it captured from runs (backward taint). J2's `fold` is a proposal; J3
+disposes.
 
 ---
 

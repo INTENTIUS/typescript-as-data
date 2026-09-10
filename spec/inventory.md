@@ -110,6 +110,10 @@ Shape only. No resolution, no evaluation.
 | L5.9 | `leakedIdentity` | a call returning a live object the body produced records a taint edge; one merely passed through the arguments does not | R4.2; F-CallLeak (judgments.md) |
 | L5.10 | error re-anchoring | a failure inside a callee is re-thrown at the call site naming callee, file, position, reason | R9.3 |
 | L5.11 | `params` bare-specifier case | the one recognized bare import: `@intentius/chant/params` resolves against `FoldSession.buildParams` | R8 |
+| L5.12 | `hasObjectIdentity` (added #14 read) | a captured value has identity when it is an object **or a function**; only those add to `liveSources` | F-Import (judgments.md) |
+| L5.13 | namespace import of a project file (added #14 read) | resolves to a synthetic plain object of the target's `exportedValues`; capture if any entry has identity | F-Namespace (judgments.md) |
+| L5.14 | namespace import of a package (added #14 read) | never resolved — the reason `new ns.Type(...)` is unreachable | F-Namespace (judgments.md), R6.3 |
+| L5.15 | unresolved import never referenced (added #14 read) | does not force run; failure recorded for diagnostics only | F-Reference (judgments.md) |
 
 ## L6 — Revival (`reviveFoldedValue`)
 
@@ -159,6 +163,11 @@ module is never imported.
 | L8.10 | `MAX_RESOLUTION_DEPTH` | a second bound, separate from L5.8 and L7.8 | R4.5 |
 | L8.11 | per-file fold memo | a file imported by many is folded **exactly once**; every referrer shares the result | R5 (lead); F-Memo (judgments.md) |
 | L8.12 | per-initializer-node memo | a composite call reached through several member accesses is invoked **exactly once**, "matching what actually running the file would do" | R4.6; F-Count (judgments.md) |
+| L8.13 | zero declarators after the gate (added #14 read) | `run("no foldable resource exports")` — a file must export something | F-NoExports (judgments.md) |
+| L8.14 | file inside chant's own module tree (added #14 read) | `run` — not project source | F-NotProject (judgments.md) |
+| L8.15 | composite-call result type (added #14 read) | must be a `CompositeInstance` or `Declarable`, else run | F-Call step 7 (judgments.md) |
+| L8.16 | destructure source (added #14 read) | must be a composite instance or indexable object | F-Declarator (judgments.md) |
+| L8.17 | a re-export is a capture (added #14 read) | `export { a } from "./g"` adds `g` to `liveSources` when the value has identity | F-Declarator (judgments.md) |
 
 ## L9 — Trust and isolation
 
@@ -201,13 +210,13 @@ The first version of this file broke that rule on fourteen rows and reported
 | L2 shape classification | 16 | 16 | 0 |
 | L3 expression reduction | 22 | 22 | 0 |
 | L4 value domain | 5 | 5 | 0 |
-| L5 scope and local calls | 11 | 11 | 0 |
+| L5 scope and local calls | 15 | 15 | 0 |
 | L6 revival | 9 | 9 | 0 |
 | L7 interpretation | 8 | 8 | 0 |
-| L8 file decision and taint | 12 | 12 | 0 |
+| L8 file decision and taint | 17 | 17 | 0 |
 | L9 trust and isolation | 6 | 6 | 0 |
 | L10 observables | 5 | 5 | 0 |
-| **total** | **101** | **101** | **0** |
+| **total** | **110** | **110** | **0** |
 
 **Row identifiers are stable and append-only.** `L3.10` names one decision
 point forever; a new row in a layer takes the next number and nothing is ever
@@ -236,8 +245,8 @@ removed, so a citation of it stays resolvable. This is the same stability rule
 ## What this inventory does not cover
 
 `fold-import.ts` was read for decision points, not line by line end to end. The
-areas read are listed at the top. Two things are known to remain: the
-member-access and destructuring resolution paths around `resolveLiveValue`, and
-`buildExternals`'s namespace-import handling. Neither is expected to change the
-shape of a requirement, and both should be confirmed before #44's gate is
-called complete.
+two regions the first version named as unread — the member-access and
+destructuring paths around `resolveLiveValue`, and `buildExternals`'s
+namespace-import handling — were read for #14 (J2) and produced rows
+L5.12–L5.15 and L8.13–L8.17. No known unread region remains at the
+decision-point level; #44's precondition is met.
