@@ -235,8 +235,13 @@ reference or be referenced by a foldable one in ways only running proves safe.
 
 `planFoldTaint` (L8.6–L8.8):
 
-- **Forward.** A file that imports or re-exports from a file that will not fold
-  is tainted.
+- **Forward, along imports.** A tainted file taints every file it imports or
+  re-exports from: if `f` runs, its real import of `g` constructs `g`'s
+  entities, and a folded `g` would be a second copy — so `g` runs even if it
+  would have folded alone. (The first revision stated this edge backwards —
+  "an importer of a non-folding file is tainted" — which is not the taint walk
+  at all but J2's resolution failure putting the importer in the seed.
+  Corrected with judgments.md J3.)
 - **Reverse.** A file whose *objects were captured* by an already-folded file
   taints the capturer. `liveSources` records only non-primitive captures
   (L8.5) — a primitive has no identity to disagree about.

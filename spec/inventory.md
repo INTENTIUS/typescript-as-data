@@ -105,7 +105,7 @@ Shape only. No resolution, no evaluation.
 | L5.6 | parameter defaults | folded in the callee's scope when the argument is `undefined` | R6.5 |
 | L5.7 | block body with no `return` | evaluates to `undefined`, as running would | R6.5 |
 | L5.8 | recursion bound | `MAX_FUNCTION_CALL_DEPTH = 32` → rejection | R4.5 |
-| L5.9 | `leakedIdentity` | a call returning a live object the body produced records a taint edge; one merely passed through the arguments does not | R4.2 |
+| L5.9 | `leakedIdentity` | a call returning a live object the body produced records a taint edge; one merely passed through the arguments does not | R4.2; F-CallLeak (judgments.md) |
 | L5.10 | error re-anchoring | a failure inside a callee is re-thrown at the call site naming callee, file, position, reason | R9.3 |
 | L5.11 | `params` bare-specifier case | the one recognized bare import: `@intentius/chant/params` resolves against `FoldSession.buildParams` | R8 |
 
@@ -149,14 +149,14 @@ module is never imported.
 | L8.2 | all-or-nothing per file | one unrecognized export disqualifies everything | R4.1 |
 | L8.3 | `foldModule` vs `tryFoldFile` | `foldModule` is **per-export** with an ok/false entry each and silently skips non-`new` exports; `tryFoldFile` is per-file | R4.1 |
 | L8.4 | `exportedValues` completeness | the file's whole export namespace, equal to what importing would give | R5.1 |
-| L8.5 | `liveSources` | non-primitive captures only — a primitive has no identity to disagree about | R4.2 |
-| L8.6 | forward taint | importer of a non-folding file is tainted | R4.2 |
-| L8.7 | reverse taint | a file whose objects were captured taints the capturing file | R4.2 |
-| L8.8 | fixpoint | seed with non-folding files, walk both edge sets to closure | R4.3 |
-| L8.9 | cycle detection | `FoldSession.stack`, located error naming the cycle | R4.4 |
+| L8.5 | `liveSources` | non-primitive captures only — a primitive has no identity to disagree about | R4.2; F-Capture (judgments.md) |
+| L8.6 | forward taint | importer of a non-folding file is tainted | R4.2; F-Succ forward (judgments.md) |
+| L8.7 | reverse taint | a file whose objects were captured taints the capturing file | R4.2; F-Succ backward (judgments.md) |
+| L8.8 | fixpoint | seed with non-folding files, walk both edge sets to closure | R4.3; F-Taint, F-Fix (judgments.md) |
+| L8.9 | cycle detection | `FoldSession.stack`, located error naming the cycle | R4.4; F-Cycle (judgments.md) |
 | L8.10 | `MAX_RESOLUTION_DEPTH` | a second bound, separate from L5.8 and L7.8 | R4.5 |
-| L8.11 | per-file fold memo | a file imported by many is folded **exactly once**; every referrer shares the result | R5 (lead paragraph: folded exactly once per build) |
-| L8.12 | per-initializer-node memo | a composite call reached through several member accesses is invoked **exactly once**, "matching what actually running the file would do" | R4.6 |
+| L8.11 | per-file fold memo | a file imported by many is folded **exactly once**; every referrer shares the result | R5 (lead); F-Memo (judgments.md) |
+| L8.12 | per-initializer-node memo | a composite call reached through several member accesses is invoked **exactly once**, "matching what actually running the file would do" | R4.6; F-Count (judgments.md) |
 
 ## L9 — Trust and isolation
 
