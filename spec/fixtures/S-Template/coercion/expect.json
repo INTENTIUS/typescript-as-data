@@ -1,0 +1,2 @@
+{ "rules": ["S-Template", "F-Eval-Template"], "export": "x", "shape": "accept", "fold": "fold", "value": "count=3, ok=true, n=null",
+  "note": "Spans coerce by ECMAScript ToString (R10.4 / F-Eval-Template)." }

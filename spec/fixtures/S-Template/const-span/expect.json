@@ -1,0 +1,2 @@
+{ "rules": ["S-Template", "F-Eval-Template", "F-Eval-Ident"], "export": "x", "shape": "accept", "fold": "fold", "value": "Hello World!",
+  "note": "The claim chant#2306 found stated backwards in the docs: a template interpolating a const folds." }

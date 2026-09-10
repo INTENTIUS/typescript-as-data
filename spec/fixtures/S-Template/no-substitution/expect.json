@@ -1,0 +1,2 @@
+{ "rules": ["S-Literal", "F-Eval-Literal"], "export": "x", "shape": "accept", "fold": "fold", "value": "plain",
+  "note": "A template with no substitutions is a literal (S-Literal), not S-Template." }
