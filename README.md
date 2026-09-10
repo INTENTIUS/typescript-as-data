@@ -14,7 +14,14 @@ says what must hold across that boundary for the two paths to agree.
 
 ## Status
 
-Skeleton. Nothing here is normative yet.
+Normative drafts exist for every part of the mechanism — `spec/grammar.md`,
+`spec/judgments.md` (J1–J4), `spec/values.md`, `spec/divergence.md`,
+`spec/hosts.md` — with one identifier vocabulary (`S-*`/`F-*`), a decision-
+point inventory that cites them (110 rows, gated in CI), a conformance runner,
+a reference implementation of the walking-skeleton subset, and chant
+cross-checked against it from the published package. Fixture coverage is one
+rule deep (`S-Template`); `spec/fixtures/UNCOVERED.md` lists the rest and may
+only shrink.
 
 Work is sequenced paper-first against Onward! 2027, so the two milestones are
 the thing to read before the epics:
@@ -37,7 +44,9 @@ The five epics (#1-#5) describe the intended shape of each area.
 | Path | What it holds |
 |---|---|
 | `spec/` | The normative specification: grammar, judgments, rule identifiers |
-| `packages/` | The reference implementation and the conformance harness |
+| `packages/reference` | The reference implementation (`@intentius/tsad-reference`) |
+| `packages/conformance` | The adapter interface, fixture format, runner, and the chant adapter |
+| `spec/fixtures/` | Conformance fixtures, one directory per rule |
 | `docs/` | The published site (Astro + Starlight) |
 
 ## Relationship to chant
