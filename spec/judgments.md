@@ -469,12 +469,21 @@ captured its objects," not merely quote a construct in `c`.
 
 ### Validation status
 
-The differential that discharges the objective (chant#1025) currently compares
-fold against run **only for builds where `T(B) = ∅`** — every file folded
-(chant#2345). Those are exactly the builds in which this judgment does
-nothing. The proposition above has no differential evidence for the mixed
-case, and until chant#2345 lands, the claim rests on the argument here and on
-the crash class it was written to prevent (chant#1044, #1020).
+Until chant#2345 the differential that discharges the objective (chant#1025)
+compared fold against run **only for builds where `T(B) = ∅`** — every file
+folded — which are exactly the builds in which this judgment does nothing.
+chant#2345 removes that early return: every non-empty corpus entry is now
+built both ways and held to error parity and byte-identical output, with a
+shrink-only allowlist for known divergences.
+
+**First full run, 2026-09-10:** 107 entries, 95 fully folded, 12 with at
+least one run-fallback file — **drift 0**, allowlist empty. Every mixed
+entry, where `T(B) ≠ ∅` and both taint directions can fire, agrees fold-vs-
+run. That is the proposition's first differential evidence; before it the
+claim rested on the argument above and on the crash class it was written to
+prevent (chant#1044, #1020). Twelve entries is a small sample and they are
+chant's own examples; an adversarial mixed corpus (chant#2347) is what would
+make it strong.
 
 ---
 
