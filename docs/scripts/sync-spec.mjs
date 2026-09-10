@@ -14,7 +14,9 @@ const outDir = join(here, "..", "src", "content", "docs", "spec");
 rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
 
-const ID = /^(#{1,6})\s+((?:R-?[A-Za-z0-9]+(?:\.\d+)?|L\d+\.\d+))\b(.*)$/;
+// Only genuine identifiers: R<n>, R<n>.<m>, L<n>.<m>. A word starting with R
+// ("Requirements", "Read") must not become an anchor.
+const ID = /^(#{1,6})\s+((?:R\d+(?:\.\d+)?|L\d+\.\d+))\b(.*)$/;
 const ORDER = ["README", "requirements", "inventory", "prior-art"];
 
 for (const file of readdirSync(specDir).filter((f) => f.endsWith(".md"))) {
