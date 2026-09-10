@@ -43,16 +43,16 @@ Shape only. No resolution, no evaluation.
 |---|---|---|---|
 | L2.1 | unwrapping | parenthesized / `as` / `satisfies` / `!` recurse into the inner expression | S-Unwrap (grammar.md) |
 | L2.2 | literals | string, no-substitution template, numeric, `true`, `false`, `null` admitted | S-Literal (grammar.md) |
-| L2.3 | bare identifier | always shape-valid; resolution is not this layer's question | R3.1 |
-| L2.4 | tagged template interior | opaque — not recursed into | R3.1 |
+| L2.3 | bare identifier | always shape-valid; resolution is not this layer's question | R3.1; F-Div-Ident (divergence.md) |
+| L2.4 | tagged template interior | opaque — not recursed into | R3.1; F-Div-Tag (divergence.md) |
 | L2.5 | template expression | admitted when every span is | S-Template (grammar.md) |
 | L2.6 | object member | literal key required; shorthand always valid; spread recurses | S-Object / S-Prop / S-Shorthand / S-SpreadProp (grammar.md) |
 | L2.7 | element access key | string or numeric literal only, else EVL003 | S-Index (grammar.md) |
 | L2.8 | operators | closed sets `SUPPORTED_BINARY_OPERATORS` (13) and `SUPPORTED_UNARY_OPERATORS` (2) | R10.1; S-Unary, S-Binary (grammar.md) |
-| L2.9 | flow insensitivity | every branch of `&&`/`\|\|`/`??`/`?:` must be shape-valid | R3.2 |
+| L2.9 | flow insensitivity | every branch of `&&`/`\|\|`/`??`/`?:` must be shape-valid | R3.2; F-Exc-Lazy (divergence.md) |
 | L2.10 | `new` | every argument classified positionally, no props-position assumption | S-New (grammar.md) |
-| L2.11 | call — registered helper | name-only check, provenance deferred | R3.3 |
-| L2.12 | call — intrinsic call form | registry-gated, registry is an optional parameter | R3.2 |
+| L2.11 | call — registered helper | name-only check, provenance deferred | R3.3; F-Div-Provenance (divergence.md) |
+| L2.12 | call — intrinsic call form | registry-gated, registry is an optional parameter | R3.2; F-Exc-Registry (divergence.md) |
 | L2.13 | call — eager intrinsic | registry-gated | R3.3 |
 | L2.14 | call — method (`x.y()`) | admitted unconditionally, receiver and args recursed | R3.3 |
 | L2.15 | call — `<call>(...).step` | admitted unconditionally at the property-access node | R3.3 |
@@ -89,11 +89,11 @@ Shape only. No resolution, no evaluation.
 
 | # | Decision | Behaviour | Covers |
 |---|---|---|---|
-| L4.1 | `FoldedValue` union | 9 cases | R1 |
-| L4.2 | `FoldedResource.args` | positional; authoritative when the shape is not `(props)`/`(props, attributes)`; `props` is a view | R10.8 |
-| L4.3 | `undefined` in the union | no stated rule | R10.7 |
-| L4.4 | `FoldableFunction` | callable, never a value; explicitly **not** a `FoldedValue` | R1.3 |
-| L4.5 | `carriesLiveObject` | prototype other than `Object`/`Array` — and `typeof === "function"` counts as live | R1.4 |
+| L4.1 | `FoldedValue` union | 9 cases | R1; F-Val-Domain (values.md) |
+| L4.2 | `FoldedResource.args` | positional; authoritative when the shape is not `(props)`/`(props, attributes)`; `props` is a view | R10.8; F-Val-Arity (values.md) |
+| L4.3 | `undefined` in the union | no stated rule | R10.7; F-Val-Undefined (values.md) |
+| L4.4 | `FoldableFunction` | callable, never a value; explicitly **not** a `FoldedValue` | R1.3; F-Val-Callable (values.md) |
+| L4.5 | `carriesLiveObject` | prototype other than `Object`/`Array` — and `typeof === "function"` counts as live | R1.4; F-Val-Live (values.md) |
 
 ## L5 — Scope, resolution, and project-local calls
 
@@ -121,15 +121,15 @@ The second phase. Resolves envelope names through the **folding file's own impor
 
 | # | Decision | Behaviour | Covers |
 |---|---|---|---|
-| L6.1 | live object passthrough | `AttrRef`, `Declarable`, `CompositeInstance`, `Intrinsic` returned unchanged — the generic walk would destroy identity | R5 (lead) |
-| L6.2 | `{__symbol}` | resolved via `SIMPLE_DOTTED_CHAIN` regex, then real property access | R1.2 |
-| L6.3 | `{__intrinsic}` | **revived** — real function resolved and invoked, both tag and call form | R1.2 |
-| L6.4 | `{__helper}` | revived | R1.2 correct |
-| L6.5 | `{__compositeStep}` | revived, then `.step` read off the real result | R1.2 correct |
-| L6.6 | `{__resource}` | revived into a real instance by the class the file's import names | R1.2 correct |
-| L6.7 | `{__attrRef}` | **passes through unrevived** — the serializer walker accepts the envelope | R1.2 correct |
-| L6.8 | `requireLiveRefs` | inside an intrinsic's or helper's arguments a `{__attrRef}` is **rejected**, because the receiver does `instanceof` checks and `WeakRef` derefs; elsewhere it passes | R1.2 |
-| L6.9 | composite-step args | revived with `requireLiveRefs: false` — a composite stores props rather than inspecting them | R1.2 |
+| L6.1 | live object passthrough | `AttrRef`, `Declarable`, `CompositeInstance`, `Intrinsic` returned unchanged — the generic walk would destroy identity | R5 (lead); F-Val-Live (values.md) |
+| L6.2 | `{__symbol}` | resolved via `SIMPLE_DOTTED_CHAIN` regex, then real property access | R1.2; F-Val-Fate, F-Val-Symbol-Scope (values.md) |
+| L6.3 | `{__intrinsic}` | **revived** — real function resolved and invoked, both tag and call form | R1.2; F-Val-Fate (values.md) |
+| L6.4 | `{__helper}` | revived | R1.2; F-Val-Fate (values.md) |
+| L6.5 | `{__compositeStep}` | revived, then `.step` read off the real result | R1.2; F-Val-Fate (values.md) |
+| L6.6 | `{__resource}` | revived into a real instance by the class the file's import names | R1.2; F-Val-Fate, F-Val-Arity (values.md) |
+| L6.7 | `{__attrRef}` | **passes through unrevived** — the serializer walker accepts the envelope | R1.2; F-Val-Fate (values.md) |
+| L6.8 | `requireLiveRefs` | inside an intrinsic's or helper's arguments a `{__attrRef}` is **rejected**, because the receiver does `instanceof` checks and `WeakRef` derefs; elsewhere it passes | R1.2; F-Val-Position (values.md) |
+| L6.9 | composite-step args | revived with `requireLiveRefs: false` — a composite stores props rather than inspecting them | R1.2; F-Val-Position (values.md) |
 
 ## L7 — Interpretation (the third evaluation mode)
 
