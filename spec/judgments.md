@@ -469,10 +469,10 @@ captured its objects," not merely quote a construct in `c`.
 
 ### Validation status
 
-Until chant#2345 the differential that discharges the objective (chant#1025)
-compared fold against run **only for builds where `T(B) = ∅`** — every file
-folded — which are exactly the builds in which this judgment does nothing.
-chant#2345 removes that early return: every non-empty corpus entry is now
+Until chant#2345 (landed 2026-09-10 as chant PR #2364) the differential that
+discharges the objective (chant#1025) compared fold against run **only for
+builds where `T(B) = ∅`** — every file folded — which are exactly the builds
+in which this judgment does nothing. chant#2345 removes that early return: every non-empty corpus entry is now
 built both ways and held to error parity and byte-identical output, with a
 shrink-only allowlist for known divergences.
 
