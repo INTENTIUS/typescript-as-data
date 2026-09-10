@@ -92,3 +92,12 @@ Planned files, one per issue:
 Every normative rule carries an identifier (`S-*` for shape, `F-*` for fold and
 file-level decisions). CI asserts every identifier is exercised by at least one
 conformance test and that every test cites a real identifier.
+
+**Decided 2026-09-10 (#46): one vocabulary at the end.** `S-*`/`F-*` are the
+only normative identifiers. `requirements.md`'s `R*` clauses are the
+provisional "why" layer and are retired in a single migration once the rule
+files exist (#13, #14, #16, #17, #39): each clause's rationale becomes a
+non-normative note under the rule that discharges it, the objective becomes
+`judgments.md`'s preamble, the four requirements-on-the-spec become process
+rules in this README, and `inventory.md` is re-cited to rules only. Until
+then, `R*` citations are legitimate and #44's gate is not built.
