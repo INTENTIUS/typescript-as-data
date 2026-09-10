@@ -456,6 +456,89 @@ identifier — and `FoldError` carries exactly those (L10.4).
 
 ---
 
+## R10 — Semantics a second implementation cannot guess
+
+R1 defines the domain and R3 defines membership. Neither says what an operator
+*means*. "As ECMAScript" is the obvious discharge and it is available for most
+of this section — but not all of it, and the places where the implementation
+departs from ECMAScript are exactly the ones a second implementation would get
+wrong by assuming it.
+
+### R10.1 — Operators are ECMAScript's, on the folded operand values
+
+The supported binary operators (L2.8, L3.14): `+` `-` `*` `/` `===` `!==` `>`
+`<` `>=` `<=`, and the lazy `&&` `||` `??` (L3.13). Unary `!` and `-`
+(L3.12). Conditional `?:`. For every one of these the implementation applies
+the host JavaScript operator to the folded values, so the semantics — including
+`+`'s string-versus-numeric dispatch, relational comparison on strings, and
+`&&`/`||` returning an operand rather than a boolean — are ECMAScript's. The
+spec should say so per operator and require an implementation in another
+language to reproduce ECMAScript coercion for these operators, not its host's.
+
+### R10.2 — Member access on `null`/`undefined` is *not* ECMAScript, and the spec must pick
+
+Both access branches return `undefined` where ECMAScript throws (L3.10,
+INTENTIUS/chant#2328). Two defensible rules: refuse and fall back, matching
+what chant#1535 chose for the sibling case; or keep optional-chaining
+semantics and state that fold is not equivalent to run for this shape. The
+spec must state one. Until chant resolves #2328, "as ECMAScript" is not
+available for member access.
+
+### R10.3 — Attribute references are produced by two rules and refused by a third
+
+Property or element access on an identifier bound to a same-file `new` yields
+`{__attrRef: {entity, attribute}}` keyed by the identifier (L3.9). Access on a
+value that folded to a `{__resource}` envelope yields the same, but only when
+the object expression is a plain identifier — any other shape is refused,
+because there is no name to key the reference on and silently indexing the
+envelope produced wrong output (L3.11, chant#1535).
+
+### R10.4 — Template spans coerce by ECMAScript `ToString`, and the spec must say what that does to an envelope
+
+`String(fold(span))` (L3.2). For scalars that is ECMAScript. For a symbolic
+envelope it is `"[object Object]"` — the implementation knows this and guards
+the *eager-intrinsic* case for exactly that reason (R7.3), but the template
+branch itself has no envelope check. Whether a same-file attribute reference
+inside a plain template is reachable, and what the run path produces for it,
+is under verification; the spec must either refuse an envelope in a span or
+state the coercion result.
+
+### R10.5 — Key and element ordering are ECMAScript's, and byte-identity depends on it
+
+Object literals evaluate members in source order; spread is `Object.assign`,
+so spread keys land in the source's insertion order and a later key wins
+(L3.3). Arrays preserve element order; spread splices in place. This is
+ECMAScript object-literal evaluation and "as ECMAScript" is available here —
+but it must be *stated*, because the objective is byte-identical serialization
+and an implementation that satisfied every other requirement with a different
+key order would fail it.
+
+### R10.6 — Spread departs from ECMAScript in one direction
+
+Object spread requires a non-null object; array spread requires
+`Array.isArray` (L3.4, L3.5). ECMAScript array spread accepts any iterable —
+`[...'ab']` is `['a','b']` there and a rejection here. A deliberate narrowing,
+and one a second implementation would not infer from "as ECMAScript".
+
+### R10.7 — `undefined` is absent, not `null`, in a property; and is `null` in an array
+
+The domain admits `undefined` (L4.3). In a property position the serializer
+drops the key rather than emitting `null` (chant's build-parameters
+documentation states this for JSON and YAML). In an array position ECMAScript
+`JSON.stringify` emits `null`. Both follow from ECMAScript JSON semantics; both
+must be stated because they are the difference between "the property is
+absent" and "the property is null", which platforms treat differently.
+
+### R10.8 — Constructor arity
+
+`FoldedResource.args` (L4.2, R1.5): present when the argument list is not
+`(props)` or `(props, attributes)`, authoritative when present, the entity
+constructed by spreading it; `props` is a view, never re-passed. An
+implementation that assumed the props object is always first would construct
+`new Parameter("String", {...})` wrongly.
+
+---
+
 ## Requirements on the specification itself
 
 1. **Every normative rule carries a stable identifier** (#6, #46).
@@ -481,6 +564,7 @@ identifier — and `FoldError` carries exactly those (L10.4).
 | R7 | two modes | three; interpretation's five rules |
 | R8 | absent | build parameters |
 | R9 | absent | provenance, the execution observable, fallback reporting, message stability |
+| R10 | absent | operator, coercion, ordering, `undefined`, spread and arity semantics |
 
 ## What this list is not
 

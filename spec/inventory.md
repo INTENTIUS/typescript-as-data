@@ -48,7 +48,7 @@ Shape only. No resolution, no evaluation.
 | L2.5 | template expression | admitted when every span is | GAP — no clause admits a template with spans (F1's sibling) |
 | L2.6 | object member | literal key required; shorthand always valid; spread recurses | GAP — no clause on key shape |
 | L2.7 | element access key | string or numeric literal only, else EVL003 | GAP — no clause on element-access keys |
-| L2.8 | operators | closed sets `SUPPORTED_BINARY_OPERATORS` (13) and `SUPPORTED_UNARY_OPERATORS` (2) | GAP — no clause enumerates the operator sets (F5) |
+| L2.8 | operators | closed sets `SUPPORTED_BINARY_OPERATORS` (13) and `SUPPORTED_UNARY_OPERATORS` (2) | R10.1 (semantics); enumeration is #12's |
 | L2.9 | flow insensitivity | every branch of `&&`/`\|\|`/`??`/`?:` must be shape-valid | R3.2 |
 | L2.10 | `new` | every argument classified positionally, no props-position assumption | GAP — no clause on positional `new` arguments (F11) |
 | L2.11 | call — registered helper | name-only check, provenance deferred | R3.3 |
@@ -63,19 +63,19 @@ Shape only. No resolution, no evaluation.
 | # | Decision | Behaviour | Covers |
 |---|---|---|---|
 | L3.1 | arrow / function expression as a value | rejected — nothing can serialize a function | R1.3 |
-| L3.2 | template expression | concatenation, spans coerced by `String()` | GAP (F5) |
-| L3.3 | object spread | `Object.assign` — later keys win, insertion order preserved | **GAP (F4, and the ordering rule is `Object.assign`'s)** |
-| L3.4 | object spread of a non-object | rejected | R3.1 (divergence 3) |
-| L3.5 | array spread of a non-array | rejected | R3.1 |
+| L3.2 | template expression | concatenation, spans coerced by `String()` | R10.4 |
+| L3.3 | object spread | `Object.assign` — later keys win, insertion order preserved | R10.5 |
+| L3.4 | object spread of a non-object | rejected | R3.1, R10.6 |
+| L3.5 | array spread of a non-array | rejected | R3.1, R10.6 |
 | L3.6 | identifier not in `consts` | consult `externals`; else unresolved | GAP — R5 is identity, not lookup order |
 | L3.7 | bare `process` | pointed rejection naming build parameters | R8 |
 | L3.8 | identifier bound to same-file `new` | only `externals` may answer; else rejected, to avoid constructing a duplicate | R3.1, R4.6 |
-| L3.9 | property access on a resource-bound const | `{__attrRef}` keyed by the const's name | GAP — R1 lists `AttrRefValue` in the domain, no clause produces it |
-| L3.10 | property access on `null`/`undefined` | **returns `undefined`; JavaScript would throw** | **GAP (new — a real divergence from JS)** |
-| L3.11 | property access on a `{__resource}` envelope | `{__attrRef}` when the object is a plain identifier; **rejected otherwise** (chant#1535 — silent wrong output otherwise) | **GAP (new)** |
-| L3.12 | `-x`, `!x` | JS coercion | GAP (F5) |
-| L3.13 | `&&`, `\|\|`, `??` | lazily evaluated, JS truthiness | GAP — R3.2 covers laziness; truthiness semantics not stated (F5) |
-| L3.14 | arithmetic and comparison | JS semantics via unchecked casts | GAP (F5) |
+| L3.9 | property access on a resource-bound const | `{__attrRef}` keyed by the const's name | R10.3 |
+| L3.10 | property access on `null`/`undefined` | **returns `undefined`; JavaScript would throw** | R10.2 (pending chant#2328) |
+| L3.11 | property access on a `{__resource}` envelope | `{__attrRef}` when the object is a plain identifier; **rejected otherwise** (chant#1535 — silent wrong output otherwise) | R10.3 |
+| L3.12 | `-x`, `!x` | JS coercion | R10.1 |
+| L3.13 | `&&`, `\|\|`, `??` | lazily evaluated, JS truthiness | R3.2, R10.1 |
+| L3.14 | arithmetic and comparison | JS semantics via unchecked casts | R10.1 |
 | L3.15 | `new ns.Type(...)` | rejected — a namespace-qualified constructor cannot be resolved through named imports | R6.3 |
 | L3.16 | envelope-producing branches inside a folded function body | `new`, tagged template, helper call, intrinsic call and `.step` are all **refused** when `functionBodyDepth > 0` | R6.3 |
 | L3.17 | eager intrinsic referenced as a bare value | rejected — "call it instead" | R1.3 |
@@ -88,8 +88,8 @@ Shape only. No resolution, no evaluation.
 | # | Decision | Behaviour | Covers |
 |---|---|---|---|
 | L4.1 | `FoldedValue` union | 9 cases | R1 |
-| L4.2 | `FoldedResource.args` | positional; authoritative when the shape is not `(props)`/`(props, attributes)`; `props` is a view | GAP — R1.5 points at it; the rule is #42's |
-| L4.3 | `undefined` in the union | no stated rule | GAP (F12) |
+| L4.2 | `FoldedResource.args` | positional; authoritative when the shape is not `(props)`/`(props, attributes)`; `props` is a view | R10.8 |
+| L4.3 | `undefined` in the union | no stated rule | R10.7 |
 | L4.4 | `FoldableFunction` | callable, never a value; explicitly **not** a `FoldedValue` | R1.3 |
 | L4.5 | `carriesLiveObject` | prototype other than `Object`/`Array` — and `typeof === "function"` counts as live | R1.4 |
 
@@ -196,16 +196,16 @@ The first version of this file broke that rule on fourteen rows and reported
 | | Rows | Covered | GAP |
 |---|---|---|---|
 | L1 statement scan | 7 | 7 | 0 |
-| L2 shape classification | 16 | 9 | 7 |
-| L3 expression reduction | 20 | 14 | 6 |
-| L4 value domain | 5 | 3 | 2 |
+| L2 shape classification | 16 | 10 | 6 |
+| L3 expression reduction | 20 | 19 | 1 |
+| L4 value domain | 5 | 5 | 0 |
 | L5 scope and local calls | 11 | 8 | 3 |
 | L6 revival | 9 | 9 | 0 |
 | L7 interpretation | 8 | 8 | 0 |
 | L8 file decision and taint | 12 | 12 | 0 |
 | L9 trust and isolation | 6 | 6 | 0 |
 | L10 observables | 5 | 5 | 0 |
-| **total** | **99** | **81** | **18** |
+| **total** | **99** | **89** | **10** |
 
 **Row identifiers are stable and append-only.** `L3.10` names one decision
 point forever; a new row in a layer takes the next number and nothing is ever
