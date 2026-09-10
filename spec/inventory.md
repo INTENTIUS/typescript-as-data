@@ -33,7 +33,7 @@ The gate that runs before any expression is classified. Disqualifies whole files
 | L1.4 | exported class, `let`/`var` | disqualifies | GAP (F1) |
 | L1.5 | destructured export with rest, nested, or defaulted element | disqualifies | GAP (F1) |
 | L1.6 | `export type {...}` and `isTypeOnly` re-export elements | skipped, erased — not a disqualifier | **GAP (new)** |
-| L1.7 | rationale for per-module rather than per-declaration fallback | an unfoldable export can reference or be referenced by a foldable one in ways only running proves safe | R4.1 asserts this without the reason |
+| L1.7 | rationale for per-module rather than per-declaration fallback | an unfoldable export can reference or be referenced by a foldable one in ways only running proves safe | GAP — R4.1 asserts the per-module rule without this reason |
 
 ## L2 — Expression shape classification (`findSubsetViolation`)
 
@@ -41,21 +41,21 @@ Shape only. No resolution, no evaluation.
 
 | # | Decision | Behaviour | Covers |
 |---|---|---|---|
-| L2.1 | unwrapping | parenthesized / `as` / `satisfies` / `!` recurse into the inner expression | R3 |
-| L2.2 | literals | string, no-substitution template, numeric, `true`, `false`, `null` admitted | R1 |
+| L2.1 | unwrapping | parenthesized / `as` / `satisfies` / `!` recurse into the inner expression | GAP — R3 is about approximation direction, not unwrapping |
+| L2.2 | literals | string, no-substitution template, numeric, `true`, `false`, `null` admitted | GAP — R1 defines the domain, no clause admits literal syntax |
 | L2.3 | bare identifier | always shape-valid; resolution is not this layer's question | R3.1 |
 | L2.4 | tagged template interior | opaque — not recursed into | R3.1 |
-| L2.5 | template expression | admitted when every span is | R1 (the claim `requirements.md` was written to correct) |
-| L2.6 | object member | literal key required; shorthand always valid; spread recurses | R3 |
-| L2.7 | element access key | string or numeric literal only, else EVL003 | R3 |
-| L2.8 | operators | closed sets `SUPPORTED_BINARY_OPERATORS` (13) and `SUPPORTED_UNARY_OPERATORS` (2) | R3, semantics GAP (F5) |
+| L2.5 | template expression | admitted when every span is | GAP — no clause admits a template with spans (F1's sibling) |
+| L2.6 | object member | literal key required; shorthand always valid; spread recurses | GAP — no clause on key shape |
+| L2.7 | element access key | string or numeric literal only, else EVL003 | GAP — no clause on element-access keys |
+| L2.8 | operators | closed sets `SUPPORTED_BINARY_OPERATORS` (13) and `SUPPORTED_UNARY_OPERATORS` (2) | GAP — no clause enumerates the operator sets (F5) |
 | L2.9 | flow insensitivity | every branch of `&&`/`\|\|`/`??`/`?:` must be shape-valid | R3.2 |
-| L2.10 | `new` | every argument classified positionally, no props-position assumption | R3 |
+| L2.10 | `new` | every argument classified positionally, no props-position assumption | GAP — no clause on positional `new` arguments (F11) |
 | L2.11 | call — registered helper | name-only check, provenance deferred | R3.3 |
 | L2.12 | call — intrinsic call form | registry-gated, registry is an optional parameter | R3.2 |
 | L2.13 | call — eager intrinsic | registry-gated | R3.3 |
 | L2.14 | call — method (`x.y()`) | admitted unconditionally, receiver and args recursed | R3.3 |
-| L2.15 | call — `<call>(...).step` | admitted unconditionally at the property-access node | R3.3 |
+| L2.15 | call — `<call>(...).step` | admitted unconditionally at the property-access node | GAP — R3.3 does not list `.step`; only R1's table names it |
 | L2.16 | any other call | violation, `callExpressionMessage` | R3.3 |
 
 ## L3 — Expression reduction (`fold`)
@@ -67,14 +67,14 @@ Shape only. No resolution, no evaluation.
 | L3.3 | object spread | `Object.assign` — later keys win, insertion order preserved | **GAP (F4, and the ordering rule is `Object.assign`'s)** |
 | L3.4 | object spread of a non-object | rejected | R3.1 (divergence 3) |
 | L3.5 | array spread of a non-array | rejected | R3.1 |
-| L3.6 | identifier not in `consts` | consult `externals`; else unresolved | R5 |
+| L3.6 | identifier not in `consts` | consult `externals`; else unresolved | GAP — R5 is identity, not lookup order |
 | L3.7 | bare `process` | pointed rejection naming build parameters | GAP (F2) |
-| L3.8 | identifier bound to same-file `new` | only `externals` may answer; else rejected, to avoid constructing a duplicate | R5, and the duplicate hazard is **GAP (new)** |
-| L3.9 | property access on a resource-bound const | `{__attrRef}` keyed by the const's name | R1 |
+| L3.8 | identifier bound to same-file `new` | only `externals` may answer; else rejected, to avoid constructing a duplicate | R3.1 (the rejection); the duplicate-construction hazard is GAP |
+| L3.9 | property access on a resource-bound const | `{__attrRef}` keyed by the const's name | GAP — R1 lists `AttrRefValue` in the domain, no clause produces it |
 | L3.10 | property access on `null`/`undefined` | **returns `undefined`; JavaScript would throw** | **GAP (new — a real divergence from JS)** |
 | L3.11 | property access on a `{__resource}` envelope | `{__attrRef}` when the object is a plain identifier; **rejected otherwise** (chant#1535 — silent wrong output otherwise) | **GAP (new)** |
 | L3.12 | `-x`, `!x` | JS coercion | GAP (F5) |
-| L3.13 | `&&`, `\|\|`, `??` | lazily evaluated, JS truthiness | R3.2 for laziness; semantics GAP (F5) |
+| L3.13 | `&&`, `\|\|`, `??` | lazily evaluated, JS truthiness | GAP — R3.2 covers laziness; truthiness semantics not stated (F5) |
 | L3.14 | arithmetic and comparison | JS semantics via unchecked casts | GAP (F5) |
 | L3.15 | `new ns.Type(...)` | rejected — a namespace-qualified constructor cannot be resolved through named imports | **GAP (new)** |
 | L3.16 | envelope-producing branches inside a folded function body | `new`, tagged template, helper call, intrinsic call and `.step` are all **refused** when `functionBodyDepth > 0` | **GAP (new)** |
@@ -91,17 +91,17 @@ Shape only. No resolution, no evaluation.
 | L4.2 | `FoldedResource.args` | positional; authoritative when the shape is not `(props)`/`(props, attributes)`; `props` is a view | GAP (F11) |
 | L4.3 | `undefined` in the union | no stated rule | GAP (F12) |
 | L4.4 | `FoldableFunction` | callable, never a value; explicitly **not** a `FoldedValue` | R1.3 |
-| L4.5 | `carriesLiveObject` | prototype other than `Object`/`Array` — and `typeof === "function"` counts as live | R1.4, function case **GAP (new)** |
+| L4.5 | `carriesLiveObject` | prototype other than `Object`/`Array` — and `typeof === "function"` counts as live | GAP — R1.4 states the prototype test; the `function` case is not stated |
 
 ## L5 — Scope, resolution, and project-local calls
 
 | # | Decision | Behaviour | Covers |
 |---|---|---|---|
-| L5.1 | `collectConsts` | top-level `const` with an identifier name and an initializer, single file | R5 |
-| L5.2 | `externals` | pre-resolved imported bindings, consulted only when `consts` misses | R5 |
+| L5.1 | `collectConsts` | top-level `const` with an identifier name and an initializer, single file | GAP — R5 is identity, not which declarations bind |
+| L5.2 | `externals` | pre-resolved imported bindings, consulted only when `consts` misses | GAP — R5 does not state lookup order |
 | L5.3 | shadowing | `consts` before `externals`; a local `const` defeats a registered helper or intrinsic name | **GAP (new)** |
 | L5.4 | project-local function admissibility | plain params, body is one expression or `const`s then a final `return`; no generator, async, rest param, early return, `let`/`var` | GAP (F1's sibling — a second statement-level subset) |
-| L5.5 | body scope | folds in the **defining** module's scope, parameters bound on top | R5 |
+| L5.5 | body scope | folds in the **defining** module's scope, parameters bound on top | GAP — a scoping rule; R5 is an identity rule |
 | L5.6 | parameter defaults | folded in the callee's scope when the argument is `undefined` | **GAP (new)** |
 | L5.7 | block body with no `return` | evaluates to `undefined`, as running would | **GAP (new)** |
 | L5.8 | recursion bound | `MAX_FUNCTION_CALL_DEPTH = 32` → rejection | **GAP (new)** |
@@ -115,9 +115,9 @@ The second phase. Resolves envelope names through the **folding file's own impor
 
 | # | Decision | Behaviour | Covers |
 |---|---|---|---|
-| L6.1 | live object passthrough | `AttrRef`, `Declarable`, `CompositeInstance`, `Intrinsic` returned unchanged — the generic walk would destroy identity | R5 |
+| L6.1 | live object passthrough | `AttrRef`, `Declarable`, `CompositeInstance`, `Intrinsic` returned unchanged — the generic walk would destroy identity | GAP — the passthrough is how R5 holds, and no clause states it |
 | L6.2 | `{__symbol}` | resolved via `SIMPLE_DOTTED_CHAIN` regex, then real property access | **GAP (new)** |
-| L6.3 | `{__intrinsic}` | **revived** — real function resolved and invoked, both tag and call form | **F6: `requirements.md` R1.2 says this is output. It is not.** |
+| L6.3 | `{__intrinsic}` | **revived** — real function resolved and invoked, both tag and call form | GAP — R1.2 states the opposite (F6) |
 | L6.4 | `{__helper}` | revived | R1.2 correct |
 | L6.5 | `{__compositeStep}` | revived, then `.step` read off the real result | R1.2 correct |
 | L6.6 | `{__resource}` | revived into a real instance by the class the file's import names | R1.2 correct |
@@ -155,7 +155,7 @@ module is never imported.
 | L8.8 | fixpoint | seed with non-folding files, walk both edge sets to closure | R4.3 |
 | L8.9 | cycle detection | `FoldSession.stack`, located error naming the cycle | R4.4 |
 | L8.10 | `MAX_RESOLUTION_DEPTH` | a second bound, separate from L5.8 and L7.8 | **GAP (new)** |
-| L8.11 | per-file fold memo | a file imported by many is folded **exactly once**; every referrer shares the result | R5 — but stated as a memo rather than as the requirement it is |
+| L8.11 | per-file fold memo | a file imported by many is folded **exactly once**; every referrer shares the result | R5 (lead paragraph: folded exactly once per build) |
 | L8.12 | per-initializer-node memo | a composite call reached through several member accesses is invoked **exactly once**, "matching what actually running the file would do" | **GAP (new — within-file evaluation count is semantics)** |
 
 ## L9 — Trust and isolation
@@ -183,21 +183,34 @@ module is never imported.
 
 ## Coverage summary
 
+**The rule for the column.** A row is *covered* only when a specific requirement
+clause — `R3.3`, `R4.2`, `R-spec.3`, or a named lead paragraph — specifies what
+the row does. A citation of a requirement *family* (`R3`, `R5`) is not coverage:
+it means a requirement in the same neighbourhood exists, which is a different
+claim. A partially covered row is GAP. There is no double counting.
+
+The first version of this file broke that rule on fourteen rows and reported
+44 covered / 58 gaps. Corrected (#45):
+
 | | Rows | Covered | GAP |
 |---|---|---|---|
 | L1 statement scan | 7 | 0 | 7 |
-| L2 shape classification | 16 | 14 | 2 |
-| L3 expression reduction | 20 | 6 | 14 |
-| L4 value domain | 5 | 3 | 3 |
-| L5 scope and local calls | 11 | 3 | 8 |
-| L6 revival | 9 | 5 | 4 |
+| L2 shape classification | 16 | 8 | 8 |
+| L3 expression reduction | 20 | 4 | 16 |
+| L4 value domain | 5 | 2 | 3 |
+| L5 scope and local calls | 11 | 1 | 10 |
+| L6 revival | 9 | 4 | 5 |
 | L7 interpretation | 8 | 0 | 8 |
 | L8 file decision and taint | 12 | 9 | 3 |
-| L9 trust and isolation | 6 | 3 | 4 |
-| L10 observables | 5 | 1 | 5 |
-| **total** | **99** | **44** | **58** |
+| L9 trust and isolation | 6 | 3 | 3 |
+| L10 observables | 5 | 1 | 4 |
+| **total** | **99** | **32** | **67** |
 
-Some rows are partly covered and counted in both columns, so the totals exceed 99.
+**Row identifiers are stable and append-only.** `L3.10` names one decision
+point forever; a new row in a layer takes the next number and nothing is ever
+renumbered. A row that turns out to be wrong is struck through with a note, not
+removed, so a citation of it stays resolvable. This is the same stability rule
+#6 gives rule identifiers, for the same reason: #44's gate cites these.
 
 **20 findings beyond the 14 the review already knew about.** They are marked
 `GAP (new)` above. The ones that change a requirement rather than adding one:
