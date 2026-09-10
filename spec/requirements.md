@@ -352,6 +352,31 @@ shape — except that its body **must** end in `return` and an empty body is
 rejected (L7.4). The two subsets differ on exactly this point and the spec
 should say why, or fix one.
 
+### R6.6 — What a binding is, and the order names resolve in
+
+**A top-level binding is a `const` with an identifier name and an initializer**
+(`collectConsts`, L5.1). Nothing else is: a top-level destructured `const`
+(`const { a } = …`) does not bind `a` for the folder, and a non-exported
+`const` is collected exactly like an exported one. The spec must say this
+because the first is a surprise — the declaration is valid TypeScript and the
+name is simply invisible.
+
+**Lookup order is `consts`, then `externals`** (L5.2, `fold.ts` identifier
+branch). A name in the file's own `consts` is never looked up in `externals`,
+which is the mechanism behind R6.4's shadowing rule and must be stated as the
+order rather than only as its consequence.
+
+**A project-local function's body folds in the defining module's scope**
+(L5.5, `callFoldableFunction`): the arguments fold in the caller's `consts`/
+`externals`; the body folds against a copy of the *callee's* `consts` and
+`externals`, with each parameter bound by deleting the name from that copy of
+`consts` and setting it in `externals` (so a parameter shadows a module-level
+const of the same name); `externals` are read live, so a function declared
+before a const it reads still sees the const's value. R7.2 states the same
+scope rule for composite factories; this is its counterpart for plain
+functions, and without it a helper in `lib/` reading `lib/`'s own imports is
+unspecified.
+
 ---
 
 ## R7 — There are three evaluation modes, not two
@@ -442,7 +467,16 @@ A fallback is not an error (R4.1), which is exactly why it must be reported: an
 unreported fallback is indistinguishable from a fold, and R2's guarantee
 becomes unauditable. A conforming implementation must report, per file, the
 decision taken and — for a fallback — a located reason (L10.3). The reason's
-wording is unconstrained. Whether the report is summarized or verbose by
+wording is unconstrained.
+
+**Which location, when there are two.** A rejection inside a project-local
+function body has a position in the callee's file and a call site in the
+caller's. The implementation re-throws at the **call site**, naming the callee,
+its file, the position inside it, and the reason, preserving the rule
+identifier (L5.10, `callFoldableFunction`). The reported location is the call;
+the callee position travels in the message. The spec must say which is
+primary, because R-spec.3's "located" is otherwise ambiguous for exactly this
+case. Whether the report is summarized or verbose by
 default is presentation, not conformance.
 
 ### R9.4 — Message stability is not normative; location and rule are
@@ -580,6 +614,7 @@ implementation that assumed the props object is always first would construct
 | R8 | absent | build parameters |
 | R9 | absent | provenance, the execution observable, fallback reporting, message stability |
 | R10 | absent | operator, coercion, ordering, `undefined`, spread and arity semantics |
+| R6.6, R9.3 | absent | binding shape, lookup order, defining-module scope, call-site relocation (#48) |
 
 ## What this list is not
 

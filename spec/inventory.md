@@ -97,16 +97,16 @@ Shape only. No resolution, no evaluation.
 
 | # | Decision | Behaviour | Covers |
 |---|---|---|---|
-| L5.1 | `collectConsts` | top-level `const` with an identifier name and an initializer, single file | GAP — R5 is identity, not which declarations bind |
-| L5.2 | `externals` | pre-resolved imported bindings, consulted only when `consts` misses | GAP — R5 does not state lookup order |
+| L5.1 | `collectConsts` | top-level `const` with an identifier name and an initializer, single file | R6.6 |
+| L5.2 | `externals` | pre-resolved imported bindings, consulted only when `consts` misses | R6.6 |
 | L5.3 | shadowing | `consts` before `externals`; a local `const` defeats a registered helper or intrinsic name | R6.4 |
 | L5.4 | project-local function admissibility | plain params, body is one expression or `const`s then a final `return`; no generator, async, rest param, early return, `let`/`var` | R6.5 |
-| L5.5 | body scope | folds in the **defining** module's scope, parameters bound on top | GAP — a scoping rule; R5 is an identity rule |
+| L5.5 | body scope | folds in the **defining** module's scope, parameters bound on top | R6.6 |
 | L5.6 | parameter defaults | folded in the callee's scope when the argument is `undefined` | R6.5 |
 | L5.7 | block body with no `return` | evaluates to `undefined`, as running would | R6.5 |
 | L5.8 | recursion bound | `MAX_FUNCTION_CALL_DEPTH = 32` → rejection | R4.5 |
 | L5.9 | `leakedIdentity` | a call returning a live object the body produced records a taint edge; one merely passed through the arguments does not | R4.2 |
-| L5.10 | error re-anchoring | a failure inside a callee is re-thrown at the call site naming callee, file, position, reason | R-spec.3 partially |
+| L5.10 | error re-anchoring | a failure inside a callee is re-thrown at the call site naming callee, file, position, reason | R9.3 |
 | L5.11 | `params` bare-specifier case | the one recognized bare import: `@intentius/chant/params` resolves against `FoldSession.buildParams` | R8 |
 
 ## L6 — Revival (`reviveFoldedValue`)
@@ -199,13 +199,13 @@ The first version of this file broke that rule on fourteen rows and reported
 | L2 shape classification | 16 | 10 | 6 |
 | L3 expression reduction | 20 | 19 | 1 |
 | L4 value domain | 5 | 5 | 0 |
-| L5 scope and local calls | 11 | 8 | 3 |
+| L5 scope and local calls | 11 | 11 | 0 |
 | L6 revival | 9 | 9 | 0 |
 | L7 interpretation | 8 | 8 | 0 |
 | L8 file decision and taint | 12 | 12 | 0 |
 | L9 trust and isolation | 6 | 6 | 0 |
 | L10 observables | 5 | 5 | 0 |
-| **total** | **99** | **89** | **10** |
+| **total** | **99** | **92** | **7** |
 
 **Row identifiers are stable and append-only.** `L3.10` names one decision
 point forever; a new row in a layer takes the next number and nothing is ever
