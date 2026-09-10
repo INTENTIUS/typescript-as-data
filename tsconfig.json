@@ -24,8 +24,9 @@
     "vitest.config.ts"
   ],
   "exclude": [
-    "node_modules",
     "**/dist/**",
-    "docs/**"
+    "docs/**",
+    "node_modules",
+    "spec/fixtures/**"
   ]
 }
