@@ -67,7 +67,7 @@ Shape only. No resolution, no evaluation.
 | L3.3 | object spread | `Object.assign` — later keys win, insertion order preserved | R10.5 |
 | L3.4 | object spread of a non-object | rejected | R3.1, R10.6 |
 | L3.5 | array spread of a non-array | rejected | R3.1, R10.6 |
-| L3.6 | identifier not in `consts` | consult `externals`; else unresolved | GAP — R5 is identity, not lookup order |
+| L3.6 | identifier not in `consts` | consult `externals`; else unresolved | R6.6 (lookup order; same rule as L5.2) |
 | L3.7 | bare `process` | pointed rejection naming build parameters | R8 |
 | L3.8 | identifier bound to same-file `new` | only `externals` may answer; else rejected, to avoid constructing a duplicate | R3.1, R4.6 |
 | L3.9 | property access on a resource-bound const | `{__attrRef}` keyed by the const's name | R10.3 |
@@ -197,7 +197,7 @@ The first version of this file broke that rule on fourteen rows and reported
 |---|---|---|---|
 | L1 statement scan | 7 | 7 | 0 |
 | L2 shape classification | 16 | 16 | 0 |
-| L3 expression reduction | 20 | 19 | 1 |
+| L3 expression reduction | 20 | 20 | 0 |
 | L4 value domain | 5 | 5 | 0 |
 | L5 scope and local calls | 11 | 11 | 0 |
 | L6 revival | 9 | 9 | 0 |
@@ -205,7 +205,7 @@ The first version of this file broke that rule on fourteen rows and reported
 | L8 file decision and taint | 12 | 12 | 0 |
 | L9 trust and isolation | 6 | 6 | 0 |
 | L10 observables | 5 | 5 | 0 |
-| **total** | **99** | **98** | **1** |
+| **total** | **99** | **99** | **0** |
 
 **Row identifiers are stable and append-only.** `L3.10` names one decision
 point forever; a new row in a layer takes the next number and nothing is ever
