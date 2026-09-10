@@ -508,10 +508,19 @@ inherit `ToString`; chant's side of it is tracked as a lint gap.
 Object literals evaluate members in source order; spread is `Object.assign`,
 so spread keys land in the source's insertion order and a later key wins
 (L3.3). Arrays preserve element order; spread splices in place. This is
-ECMAScript object-literal evaluation and "as ECMAScript" is available here —
-but it must be *stated*, because the objective is byte-identical serialization
-and an implementation that satisfied every other requirement with a different
-key order would fail it.
+ECMAScript object-literal evaluation and "as ECMAScript" is available here.
+
+Whether order is *observable* depends on the emitter, verified in chant: a
+lexicon whose serializer produces JSON is re-stringified through
+`sortedJsonReplacer` (`packages/core/src/utils.ts:30`), which sorts every
+object's keys, and YAML for those lexicons is derived from that sorted JSON
+(`cli/commands/build.ts:743–746`) — so folded key order never reaches the
+output. Six lexicons serialize YAML themselves (fountain, docker, gitlab, k8s,
+gcp, github) and their text is emitted as-is, so for them the walker's
+insertion order *is* the output order. The rule must therefore be stated: an
+implementation targeting a host that preserves order would fail byte-identity
+with a different key order, and nothing in the objective says which hosts
+those are.
 
 ### R10.6 — Spread departs from ECMAScript in one direction
 
@@ -522,12 +531,18 @@ and one a second implementation would not infer from "as ECMAScript".
 
 ### R10.7 — `undefined` is absent, not `null`, in a property; and is `null` in an array
 
-The domain admits `undefined` (L4.3). In a property position the serializer
-drops the key rather than emitting `null` (chant's build-parameters
-documentation states this for JSON and YAML). In an array position ECMAScript
-`JSON.stringify` emits `null`. Both follow from ECMAScript JSON semantics; both
-must be stated because they are the difference between "the property is
-absent" and "the property is null", which platforms treat differently.
+The domain admits `undefined` (L4.3). The serializer walker passes it through
+unchanged and keeps the key (`serializer-walker.ts:33`, `:117`); the drop
+happens at emission, and — verified — it happens for both formats because
+YAML is produced by round-tripping the sorted JSON (`build.ts:743–746`), so
+`JSON.stringify` has already removed an `undefined`-valued key and turned an
+`undefined` array element into `null` before any YAML exists. That is what
+makes chant's build-parameters documentation true ("dropped from the output
+in both JSON and YAML rather than shipped as `null`"). Both facts must be
+stated because they are the difference between "absent" and "null", which
+platforms treat differently — and for the six YAML-native lexicons above the
+walker's `undefined` reaches *their* emitter directly, so the rule there is
+each serializer's, not `JSON.stringify`'s.
 
 ### R10.8 — Constructor arity
 
