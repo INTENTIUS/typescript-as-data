@@ -114,7 +114,7 @@ Shape only. No resolution, no evaluation.
 | L5.12 | `hasObjectIdentity` (added #14 read) | a captured value has identity when it is an object **or a function**; only those add to `liveSources` | F-Import (judgments.md) |
 | L5.13 | namespace import of a project file (added #14 read) | resolves to a synthetic plain object of the target's `exportedValues`; capture if any entry has identity | F-Namespace (judgments.md) |
 | L5.14 | namespace import of a package (added #14 read) | never resolved — the reason `new ns.Type(...)` is unreachable | F-Namespace (judgments.md), |
-| L5.15 | unresolved import never referenced (added #14 read) | does not force run; failure recorded for diagnostics only | F-(judgments.md) |
+| L5.15 | unresolved import never referenced (added #14 read) | does not force run; failure recorded for diagnostics only | F-Reference (judgments.md) |
 
 ## L6 — Revival (`reviveFoldedValue`)
 
@@ -232,10 +232,10 @@ removed, so a citation of it stays resolvable. This is the same stability rule
   JavaScript throws. The mechanism does not inherit JS semantics wholesale, so
   F5 cannot be discharged by saying "as JavaScript".
 - **L6.3** — `{__intrinsic}` is revived, not passed through. `requirements.md`
-  R1.2 states the opposite. F6 is now answered: **only `{__attrRef}` survives to
+  the first requirements draft stated the opposite. F6 is now answered — F-Val-Fate: **only `{__attrRef}` survives to
   serialization**, and even that is rejected in a live-ref position (L6.8).
 - **L5.9** — identity leaks through project-local function calls, not only
-  through imports. R4.2's taint story is incomplete as written.
+  through imports. The first taint description missed this; F-CallLeak carries it.
 - **L8.12** — a composite call reached through several member accesses is
   invoked exactly once. Evaluation *count* is observable semantics, not an
   optimization, and no requirement says so.

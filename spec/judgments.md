@@ -172,8 +172,10 @@ If `x` is the chain sentinel, propagate. If `x` is `null`/`undefined`: with
 not a function, reject. Else `⟦o.m(args)⟧ = x[m].apply(x, ⟦args⟧)`.
 
 **F-Eval-Function.** An arrow or function expression in value position
-rejects (F-Val-Callable). **F-Eval-Reject.** Any expression matching no rule
-above rejects with `unsupported expression` (S-Reject).
+rejects (F-Val-Callable).
+
+**F-Eval-Reject.** Any expression matching no rule above rejects with
+`unsupported expression` (S-Reject).
 
 ### What J1 does not do
 
@@ -384,8 +386,12 @@ T(B)      =  μX . Seed(B) ∪ ⋃_{f ∈ X} Succ(f)                            
 Verdict:     fold(f)  iff  f ∉ T(B)        run(f)  iff  f ∈ T(B)             -- F-Verdict
 ```
 
-**F-Succ, read carefully.** Taint flows from a tainted file `f` in two
-directions at once:
+**F-Seed.** `Seed(B)` is every file whose tentative J2 verdict is `run`.
+Nothing else is ever in the seed: a foldable file enters `T` only by
+propagation.
+
+**F-Succ.** `Succ(f)` is the set of files `f` taints. Read carefully — taint
+flows from a tainted file `f` in two directions at once:
 
 - *forward along imports* — to every `g` that `f` imports (`f → g`). If `f`
   runs, its real import of `g` will construct `g`'s entities; a folded `g`
@@ -400,6 +406,10 @@ The first revision of `requirements.md` R4.2 stated the forward direction as
 edge, and it is not how taint propagates — it is handled earlier, by J2: a
 file whose import cannot be resolved to a folded `X(g)` fails to fold on its
 own and is in `Seed`. Corrected there in the same commit as this file.
+
+**F-Taint.** `T(B)` is the least set containing `Seed(B)` and closed under
+`Succ`. **F-Verdict.** A file's final verdict is `fold` iff it is not in
+`T(B)`.
 
 **F-Fix.** `T(B)` is the least fixpoint of a monotone operator on the finite
 lattice `𝒫(F)`, so it exists and is reached in at most `|F|` iterations. The
