@@ -496,12 +496,12 @@ envelope produced wrong output (L3.11, chant#1535).
 ### R10.4 — Template spans coerce by ECMAScript `ToString`, and the spec must say what that does to an envelope
 
 `String(fold(span))` (L3.2). For scalars that is ECMAScript. For a symbolic
-envelope it is `"[object Object]"` — the implementation knows this and guards
-the *eager-intrinsic* case for exactly that reason (R7.3), but the template
-branch itself has no envelope check. Whether a same-file attribute reference
-inside a plain template is reachable, and what the run path produces for it,
-is under verification; the spec must either refuse an envelope in a span or
-state the coercion result.
+envelope it is `"[object Object]"` — and, verified, the run path produces the
+same, because `AttrRef` defines no `toString`. So fold and run *agree* and the
+output is silently wrong on both; the implementation guards the
+eager-intrinsic case for exactly this hazard (R7.3) and not the template span.
+The spec should refuse an envelope in a plain template span rather than
+inherit `ToString`; chant's side of it is tracked as a lint gap.
 
 ### R10.5 — Key and element ordering are ECMAScript's, and byte-identity depends on it
 
