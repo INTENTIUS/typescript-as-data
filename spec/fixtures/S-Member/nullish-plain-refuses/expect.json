@@ -1,0 +1,1 @@
+{ "rules": ["S-Member", "F-Eval-Member", "F-Div-Nullish"], "export": "x", "shape": "accept", "fold": "run", "note": "chant-v0.63.0: a plain read on undefined refuses (running throws). Shape cannot see it." }

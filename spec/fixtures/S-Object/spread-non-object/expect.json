@@ -1,0 +1,1 @@
+{ "rules": ["S-SpreadProp", "F-Eval-Object", "F-Div-SpreadType"], "export": "x", "shape": "accept", "fold": "run", "note": "Shape-valid (n is an identifier); the folder rejects once n folds to a number." }

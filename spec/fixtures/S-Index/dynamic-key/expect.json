@@ -1,0 +1,1 @@
+{ "rules": ["S-Index", "F-Eval-Index"], "export": "x", "shape": "reject", "fold": "run", "note": "EVL003: a non-literal key is rejected at shape and at fold." }

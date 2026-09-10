@@ -1,0 +1,1 @@
+{ "rules": ["S-Binary", "F-Eval-Binary"], "export": "x", "shape": "accept", "fold": "fold", "value": [3, "a1", 3.5, true, false], "note": "R10.1: ECMAScript semantics per operator, including + string dispatch." }

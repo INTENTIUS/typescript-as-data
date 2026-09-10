@@ -11,6 +11,7 @@ export function runFixture(adapter: ConformanceAdapter, f: Fixture): FixtureRepo
   const r = adapter.foldExport(f.input, f.exportName);
   if (f.fold === "fold") {
     if (!r.ok) failures.push(`fold: expected fold, got run (${r.message})`);
+    else if (f.value === "$undefined") { if (r.value !== undefined) failures.push(`fold: value ${JSON.stringify(r.value)} ≠ expected undefined`); }
     else if (JSON.stringify(r.value) !== JSON.stringify(f.value)) failures.push(`fold: value ${JSON.stringify(r.value)} ≠ expected ${JSON.stringify(f.value)}`);
   } else {
     if (r.ok) failures.push(`fold: expected run, got fold with ${JSON.stringify(r.value)}`);

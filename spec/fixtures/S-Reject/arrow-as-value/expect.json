@@ -1,0 +1,1 @@
+{ "rules": ["S-Reject", "F-Eval-Function", "F-Val-Callable"], "export": "x", "shape": "reject", "fold": "run", "note": "A function is never a value." }

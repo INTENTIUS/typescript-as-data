@@ -7,7 +7,7 @@
  *     "export": "x",                                 // which export is judged
  *     "shape": "accept" | "reject",                  // S-* verdict
  *     "fold":  "fold"   | "run",                     // F-* verdict
- *     "value": <json>,                               // required when fold = "fold"
+ *     "value": <json> | "$undefined",                // required when fold = "fold"; the sentinel means the folded value is undefined, which JSON cannot write
  *     "rejectAt": { "line": n, "column": n },        // optional, when fold = "run": where the rejection must point
  *     "note": "why this fixture exists" }
  */

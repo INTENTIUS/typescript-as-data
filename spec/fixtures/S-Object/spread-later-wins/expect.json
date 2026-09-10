@@ -1,0 +1,1 @@
+{ "rules": ["S-Object", "S-SpreadProp", "F-Eval-Object"], "export": "x", "shape": "accept", "fold": "fold", "value": { "a": 1, "b": 3, "c": 4 }, "note": "R10.5: insertion order, later key wins." }

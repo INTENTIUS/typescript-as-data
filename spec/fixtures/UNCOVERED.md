@@ -2,7 +2,7 @@
 
 Deliberate, and this list may only shrink (#8). Each entry names the rule and why it is still uncovered. Remove an entry when its fixture lands; the gate fails if an entry is stale.
 
-Generated at the walking skeleton (#10) — one rule had fixtures, every other rule is listed here because the corpus does not exist yet (#24), not because any of them is out of scope.
+31 of 122 rules have fixtures. Every rule below is uncovered because the corpus is still growing (#24), not because any is out of scope.
 
 - `F-Bind` — no fixture yet; corpus is #24's
 - `F-Call` — no fixture yet; corpus is #24's
@@ -16,35 +16,22 @@ Generated at the walking skeleton (#10) — one rule had fixtures, every other r
 - `F-Div` — no fixture yet; corpus is #24's
 - `F-Div-Depth` — no fixture yet; corpus is #24's
 - `F-Div-Eager` — no fixture yet; corpus is #24's
-- `F-Div-Ident` — no fixture yet; corpus is #24's
 - `F-Div-Method` — no fixture yet; corpus is #24's
 - `F-Div-NsNew` — no fixture yet; corpus is #24's
-- `F-Div-Nullish` — no fixture yet; corpus is #24's
 - `F-Div-Provenance` — no fixture yet; corpus is #24's
 - `F-Div-SameFileNew` — no fixture yet; corpus is #24's
-- `F-Div-SpreadType` — no fixture yet; corpus is #24's
 - `F-Div-Step` — no fixture yet; corpus is #24's
 - `F-Div-Tag` — no fixture yet; corpus is #24's
-- `F-Eval-Array` — no fixture yet; corpus is #24's
-- `F-Eval-Binary` — no fixture yet; corpus is #24's
 - `F-Eval-CallEager` — no fixture yet; corpus is #24's
 - `F-Eval-CallHelper` — no fixture yet; corpus is #24's
 - `F-Eval-CallIntrinsic` — no fixture yet; corpus is #24's
 - `F-Eval-CallLocal` — no fixture yet; corpus is #24's
 - `F-Eval-CallMethod` — no fixture yet; corpus is #24's
-- `F-Eval-Conditional` — no fixture yet; corpus is #24's
-- `F-Eval-Function` — no fixture yet; corpus is #24's
-- `F-Eval-Index` — no fixture yet; corpus is #24's
 - `F-Eval-Interior` — no fixture yet; corpus is #24's
-- `F-Eval-Member` — no fixture yet; corpus is #24's
 - `F-Eval-New` — no fixture yet; corpus is #24's
-- `F-Eval-Object` — no fixture yet; corpus is #24's
 - `F-Eval-Tagged` — no fixture yet; corpus is #24's
-- `F-Eval-Unary` — no fixture yet; corpus is #24's
 - `F-Eval-Undefined` — no fixture yet; corpus is #24's
-- `F-Eval-Unwrap` — no fixture yet; corpus is #24's
 - `F-Exc` — no fixture yet; corpus is #24's
-- `F-Exc-Lazy` — no fixture yet; corpus is #24's
 - `F-Exc-Registry` — no fixture yet; corpus is #24's
 - `F-Fix` — no fixture yet; corpus is #24's
 - `F-Host-Admission` — no fixture yet; corpus is #24's
@@ -75,7 +62,6 @@ Generated at the walking skeleton (#10) — one rule had fixtures, every other r
 - `F-Taint` — no fixture yet; corpus is #24's
 - `F-Total` — no fixture yet; corpus is #24's
 - `F-Val-Arity` — no fixture yet; corpus is #24's
-- `F-Val-Callable` — no fixture yet; corpus is #24's
 - `F-Val-Domain` — no fixture yet; corpus is #24's
 - `F-Val-Envelope` — no fixture yet; corpus is #24's
 - `F-Val-Fate` — no fixture yet; corpus is #24's
@@ -84,15 +70,12 @@ Generated at the walking skeleton (#10) — one rule had fixtures, every other r
 - `F-Val-Serializable` — no fixture yet; corpus is #24's
 - `F-Val-Symbol-Scope` — no fixture yet; corpus is #24's
 - `F-Val-Undefined` — no fixture yet; corpus is #24's
-- `S-Array` — no fixture yet; corpus is #24's
-- `S-Binary` — no fixture yet; corpus is #24's
 - `S-Call` — no fixture yet; corpus is #24's
 - `S-CallEager` — no fixture yet; corpus is #24's
 - `S-CallHelper` — no fixture yet; corpus is #24's
 - `S-CallIntrinsic` — no fixture yet; corpus is #24's
 - `S-CallMethod` — no fixture yet; corpus is #24's
 - `S-CompositeStep` — no fixture yet; corpus is #24's
-- `S-Conditional` — no fixture yet; corpus is #24's
 - `S-Disqualify` — no fixture yet; corpus is #24's
 - `S-ExportDestructure` — no fixture yet; corpus is #24's
 - `S-ExportFunction` — no fixture yet; corpus is #24's
@@ -104,18 +87,11 @@ Generated at the walking skeleton (#10) — one rule had fixtures, every other r
 - `S-FactoryParams` — no fixture yet; corpus is #24's
 - `S-FnBody` — no fixture yet; corpus is #24's
 - `S-FnParams` — no fixture yet; corpus is #24's
-- `S-Ident` — no fixture yet; corpus is #24's
-- `S-Index` — no fixture yet; corpus is #24's
-- `S-Member` — no fixture yet; corpus is #24's
 - `S-Module` — no fixture yet; corpus is #24's
 - `S-New` — no fixture yet; corpus is #24's
-- `S-Object` — no fixture yet; corpus is #24's
 - `S-Prop` — no fixture yet; corpus is #24's
 - `S-ReExport` — no fixture yet; corpus is #24's
 - `S-Shorthand` — no fixture yet; corpus is #24's
-- `S-SpreadProp` — no fixture yet; corpus is #24's
 - `S-Tagged` — no fixture yet; corpus is #24's
 - `S-TopConst` — no fixture yet; corpus is #24's
-- `S-Unary` — no fixture yet; corpus is #24's
 - `S-Undefined` — no fixture yet; corpus is #24's
-- `S-Unwrap` — no fixture yet; corpus is #24's

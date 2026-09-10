@@ -1,0 +1,1 @@
+{ "rules": ["S-Ident", "F-Eval-Ident"], "export": "x", "shape": "accept", "fold": "fold", "value": 1, "note": "F-Eval-Ident step 2: a const resolves to its initializer, transitively." }

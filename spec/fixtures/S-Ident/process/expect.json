@@ -1,0 +1,1 @@
+{ "rules": ["F-Eval-Ident"], "export": "x", "shape": "accept", "fold": "run", "note": "F-Eval-Ident step 4: a bare process reference is a pointed rejection." }

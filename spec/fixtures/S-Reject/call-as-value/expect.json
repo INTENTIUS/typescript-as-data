@@ -1,0 +1,1 @@
+{ "rules": ["S-Reject", "F-Eval-Reject"], "export": "x", "shape": "reject", "fold": "run", "note": "A call has no evaluation case: structurally unrepresentable." }

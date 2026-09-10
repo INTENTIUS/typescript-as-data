@@ -1,0 +1,1 @@
+{ "rules": ["S-Array", "F-Eval-Array"], "export": "x", "shape": "accept", "fold": "fold", "value": [1, 2, 3, 4] }

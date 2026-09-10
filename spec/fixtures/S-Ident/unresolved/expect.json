@@ -1,0 +1,1 @@
+{ "rules": ["S-Ident", "F-Eval-Ident", "F-Div-Ident"], "export": "x", "shape": "accept", "fold": "run", "note": "F-Direction: shape accepts any identifier; the folder rejects an unresolved one. The canonical permitted-direction divergence." }

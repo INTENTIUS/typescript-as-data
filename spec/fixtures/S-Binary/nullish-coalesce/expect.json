@@ -1,0 +1,1 @@
+{ "rules": ["S-Binary", "F-Eval-Binary"], "export": "x", "shape": "accept", "fold": "fold", "value": "d" }

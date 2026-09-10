@@ -1,0 +1,1 @@
+{ "rules": ["S-Binary", "F-Eval-Binary", "F-Exc-Lazy"], "export": "x", "shape": "reject", "fold": "fold", "value": false, "note": "F-Exc-Lazy: the classifier rejects (right operand out of subset); the folder never folds the untaken side. The exception to F-Direction, exercised." }

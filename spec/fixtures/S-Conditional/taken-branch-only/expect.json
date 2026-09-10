@@ -1,0 +1,1 @@
+{ "rules": ["S-Conditional", "F-Eval-Conditional", "F-Exc-Lazy"], "export": "x", "shape": "reject", "fold": "fold", "value": "yes", "note": "F-Exc-Lazy for the conditional: untaken branch is never folded." }

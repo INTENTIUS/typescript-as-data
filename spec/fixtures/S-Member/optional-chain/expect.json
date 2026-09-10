@@ -1,0 +1,1 @@
+{"rules": ["S-Member", "F-Eval-Member"], "export": "x", "shape": "accept", "fold": "fold", "value": "$undefined", "note": "?. on a nullish object short-circuits the chain to undefined (F-Eval-Member steps 3\u20134, chant-v0.63.0). The folded value is undefined itself; what a serializer does with it is F-Val-Undefined's question, not this fixture's."}
