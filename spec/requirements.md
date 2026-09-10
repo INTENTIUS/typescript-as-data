@@ -406,13 +406,63 @@ must say how the binding enters and that it is recorded.
 
 ---
 
+## R9 — Outputs beyond values, and what must be observable
+
+Folding produces more than the value tree, and the first revision had no place
+for any of it. Four things, each decided here as a recommendation for the
+normative text (#43).
+
+### R9.1 — Provenance is an optional capability, outside the equivalence objective
+
+`setPathProvenance` (L10.2) records, during fold, which composite parameter
+produced which emitted field; the first (innermost) writer wins. It is real
+output and it is useful. It is **not** part of the objective: the run path
+obtains provenance, where it has any, by a different mechanism, and making
+provenance normative would oblige fold and run to agree on a thing the run path
+does not uniformly produce.
+
+So: a conforming implementation *may* expose path provenance; conformance
+reports whether it does; the equivalence claim is over serialized output only.
+The first-writer-wins rule is stated for implementations that do expose it, so
+two of them agree on which writer.
+
+### R9.2 — The no-execution observable is normative in shape, not in name
+
+R2 is checkable only through `FoldExecutionCounts` (L10.1). A conforming
+implementation must expose, per build and resettable: the number of factory or
+constructor invocations performed in-process during folding; of those, how
+many resolved to project-owned code; and how many factory bodies were
+interpreted instead. Three non-negative integers. That is sufficient for a
+conformance harness to assert "zero project-owned invocations" under isolation
+(R2.2) and to measure interpretation coverage (R7.2). Names are not normative.
+
+### R9.3 — Fallback reporting is normative
+
+A fallback is not an error (R4.1), which is exactly why it must be reported: an
+unreported fallback is indistinguishable from a fold, and R2's guarantee
+becomes unauditable. A conforming implementation must report, per file, the
+decision taken and — for a fallback — a located reason (L10.3). The reason's
+wording is unconstrained. Whether the report is summarized or verbose by
+default is presentation, not conformance.
+
+### R9.4 — Message stability is not normative; location and rule are
+
+chant builds every rejection message of a given kind through one shared
+builder so two sites cannot drift (L10.5). That is a property of one
+implementation's tooling: a second implementation in another language cannot
+share strings, and requiring it would make the wording normative by the back
+door. What conformance requires is already R-spec.3 — the node and the rule
+identifier — and `FoldError` carries exactly those (L10.4).
+
+---
+
 ## Requirements on the specification itself
 
 1. **Every normative rule carries a stable identifier** (#6, #46).
 2. **Every identifier is exercised by at least one fixture, and every fixture
    cites a real identifier.** Both directions, in CI (#8, #44).
-3. **Rejections are located** — node and rule, wording unconstrained. Whether
-   message *stability* is also normative (L10.5) is #43's.
+3. **Rejections are located** — node and rule, wording unconstrained. Message
+   stability is not normative (R9.4).
 4. **The subset is versioned** (#18).
 
 ---
@@ -430,6 +480,7 @@ must say how the binding enters and that it is recorded.
 | R6 | absent | statement gate, scope-dependence, shadowing, two more subsets |
 | R7 | two modes | three; interpretation's five rules |
 | R8 | absent | build parameters |
+| R9 | absent | provenance, the execution observable, fallback reporting, message stability |
 
 ## What this list is not
 

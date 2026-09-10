@@ -173,11 +173,11 @@ module is never imported.
 
 | # | Decision | Behaviour | Covers |
 |---|---|---|---|
-| L10.1 | `FoldExecutionCounts` | `factoryInvocations`, `projectFactoryInvocations`, `factoryInterpretations` — process-wide, monotonic, resettable | GAP — R2.3 names the observable; what must be exposed is #43's |
-| L10.2 | provenance | `setPathProvenance` records which composite parameter produced which emitted field, first (innermost) writer wins | GAP (F9), and first-writer-wins is **GAP (new)** |
-| L10.3 | per-file decision line | `[fold:fold]` / `[fold:run] <reason>`, summarized without `--verbose` | GAP (F13) |
+| L10.1 | `FoldExecutionCounts` | `factoryInvocations`, `projectFactoryInvocations`, `factoryInterpretations` — process-wide, monotonic, resettable | R9.2 |
+| L10.2 | provenance | `setPathProvenance` records which composite parameter produced which emitted field, first (innermost) writer wins | R9.1 |
+| L10.3 | per-file decision line | `[fold:fold]` / `[fold:run] <reason>`, summarized without `--verbose` | R9.3 |
 | L10.4 | `FoldError` | located, carries an EVL rule id, constructed with `stackTraceLimit = 0` | R-spec.3 |
-| L10.5 | one wording per rejection kind | shared message builders so two sites cannot drift | **GAP (new — and it is a real conformance question: is message stability normative?)** |
+| L10.5 | one wording per rejection kind | shared message builders so two sites cannot drift | R9.4 (decided not normative, with reason) |
 
 ---
 
@@ -204,8 +204,8 @@ The first version of this file broke that rule on fourteen rows and reported
 | L7 interpretation | 8 | 8 | 0 |
 | L8 file decision and taint | 12 | 12 | 0 |
 | L9 trust and isolation | 6 | 6 | 0 |
-| L10 observables | 5 | 2 | 3 |
-| **total** | **99** | **78** | **21** |
+| L10 observables | 5 | 5 | 0 |
+| **total** | **99** | **81** | **18** |
 
 **Row identifiers are stable and append-only.** `L3.10` names one decision
 point forever; a new row in a layer takes the next number and nothing is ever
