@@ -91,9 +91,36 @@ reference implementation is fine; a reader assuming it is complete is not,
 which is why this sentence is here.
 
 
-Every normative rule carries an identifier (`S-*` for shape, `F-*` for fold and
-file-level decisions). CI asserts every identifier is exercised by at least one
-conformance test and that every test cites a real identifier.
+## Identifiers (#6)
+
+Every normative rule carries an identifier. Two families, and the family is
+part of the meaning:
+
+- **`S-*`** — a *shape* rule: decidable from syntax alone, by a classifier
+  with no binding resolver and no registry. Lives in `grammar.md`. An `S-`
+  rule may accept what an `F-` rule later rejects; never the reverse
+  (`F-Direction`).
+- **`F-*`** — a *fold* rule: needs resolution, a registry, the module graph,
+  or the host. Sub-prefixes name the file that owns it: `F-Eval-` (J1),
+  bare `F-` for J2/J3 verdict and taint rules, `F-Obs-`/`F-NoOwnExecution`/
+  `F-Depth` (J4), `F-Val-` (values.md), `F-Div-`/`F-Exc-`/`F-Direction`
+  (divergence.md), `F-Host-` (hosts.md).
+
+Naming: `Prefix-CamelWords`, no digits in the name part, specific enough to
+read alone (`F-Eval-Member`, not `F-Eval-3`). A rule with numbered steps is
+cited as `F-Eval-Member step 4`; the step number is not part of the
+identifier.
+
+**Stability.** An identifier names one rule for the life of the spec. A rule
+that is split keeps its identifier on the part closest to its original
+meaning and the new part gets a new one. A rule that is removed or renamed
+is struck through in place with a note naming its successor; the identifier
+is never reused. Inventory row identifiers (`L3.10`) follow the same rule.
+
+**Enforcement.** `spec/coverage.test.ts` (#44) asserts every inventory row
+cites a defined rule. The reverse — every defined rule has a conformance
+fixture — is #8's gate. Together they make an identifier that nothing
+exercises, or a citation of nothing, a CI failure rather than a drift.
 
 **Decided 2026-09-10 (#46): one vocabulary at the end.** `S-*`/`F-*` are the
 only normative identifiers. `requirements.md`'s `R*` clauses are the
