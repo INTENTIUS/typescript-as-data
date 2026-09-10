@@ -41,16 +41,16 @@ Shape only. No resolution, no evaluation.
 
 | # | Decision | Behaviour | Covers |
 |---|---|---|---|
-| L2.1 | unwrapping | parenthesized / `as` / `satisfies` / `!` recurse into the inner expression | GAP — R3 is about approximation direction, not unwrapping |
-| L2.2 | literals | string, no-substitution template, numeric, `true`, `false`, `null` admitted | GAP — R1 defines the domain, no clause admits literal syntax |
+| L2.1 | unwrapping | parenthesized / `as` / `satisfies` / `!` recurse into the inner expression | S-Unwrap (grammar.md) |
+| L2.2 | literals | string, no-substitution template, numeric, `true`, `false`, `null` admitted | S-Literal (grammar.md) |
 | L2.3 | bare identifier | always shape-valid; resolution is not this layer's question | R3.1 |
 | L2.4 | tagged template interior | opaque — not recursed into | R3.1 |
-| L2.5 | template expression | admitted when every span is | GAP — no clause admits a template with spans (F1's sibling) |
-| L2.6 | object member | literal key required; shorthand always valid; spread recurses | GAP — no clause on key shape |
-| L2.7 | element access key | string or numeric literal only, else EVL003 | GAP — no clause on element-access keys |
-| L2.8 | operators | closed sets `SUPPORTED_BINARY_OPERATORS` (13) and `SUPPORTED_UNARY_OPERATORS` (2) | R10.1 (semantics); enumeration is #12's |
+| L2.5 | template expression | admitted when every span is | S-Template (grammar.md) |
+| L2.6 | object member | literal key required; shorthand always valid; spread recurses | S-Object / S-Prop / S-Shorthand / S-SpreadProp (grammar.md) |
+| L2.7 | element access key | string or numeric literal only, else EVL003 | S-Index (grammar.md) |
+| L2.8 | operators | closed sets `SUPPORTED_BINARY_OPERATORS` (13) and `SUPPORTED_UNARY_OPERATORS` (2) | R10.1; S-Unary, S-Binary (grammar.md) |
 | L2.9 | flow insensitivity | every branch of `&&`/`\|\|`/`??`/`?:` must be shape-valid | R3.2 |
-| L2.10 | `new` | every argument classified positionally, no props-position assumption | GAP — no clause on positional `new` arguments (F11) |
+| L2.10 | `new` | every argument classified positionally, no props-position assumption | S-New (grammar.md) |
 | L2.11 | call — registered helper | name-only check, provenance deferred | R3.3 |
 | L2.12 | call — intrinsic call form | registry-gated, registry is an optional parameter | R3.2 |
 | L2.13 | call — eager intrinsic | registry-gated | R3.3 |
@@ -196,7 +196,7 @@ The first version of this file broke that rule on fourteen rows and reported
 | | Rows | Covered | GAP |
 |---|---|---|---|
 | L1 statement scan | 7 | 7 | 0 |
-| L2 shape classification | 16 | 10 | 6 |
+| L2 shape classification | 16 | 16 | 0 |
 | L3 expression reduction | 20 | 19 | 1 |
 | L4 value domain | 5 | 5 | 0 |
 | L5 scope and local calls | 11 | 11 | 0 |
@@ -205,7 +205,7 @@ The first version of this file broke that rule on fourteen rows and reported
 | L8 file decision and taint | 12 | 12 | 0 |
 | L9 trust and isolation | 6 | 6 | 0 |
 | L10 observables | 5 | 5 | 0 |
-| **total** | **99** | **92** | **7** |
+| **total** | **99** | **98** | **1** |
 
 **Row identifiers are stable and append-only.** `L3.10` names one decision
 point forever; a new row in a layer takes the next number and nothing is ever
