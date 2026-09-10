@@ -100,11 +100,30 @@ evaluators processed a complete program to produce a complete residual program;
 they treat a program as a collection of modules processed independently.
 
 This is the closest theoretical neighbour to per-file folding and the paper
-must engage it directly. **Not yet read in full** — the TCS full text was not
-accessible during this sweep. The open question is whether they address shared
-state or object identity across module boundaries. If they do, chant's
-fixpoint is a rediscovery in a different setting and must say so. If they do
-not, it is the gap chant fills, and that is the sentence the abstract needs.
+must engage it directly.
+
+**Read at abstract level, not full text.** ACM DL and ScienceDirect both refuse
+the fetcher (403), including ScienceDirect's bronze-open-access PDF that
+Unpaywall reports for the TCS version. What is established from the published
+abstract and from the Chalmers group's own summary of the work
+(`cse.chalmers.se/~rjmh/TFR/results.html`): they pose **two** problems —
+the program to be specialised arrives one module at a time (PLDI '97), or the
+*static data* is divided into "data modules" and the residual program is built
+in stages, one residual module per data module (PEPM '97, extended in TCS
+2000). Both are about the modular *structure* of specialisation: how the
+input's modules map onto the residual's modules while the whole program is
+specialised. Neither, as posed, is a per-module *decision* between
+specialising and leaving a module unspecialised — and the setting is a
+functional language where object identity is not a concept, so the identity
+problem chant's fixpoint solves has no obvious way to arise there.
+
+So the working conclusion is: **not a rediscovery.** Heldal & Hughes is the
+citation for "partial evaluation has been made modular before"; chant's
+contribution is orthogonal to it — a per-module fall-back with identity
+preserved across the resulting boundary. Confidence is moderate, resting on
+the abstract and the authors' own précis rather than the body of the paper.
+The full text should still be read before camera-ready (#47), but this is no
+longer the unknown that gates #15 and #28.
 
 ### Evaluation that escapes into execution — Nix import-from-derivation
 
@@ -172,7 +191,9 @@ explicit in the language rather than inferred.
 
 ## Must do before submission
 
-1. Read Heldal & Hughes 2000 in full. The novelty of item 4 depends on it.
+1. Read Heldal & Hughes 2000 in full — now for the camera-ready citation
+   rather than to decide item 4; see the narrowed conclusion above. Needs a
+   browser or institutional access; the fetcher used here is refused.
 2. ~~Prepack heap-serialization identity~~ — answered above from
    `ResidualHeapVisitor`; a citation to the source file, not the marketing page.
 3. ~~D: error versus fallback~~ — answered above from the compiler's
