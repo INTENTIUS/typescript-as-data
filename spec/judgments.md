@@ -19,12 +19,22 @@ Stub. Formalises R1, R3, R6.3–R6.6, R7.3, R10. Environment `Γ` is the
 `consts`-then-`externals` lookup of R6.6; `H` is the host (R7, #16); `v`
 ranges over the value domain of R1.
 
-## J2 — Per-file verdict `B ⊢ f ⇓ fold(X, L) | run(reason)` (#14)
+## J2 — Per-file verdict `B, ι ⊢ f ⇓ fold(X, L) | run(reason)` (#14)
 
-Stub. Formalises R4.1, R6.1, R2.2, R9.3. On `fold`, `X` is the complete export
-namespace (R5.1) and `L ⊆ F` the set of files whose objects `f` captured. This
-judgment is evaluated **in isolation** per file; its verdict is *tentative*,
-and J3 is what makes it final.
+Stub. Formalises R4.1, R6.1, R2.2, R9.3. `ι ∈ {open, isolated}` is the
+isolation mode (decided #36: an optional capability, modelled here rather
+than left to deployment). On `fold`, `X` is the complete export namespace
+(R5.1) and `L ⊆ F` the set of files whose objects `f` captured. This judgment
+is evaluated per file in isolation from the others; its verdict is
+*tentative*, and J3 is what makes it final.
+
+**F-IsolatedRefusal.** Under `ι = isolated`, if folding `f` would require
+resolving and invoking a binding that is not on the trust allowlist (R2.1) —
+a project-owned composite factory, constructor, or intrinsic — then
+`B, isolated ⊢ f ⇓ run("isolation")`, even where `B, open ⊢ f ⇓ fold(…)`. A
+factory that is *interpretable* (R7.2) is not an invocation and is unaffected.
+Observable: R9.2's `projectFactoryInvocations` is zero across every folded
+file under `isolated`.
 
 ---
 

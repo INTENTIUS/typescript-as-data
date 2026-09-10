@@ -12,6 +12,34 @@ Two files exist ahead of the normative text, neither of them normative:
 
 Write the files below against both.
 
+## Ownership — this repository is normative; chant implements it
+
+Decided 2026-09-10 (#33). The subset is defined here. chant's
+`packages/core/src/fold/subset.ts`, which currently calls itself "the single
+canonical definition of chant's statically-foldable expression subset", is an
+implementation of this specification, and its module documentation will say
+so and cite the rule identifiers it implements (chant-side issue filed from
+#33).
+
+**A subset change goes spec-first.** The rule is proposed and landed here —
+grammar, judgment, or value-domain text with an identifier and a fixture —
+then implemented in chant citing that identifier, then released. The
+specification version chant declares (#18) moves with it.
+
+**The provisional path**, for a change chant needs before the spec can be
+written properly: chant may ship it with the affected rule marked
+*provisional* in `subset.ts`'s module doc, naming the issue here that will
+specify it. A provisional marker may survive at most one chant release; the
+docs-parity gate on chant's side (#34) fails on one older than that. A
+provisional change is not conformance-tested until the rule exists here, and
+chant's documentation may not describe it as supported until then.
+
+**What this costs chant**, stated so it is accepted rather than discovered:
+the subset can no longer change by editing code and a comment. That is the
+price of the paper being able to call this a specification, and of the
+conformance suite testing chant against a document chant cannot invalidate
+by itself.
+
 ## Scope — what the name claims, and what it does not
 
 **The name overclaims, and this paragraph is the correction.** "typescript-as-data"

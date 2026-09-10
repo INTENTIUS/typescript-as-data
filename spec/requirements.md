@@ -158,9 +158,18 @@ silently.
 Under sandboxed execution a fold whose revival would invoke *project-owned*
 code is refused and the file falls back to run (L9.5,
 INTENTIUS/chant#1093). The fold/run decision is therefore parameterized by
-whether project code may execute in this process. Either the spec models that
-parameter or it describes a judgment that behaves differently in a real
-deployment. See #36.
+whether project code may execute in this process.
+
+**Decided (#36): isolation is an optional capability, modelled in the
+judgment.** J2 takes an isolation mode `ι ∈ {open, isolated}`; under
+`isolated`, a file whose fold would require invoking project-owned code is
+`run`, not `fold` (F-IsolatedRefusal, judgments.md). An implementation
+declares whether it supports `isolated`; conformance reports it separately
+and does not require it. The observable is R9.2's `projectFactoryInvocations`
+counter, which must be zero for every folded file under `isolated`. Nix
+import-from-derivation is the cited precedent for evaluation escaping into a
+contained execution and resuming (`prior-art.md`). The reference
+implementation is not required to ship a sandbox before submission.
 
 ### R2.3 — The observable
 
