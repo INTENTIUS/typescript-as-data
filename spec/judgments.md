@@ -479,11 +479,27 @@ shrink-only allowlist for known divergences.
 **First full run, 2026-09-10:** 107 entries, 95 fully folded, 12 with at
 least one run-fallback file — **drift 0**, allowlist empty. Every mixed
 entry, where `T(B) ≠ ∅` and both taint directions can fire, agrees fold-vs-
-run. That is the proposition's first differential evidence; before it the
+run. That was the proposition's first differential evidence; before it the
 claim rested on the argument above and on the crash class it was written to
-prevent (chant#1044, #1020). Twelve entries is a small sample and they are
-chant's own examples; an adversarial mixed corpus (chant#2347) is what would
-make it strong.
+prevent (chant#1044, #1020).
+
+**chant-v0.65.0 (chant#2347, PR #2375) added the adversarial entry**
+`examples/fold-adversarial/`: nine files, each named for one resolution-time
+decision point and carrying this specification's inventory row and rule
+identifier. Four of them exercise this judgment *on purpose*, in one build:
+`taint-run-only-importer.ts` (F-Seed — an early `return` in a project-local
+function puts the importer in the seed), `taint-shared-config.ts` (F-Succ
+forward — the running importer pulls a foldable config back), `taint-
+capturing-sibling.ts` (F-Succ backward — the source of a captured object
+pulls the capturer back), and `taint-independent.ts` (F-Taint/F-Fix — the
+control that no edge reaches, and that must still fold). The entry's own test
+asserts which file folds and which runs, and the differential holds fold-vs-
+run across it. The other five cover F-Div-Nullish, the `?.` short-circuit,
+F-Eval-Ident shadowing, F-Div-SpreadType, and F-Depth.
+
+So the evidence is now: twelve incidental mixed entries plus one designed to
+fire both taint directions, all agreeing. The corpus is still chant's own,
+and the adversarial entry is one build; it is evidence, not proof.
 
 ---
 
