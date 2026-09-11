@@ -1,0 +1,9 @@
+{
+  "rules": ["F-Taint", "F-Fix", "F-Verdict"],
+  "project": true,
+  "verdicts": { "app.ts": "run", "alone.ts": "fold" },
+  "tentative": { "app.ts": "run", "alone.ts": "fold" },
+  "taintedBy": {},
+  "exports": { "alone.ts": { "value": { "kept": true, "items": [1, 2] } } },
+  "note": "The control. T(B) is the LEAST set closed under Succ, so a file no edge reaches keeps its fold verdict. An implementation that fell back whenever any file in the build fell back would pass the other three fixtures and fail this one."
+}

@@ -26,6 +26,8 @@ In neither case do a folded object and a run object for `e` coexist. ∎
 
 **Where the argument was wrong once.** The first prose statement of the forward edge had the direction reversed. Writing `Succ` as an operator caught it (#15). The paper should keep that as evidence that the formal statement earns its place.
 
+**What has been executed.** A second implementation, written from J2 and J3 rather than ported, computes `T(B)` by a worklist from `Seed`. Whole-build fixtures hold it to each edge in turn: a file that seeds with no edge at all, the forward edge into an import, the backward edge two hops out through a capture. A fourth is the control: the file nothing reaches, which must still fold. Falling back on everything satisfies the claim and is what a degraded implementation does. chant, the first implementation, has no entry that takes a set of files, so its evidence for this theorem is the differential over every mixed corpus entry, together with the adversarial build (`paper/measurements.md`, chant#2408).
+
 ## Theorem 2, the permitted direction of divergence
 
 Let `shape(e, ρ)` be the classifier's verdict on expression `e` with optional registry `ρ`, and `fold(e, Γ, ρ)` the evaluator's.
@@ -38,4 +40,4 @@ Let `shape(e, ρ)` be the classifier's verdict on expression `e` with optional r
 
 ## Mechanisation
 
-Declined for the submission. The venue accepts compelling arguments, exploratory implementations and substantial examples as validation. Theorem 1 has the argument above, the differential over every corpus entry including the mixed ones (`paper/measurements.md`), and an adversarial build that fires both taint edges on purpose. Theorem 2 has the shared-classifier construction, the enumerated table, and a fixture per row (#24). A mechanised proof would make the claim airtight rather than accepted; if pursued it belongs in `spec/mechanization/` on its own CI job.
+Declined for the submission. The venue accepts compelling arguments, exploratory implementations and substantial examples as validation. Theorem 1 has the argument above and three executed artifacts: the differential over every corpus entry including the mixed ones (`paper/measurements.md`), an adversarial build that fires both taint edges on purpose, and a second implementation held to whole-build fixtures. Theorem 2 has the shared-classifier construction and the enumerated table; a fixture per row is still owed (#24). A mechanised proof would make the claim airtight rather than accepted; if pursued it belongs in `spec/mechanization/` on its own CI job.

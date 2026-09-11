@@ -1,0 +1,7 @@
+{
+  "rules": ["F-Namespace", "F-Import", "F-Bind"],
+  "project": true,
+  "verdicts": { "values.ts": "fold", "use.ts": "fold" },
+  "exports": { "use.ts": { "url": "localhost:8080" } },
+  "note": "A namespace import of a project file is a synthetic plain object of the target's namespace, so a member access on it indexes like any other object. Every entry here is a primitive, so nothing is captured and no edge exists."
+}

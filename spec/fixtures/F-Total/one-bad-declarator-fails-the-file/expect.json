@@ -1,0 +1,7 @@
+{
+  "rules": ["F-Total", "F-Declarator", "F-Reference"],
+  "project": true,
+  "verdicts": { "mixed.ts": "run" },
+  "tentative": { "mixed.ts": "run" },
+  "note": "No partial namespace is ever produced. The first declarator reduces and the second does not, and the verdict is run for the whole file, so a consumer never sees a half-folded module."
+}

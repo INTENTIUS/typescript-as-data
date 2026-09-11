@@ -1,9 +1,10 @@
 import type { ConformanceAdapter } from "./adapter";
-import type { Fixture } from "./fixture";
+import type { ExpressionFixture, Fixture, ProjectFixture } from "./fixture";
+import { expressionFixtures, projectFixtures } from "./fixture";
 
 export interface FixtureReport { fixture: string; adapter: string; pass: boolean; skipped?: string; failures: string[] }
 
-export function runFixture(adapter: ConformanceAdapter, f: Fixture): FixtureReport {
+export function runFixture(adapter: ConformanceAdapter, f: ExpressionFixture): FixtureReport {
   const failures: string[] = []; let skipped: string | undefined;
   const s = adapter.shape(f.input, f.exportName);
   if (s === "unavailable") skipped = "shape classifier unavailable";
@@ -20,12 +21,59 @@ export function runFixture(adapter: ConformanceAdapter, f: Fixture): FixtureRepo
   }
   return { fixture: f.id, adapter: adapter.name, pass: failures.length === 0, skipped, failures };
 }
-export function runFixtures(adapter: ConformanceAdapter, fixtures: Fixture[]): FixtureReport[] { return fixtures.map((f) => runFixture(adapter, f)); }
+export function runFixtures(adapter: ConformanceAdapter, fixtures: Fixture[]): FixtureReport[] {
+  return [
+    ...expressionFixtures(fixtures).map((f) => runFixture(adapter, f)),
+    ...projectFixtures(fixtures).map((f) => runProjectFixture(adapter, f)),
+  ];
+}
+
+/** #24 — a whole-build fixture. J3's edges are invisible in any single file, so this is the only shape that can test them. */
+export function runProjectFixture(adapter: ConformanceAdapter, f: ProjectFixture): FixtureReport {
+  const base = { fixture: f.id, adapter: adapter.name };
+  if (!adapter.foldProject) return { ...base, pass: true, skipped: "no project entry", failures: [] };
+  const r = adapter.foldProject(f.files);
+  if (r === "unavailable") return { ...base, pass: true, skipped: "project entry unavailable", failures: [] };
+  const failures: string[] = [];
+  for (const [path, want] of Object.entries(f.verdicts)) {
+    const got = r.verdicts[path];
+    if (!got) { failures.push(`${path}: no verdict reported`); continue; }
+    if (got.kind !== want) failures.push(`${path}: expected ${want}, got ${got.kind}${got.kind === "run" ? ` (${got.reason})` : ""}`);
+  }
+  for (const path of Object.keys(r.verdicts)) if (!(path in f.verdicts)) failures.push(`${path}: verdict reported but not expected`);
+  for (const [path, want] of Object.entries(f.tentative ?? {})) {
+    if (!r.tentative) { failures.push(`${path}: fixture expects a tentative verdict, adapter reports none`); continue; }
+    if (r.tentative[path] !== want) failures.push(`${path}: tentative expected ${want}, got ${r.tentative[path] ?? "none"}`);
+  }
+  for (const [path, want] of Object.entries(f.taintedBy ?? {})) {
+    if (!r.taintedBy) { failures.push(`${path}: fixture expects a taint source, adapter reports none`); continue; }
+    if (r.taintedBy[path] !== want) failures.push(`${path}: tainted by ${r.taintedBy[path] ?? "nothing"}, expected ${want}`);
+  }
+  for (const [path, want] of Object.entries(f.exports ?? {})) {
+    const got = r.verdicts[path];
+    if (got?.kind !== "fold") { failures.push(`${path}: expected exports, but the file did not fold`); continue; }
+    for (const [name, value] of Object.entries(want)) {
+      if (JSON.stringify(got.exports[name]) !== JSON.stringify(value)) {
+        failures.push(`${path}: export ${name} = ${JSON.stringify(got.exports[name])} ≠ expected ${JSON.stringify(value)}`);
+      }
+    }
+  }
+  return { ...base, pass: failures.length === 0, failures };
+}
 
 /** #11 — two implementations must agree on every fixture, independently of what the fixture expects. */
 export function compareAdapters(a: ConformanceAdapter, b: ConformanceAdapter, fixtures: Fixture[]): string[] {
   const dis: string[] = [];
-  for (const f of fixtures) {
+  for (const f of projectFixtures(fixtures)) {
+    if (!a.foldProject || !b.foldProject) continue;
+    const ra = a.foldProject(f.files), rb = b.foldProject(f.files);
+    if (ra === "unavailable" || rb === "unavailable") continue;
+    for (const path of new Set([...Object.keys(ra.verdicts), ...Object.keys(rb.verdicts)])) {
+      const va = ra.verdicts[path]?.kind ?? "absent", vb = rb.verdicts[path]?.kind ?? "absent";
+      if (va !== vb) dis.push(`${f.id} ${path}: ${a.name} ${va}, ${b.name} ${vb}`);
+    }
+  }
+  for (const f of expressionFixtures(fixtures)) {
     const ra = a.foldExport(f.input, f.exportName), rb = b.foldExport(f.input, f.exportName);
     if (ra.ok !== rb.ok) dis.push(`${f.id}: ${a.name} ${ra.ok ? "folds" : "runs"}, ${b.name} ${rb.ok ? "folds" : "runs"}`);
     else if (ra.ok && rb.ok && JSON.stringify(ra.value) !== JSON.stringify(rb.value)) dis.push(`${f.id}: values differ — ${a.name} ${JSON.stringify(ra.value)} vs ${b.name} ${JSON.stringify(rb.value)}`);

@@ -10,10 +10,29 @@ export type ShapeResult =
 export type FoldResult =
   | { ok: true; value: unknown }
   | { ok: false; rule?: string; line: number; column: number; message: string };
+/** A whole-build verdict (J2 + J3). `rule` and `reason` are diagnostic; only `kind` is compared. */
+export type ProjectVerdict =
+  | { kind: "fold"; exports: Record<string, unknown> }
+  | { kind: "run"; rule?: string; reason: string };
+export interface ProjectResult {
+  verdicts: Record<string, ProjectVerdict>;
+  /** J2's proposal, before J3 disposed of it. Omitted by an implementation that cannot separate the two phases. */
+  tentative?: Record<string, "fold" | "run">;
+  /** For a file J3 tainted, the file whose taint reached it. */
+  taintedBy?: Record<string, string>;
+}
+
 export interface ConformanceAdapter {
   readonly name: string;
   /** S-* verdict on the initializer of `exportName`. "unavailable" if the implementation exposes no shape classifier. */
   shape(source: string, exportName: string): ShapeResult;
   /** F-* verdict: fold the initializer of `exportName` to a JSON-comparable value, or a located rejection. */
   foldExport(source: string, exportName: string): FoldResult;
+  /**
+   * J2 + J3 over a whole build: every file's final verdict. Optional, and
+   * "unavailable" when the implementation exposes no project-level entry —
+   * chant's public API is per-file, so its project fixtures are reported
+   * skipped rather than silently passing.
+   */
+  foldProject?(files: Map<string, string>): ProjectResult | "unavailable";
 }

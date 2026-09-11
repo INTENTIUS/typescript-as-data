@@ -1,5 +1,6 @@
-import type { ConformanceAdapter } from "@intentius/tsad-conformance";
+import type { ConformanceAdapter, ProjectResult } from "@intentius/tsad-conformance";
 import { shapeOfExport, foldExport } from "./module";
+import { foldProject } from "./project";
 
 /** The reference reports spec rule identifiers directly: it is written from the spec. */
 export const referenceAdapter: ConformanceAdapter = {
@@ -12,4 +13,14 @@ export const referenceAdapter: ConformanceAdapter = {
     return { accepted: false, rule: v.rule, line: line + 1, column: character + 1, message: v.message };
   },
   foldExport(source, exportName) { return foldExport(source, exportName); },
+  foldProject(files) {
+    const r = foldProject(files);
+    const out: ProjectResult = { verdicts: {}, tentative: {}, taintedBy: {} };
+    for (const [path, v] of r.verdicts) {
+      out.verdicts[path] = v.kind === "fold" ? { kind: "fold", exports: Object.fromEntries(v.exports) } : { kind: "run", rule: v.rule, reason: v.reason };
+    }
+    for (const [path, v] of r.tentative) out.tentative![path] = v.kind;
+    for (const [path, from] of r.taintSource) out.taintedBy![path] = from;
+    return out;
+  },
 };

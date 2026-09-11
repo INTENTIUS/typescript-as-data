@@ -412,8 +412,9 @@ file whose import cannot be resolved to a folded `X(g)` fails to fold on its
 own and is in `Seed`. Corrected there in the same commit as this file.
 
 **F-Taint.** `T(B)` is the least set containing `Seed(B)` and closed under
-`Succ`. **F-Verdict.** A file's final verdict is `fold` iff it is not in
-`T(B)`.
+`Succ`.
+
+**F-Verdict.** A file's final verdict is `fold` iff it is not in `T(B)`.
 
 **F-Fix.** `T(B)` is the least fixpoint of a monotone operator on the finite
 lattice `𝒫(F)`, so it exists and is reached in at most `|F|` iterations. The

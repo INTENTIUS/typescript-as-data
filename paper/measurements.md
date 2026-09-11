@@ -52,13 +52,28 @@ The chant side's `false` is also an unsampled invariant: the run fails unless ev
 
 | Pin | Fixtures | Rules with a fixture | Shape and fold agreement |
 |---|---|---|---|
-| chant 0.68.1 | 26 | 32 of 123 | all |
+| chant 0.69.1 | 37, of which 8 are whole-build | 51 of 125 | all, on the 29 the pin can answer |
 
 One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
 
 **What this agreement is worth.** Until #50 the reference implementation's evaluation layer was a *port* of chant's, so agreement on expression-level fixtures was guaranteed by construction rather than observed. It is now written from `grammar.md` §2 and `judgments.md` J1 without consulting chant's source, and the two implementations agree on every fixture, so the comparison is between two codebases rather than one code base with itself.
 
-Two limits on that. The rewrite's author had read chant's implementation closely while writing the specification from it, so this establishes that the specification is complete enough to implement from, not that a reader who had never seen chant would arrive at the same place. And the reference covers the expression layer only: J2 and J3 are unimplemented there (#21, #22), so Theorem 1 still rests on one implementation.
+Two limits on that. The rewrite's author had read chant's implementation closely while writing the specification from it, so this establishes that the specification is complete enough to implement from, not that a reader who had never seen chant would arrive at the same place. And the agreement covers the expression and single-file layers. It does not cover J3, for the reason the next section gives.
+
+**What the whole-build fixtures establish, and against how many implementations.** The reference now implements J2's per-file verdict and J3's fixpoint from `judgments.md` (#21, #22). Eight whole-build fixtures assert the verdicts of an entire build rather than the value of one expression. Four of them fire an edge on purpose:
+
+| Fixture | What it fires |
+|---|---|
+| a file whose own body leaves `S-FnBody` | `F-Seed`, with no edge involved |
+| an importer that runs, over a config that folds | `F-Succ` forward |
+| a sibling that captured an object from a file the seed reached | `F-Succ` backward, at two hops |
+| a file no edge reaches | `F-Taint`'s control, which must still fold |
+
+The control is the one with teeth. An implementation that falls back on every file in a build with any fallback satisfies the other three and fails this, so the suite asserts it against a stub that does exactly that.
+
+chant cannot answer any of them. Its public entry folds one expression or one file's resource exports; nothing in it takes a set of files, and a taint edge does not exist inside a single file. The whole-build fixtures therefore run against one implementation. The suite asserts that chant reports no project entry, so it fails the day one lands rather than letting the comparison lapse (chant#2408). What supports Theorem 1 across two implementations is the differential, not these fixtures.
+
+Writing J2 and J3 from the specification alone found one more gap in it. `F-Import` and `F-Val-Live` state two different identity predicates — a value with `typeof` object or function, against one with a prototype other than `Object` or `Array` — and the specification never says they answer different questions (#59). Using either predicate for both uses is wrong, in one direction unsoundly.
 
 The port's own failure mode is worth recording because it is the one this section should not paper over: chant-v0.69.0 extended an envelope check from three kinds to five while the port still had three, and because no fixture covered the shape, the suite stayed green against a stale port until the drift was found by reading the release diff. Two fixtures now cover it, and the port that made the drift possible is gone.
 
@@ -75,6 +90,8 @@ Writing the specification against the implementation found defects the implement
 | three stale documentation claims, one in a shape the parity gate could not see | docs | chant#2306, #2348 |
 | the forward taint edge stated backwards in the spec's own prose | `spec/requirements.md` | caught by writing `Succ` as an operator (#15) |
 | four normative sentences used an *unclaimed* callee and none defined it | `spec/grammar.md` | found by writing the reference from the spec text; S-Unclaimed added (#51) |
+| two identity predicates stated for captures and never reconciled | `spec/judgments.md`, `spec/values.md` | found by writing J2 and J3 from the spec text (#59) |
+| no public entry folds a whole project, so J3 is not testable from outside | `@intentius/chant` | chant#2408, open |
 | a backward-tainted file's fallback reason claims a file imports it, and none does | `discovery/fold-import.ts` | found by walking the adversarial build for the paper's worked example; `F-Obs-Report` requires naming the backward edge |
 | a module that threw at import was cached as evaluated, so a second build in one process reported no error | `discovery/import.ts` | chant#2368, fixed in v0.69.1; found by the adversarial corpus entry this specification's inventory shaped |
 
@@ -92,6 +109,7 @@ The corpus is chant's own examples, and chant's documentation says the number is
 ## Limits
 
 - Twelve mixed entries and one adversarial build are a small sample, all from one project.
-- Fixture coverage is 32 of 123 rules, and the cross-file rules cannot have fixtures until the format grows (#24).
-- The reference implementation does not implement the module layer or J3, so Theorem 1 has one implementation's evidence.
-- The independent rewrite found one specification gap. One is a small sample, and it is the sample a single author working alone can produce.
+- Fixture coverage is 51 of 125 rules. The 74 without one are listed with a reason, and the list may only shrink.
+- Only the differential puts J3 in front of both implementations at once; the fixtures for it reach one (chant#2408).
+- The reference has no host that supplies constructors, so it cannot revive a resource envelope into an instance. `F-CallLeak` therefore has no fixture, and the J3 fixtures reach captures through imports only (`packages/reference/CAVEATS.md`).
+- The independent rewrite found two specification gaps. Two is a small sample, and it is the sample a single author working alone can produce.

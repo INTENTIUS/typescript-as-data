@@ -1,0 +1,6 @@
+{
+  "rules": ["F-Cycle"],
+  "project": true,
+  "verdicts": { "a.ts": "run", "b.ts": "run" },
+  "note": "Resolution meets itself. The requirement is a located error naming the cycle, not an infinite regress, so the only assertion a conforming implementation must satisfy is that both files get a verdict at all."
+}
