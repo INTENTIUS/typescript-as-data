@@ -3,9 +3,11 @@
   "anaphora/repeated-opening": 1
  },
  "spec/divergence.md": {
-  "discourse/punchy-fragments": 6,
+  "discourse/punchy-fragments": 7,
   "claude/colon-reveal": 6,
-  "tricolon/comma-series": 2
+  "tricolon/comma-series": 2,
+  "anaphora/repeated-opening": 1,
+  "repetition/near-duplicate": 1
  },
  "spec/grammar.md": {
   "claude/colon-reveal": 8,
@@ -18,7 +20,7 @@
  },
  "spec/hosts.md": {
   "claude/colon-reveal": 7,
-  "tricolon/comma-series": 4,
+  "tricolon/comma-series": 3,
   "discourse/punchy-fragments": 2,
   "claude/contrast-tail": 3,
   "tricolon/density": 1,

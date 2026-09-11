@@ -1,7 +1,10 @@
 // Prose lint for spec/*.md and README.md (copied from chant's scripts/lint-docs-sentences.mjs),
 //
 // Posture here: README.md, spec/README.md and spec/prior-art.md are prose and
-// lint at ZERO. The rule files (grammar, judgments, values, divergence, hosts,
+// carry no real findings. Four baselined entries in them are heading-run
+// artifacts: a table or bullet list between two headings blanks out, so the
+// headings read as consecutive sentences opening with "##". Those four are
+// the only tolerated findings in the prose files. The rule files (grammar, judgments, values, divergence, hosts,
 // inventory) are formal text: every rule opens with its identifier in bold,
 // case analyses open with "If"/"with"/"otherwise", and definitions are short
 // lines. The linter reads those as anaphora, fragments and colon reveals;

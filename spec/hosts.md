@@ -15,7 +15,7 @@ not the extraction.
 
 ---
 
-## F-Host-Interface, what a host supplies
+## F-Host-Interface (what a host supplies)
 
 Six things. The first four are the parameters R7 named; the last two are
 what the trust rules need.
@@ -37,7 +37,7 @@ what the trust rules need.
    with `Composite` imported from the host, that makes a project-defined
    factory *interpretable* (R7.2).
 
-## F-Host-Registry, the shape of an intrinsic registration
+## F-Host-Registry (the shape of an intrinsic registration)
 
 ```
 IntrinsicDef = { name, isTag: boolean, foldsAsCall?: boolean, foldsEagerly?: boolean, … }
@@ -57,7 +57,7 @@ IntrinsicDef = { name, isTag: boolean, foldsAsCall?: boolean, foldsEagerly?: boo
   exports (`chant dev check-lexicon`). A host must provide the equivalent
   check or its registry is a claim, not a fact.
 
-## F-Host-Admission, when a call may be registered
+## F-Host-Admission (when a call may be registered)
 
 A call-form intrinsic, an eager intrinsic, or an authoring helper qualifies
 **only** if all hold:
@@ -78,7 +78,7 @@ the nested-construction hazard wearing a call; `propagate()`,
 helpers and `propagate` mutates in place; `createResource()`/
 `createProperty()` build classes at a module's top level, never as a value.
 
-## F-Host-Closed-vs-Open, why packages are closed and project files are open
+## F-Host-Closed-vs-Open (why packages are closed and project files are open)
 
 A call into a **package** folds only through a closed allowlist, a
 registered intrinsic or helper, checked by name *and* by the provenance of
@@ -93,7 +93,7 @@ input; it is admitted only when it can be *evaluated without being
 executed*, folded or interpreted, which a syntactic body check decides and
 an allowlist could not.
 
-## F-Host-NoSubstitution, the function that runs is the one imported
+## F-Host-NoSubstitution (the function that runs is the one imported)
 
 For every registered name, helper, intrinsic, constructor, composite -
 revival resolves the name **through the folding file's own `import`
@@ -104,7 +104,7 @@ host's, and the file falls back (F-Div-Provenance); and the registry cannot
 drift from the helpers' real behaviour, because it never reimplements them.
 This is the CTFE principle ([`prior-art.md`](./prior-art.md)) made a rule.
 
-## F-Host-Composite, the registration that admits interpretation
+## F-Host-Composite (the registration that admits interpretation)
 
 A project file's composite is interpretable (R7.2 rule 2) iff its defining
 module has `export const N = Composite(fn, "N")` where `Composite` is bound,
@@ -114,7 +114,7 @@ plain helper that returns a composite is not registered and stays on the
 invoking path. A host that offers interpretation must define an equivalent
 registration form; the shape of `fn` is S-FactoryBody.
 
-## F-Host-DataExports, a package's plain data folds as values
+## F-Host-DataExports (a package's plain data folds as values)
 
 A named import from an **active** package resolves to the package's real
 export (J2 F-Import). A plain-data export, a pseudo-parameter namespace, an
@@ -124,7 +124,7 @@ never resolved (F-Namespace), so nothing is reachable through `ns.x` from a
 package: the class or intrinsic has to be reachable through a *named*
 import.
 
-## F-Host-Trust, what may be imported during a fold
+## F-Host-Trust (what may be imported during a fold)
 
 Arm 1: a specifier that is an active package of this build, or a subpath of
 one, matched by text against the closed set the build already resolved. Arm
@@ -134,7 +134,7 @@ source and its `node_modules`. Nothing else, and a build with no package
 list keeps only arm 2 (R2.1). Under `ι = isolated`, an import outside both
 arms is F-IsolatedRefusal (J2).
 
-## F-Host-Generality, what varies and what does not
+## F-Host-Generality (what varies and what does not)
 
 What a host may vary: the six items of F-Host-Interface. What it may not:
 the syntax (grammar.md), the semantics of admitted operators (R10, J1), the

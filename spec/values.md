@@ -9,7 +9,7 @@ domain is a property of folding's output, not of syntax, so it takes the
 
 ---
 
-## F-Val-Domain, the closed union
+## F-Val-Domain (the closed union)
 
 A folded value `v` is exactly one of:
 
@@ -30,7 +30,7 @@ Nothing else. In particular no function is a `v` (F-Val-Callable), and no
 live instance is a `v`, a live instance is what an envelope becomes
 (F-Val-Live).
 
-## F-Val-Envelope, six envelopes, recognised by key
+## F-Val-Envelope (six envelopes, recognised by key)
 
 A value is an *envelope* iff it is a non-array object carrying one of the keys
 `__attrRef`, `__intrinsic`, `__helper`, `__resource`, `__compositeStep`,
@@ -38,7 +38,7 @@ A value is an *envelope* iff it is a non-array object carrying one of the keys
 *denotes* something not yet constructed (R1.1); it is never a thunk, and an
 implementation must not attempt to force it.
 
-## F-Val-Fate, what happens to each envelope
+## F-Val-Fate (what happens to each envelope)
 
 Revival (R7.1, `reviveFoldedValue`) walks a folded tree and replaces
 envelopes:
@@ -56,7 +56,7 @@ envelopes:
 five must never reach a serializer (R1.2). An implementation that emits a
 `__resource` envelope has produced wrong output, not a placeholder.
 
-## F-Val-Position, validity is position-dependent
+## F-Val-Position (validity is position-dependent)
 
 Revival carries a flag `requireLiveRefs`. It is **true** inside the
 arguments of an `__intrinsic` or `__helper`, the receiving function inspects
@@ -71,7 +71,7 @@ So the same `v` is valid in one position and a rejection in another. A
 specification of the domain alone does not capture this; the rule is part of
 the domain.
 
-## F-Val-Live, liveness
+## F-Val-Live (liveness)
 
 A value *carries a live object* iff it, or anything reachable through plain
 objects and arrays, has a prototype other than `Object`, `Array`, or `null`
@@ -84,7 +84,7 @@ the identity J3 exists to preserve. `isIntrinsic` is keyed on a global
 
 Liveness is what F-Capture (J3) and F-CallLeak test.
 
-## F-Val-Callable, functions are callable, never values
+## F-Val-Callable (functions are callable, never values)
 
 `FoldableFunction` (R1.3) is a marker for a project-local function J1 may
 *call*. It is **not** a `v`, never appears inside a folded tree, and is
@@ -92,14 +92,14 @@ refused anywhere a value is required: `{ resolver: φ }` does not fold though
 `φ(x)` does (L3.1, L4.4). An eagerly-evaluated lexicon function referenced
 without calling it is refused likewise, with "call it instead" (L3.17).
 
-## F-Val-Serializable, the sub-domain that may reach output
+## F-Val-Serializable (the sub-domain that may reach output)
 
 A value may reach a serializer iff it is: a scalar; an array or object all of
 whose members may; an `__attrRef` envelope; or a live instance produced by
 revival. Every other envelope, and every callable, may not. The objective's
 "byte-identical serialized output" is stated over this sub-domain.
 
-## F-Val-Arity, a resource's constructor arguments
+## F-Val-Arity (a resource's constructor arguments)
 
 `__resource.props` is the first object-literal argument. When the argument
 list is not `(props)` or `(props, attributes)`, e.g. `new Parameter("String",
@@ -107,14 +107,14 @@ list is not `(props)` or `(props, attributes)`, e.g. `new Parameter("String",
 spreading it, and `props` is reported for readers but never re-passed (L4.2,
 R10.8, R1.5).
 
-## F-Val-Undefined, `undefined` in the domain
+## F-Val-Undefined (`undefined` in the domain)
 
 `undefined` is a scalar of the domain (L4.3). In a property position it is
 dropped at emission; in an array position it becomes `null`, for both JSON
 and YAML, because YAML is round-tripped through the JSON emitter (R10.7). For
 a lexicon that serializes YAML itself, the rule is that serializer's own.
 
-## F-Val-Symbol-Scope, where `__symbol` may appear
+## F-Val-Symbol-Scope (where `__symbol` may appear)
 
 Only inside an intrinsic's interior, a tag's interpolations or a call form's
 arguments (`foldIntrinsicValue`). Anywhere else an unresolved chain is a

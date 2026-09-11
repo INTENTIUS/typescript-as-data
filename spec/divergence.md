@@ -9,7 +9,7 @@ two exceptions with the reason each is tolerated. Derived from
 
 ---
 
-## F-Direction, the claim
+## F-Direction (the claim)
 
 Let `shape(e, ρ)` be the classifier's verdict on expression `e` given an
 optional registry `ρ`, and `fold(e, Γ, ρ)` the folder's, given also an
@@ -38,7 +38,7 @@ perform, enumerated below. And by fixture: one accepting and one rejecting
 fixture per row of F-Div, asserting the classifier's and the folder's verdicts
 side by side (#8, #24). chant's `subset-doc-parity.test.ts` is the precedent.
 
-## F-Div, the divergences in the permitted direction
+## F-Div (the divergences in the permitted direction)
 
 Shape accepts; the folder may reject, because it resolves.
 
@@ -60,12 +60,12 @@ Every row is a fallback, never wrong output. That property, a divergence in
 this direction can only lose coverage, is what makes the direction the safe
 one.
 
-## F-Exc, the two exceptions
+## F-Exc (the two exceptions)
 
 Shape rejects; the folder accepts. Each is stated with why it is tolerated
 rather than fixed.
 
-**F-Exc-Lazy, short-circuit laziness.** The folder evaluates `&&`, `||`,
+**F-Exc-Lazy.** Short-circuit laziness. The folder evaluates `&&`, `||`,
 `??` and `?:` lazily and never folds the untaken operand; the classifier is
 flow-insensitive and requires every operand to be shape-valid (L2.9, L3.13).
 `false && sideEffect()` folds to `false` and is a lint error. *Tolerated
@@ -74,7 +74,7 @@ false positive is a visible lint error on code whose untaken branch is
 suspect anyway. The implementation's own module doc calls it a wart, and a
 specification should not launder the word.
 
-**F-Exc-Registry, call-form registration without a registry.** The
+**F-Exc-Registry.** Call-form registration without a registry. The
 classifier takes `ρ` as an optional parameter. Given one, its answer for a
 plain call is the folder's own; without one, every plain call is a violation,
 including `Ref(bucket)` that the folder accepts (L2.12, L2.13). *Tolerated
