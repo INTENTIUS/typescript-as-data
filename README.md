@@ -1,67 +1,36 @@
 # typescript-as-data
 
-A specification for a statically evaluable subset of TypeScript, a minimal
-reference implementation of it, and a conformance suite both the reference
-implementation and independent implementations run against.
+A specification for a statically evaluable subset of TypeScript. It comes with a reference implementation and a conformance suite.
 
-The subset is the part of TypeScript whose value is fully determined by
-literals, constants, and symbolic references — the part a tool can reduce to
-data without executing it. Configuration languages usually get this property by
-inventing a language. This specification gets it by carving a fragment out of an
-existing one, and by defining what happens at the edge: source outside the
-subset is not an error, it falls back to real execution, and the specification
-says what must hold across that boundary for the two paths to agree.
+The subset is the part of TypeScript whose value is fixed by its source: literals, constants, and symbolic references. A tool can reduce it to data without running it. Most configuration languages get this property by inventing a language. This specification carves a fragment out of an existing one and defines the edge: source outside the subset falls back to real execution, and the two paths must agree.
 
 ## Status
 
-Normative drafts exist for every part of the mechanism — `spec/grammar.md`,
-`spec/judgments.md` (J1–J4), `spec/values.md`, `spec/divergence.md`,
-`spec/hosts.md` — with one identifier vocabulary (`S-*`/`F-*`), a decision-
-point inventory that cites them (110 rows, gated in CI), a conformance runner,
-a reference implementation of the walking-skeleton subset, and chant
-cross-checked against it from the published package. Fixture coverage is one
-rule deep (`S-Template`); `spec/fixtures/UNCOVERED.md` lists the rest and may
-only shrink.
-
-Work is sequenced paper-first against Onward! 2027, so the two milestones are
-the thing to read before the epics:
-
-- [Onward! 2027](https://github.com/INTENTIUS/typescript-as-data/milestone/1) —
-  everything required to submit. The specification itself, the paper sections,
-  and only as much reference implementation as the figures and the generality
-  claim need.
-- [Post-submission](https://github.com/INTENTIUS/typescript-as-data/milestone/2) —
-  artifact work that strengthens the spec and reference implementation but does
-  not block the paper. Deliberately parked, not forgotten.
-
-Issue #31 gates everything: it checks whether the central claim is novel, which
-the rest of the plan assumes and nothing has yet verified.
-
-The five epics (#1-#5) describe the intended shape of each area.
+Every part of the mechanism has a normative draft under `spec/`. One identifier vocabulary covers them (`S-*` for shape rules, `F-*` for fold rules). A decision-point inventory of 110 rows cites those rules and is gated in CI. A reference implementation covers the walking-skeleton subset. chant is cross-checked against it from the published package. Fixture coverage is one rule deep; `spec/fixtures/UNCOVERED.md` lists the rest and may only shrink.
 
 ## Layout
 
-| Path | What it holds |
+| Path | Holds |
 |---|---|
-| `spec/` | The normative specification: grammar, judgments, rule identifiers |
+| `spec/` | The normative specification |
+| `spec/fixtures/` | Conformance fixtures, one directory per rule |
 | `packages/reference` | The reference implementation (`@intentius/tsad-reference`) |
 | `packages/conformance` | The adapter interface, fixture format, runner, and the chant adapter |
-| `spec/fixtures/` | Conformance fixtures, one directory per rule |
-| `docs/` | The published site (Astro + Starlight) |
+| `docs/` | The published site (Astro + Starlight), generated from `spec/` |
 
 ## Relationship to chant
 
-[chant](https://github.com/INTENTIUS/chant) is a production implementation of
-this subset and the origin of it. It is not the reference implementation: it is
-one of the implementations the conformance suite tests, and the source of the
-corpus the suite measures against.
+[chant](https://github.com/INTENTIUS/chant) is a production implementation of this subset and its origin. It is not the reference implementation; the conformance suite tests it, and its example corpus is what the suite measures against.
 
 ## Development
+
+Node 24 and npm.
 
 ```bash
 npm install
 npm run typecheck
 npm test
+npm run lint:prose
 
 npm run docs        # docs dev server
 npm run docs:build  # static build, as CI runs it

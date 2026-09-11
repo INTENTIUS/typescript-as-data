@@ -10,12 +10,14 @@
     "docs": "npm --prefix docs run dev",
     "docs:build": "npm --prefix docs run build",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "lint:prose": "node scripts/lint-docs-sentences.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
     "typescript": "^5.9.0",
     "vitest": "^4.0.0",
-    "@intentius/chant": "0.66.1"
+    "@intentius/chant": "0.66.1",
+    "sentences": "0.1.1"
   }
 }

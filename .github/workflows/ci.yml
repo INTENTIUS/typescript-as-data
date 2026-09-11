@@ -34,6 +34,9 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Prose lint (sentences)
+        run: npm run lint:prose
+
   docs-build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
