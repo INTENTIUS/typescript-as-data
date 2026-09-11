@@ -3,7 +3,7 @@ import { shapeOfExport, foldExport } from "./module";
 
 /**
  * #20 decision: the ported code carries chant's lint ids on rejections
- * ("EVL001", "EVL003"). The specification's identifiers are the S-*/F-* rules,
+ * ("EVL001", "EVL003"). The specification's identifiers are the S- and F- rules,
  * so the adapter translates at the boundary instead of editing the port.
  */
 const RULE_ID: Record<string, string> = { EVL001: "S-Reject", EVL003: "S-Index" };
