@@ -71,8 +71,12 @@ numeric literal to `Number(text)`; `true`, `false`, `null` to themselves.
 5. Otherwise **reject** `unresolved identifier: n` (F-Reference).
 
 **F-Eval-Template.** `⟦`h ${e₁} t₁ … ${eₖ} tₖ`⟧ = h ⧺ ToString(⟦e₁⟧) ⧺ t₁ ⧺ …`
-(R10.4). *Recommendation carried from R10.4:* an envelope among the `⟦eᵢ⟧`
-should be a rejection; the implementation currently coerces it.
+per R10.4. An envelope among the `⟦eᵢ⟧` is a located rejection at that span,
+because a symbolic value has no string form until the build resolves it.
+
+- chant-v0.68.0 refuses such a span on both paths and reports it at lint
+  time as EVL011 (chant#2349). Inventory row L3.23 lists the envelope kinds
+  it checks.
 
 **F-Eval-Tagged.** For `tag`…``: if `depth > 0`, **reject** (R6.3). If `ρ`
 does not register `tag` with `isTag`, **reject**. Otherwise
@@ -522,7 +526,13 @@ file *imported*; none of it is code the file *wrote*. (Was R2.)
 | `MAX_INTERPRETATION_DEPTH` | 16 | nested factory interpretation |
 | `MAX_RESOLUTION_DEPTH` | 200 | the cross-file resolution stack |
 
-The values must be stated. Exhaustion must produce `run`, never a failure and never a silent change of evaluation mode. chant meets this for the first and third bounds. At the second it returns "not interpretable", invokes the factory instead, and still reports `fold` with no trace (chant#2370), which is the one known place chant and this rule differ. (Was R4.5.)
+- The values must be stated.
+- Exhaustion must produce `run`, never a failure and never a silent change of
+  evaluation mode.
+- chant has met both for all three bounds since v0.68.0, when the
+  interpretation bound stopped degrading to invocation under a `fold` verdict
+  and began throwing a propagated depth error that names the bound and falls
+  the file back to run (chant#2370; was R4.5).
 
 **F-Obs-Counters.** A conforming implementation exposes, per build and
 resettable, three non-negative integers: in-process factory/constructor

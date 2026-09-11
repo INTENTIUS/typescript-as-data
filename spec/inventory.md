@@ -64,7 +64,7 @@ Shape only. No resolution, no evaluation.
 | # | Decision | Behaviour | Covers |
 |---|---|---|---|
 | L3.1 | arrow / function expression as a value | rejected; nothing can serialize a function | F-Eval-Function; F-Val-Callable |
-| L3.2 | template expression | concatenation, spans coerced by `String()` | F-Eval-Template |
+| L3.2 | template expression | concatenation, spans coerced by `String()`; since chant-v0.68.0 an attribute reference, intrinsic or helper envelope in a span is a located rejection (chant#2349) | F-Eval-Template |
 | L3.3 | object spread | `Object.assign`; later keys win, insertion order preserved | F-Eval-Object |
 | L3.4 | object spread of a non-object | rejected | F-Eval-Object; F-Div-SpreadType |
 | L3.5 | array spread of a non-array | rejected | F-Eval-Array; F-Div-SpreadType |
@@ -85,6 +85,7 @@ Shape only. No resolution, no evaluation.
 | L3.20 | `.step` narrowing | only when the callee is not already a helper, intrinsic, `FoldableFunction`, or shadowed by a const (`isUnclaimedBareCall`) | F-Eval-Member step 2; F-Div-Step |
 | L3.21 | optional chain on nullish (added chant-v0.63.0) | `?.` on `null`/`undefined` yields a short-circuit sentinel that propagates through the rest of the chain; further `.`/`[]`, `!`, `?.()`; and becomes `undefined` at the chain's end (`continuesOptionalChain`) | F-Eval-Member steps 3–4 |
 | L3.22 | `?.()` method call on nullish (added chant-v0.63.0) | short-circuits like L3.21; a plain `.()` on nullish refuses | F-Eval-CallMethod |
+| L3.23 | envelope in a plain template span (added chant-v0.68.0) | `symbolicEnvelopeKind` refuses `__attrRef`, `__intrinsic`, `__helper`; `__resource` and `__compositeStep` are not checked and still coerce | F-Eval-Template; F-Div-TemplateEnvelope (divergence.md) |
 
 ## L4. Value domain
 
@@ -146,7 +147,7 @@ module is never imported.
 | L7.5 | rule 5; every expression in the subset | extended with `new` in value position and calls through a bare identifier | S-FactoryBody |
 | L7.6 | module-level resource reference declines | that resource is a singleton the run path shares; interpretation would not | F-Call step 4 (declines: module-level resource) |
 | L7.7 | `constResolvesToResource` follows alias chains | `const a = new T(); const b = a;` cannot smuggle one in | F-Call step 4 (alias chains) |
-| L7.8 | `MAX_INTERPRETATION_DEPTH` (16) | exhaustion returns "not interpretable"; the caller invokes instead and the file still folds, with no trace (chant#2370). Degrades rather than falls back; the one known F-Depth gap | F-Depth |
+| L7.8 | `MAX_INTERPRETATION_DEPTH` (16) | exhaustion throws a propagated depth error naming the bound; the file falls back to run (chant-v0.68.0, chant#2370; before that it degraded to invocation and still reported fold) | F-Depth |
 
 ## L8. File decision, session, and taint
 
@@ -209,7 +210,7 @@ The first version of this file broke that rule on fourteen rows and reported
 |---|---|---|---|
 | L1 statement scan | 7 | 7 | 0 |
 | L2 shape classification | 16 | 16 | 0 |
-| L3 expression reduction | 22 | 22 | 0 |
+| L3 expression reduction | 23 | 23 | 0 |
 | L4 value domain | 5 | 5 | 0 |
 | L5 scope and local calls | 15 | 15 | 0 |
 | L6 revival | 9 | 9 | 0 |
@@ -217,7 +218,7 @@ The first version of this file broke that rule on fourteen rows and reported
 | L8 file decision and taint | 17 | 17 | 0 |
 | L9 trust and isolation | 6 | 6 | 0 |
 | L10 observables | 5 | 5 | 0 |
-| **total** | **110** | **110** | **0** |
+| **total** | **111** | **111** | **0** |
 
 **Row identifiers are stable and append-only.** `L3.10` names one decision
 point forever; a new row in a layer takes the next number and nothing is ever

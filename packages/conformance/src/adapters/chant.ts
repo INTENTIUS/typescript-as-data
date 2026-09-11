@@ -19,7 +19,7 @@ const parse = (src: string) => ts.createSourceFile("fixture.ts", src, ts.ScriptT
 const shapeFn = (chant as unknown as { findSubsetViolation?: (n: ts.Node) => { node: ts.Node; ruleId: string; message: string } | undefined }).findSubsetViolation;
 
 export const chantAdapter: ConformanceAdapter = {
-  name: `chant@${(chant as unknown as { VERSION?: string }).VERSION ?? "0.67.0"}`,
+  name: `chant@${(chant as unknown as { VERSION?: string }).VERSION ?? "0.68.1"}`,
   shape(source, exportName) {
     if (!shapeFn) return "unavailable";
     const sf = parse(source); const init = exportInitializer(sf, exportName);

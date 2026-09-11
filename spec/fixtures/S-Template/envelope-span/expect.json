@@ -1,0 +1,2 @@
+{ "rules": ["S-Template", "F-Eval-Template", "F-Div-TemplateEnvelope"], "export": "x", "shape": "accept", "fold": "run",
+  "note": "A symbolic value (here an attribute reference) inside a plain template span is refused. Shape accepts (bucket.arn is a member access); the folder rejects once the span folds to an envelope. chant-v0.68.0 (#2349) made this a refusal on both paths; before it, both paths produced \"[object Object]\"." }

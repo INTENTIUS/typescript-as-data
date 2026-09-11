@@ -2,7 +2,7 @@
 
 Deliberate, and this list may only shrink (#8). Each entry names the rule and why it is still uncovered. Remove an entry when its fixture lands; the gate fails if an entry is stale.
 
-31 of 122 rules have fixtures. Every rule below is uncovered because the corpus is still growing (#24), not because any is out of scope.
+32 of 123 rules have fixtures. Every rule below is uncovered because the corpus is still growing (#24), not because any is out of scope.
 
 - `F-Bind` — no fixture yet; corpus is #24's
 - `F-Call` — no fixture yet; corpus is #24's
