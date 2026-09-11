@@ -8,10 +8,10 @@ something, and the rule by which each supplied thing is admitted. Rules are
 (`foldable-helpers.ts`), `isTrustedExecutableBinding`, and
 `findCompositeDefinition`, at `e4074c17`.
 
-This records chant's instantiation as the interface *as currently
-understood*. The hooks were meant to be discovered by extraction (#19, #20);
-where extraction finds a cut this file does not name, this file is amended,
-not the extraction.
+The extraction (#19, `packages/reference/CUTS.md`) confirmed this list without
+amendment. The expression layer needed items 3, 4 and 5 and nothing else;
+items 1, 2 and 6 live in revival and interpretation, which the reference
+implementation does not yet port (#21, #22).
 
 ---
 
