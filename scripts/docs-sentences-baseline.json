@@ -33,7 +33,7 @@
  },
  "spec/judgments.md": {
   "discourse/punchy-fragments": 46,
-  "claude/colon-reveal": 22,
+  "claude/colon-reveal": 21,
   "repetition/near-duplicate": 20,
   "anaphora/repeated-opening": 11,
   "tricolon/comma-series": 12,
