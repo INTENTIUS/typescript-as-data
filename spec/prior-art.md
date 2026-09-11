@@ -104,7 +104,9 @@ must engage it directly.
 
 **Read at abstract level, not full text.** ACM DL and ScienceDirect both refuse
 the fetcher (403), including ScienceDirect's bronze-open-access PDF that
-Unpaywall reports for the TCS version. What is established from the published
+Unpaywall reports for the TCS version. Hughes' Chalmers page links a
+PostScript copy marked "provided only to the TFR reviewers"; it was not
+fetched. What is established from the published
 abstract and from the Chalmers group's own summary of the work
 (`cse.chalmers.se/~rjmh/TFR/results.html`): they pose **two** problems -
 the program to be specialised arrives one module at a time (PLDI '97), or the
