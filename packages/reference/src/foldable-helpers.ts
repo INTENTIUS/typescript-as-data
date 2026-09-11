@@ -1,4 +1,4 @@
-// Ported from INTENTIUS/chant packages/core/src/fold/foldable-helpers.ts at f8ae312b (Apache-2.0).
+// Ported from INTENTIUS/chant packages/core/src/fold/foldable-helpers.ts at e6430b1c (Apache-2.0).
 // Derived, not rewritten (#19). Every chant-specific cut is listed in ../CUTS.md.
 // Regenerate with scripts/sync-port.mjs; do not edit by hand.
 

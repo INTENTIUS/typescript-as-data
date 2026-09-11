@@ -6,6 +6,8 @@ Draft for #29. Every number cites the artifact it comes from. None is a coverage
 
 `examples/fold-differential.test.ts` builds every corpus entry twice, folded and run, and requires identical errors and byte-identical serialised output (chant#1025).
 
+The error half of that was unsound until chant-v0.69.1, because under the test runner a module that threw during import was cached as evaluated, so the second build of a directory in one process reported no error while every differential builds the same directory two or three times per process; `importModule` now remembers an evaluation failure and replays it, so error parity is compared rather than assumed (chant#2368).
+
 - Until chant#2345 it compared only entries where every file folded, which are the builds in which J3 does nothing.
 - Since chant-v0.65.0 it compares every non-empty entry.
 
@@ -70,6 +72,7 @@ Writing the specification against the implementation found defects the implement
 | interpretation depth exhaustion degraded silently | `fold-import.ts` | chant#2370, fixed in v0.68.0 |
 | three stale documentation claims, one in a shape the parity gate could not see | docs | chant#2306, #2348 |
 | the forward taint edge stated backwards in the spec's own prose | `spec/requirements.md` | caught by writing `Succ` as an operator (#15) |
+| a module that threw at import was cached as evaluated, so a second build in one process reported no error | `discovery/import.ts` | chant#2368, fixed in v0.69.1; found by the adversarial corpus entry this specification's inventory shaped |
 
 ## Negative results, kept
 
