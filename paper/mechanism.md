@@ -55,18 +55,26 @@ The claim is one-directional and stated with its exceptions inside it. **If eval
 
 The direction is chosen rather than observed, and the reason is asymmetric cost. A classifier that accepts too much produces a fallback the author learns about from a per-file decision line. A classifier that rejects too much produces an error on correct source, and a lint that cries wolf gets disabled, taking the real diagnostics with it. The classifier is also the predicate a downstream tool asks *will this reduce* without running a reduction, and such a tool must get an answer safe to act on.
 
-Twelve enumerated divergences run the permitted way (`F-Div-*`). Half of them, as a sample.
+Twelve divergences run the permitted way, and the specification enumerates all twelve rather than describing the shape of the set (`F-Div-*`). The enumeration is the useful part: a claim that two analyses disagree only in one direction is worth little without a list of where, because the list is what a reader checks and what a new rule has to join.
 
-| Rule | Classifier sees | Evaluator additionally requires |
+| Rule | The classifier sees | The evaluator additionally requires |
 |---|---|---|
-| `F-Div-Ident` | any bare identifier | that it resolves |
-| `F-Div-Tag` | any tagged-template tag | that the registry admits it |
-| `F-Div-Provenance` | a registered helper name | that the name was imported from the host |
-| `F-Div-SpreadType` | a spread operand of valid shape | that it reduces to an object or an array |
-| `F-Div-Nullish` | a member read | that the object is not nullish, unless written `?.` |
+| `F-Div-Ident` | any bare identifier | that it resolves, and that it is not an ambient environment read |
+| `F-Div-Tag` | any tagged-template tag, interior opaque | that the registry admits the tag, and the interior reduces |
+| `F-Div-Provenance` | a registered helper *name* | that the name was imported from the host and not shadowed |
+| `F-Div-SpreadType` | a spread operand of valid shape | that it reduces to an object, or an array for array spread |
+| `F-Div-SameFileNew` | a bare identifier | that a name bound to a same-file construction is answered by the pre-built instance, never re-reduced |
+| `F-Div-Nullish` | a member or element read | that the object is not nullish, unless the read is written `?.` |
+| `F-Div-NsNew` | a construction with any callee | that the callee is a plain identifier |
+| `F-Div-Method` | a method call | that the receiver is a real value, not an envelope, with a callable of that name |
 | `F-Div-Step` | any call narrowed to `.step` | that the callee is unclaimed |
+| `F-Div-Depth` | five constructs that reduce at top level | that the expression is not inside a reduced function body |
+| `F-Div-Eager` | a registered eager name | that it resolves to a function and is called rather than referenced |
+| `F-Div-TemplateEnvelope` | an access or call inside a template span | that the span does not reduce to an envelope |
 
-Each costs coverage rather than correctness, because a file the classifier passes and the evaluator refuses falls back to run. That asymmetry is what makes the direction the safe one to guarantee: a classifier that erred the other way would report errors on correct source, and a lint that cries wolf gets switched off.
+Every row has the same shape. The classifier decides from syntax, and the evaluator consults something syntax cannot see: a binding, a registry, a runtime type, a position. Each therefore costs coverage rather than correctness, because a file the classifier passes and the evaluator refuses falls back rather than emitting anything.
+
+The two rows that run the other way are the exceptions named above, and there is no third. An implementation that discovers one has found either a bug or a rule that belongs in this table, and the specification says so rather than leaving the set open.
 
 ## The per-file verdict
 
