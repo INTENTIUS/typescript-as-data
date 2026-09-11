@@ -514,18 +514,16 @@ F-Eval-CallEager, F-Eval-CallMethod on a real receiver, and, under `open` -
 invocation of an imported factory (J2 F-Call step 6). All of it is code the
 file *imported*; none of it is code the file *wrote*. (Was R2.)
 
-**F-Depth.** Three bounds. Each must turn exhaustion into `run`, never into
-wrong output and never into a silent change of evaluation mode. chant meets
-this for two of them and not the third: at `MAX_INTERPRETATION_DEPTH` its
-`resolveInterpretableFactory` returns "not interpretable", the caller
-invokes the factory instead, and the file still reports `fold` with no
-trace (chant#2370). That is a degradation, not a fallback, and it is the
-one place the spec's rule and chant's behaviour are known to differ. The
-rule stands as written; chant#2370 decides how chant meets it.: `MAX_FUNCTION_CALL_DEPTH = 32` on nested project-local calls
-(F-Eval-CallLocal step 2), `MAX_INTERPRETATION_DEPTH` on nested factory
-interpretation, `MAX_RESOLUTION_DEPTH` on the cross-file resolution stack.
-An implementation may choose its own values; it must state them and must
-fall back, not fail. (Was R4.5.)
+**F-Depth.** Three bounds: `MAX_FUNCTION_CALL_DEPTH = 32` on nested
+project-local calls (F-Eval-CallLocal step 2), `MAX_INTERPRETATION_DEPTH = 16`
+on nested factory interpretation, and `MAX_RESOLUTION_DEPTH = 200` on the
+cross-file resolution stack. An implementation may choose its own values. It
+must state them, and on exhaustion it must fall back to `run` rather than
+fail or silently change evaluation mode. chant meets this for the first and
+third. At `MAX_INTERPRETATION_DEPTH` it returns "not interpretable", the
+caller invokes the factory instead, and the file still reports `fold` with
+no trace (chant#2370). That is the one known place the rule and chant
+differ; chant#2370 decides how chant closes it. (Was R4.5.)
 
 **F-Obs-Counters.** A conforming implementation exposes, per build and
 resettable, three non-negative integers: in-process factory/constructor
