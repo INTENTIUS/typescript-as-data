@@ -26,14 +26,17 @@ Each draft feeds one section of the paper.
 
 | File | Issue | Section it feeds |
 |---|---|---|
+| `introduction.md` | #52 | abstract and introduction |
+| `mechanism.md` | #53 | the technical body |
 | `related-work.md` | #27 | related work |
 | `theorem.md` | #28 | the two claims and their proof sketches |
 | `measurements.md` | #29 | evaluation |
+| `discussion.md` | #54 | discussion |
 | `../spec/prior-art.md` | #31 | the novelty narrowing, cited from related work |
 
 ## Still to write
 
-The introduction, the mechanism description drawn from J1 to J4, and the discussion. Each is a file here, linted, citing rule ids.
+Every section has a draft. What remains is the pass that turns seven Markdown files into thirteen pages: cutting to length, deciding what the mechanism section keeps when it has four pages rather than open space, and the figures. That pass wants the 2027 call in hand.
 
 ## Artifact
 
