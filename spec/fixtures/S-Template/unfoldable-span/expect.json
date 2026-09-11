@@ -1,2 +1,16 @@
-{ "rules": ["S-Template", "S-Reject", "F-Eval-Reject"], "export": "x", "shape": "reject", "fold": "run", "rejectAt": { "line": 1, "column": 24 },
-  "note": "A span outside the subset rejects the template; the rejection points at the span, not the template." }
+{
+  "rules": [
+    "S-Template",
+    "S-Reject",
+    "F-Eval-Reject",
+    "F-Reason"
+  ],
+  "export": "x",
+  "shape": "reject",
+  "fold": "run",
+  "rejectAt": {
+    "line": 1,
+    "column": 24
+  },
+  "note": "A span outside the subset rejects the template; the rejection points at the span, not the template (F-Reason: a located rejection is a conformance requirement; its wording is not)."
+}

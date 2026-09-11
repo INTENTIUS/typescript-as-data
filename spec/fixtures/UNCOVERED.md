@@ -2,7 +2,7 @@
 
 Deliberate, and this list may only shrink (#8). Each entry names the rule and why it is still uncovered. Remove an entry when its fixture lands; the gate fails if an entry is stale.
 
-32 of 123 rules have fixtures. Every rule below is uncovered because the corpus is still growing (#24), not because any is out of scope.
+33 of 123 rules have fixtures. Every rule below is uncovered because the corpus is still growing (#24), not because any is out of scope.
 
 - `F-Bind` — no fixture yet; corpus is #24's
 - `F-Call` — no fixture yet; corpus is #24's
@@ -54,7 +54,6 @@ Deliberate, and this list may only shrink (#8). Each entry names the rule and wh
 - `F-Obs-Messages` — no fixture yet; corpus is #24's
 - `F-Obs-Provenance` — no fixture yet; corpus is #24's
 - `F-Obs-Report` — no fixture yet; corpus is #24's
-- `F-Reason` — no fixture yet; corpus is #24's
 - `F-Reference` — no fixture yet; corpus is #24's
 - `F-Scan` — no fixture yet; corpus is #24's
 - `F-Seed` — no fixture yet; corpus is #24's
