@@ -37,7 +37,7 @@ import { buildDocAnalysis } from "sentences/lint/build-doc";
 import { extractProse } from "sentences/lint/markdown-prose";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const ROOTS = [join(here, "..", "spec"), join(here, "..", "README.md")];
+const ROOTS = [join(here, "..", "spec"), join(here, "..", "paper"), join(here, "..", "README.md")];
 const BASELINE = join(here, "docs-sentences-baseline.json");
 const GATED_SEVERITIES = new Set(["medium", "high"]);
 
