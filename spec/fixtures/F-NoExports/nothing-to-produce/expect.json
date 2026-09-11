@@ -1,0 +1,7 @@
+{
+  "rules": ["F-NoExports", "F-Scan"],
+  "project": true,
+  "verdicts": { "empty.ts": "run", "defaulted.ts": "run" },
+  "tentative": { "empty.ts": "run", "defaulted.ts": "run" },
+  "note": "Two ways to fail before any expression is reduced. empty.ts passes the statement gate and yields no declarator, so there is nothing to fold to; defaulted.ts is disqualified by the gate itself. Neither is folded to an empty namespace."
+}

@@ -15,6 +15,7 @@ import {
 } from "./host";
 import { isFoldableHelperName } from "./foldable-helpers";
 import { isLiteralKey, isLiteralElementKey, isUnclaimedCallee } from "./subset";
+import { findFnBodyViolation, plainBindingKey, type FnDecl } from "./fnbody";
 
 /** A located rejection, per R9.3: the node and the rule, wording unconstrained. */
 export class FoldRejection extends Error {
@@ -34,6 +35,12 @@ export interface Scope {
   readonly consts: Map<string, ts.Expression>;
   readonly externals: ReadonlyMap<string, unknown>;
   readonly depth: number;
+  /**
+   * F-Capture's sink for the file being folded, when there is one. A call that
+   * leaks the defining module's identity (F-CallLeak) records that module here,
+   * which is the same edge an import capture records.
+   */
+  readonly captures?: Set<string>;
 }
 /** H = (ρ, helpers). The helper allowlist is consulted through foldable-helpers. */
 export interface EvalHost {
@@ -46,7 +53,17 @@ export interface EvalHost {
  * this implementation yet (#21, #22).
  */
 export class FoldableFunction {
-  constructor(readonly name: string) {}
+  /** Set when a call returned a live object the body produced (F-CallLeak, J3). */
+  leakedIdentity = false;
+  constructor(
+    readonly name: string,
+    readonly fn: FnDecl,
+    /** The defining module's path, for the re-anchored reason of F-Eval-CallLocal step 7. */
+    readonly file: string,
+    /** The DEFINING module's scope: a body folds there, not in the caller's (R6.6). */
+    readonly consts: Map<string, ts.Expression>,
+    readonly externals: ReadonlyMap<string, unknown>,
+  ) {}
 }
 export const isFoldableFunction = (v: unknown): v is FoldableFunction => v instanceof FoldableFunction;
 
@@ -56,6 +73,22 @@ export const isFoldableFunction = (v: unknown): v is FoldableFunction => v insta
  */
 const CHAIN = Symbol("chain-short-circuit");
 const isChain = (v: unknown): boolean => v === CHAIN;
+
+/**
+ * F-Val-Live: carries a live object when it, or anything reachable through
+ * plain objects and arrays, has a prototype other than the plain ones, or is
+ * a function. Distinct from J2's F-Import identity test, which is the broader
+ * `typeof object or function`. The specification states both predicates and
+ * does not reconcile them; see packages/reference/CAVEATS.md.
+ */
+export function carriesLiveObject(v: unknown, seen = new Set<unknown>()): boolean {
+  if (v === null || typeof v !== "object") return typeof v === "function";
+  if (seen.has(v)) return false;
+  seen.add(v);
+  const proto = Object.getPrototypeOf(v);
+  if (proto !== Object.prototype && proto !== Array.prototype && proto !== null) return true;
+  return Object.values(v).some((inner) => carriesLiveObject(inner, seen));
+}
 
 /** F-Val-Envelope: a non-array object carrying one of the six keys. */
 const ENVELOPE_KEYS = ["__attrRef", "__intrinsic", "__helper", "__resource", "__compositeStep", "__symbol"] as const;
@@ -161,6 +194,76 @@ function foldAccess(
   }
   // 6. a plain index
   return (object as Record<string, unknown>)[key];
+}
+
+/** The depth bound of F-Eval-CallLocal step 2, stated per F-Depth. */
+export const MAX_CALL_DEPTH = 32;
+
+/** F-Eval-CallLocal: evaluate a call to a project-local function, seven steps. */
+function callLocal(callee: FoldableFunction, node: ts.CallExpression, scope: Scope, host: EvalHost): unknown {
+  const label = `call to "${callee.name}" (${callee.file})`;
+  // 1. the declaration must satisfy S-FnBody
+  const violation = findFnBodyViolation(callee.fn);
+  if (violation) reject("F-Eval-CallLocal", node, `${label} is not foldable: ${violation}`);
+  // 2. depth bound
+  if (scope.depth >= MAX_CALL_DEPTH) reject("F-Eval-CallLocal", node, `${label} is not foldable: call depth exceeded`);
+  // 3. arguments fold in the CALLER's scope; a spread argument rejects
+  const args: unknown[] = [];
+  for (const a of node.arguments) {
+    if (ts.isSpreadElement(a)) reject("F-Eval-CallLocal", node, `${label} is not foldable: a spread argument is not foldable`);
+    args.push(foldExpr(a, scope, host));
+  }
+  // 4. the body folds in the DEFINING module's scope, parameters bound on top
+  const consts = new Map(callee.consts);
+  const externals = new Map(callee.externals);
+  const bind = (n: string, v: unknown) => { consts.delete(n); externals.set(n, v); };
+  const inner: Scope = { consts, externals, depth: scope.depth + 1 };
+  callee.fn.parameters.forEach((param, i) => {
+    let value = args[i];
+    if (value === undefined && param.initializer) value = foldExpr(param.initializer, inner, host);
+    if (ts.isIdentifier(param.name)) { bind(param.name.text, value); return; }
+    if (value === null || typeof value !== "object") {
+      reject("F-Eval-CallLocal", node, `${label} is not foldable: a destructured parameter's argument is not an object`);
+    }
+    for (const el of (param.name as ts.ObjectBindingPattern).elements) {
+      bind((el.name as ts.Identifier).text, (value as Record<string, unknown>)[plainBindingKey(el)!]);
+    }
+  });
+  // 5. a concise body is its expression; a block folds its consts then returns
+  let result: unknown;
+  try {
+    const body = callee.fn.body as ts.ConciseBody;
+    if (!ts.isBlock(body)) {
+      result = foldExpr(body, inner, host);
+    } else {
+      result = undefined;
+      for (const st of body.statements) {
+        if (ts.isReturnStatement(st)) { result = st.expression ? foldExpr(st.expression, inner, host) : undefined; break; }
+        for (const d of (st as ts.VariableStatement).declarationList.declarations) {
+          const v = foldExpr(d.initializer!, inner, host);
+          if (ts.isIdentifier(d.name)) bind(d.name.text, v);
+          else {
+            if (v === null || typeof v !== "object") reject("F-Eval-CallLocal", node, `${label} is not foldable: a destructured const's source is not an object`);
+            for (const el of (d.name as ts.ObjectBindingPattern).elements) {
+              bind((el.name as ts.Identifier).text, (v as Record<string, unknown>)[plainBindingKey(el)!]);
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // 7. re-anchor a failure inside the body at the call site
+    if (e instanceof FoldRejection) {
+      reject(e.rule, node, `${label} is not foldable: ${callee.file}:${e.line}:${e.column} - ${e.message.replace(/^\d+:\d+ - /, "")}`);
+    }
+    throw e;
+  }
+  // 6. a live object the body produced, that no argument carried, leaks identity
+  if (carriesLiveObject(result) && !args.some((a) => carriesLiveObject(a))) {
+    callee.leakedIdentity = true;
+    scope.captures?.add(callee.file);
+  }
+  return result;
 }
 
 /** Γ, H ⊢ e ⇓ v. */
@@ -383,13 +486,7 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
 
       // F-Eval-CallLocal, after the two registered shapes
       const local = scope.externals.get(name);
-      if (isFoldableFunction(local)) {
-        reject(
-          "F-Eval-CallLocal",
-          node,
-          `call to "${name}" is not foldable: this implementation has no module layer to fold a project-local function body`,
-        );
-      }
+      if (isFoldableFunction(local)) return callLocal(local, node, scope, host);
 
       // F-Eval-CallEager
       if (host.intrinsics.some((i) => i.name === name && intrinsicCallFoldsEagerly(i))) {

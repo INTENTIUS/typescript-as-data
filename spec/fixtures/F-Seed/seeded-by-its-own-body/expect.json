@@ -1,0 +1,8 @@
+{
+  "rules": ["F-Seed", "F-Verdict", "F-Call"],
+  "project": true,
+  "verdicts": { "app.ts": "run", "lone.ts": "fold" },
+  "tentative": { "app.ts": "run", "lone.ts": "fold" },
+  "exports": { "lone.ts": { "value": 1 } },
+  "note": "Seed(B) is exactly the files J2 refused. app.ts calls a local function whose body leaves S-FnBody, so it is in the seed on its own account, with no edge involved. lone.ts shares no edge and folds."
+}

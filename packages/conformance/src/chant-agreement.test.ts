@@ -2,7 +2,7 @@
 import { describe, test, expect } from "vitest";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadFixtures, runFixtures, compareAdapters } from "./index";
+import { loadFixtures, runFixtures, compareAdapters, expressionFixtures, projectFixtures } from "./index";
 import { chantAdapter } from "./adapters/chant";
 import { referenceAdapter } from "@intentius/tsad-reference";
 
@@ -17,10 +17,17 @@ describe("chant cross-check (#11)", () => {
     const dis = compareAdapters(referenceAdapter, chantAdapter, fixtures);
     expect(dis, dis.join("\n")).toEqual([]);
   });
+  test("chant has no project-level entry, so the project fixtures are skipped, not silently passed (#24)", () => {
+    // chant's public API folds one expression or one module's resources; J3 is
+    // not reachable through it. Asserted so the day it is, this test fails and
+    // the cross-check is extended rather than forgotten. See chant#2408.
+    expect(projectFixtures(fixtures).length).toBeGreaterThan(0);
+    expect(chantAdapter.foldProject).toBeUndefined();
+  });
   test("chant's shape classifier is available (chant-v0.64.0+, chant#2362) and agrees on every fixture", () => {
     // The pinned chant carries the export, so "unavailable" would mean the adapter
     // silently stopped comparing the shape half — a real regression, asserted.
-    for (const f of fixtures) {
+    for (const f of expressionFixtures(fixtures)) {
       const s = chantAdapter.shape(f.input, f.exportName);
       expect(s, `${f.id}: chant shape classifier unavailable`).not.toBe("unavailable");
       if (s !== "unavailable") expect(s.accepted, `${f.id}: chant shape ${s.accepted ? "accept" : "reject"} ≠ expected ${f.shape}`).toBe(f.shape === "accept");

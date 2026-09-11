@@ -2,15 +2,10 @@
 
 Deliberate, and this list may only shrink (#8). Each entry names the rule and why it is still uncovered. Remove an entry when its fixture lands; the gate fails if an entry is stale.
 
-35 of 124 rules have fixtures. Every rule below is uncovered because the corpus is still growing (#24), not because any is out of scope.
+51 of 125 rules have fixtures. Most of the rules below are uncovered because the corpus is still growing (#24); where a rule needs something the reference implementation does not have, the entry says so.
 
-- `F-Bind` — no fixture yet; corpus is #24's
-- `F-Call` — no fixture yet; corpus is #24's
-- `F-CallLeak` — no fixture yet; corpus is #24's
-- `F-Capture` — no fixture yet; corpus is #24's
+- `F-CallLeak` — needs a host that supplies a real constructor, so a called body can produce a live object; the reference ships an empty host (packages/reference/CAVEATS.md)
 - `F-Count` — no fixture yet; corpus is #24's
-- `F-Cycle` — no fixture yet; corpus is #24's
-- `F-Declarator` — no fixture yet; corpus is #24's
 - `F-Depth` — no fixture yet; corpus is #24's
 - `F-Direction` — no fixture yet; corpus is #24's
 - `F-Div` — no fixture yet; corpus is #24's
@@ -33,7 +28,6 @@ Deliberate, and this list may only shrink (#8). Each entry names the rule and wh
 - `F-Eval-Undefined` — no fixture yet; corpus is #24's
 - `F-Exc` — no fixture yet; corpus is #24's
 - `F-Exc-Registry` — no fixture yet; corpus is #24's
-- `F-Fix` — no fixture yet; corpus is #24's
 - `F-Host-Admission` — no fixture yet; corpus is #24's
 - `F-Host-Closed-vs-Open` — no fixture yet; corpus is #24's
 - `F-Host-Composite` — no fixture yet; corpus is #24's
@@ -43,23 +37,14 @@ Deliberate, and this list may only shrink (#8). Each entry names the rule and wh
 - `F-Host-NoSubstitution` — no fixture yet; corpus is #24's
 - `F-Host-Registry` — no fixture yet; corpus is #24's
 - `F-Host-Trust` — no fixture yet; corpus is #24's
-- `F-Import` — no fixture yet; corpus is #24's
 - `F-IsolatedRefusal` — no fixture yet; corpus is #24's
 - `F-Memo` — no fixture yet; corpus is #24's
-- `F-Namespace` — no fixture yet; corpus is #24's
-- `F-NoExports` — no fixture yet; corpus is #24's
 - `F-NoOwnExecution` — no fixture yet; corpus is #24's
 - `F-NotProject` — no fixture yet; corpus is #24's
 - `F-Obs-Counters` — no fixture yet; corpus is #24's
 - `F-Obs-Messages` — no fixture yet; corpus is #24's
 - `F-Obs-Provenance` — no fixture yet; corpus is #24's
 - `F-Obs-Report` — no fixture yet; corpus is #24's
-- `F-Reference` — no fixture yet; corpus is #24's
-- `F-Scan` — no fixture yet; corpus is #24's
-- `F-Seed` — no fixture yet; corpus is #24's
-- `F-Succ` — no fixture yet; corpus is #24's
-- `F-Taint` — no fixture yet; corpus is #24's
-- `F-Total` — no fixture yet; corpus is #24's
 - `F-Val-Arity` — no fixture yet; corpus is #24's
 - `F-Val-Domain` — no fixture yet; corpus is #24's
 - `F-Val-Envelope` — no fixture yet; corpus is #24's

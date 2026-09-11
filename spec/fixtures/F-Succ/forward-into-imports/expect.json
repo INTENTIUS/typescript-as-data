@@ -1,0 +1,8 @@
+{
+  "rules": ["F-Succ", "F-Taint", "F-Import"],
+  "project": true,
+  "verdicts": { "app.ts": "run", "config.ts": "run" },
+  "tentative": { "app.ts": "run", "config.ts": "fold" },
+  "taintedBy": { "config.ts": "app.ts" },
+  "note": "The forward edge. config.ts folds on its own, and runs anyway because app.ts, which imports it, runs: app.ts's real import would construct a second settings object. This is chant#1107's observation, that fixing a leaf buys nothing while an importer still runs."
+}
