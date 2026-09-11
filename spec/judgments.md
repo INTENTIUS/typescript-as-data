@@ -74,9 +74,9 @@ numeric literal to `Number(text)`; `true`, `false`, `null` to themselves.
 per R10.4. An envelope among the `⟦eᵢ⟧` is a located rejection at that span,
 because a symbolic value has no string form until the build resolves it.
 
-- chant-v0.68.0 refuses such a span on both paths and reports it at lint
-  time as EVL011 (chant#2349). Inventory row L3.23 lists the envelope kinds
-  it checks.
+- chant refuses such a span on both paths and reports it at lint time as
+  EVL011 (chant#2349), and since v0.69.0 it covers every envelope kind that
+  can reach a span, which inventory row L3.23 lists (chant#2397).
 
 **F-Eval-Tagged.** For `tag`…``: if `depth > 0`, **reject** (R6.3). If `ρ`
 does not register `tag` with `isTag`, **reject**. Otherwise

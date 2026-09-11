@@ -1,0 +1,2 @@
+{ "rules": ["S-Template", "F-Eval-Template", "F-Div-TemplateEnvelope"], "export": "x", "shape": "accept", "fold": "run",
+  "note": "The .step idiom in a plain template span. Refused since chant-v0.69.0 (#2397), the fifth and last coercible envelope kind; __symbol cannot reach a plain span." }

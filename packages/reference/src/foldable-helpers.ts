@@ -1,5 +1,6 @@
-// Ported from INTENTIUS/chant packages/core/src/fold/foldable-helpers.ts at 1b9f5133 (Apache-2.0).
+// Ported from INTENTIUS/chant packages/core/src/fold/foldable-helpers.ts at f8ae312b (Apache-2.0).
 // Derived, not rewritten (#19). Every chant-specific cut is listed in ../CUTS.md.
+// Regenerate with scripts/sync-port.mjs; do not edit by hand.
 
 /**
  * foldable-helpers — the closed, declared allowlist of chant's OWN authoring
@@ -118,7 +119,7 @@ export interface FoldableHelperDef {
  * criteria, which is what makes registering the shared name safe.
  */
 /**
- * CUT (#19): chant's nineteen registered helpers were a hand-written list here.
+ * CUT (#19): chant's registered helpers were a hand-written list here.
  * A host installs its own list; the reference ships none (F-Host-Admission).
  */
 const HELPERS: FoldableHelperDef[] = [];

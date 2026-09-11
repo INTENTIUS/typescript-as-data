@@ -55,7 +55,7 @@ Shape accepts; the folder may reject, because it resolves.
 | F-Div-Step | `⟨call⟩.step` | the callee is an *unclaimed* bare identifier | L3.20 |
 | F-Div-Depth | a `new`, tagged template, helper call, intrinsic call, or `.step` | is not inside a folded function body | L3.16 |
 | F-Div-Eager | a registered eager intrinsic name | resolves to a function; is called, not referenced | L3.17 |
-| F-Div-TemplateEnvelope | a member access or call inside a template span | the span does not fold to an envelope (an attribute reference, intrinsic or helper); chant-v0.68.0 | L3.23 |
+| F-Div-TemplateEnvelope | a member access or call inside a template span | the span does not fold to an envelope; chant refuses all five reachable kinds since v0.69.0 | L3.23 |
 
 Every row is a fallback, never wrong output. That property, a divergence in
 this direction can only lose coverage, is what makes the direction the safe

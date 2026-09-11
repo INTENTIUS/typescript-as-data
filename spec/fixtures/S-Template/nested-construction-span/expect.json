@@ -1,0 +1,2 @@
+{ "rules": ["S-Template", "F-Eval-Template", "F-Div-TemplateEnvelope"], "export": "x", "shape": "accept", "fold": "run",
+  "note": "A nested construction in a plain template span. Refused since chant-v0.69.0 (#2397); before that it coerced to \"[object Object]\" on both paths." }

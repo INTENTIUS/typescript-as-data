@@ -1,6 +1,6 @@
 # Cuts made porting chant's expression layer (#19)
 
-Source: INTENTIUS/chant `packages/core/src/fold/{subset,fold,foldable-helpers}.ts` at `1b9f5133`. Derived, not rewritten. Each row is one place chant-specific code had to be cut, and what the cut is in the host interface (#20).
+Source: INTENTIUS/chant `packages/core/src/fold/{subset,fold,foldable-helpers}.ts` at `f8ae312b` (chant-v0.69.0). Derived, not rewritten. Each row is one place chant-specific code had to be cut, and what the cut is in the host interface (#20).
 
 | File | What was cut | Why, and where it went |
 |---|---|---|
@@ -16,3 +16,18 @@ Everything else in the three files is unchanged, comments included. The discover
 ## What the cuts say about the host interface (#20)
 
 The expression layer needed exactly three of the six things `spec/hosts.md` lists: the intrinsic registry with its three predicates (item 3), the authoring-helper allowlist (item 4), and the owned-specifier prefixes that back trust by text (item 5). Entity constructors, attribute exposure and composite registration (items 1, 2, 6) never appear in these files; they belong to revival and interpretation in the discovery layer, which is #21 and #22. Nothing had to be designed; every hook is a cut.
+
+## Keeping the port current
+
+`scripts/sync-port.mjs <chant-root> <sha>` regenerates the three files and
+re-applies every cut above. Each cut is matched textually and the script exits
+non-zero if one no longer matches, so a chant change that moves a cut site
+fails loudly instead of producing a port with a cut silently dropped. Run it
+after any chant release that touches `packages/core/src/fold/`, then run the
+conformance suite: a behavioural change chant made and the port missed shows up
+as a fixture disagreement.
+
+This is not optional hygiene. chant-v0.69.0 extended `symbolicEnvelopeKind`
+from three envelope kinds to five; until the port was re-synced, the reference
+and chant disagreed on `` `${new T({})}` `` in the direction the cross-check
+exists to catch.

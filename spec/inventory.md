@@ -2,7 +2,7 @@
 
 Every decision point in chant core's fold path, with the requirement that covers
 it. Derived from a complete read of the four files below at commit `e4074c17`
-(2026-09-09); rows L3.10, L3.21, L3.22 updated to chant-v0.63.0 (`11572c7a`).
+(2026-09-09); rows L3.10, L3.21, L3.22 updated to chant-v0.63.0 (`11572c7a`); L3.23 to chant-v0.69.0 (`f8ae312b`).
 
 A **decision point** is anywhere the mechanism chooses between admitting and
 rejecting, between evaluation modes, or between representations. One row each.
@@ -85,7 +85,7 @@ Shape only. No resolution, no evaluation.
 | L3.20 | `.step` narrowing | only when the callee is not already a helper, intrinsic, `FoldableFunction`, or shadowed by a const (`isUnclaimedBareCall`) | F-Eval-Member step 2; F-Div-Step |
 | L3.21 | optional chain on nullish (added chant-v0.63.0) | `?.` on `null`/`undefined` yields a short-circuit sentinel that propagates through the rest of the chain; further `.`/`[]`, `!`, `?.()`; and becomes `undefined` at the chain's end (`continuesOptionalChain`) | F-Eval-Member steps 3–4 |
 | L3.22 | `?.()` method call on nullish (added chant-v0.63.0) | short-circuits like L3.21; a plain `.()` on nullish refuses | F-Eval-CallMethod |
-| L3.23 | envelope in a plain template span (added chant-v0.68.0) | `symbolicEnvelopeKind` refuses `__attrRef`, `__intrinsic`, `__helper`; `__resource` and `__compositeStep` are not checked and still coerce | F-Eval-Template; F-Div-TemplateEnvelope (divergence.md) |
+| L3.23 | envelope in a plain template span (added chant-v0.68.0, completed v0.69.0) | `symbolicEnvelopeKind` refuses all five kinds that can reach a span: `__attrRef`, `__intrinsic`, `__helper`, `__resource`, `__compositeStep`. `__symbol` is produced only inside an intrinsic interior, so it cannot appear here | F-Eval-Template; F-Div-TemplateEnvelope (divergence.md) |
 
 ## L4. Value domain
 

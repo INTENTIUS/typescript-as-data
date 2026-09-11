@@ -1,5 +1,6 @@
-// Ported from INTENTIUS/chant packages/core/src/fold/subset.ts at 1b9f5133 (Apache-2.0).
+// Ported from INTENTIUS/chant packages/core/src/fold/subset.ts at f8ae312b (Apache-2.0).
 // Derived, not rewritten (#19). Every chant-specific cut is listed in ../CUTS.md.
+// Regenerate with scripts/sync-port.mjs; do not edit by hand.
 
 import * as ts from "typescript";
 import { isFoldableHelperName } from "./foldable-helpers";
