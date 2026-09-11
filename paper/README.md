@@ -27,7 +27,8 @@ Each draft feeds one section of the paper.
 | File | Issue | Section it feeds |
 |---|---|---|
 | `introduction.md` | #52 | abstract and introduction |
-| `mechanism.md` | #53 | the technical body |
+| `mechanism.md` | #53, #55, #56 | the technical body: admissibility, the direction claim, the verdict, the fixpoint |
+| `values-and-modes.md` | #58 | the value domain and the three evaluation modes |
 | `related-work.md` | #27 | related work |
 | `theorem.md` | #28 | the two claims and their proof sketches |
 | `measurements.md` | #29 | evaluation |
