@@ -10,7 +10,7 @@
   "repetition/near-duplicate": 1
  },
  "spec/grammar.md": {
-  "claude/colon-reveal": 8,
+  "claude/colon-reveal": 7,
   "discourse/punchy-fragments": 13,
   "tricolon/density": 2,
   "formatting/em-dash-density": 6,
@@ -52,7 +52,7 @@
   "anaphora/repeated-opening": 1
  },
  "paper/measurements.md": {
-  "discourse/punchy-fragments": 1
+  "discourse/punchy-fragments": 2
  },
  "README.md": {
   "anaphora/repeated-opening": 1,

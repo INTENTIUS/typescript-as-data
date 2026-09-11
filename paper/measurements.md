@@ -56,9 +56,11 @@ The chant side's `false` is also an unsampled invariant: the run fails unless ev
 
 One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
 
-**What this agreement is worth.** The reference implementation's evaluation layer is a *port* of chant's (`packages/reference/CUTS.md`), so agreement on expression-level fixtures is close to guaranteed by construction rather than observed. What the cross-check actually tests today is that the port is faithful and current, and that both implementations are reachable through one adapter interface. It is not evidence that the specification can be implemented independently. Making it so means writing the reference from the specification text rather than deriving it, which is tracked separately and is not claimed here.
+**What this agreement is worth.** Until #50 the reference implementation's evaluation layer was a *port* of chant's, so agreement on expression-level fixtures was guaranteed by construction rather than observed. It is now written from `grammar.md` §2 and `judgments.md` J1 without consulting chant's source, and the two implementations agree on every fixture, so the comparison is between two codebases rather than one code base with itself.
 
-The limits showed in chant-v0.69.0, which extended an envelope check from three kinds to five while the port still had three; because no fixture covered the shape, the suite stayed green against a stale port until the drift was found by reading the release diff, and two fixtures now cover it. A suite that passes because nothing exercises the difference is the failure mode this section should not paper over.
+Two limits on that. The rewrite's author had read chant's implementation closely while writing the specification from it, so this establishes that the specification is complete enough to implement from, not that a reader who had never seen chant would arrive at the same place. And the reference covers the expression layer only: J2 and J3 are unimplemented there (#21, #22), so Theorem 1 still rests on one implementation.
+
+The port's own failure mode is worth recording because it is the one this section should not paper over: chant-v0.69.0 extended an envelope check from three kinds to five while the port still had three, and because no fixture covered the shape, the suite stayed green against a stale port until the drift was found by reading the release diff. Two fixtures now cover it, and the port that made the drift possible is gone.
 
 ## What the specification found
 
@@ -72,6 +74,7 @@ Writing the specification against the implementation found defects the implement
 | interpretation depth exhaustion degraded silently | `fold-import.ts` | chant#2370, fixed in v0.68.0 |
 | three stale documentation claims, one in a shape the parity gate could not see | docs | chant#2306, #2348 |
 | the forward taint edge stated backwards in the spec's own prose | `spec/requirements.md` | caught by writing `Succ` as an operator (#15) |
+| four normative sentences used an *unclaimed* callee and none defined it | `spec/grammar.md` | found by writing the reference from the spec text; S-Unclaimed added (#51) |
 | a module that threw at import was cached as evaluated, so a second build in one process reported no error | `discovery/import.ts` | chant#2368, fixed in v0.69.1; found by the adversarial corpus entry this specification's inventory shaped |
 
 ## Negative results, kept
@@ -90,3 +93,4 @@ The corpus is chant's own examples, and chant's documentation says the number is
 - Twelve mixed entries and one adversarial build are a small sample, all from one project.
 - Fixture coverage is 32 of 123 rules, and the cross-file rules cannot have fixtures until the format grows (#24).
 - The reference implementation does not implement the module layer or J3, so Theorem 1 has one implementation's evidence.
+- The independent rewrite found one specification gap. One is a small sample, and it is the sample a single author working alone can produce.

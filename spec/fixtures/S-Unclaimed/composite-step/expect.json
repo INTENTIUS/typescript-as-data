@@ -1,0 +1,3 @@
+{ "rules": ["S-Unclaimed", "S-CompositeStep", "F-Eval-Member"], "export": "x", "shape": "accept", "fold": "fold",
+  "value": { "__compositeStep": "Checkout", "args": [{ "v": 4 }] },
+  "note": "An unclaimed bare-identifier callee narrowed to .step folds to the composite-step envelope. Claimed callees (a registered helper, an admitted intrinsic) are not unclaimed and take their own S-Call form; the reference ships no host, so nothing claims Checkout here." }

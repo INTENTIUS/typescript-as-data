@@ -82,7 +82,7 @@ Shape only. No resolution, no evaluation.
 | L3.17 | eager intrinsic referenced as a bare value | rejected; "call it instead" | F-Eval-Ident step 3; F-Div-Eager |
 | L3.18 | method call receiver is a symbolic envelope | rejected; else `toString` would answer with the placeholder's shape | F-Eval-CallMethod; F-Div-Method |
 | L3.19 | method call, named property not a function | rejected | F-Eval-CallMethod; F-Div-Method |
-| L3.20 | `.step` narrowing | only when the callee is not already a helper, intrinsic, `FoldableFunction`, or shadowed by a const (`isUnclaimedBareCall`) | F-Eval-Member step 2; F-Div-Step |
+| L3.20 | `.step` narrowing | only when the callee is not already a helper, intrinsic, `FoldableFunction`, or shadowed by a const (`isUnclaimedBareCall`) | S-Unclaimed, F-Eval-Member step 2; F-Div-Step |
 | L3.21 | optional chain on nullish (added chant-v0.63.0) | `?.` on `null`/`undefined` yields a short-circuit sentinel that propagates through the rest of the chain; further `.`/`[]`, `!`, `?.()`; and becomes `undefined` at the chain's end (`continuesOptionalChain`) | F-Eval-Member steps 3–4 |
 | L3.22 | `?.()` method call on nullish (added chant-v0.63.0) | short-circuits like L3.21; a plain `.()` on nullish refuses | F-Eval-CallMethod |
 | L3.23 | envelope in a plain template span (added chant-v0.68.0, completed v0.69.0) | `symbolicEnvelopeKind` refuses all five kinds that can reach a span: `__attrRef`, `__intrinsic`, `__helper`, `__resource`, `__compositeStep`. `__symbol` is produced only inside an intrinsic interior, so it cannot appear here | F-Eval-Template; F-Div-TemplateEnvelope (divergence.md) |

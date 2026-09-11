@@ -97,7 +97,8 @@ S-Call        ::= S-CallHelper | S-CallIntrinsic | S-CallEager | S-CallMethod | 
   S-CallIntrinsic ::= ⟨Identifier⟩ ( ⟨Expr⟩* )        -- registry-gated
   S-CallEager     ::= ⟨Identifier⟩ ( ⟨Expr⟩* )        -- registry-gated
   S-CallMethod    ::= ⟨Expr⟩ ( . | ?. ) ⟨Identifier⟩ ( ⟨Expr⟩* )
-  S-CompositeStep ::= ⟨CallExpression⟩ . step
+  S-CompositeStep ::= ⟨UnclaimedCall⟩ . step
+  ⟨UnclaimedCall⟩ ::= ⟨Identifier⟩ ( ⟨Expr⟩* )     -- see S-Unclaimed
 S-Reject      ::= anything else
 ```
 
@@ -127,6 +128,19 @@ Per-production conditions and divergences:
 | S-CallMethod | L2.14 | receiver ∈ ⟨Expr⟩, `.` or `?.`; args ∈ ⟨Expr⟩; method name unconstrained | receiver must fold to a real value, not a symbolic envelope; the named property must be a function (R3.3). Receiver `null`/`undefined`: `.` refuses, `?.` short-circuits (L3.22) |
 | S-CompositeStep | L2.15 | any call, any arguments, member exactly `step` | callee must be an *unclaimed* bare identifier (L3.20); refused inside a folded function body |
 | S-Reject | L2.16 | EVL001 |; |
+
+**S-Unclaimed.** A call is *unclaimed* when its callee is a bare identifier
+that no other S-Call form claims. The callee must not be:
+
+- a registered authoring helper
+- an intrinsic the registry admits in call or eager form
+- a project-local function the scope binds
+- shadowed by a local `const`
+
+Only the bare-identifier part is decidable from syntax. The four conditions
+are resolution, so S-CompositeStep admits any call at shape level and
+F-Eval-Member step 2 applies the full test. S-CompositeStep, F-Div-Step and
+F-Eval-Member all used this term without a definition until #51.
 
 **Explicitly outside the subset** (S-Reject at shape level, and rejected by
 the folder): an arrow or function expression as a value (L3.1); class
