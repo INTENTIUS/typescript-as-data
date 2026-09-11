@@ -10,6 +10,8 @@ Every part of the mechanism has a normative draft under `spec/`. One identifier 
 
 ## Layout
 
+The repository is three things and a site.
+
 | Path | Holds |
 |---|---|
 | `spec/` | The normative specification |
@@ -38,4 +40,4 @@ npm run docs:build  # static build, as CI runs it
 
 ## License
 
-Apache-2.0
+Licensed under Apache-2.0; see `LICENSE`.

@@ -73,12 +73,14 @@ ECMAScript on purpose (R10.2, R10.6) and are stated as departures.
 
 ### Varies by host
 
+A host supplies four things.
+
 - the constructors that build opaque entities
 - the calls that fold, and the rule admitting each
 - the tagged templates that are intrinsics
 - how an entity exposes attributes as symbolic references
 
-That is the host-hook interface
+Those four are the host-hook interface
 (`requirements.md` R7, issue #16), and chant's lexicons are one instantiation
 of it. The generality this buys is generality over **host vocabularies**, not
 over languages. A reader who infers language portability from "parameterized

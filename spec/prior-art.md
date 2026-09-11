@@ -112,8 +112,7 @@ the program to be specialised arrives one module at a time (PLDI '97), or the
 in stages, one residual module per data module (PEPM '97, extended in TCS
 2000). Both are about the modular *structure* of specialisation: how the
 input's modules map onto the residual's modules while the whole program is
-specialised. Neither, as posed, is a per-module *decision* between specialising and
-leaving a module unspecialised. The setting is a functional language where
+specialised. As posed, neither is a per-module *choice* to specialise or not. The setting is a functional language where
 object identity is not a concept, so the identity problem chant's fixpoint
 solves has no obvious way to arise there.
 
@@ -127,8 +126,8 @@ longer the unknown that gates #15 and #28.
 
 ### Evaluation that escapes into execution (Nix import-from-derivation)
 
-Nix evaluation is pure. IFD pauses it, realises a store object (a build), and
-resumes with the contents, the community's own framing is that
+Nix evaluation is pure. IFD pauses it to realise a store object (a build), then
+resumes with the contents. The community's own framing is that
 IFD "is bind" for Nix builds. It is an escape from pure evaluation that keeps
 the result deterministic because the build is sandboxed and content-addressed.
 
