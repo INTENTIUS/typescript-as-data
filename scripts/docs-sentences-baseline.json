@@ -48,6 +48,9 @@
   "discourse/punchy-fragments": 6,
   "repetition/near-duplicate": 6
  },
+ "paper/measurements.md": {
+  "discourse/punchy-fragments": 1
+ },
  "README.md": {
   "anaphora/repeated-opening": 1,
   "discourse/punchy-fragments": 1

@@ -3,8 +3,10 @@
 // Posture here: README.md, spec/README.md and spec/prior-art.md are prose and
 // carry no real findings. Four baselined entries in them are heading-run
 // artifacts: a table or bullet list between two headings blanks out, so the
-// headings read as consecutive sentences opening with "##". Those four are
-// the only tolerated findings in the prose files. The rule files (grammar, judgments, values, divergence, hosts,
+// headings read as consecutive sentences opening with "##". A fifth, in
+// paper/measurements.md, is a lone sentence between a table and a heading
+// read as a fragment pair; it follows the position, not the words. Those
+// five are the only tolerated findings in the prose and paper files. The rule files (grammar, judgments, values, divergence, hosts,
 // inventory) are formal text: every rule opens with its identifier in bold,
 // case analyses open with "If"/"with"/"otherwise", and definitions are short
 // lines. The linter reads those as anaphora, fragments and colon reveals;
