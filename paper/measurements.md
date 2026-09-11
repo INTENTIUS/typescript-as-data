@@ -54,6 +54,10 @@ The chant side's `false` is also an unsampled invariant: the run fails unless ev
 
 One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
 
+**What this agreement is worth.** The reference implementation's evaluation layer is a *port* of chant's (`packages/reference/CUTS.md`), so agreement on expression-level fixtures is close to guaranteed by construction rather than observed. What the cross-check actually tests today is that the port is faithful and current, and that both implementations are reachable through one adapter interface. It is not evidence that the specification can be implemented independently. Making it so means writing the reference from the specification text rather than deriving it, which is tracked separately and is not claimed here.
+
+The limits showed in chant-v0.69.0, which extended an envelope check from three kinds to five while the port still had three; because no fixture covered the shape, the suite stayed green against a stale port until the drift was found by reading the release diff, and two fixtures now cover it. A suite that passes because nothing exercises the difference is the failure mode this section should not paper over.
+
 ## What the specification found
 
 Writing the specification against the implementation found defects the implementation's own tests had not.
