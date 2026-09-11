@@ -75,6 +75,7 @@ Writing the specification against the implementation found defects the implement
 | three stale documentation claims, one in a shape the parity gate could not see | docs | chant#2306, #2348 |
 | the forward taint edge stated backwards in the spec's own prose | `spec/requirements.md` | caught by writing `Succ` as an operator (#15) |
 | four normative sentences used an *unclaimed* callee and none defined it | `spec/grammar.md` | found by writing the reference from the spec text; S-Unclaimed added (#51) |
+| a backward-tainted file's fallback reason claims a file imports it, and none does | `discovery/fold-import.ts` | found by walking the adversarial build for the paper's worked example; `F-Obs-Report` requires naming the backward edge |
 | a module that threw at import was cached as evaluated, so a second build in one process reported no error | `discovery/import.ts` | chant#2368, fixed in v0.69.1; found by the adversarial corpus entry this specification's inventory shaped |
 
 ## Negative results, kept
