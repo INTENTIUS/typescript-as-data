@@ -27,6 +27,8 @@ The **expression classifier** (`grammar.md` §2) then decides the shapes inside 
 
 Reducing an expression to a value uses three different mechanisms, and conflating them is the easiest way to misread the design.
 
+![Reduce to envelopes, then revive](figures/two-phase.svg)
+
 **Envelope, then revive.** The common case. Evaluation produces a symbolic envelope naming what the source named: `{__resource}` for a construction, `{__intrinsic}` for a registered intrinsic, `{__helper}` for an authoring helper, `{__compositeStep}` for the `.step` idiom (`F-Val-Domain`). Nothing executes. A second phase then resolves each name **through the folding file's own imports** and invokes the real constructor or function (`F-Val-Fate`). The value the caller receives is the one the run path would have produced, from the same module the source itself imported.
 
 That two-phase shape is what makes the no-execution claim precise. What is guaranteed is that none of the folded file's own statements run (`F-NoOwnExecution`). Revival does run code — the same code the run path would import for the same purpose. Stating the claim as "nothing executes" would be false; omitting revival would make the specification unimplementable.
@@ -124,6 +126,8 @@ Two consequences are worth stating because they look like defects:
 - A folded file can be forced to run by a file it never imports, through the backward edge. Nothing in its own source predicts that, which is why the fallback reason has to be able to say so.
 
 ## A worked example
+
+![The fold and run boundary with both taint edges](figures/taint-boundary.svg)
 
 The fixpoint is easiest to read on a build made to exercise it. The production implementation ships one: four files whose verdicts its own test asserts by name, measured here by running its build with per-file decisions reported.
 

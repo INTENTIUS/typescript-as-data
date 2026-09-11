@@ -32,6 +32,7 @@ Each draft feeds one section of the paper.
 | `theorem.md` | #28 | the two claims and their proof sketches |
 | `measurements.md` | #29 | evaluation |
 | `discussion.md` | #54 | discussion |
+| `figures/` | #57 | two SVGs: the taint boundary, and the two-phase shape |
 | `../spec/prior-art.md` | #31 | the novelty narrowing, cited from related work |
 
 ## Still to write
