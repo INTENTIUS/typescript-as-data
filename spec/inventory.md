@@ -146,7 +146,7 @@ module is never imported.
 | L7.5 | rule 5; every expression in the subset | extended with `new` in value position and calls through a bare identifier | S-FactoryBody |
 | L7.6 | module-level resource reference declines | that resource is a singleton the run path shares; interpretation would not | F-Call step 4 (declines: module-level resource) |
 | L7.7 | `constResolvesToResource` follows alias chains | `const a = new T(); const b = a;` cannot smuggle one in | F-Call step 4 (alias chains) |
-| L7.8 | `MAX_INTERPRETATION_DEPTH` | self-referential composite terminated | F-Depth |
+| L7.8 | `MAX_INTERPRETATION_DEPTH` (16) | exhaustion returns "not interpretable"; the caller invokes instead and the file still folds, with no trace (chant#2370). Degrades rather than falls back; the one known F-Depth gap | F-Depth |
 
 ## L8. File decision, session, and taint
 
