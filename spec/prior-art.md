@@ -27,22 +27,23 @@ centre rather than "the fallback".
 ### Same function, static or dynamic, same result, the CTFE family
 
 D's compile-time function execution, Zig's `comptime`, Rust's `const fn`,
-C++'s `constexpr`. The D specification states the principle directly: a
-function's semantics cannot depend on compile-time values; the calling context
-alone decides whether it runs at compile time or run time, and the same code is
-shared between both. That is chant's revival argument, "the function that runs
+C++'s `constexpr`. The D specification states the principle directly, quoted in the next
+paragraph: the same code runs in both contexts, and the context alone decides. That is chant's revival argument, "the function that runs
 is the one your `import` names", made twenty years earlier in a general-purpose
 language.
 
-CTFE decides per *call site*, and a context that
-*requires* compile-time evaluation and cannot get it is a **compile error**,
-not a fallback. DMD's diagnostic is "cannot be interpreted at compile time";
-a dlang forum thread (`kaejjbgiujdnqlmyzlup`) shows a `static foreach` over a
-function with no available source failing the build on it.
-The specification's prose on this was not retrievable in this sweep (the
-rendered page and the raw `.dd` both truncated or 404'd), so the citation is
-to the compiler's behaviour rather than the spec's sentence; #47 keeps that
-open. chant decides per *file*, and a file that cannot be folded is run. A CTFE'd
+CTFE decides per *call site*. The specification (dlang/dmd,
+`spec/function.dd`, "Compile Time Function Execution") lists the contexts
+"where a compile time value is required" and states the principle this work
+relies on: "All functions that execute in CTFE must also be executable at run
+time. The compile time evaluation of a function does the equivalent of running
+the function at run time. The semantics of a function cannot depend on compile
+time values of the function." A required context that cannot be evaluated is
+illegal, not a fallback; the spec's own example "is illegal, because the
+runtime code for `foo` cannot be generated", and DMD reports "cannot be
+interpreted at compile time". `__ctfe` exists to give "an alternative execution
+path to avoid operations which are forbidden in CTFE". chant decides per
+*file*, and a file that cannot be folded is run. A CTFE'd
 value is *copied* into the compiled program; nothing at run time shares
 identity with a compile-time object. chant's folded entities are the same
 objects the run path would have built, and other files hold references to them.
@@ -192,11 +193,11 @@ explicit in the language rather than inferred.
 
 ## Must do before submission
 
-1. Read Heldal & Hughes 2000 in full, now for the camera-ready citation
-   rather than to decide item 4; see the narrowed conclusion above. Needs a
-   browser or institutional access; the fetcher used here is refused.
+1. Read Heldal & Hughes 2000 in full, for the camera-ready citation rather
+   than to decide item 4; see the narrowed conclusion above. Every route
+   reachable from here is refused or restricted; this needs the author's own
+   library access.
 2. ~~Prepack heap-serialization identity~~, answered above from
    `ResidualHeapVisitor`; a citation to the source file, not the marketing page.
-3. ~~D: error versus fallback~~, answered above from the compiler's
-   diagnostic. The specification's own sentence is still wanted, for the paper's
-   citation. Not blocking.
+3. ~~D: error versus fallback~~, answered above from the specification's own
+   text (dlang/dmd `spec/function.dd`) and the compiler's diagnostic.
