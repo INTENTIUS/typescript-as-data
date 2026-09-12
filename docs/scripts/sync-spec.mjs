@@ -90,7 +90,7 @@ try {
   // The data-host column (#86): present when the report was taken with the Rust evaluator built.
   const column = /## The data-host column\n\n- evaluator: `([^`]+)`[^\n]*\n\n\| Files \| Agreed \| Both fold \|\n\|[-|]+\|\n\| (\d+) \| (\d+) \| (\d+) \|/.exec(report);
   const dataHost = column ? { evaluator: column[1], files: +column[2], agreed: +column[3], bothFold: +column[4] } : null;
-  if (rev && totals) corpus = { corpusVersion: rev[1], revision: rev[2], entries: +rev[3], files: +totals[1], comparable: +totals[2], agreed: +totals[3], bothFold: +totals[4], noHost: +totals[5], noComposite: +totals[6], chantDeclares: declared ? declared[1] : null, dataHost };
+  if (rev && totals) corpus = { corpusVersion: rev[1], revision: rev[2], entries: +rev[3], files: +totals[1], comparable: +totals[2], agreed: +totals[3], bothFold: +totals[4], noHost: +totals[5], noValueCall: +totals[6], chantDeclares: declared ? declared[1] : null, dataHost };
 } catch {}
 mkdirSync(dataDir, { recursive: true });
 const figures = { specVersion, chantPin, referenceVersion, conformanceVersion, rulesWithFixture: cov ? +cov[1] : null, rulesTotal: cov ? +cov[2] : null, fixtures: fixtureDirs.length, wholeBuildFixtures: wholeBuild, corpus };

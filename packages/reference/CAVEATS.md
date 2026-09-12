@@ -21,23 +21,29 @@ the class the host supplies, `{__intrinsic}` and `{__helper}` are invoked, and
 `{__symbol}` resolves as a dotted chain. `{__attrRef}` passes through, and is
 rejected inside a host call's arguments per **F-Val-Position**.
 
-Two limits remain.
+One limit remains.
 
-`{__compositeStep}` has no fate here. Its revival is "resolve the composite
-(J2 F-Call), then read `.step` off the real result", and this package has no
-composite factory form, so revival rejects rather than guessing.
+`{__compositeStep}` has its fate since #109: revival resolves the composite
+through the module layer's F-Call and reads `.step` off the real result. An
+expression-level fold has no module layer, so there it still rejects.
 
 Revival can only construct what a host supplies. With `EMPTY_HOST` an envelope
 has no class to become and revival rejects, which is correct rather than
 silent: a build that folds a resource and cannot revive it has not folded the
 file. Conformance fixtures name the host they need.
 
-## The composite factory form, measured
+## The composite factory form, and what F-Call does not do
 
-The corpus cross-check (#25) puts a number on the gap above: 272 of chant's
-409 corpus files reach a composite factory call, directly or through a file
-that does, and none of them can be compared until this package has the form.
-The count is in `packages/conformance/corpus-report.md`.
+F-Call is implemented (#109): a registered project composite is interpreted
+under S-FactoryParams and S-FactoryBody against its defining module's scope,
+and a host-bound factory at a declarator is invoked once per call site with
+the resolved arguments, its result required to be an entity or a composite
+instance. Two things it does not do. A host factory called outside declarator
+position, in value position or as a non-exported const's initializer, has no
+rule in J1 and is rejected here while chant invokes it; that is #110 and the
+corpus counts those files under the `valueCall` limit. And `ι = isolated`
+is not implemented, so step 5 never refuses; the corpus is judged in open
+mode.
 
 ## Capture reaches inside an entity
 

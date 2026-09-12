@@ -1,0 +1,36 @@
+{
+  "rules": [
+    "S-FactoryBody",
+    "F-Call"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "good-shapes.ts": "run",
+    "bad-shapes.ts": "run",
+    "good.ts": "fold",
+    "no-return.ts": "run",
+    "empty.ts": "run"
+  },
+  "rejectRule": {
+    "good-shapes.ts": "F-Eval-Function",
+    "bad-shapes.ts": "F-Eval-Function",
+    "no-return.ts": "F-Call",
+    "empty.ts": "F-Call"
+  },
+  "exports": {
+    "good.ts": {
+      "g": {
+        "bucket": {
+          "entityType": "Bucket",
+          "lexicon": "shapes",
+          "props": {
+            "name": "a-base-x"
+          },
+          "attributes": {}
+        }
+      }
+    }
+  },
+  "note": "A factory body is consts, plain or destructured, then a final return, and the return is required: a body without one and an empty body are not interpretable, unlike a project-local function's block (S-FnBody), which yields undefined. Both registration modules run on their own (F-Eval-Function); the good caller folds by interpretation and the bad callers run at F-Call."
+}

@@ -1,0 +1,47 @@
+{
+  "rules": [
+    "F-Host-Composite",
+    "F-Call",
+    "F-Count"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "store.ts": "run",
+    "app.ts": "fold"
+  },
+  "exports": {
+    "app.ts": {
+      "store": {
+        "data": {
+          "entityType": "Bucket",
+          "lexicon": "shapes",
+          "props": {
+            "name": "app"
+          },
+          "attributes": {}
+        },
+        "logs": {
+          "entityType": "Bucket",
+          "lexicon": "shapes",
+          "props": {
+            "name": "app-logs"
+          },
+          "attributes": {}
+        }
+      },
+      "logs": {
+        "entityType": "Bucket",
+        "lexicon": "shapes",
+        "props": {
+          "name": "other-logs"
+        },
+        "attributes": {}
+      }
+    }
+  },
+  "note": "The registration form: Composite bound in the defining module to the host's own import makes Store interpretable, so a call folds the factory body against store.ts's scope and never imports it (F-Call step 4). store.ts itself runs, since its declarator is a function used as a value (F-Eval-Function), and that is what lets a caller fold: the binding comes from source. new is admitted inside the body; the destructured call resolves once (F-Count) and indexes the members.",
+  "rejectRule": {
+    "store.ts": "F-Eval-Function"
+  }
+}
