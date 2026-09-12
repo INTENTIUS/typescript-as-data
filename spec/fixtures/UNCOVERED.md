@@ -2,7 +2,7 @@
 
 Deliberate, and this list may only shrink (#8). Each entry names the rule and why it is still uncovered. Remove an entry when its fixture lands; the gate fails if an entry is stale.
 
-107 of 132 rules have fixtures. Most of the rules below are uncovered because the corpus is still growing (#24); where a rule needs something the reference implementation does not have, the entry says so.
+107 of 138 rules have fixtures. Most of the rules below are uncovered because the corpus is still growing (#24); where a rule needs something the reference implementation does not have, the entry says so.
 
 - `F-Rule-Input` — the harness has no rule hook and no findings-as-data fixture kind yet (#101)
 - `F-Rule-Phase` — the harness has no rule hook and no findings-as-data fixture kind yet (#101)

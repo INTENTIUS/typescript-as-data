@@ -5,11 +5,13 @@ sidebar:
   order: 4
 ---
 
+import figures from "../../../data/figures.json";
+
 `packages/conformance/src/chant-agreement.test.ts` runs the fixture set against
 chant, and then runs both implementations against each other.
 
 The pin is a real dependency. `@intentius/chant` is in this repository's
-`devDependencies` at version `0.70.1`, and the adapter in
+`devDependencies` at version <code>{figures.chantPin}</code>, and the adapter in
 `packages/conformance/src/adapters/chant.ts` reaches it through its public
 entry only: `fold`, `collectConsts`, `FoldError`, and, since `chant-v0.64.0`,
 `findSubsetViolation` for the shape half. No source is vendored and no internal
@@ -51,9 +53,10 @@ is asserted rather than assumed.
 
 | Pin | Fixtures | Rules with a fixture | Shape and fold agreement |
 |---|---|---|---|
-| chant 0.70.1 | 68, of which 30 are whole-build | 100 of 127 | all, on the 52 the pin can answer |
+| chant <code>{figures.chantPin}</code> | {figures.fixtures}, of which {figures.wholeBuildFixtures} are whole-build | {figures.rulesWithFixture} of {figures.rulesTotal} | all, on every fixture the pin can answer |
 
-Numbers taken from `paper/measurements.md`.
+The counts are read from the fixture tree at build time; the agreement figure
+is `paper/measurements.md`'s.
 
 The same file reports one disagreement that existed between the two, on an
 envelope inside a template span. It was triaged the way `spec/README.md`
