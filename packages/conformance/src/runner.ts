@@ -22,18 +22,18 @@ export function runFixture(adapter: ConformanceAdapter, f: ExpressionFixture): F
   }
   return { fixture: f.id, adapter: adapter.name, pass: failures.length === 0, skipped, failures };
 }
-export function runFixtures(adapter: ConformanceAdapter, fixtures: Fixture[]): FixtureReport[] {
+export async function runFixtures(adapter: ConformanceAdapter, fixtures: Fixture[]): Promise<FixtureReport[]> {
   return [
     ...expressionFixtures(fixtures).map((f) => runFixture(adapter, f)),
-    ...projectFixtures(fixtures).map((f) => runProjectFixture(adapter, f)),
+    ...(await Promise.all(projectFixtures(fixtures).map((f) => runProjectFixture(adapter, f)))),
   ];
 }
 
 /** #24 — a whole-build fixture. J3's edges are invisible in any single file, so this is the only shape that can test them. */
-export function runProjectFixture(adapter: ConformanceAdapter, f: ProjectFixture): FixtureReport {
+export async function runProjectFixture(adapter: ConformanceAdapter, f: ProjectFixture): Promise<FixtureReport> {
   const base = { fixture: f.id, adapter: adapter.name };
   if (!adapter.foldProject) return { ...base, pass: true, skipped: "no project entry", failures: [] };
-  const r = adapter.foldProject(f.files, f.host ? requireHost(f.host) : undefined);
+  const r = await adapter.foldProject(f.files, f.host ? requireHost(f.host) : undefined);
   if (r === "unavailable") return { ...base, pass: true, skipped: "project entry unavailable", failures: [] };
   const failures: string[] = [];
   for (const [path, want] of Object.entries(f.verdicts)) {
@@ -63,16 +63,25 @@ export function runProjectFixture(adapter: ConformanceAdapter, f: ProjectFixture
 }
 
 /** #11 — two implementations must agree on every fixture, independently of what the fixture expects. */
-export function compareAdapters(a: ConformanceAdapter, b: ConformanceAdapter, fixtures: Fixture[]): string[] {
+export async function compareAdapters(a: ConformanceAdapter, b: ConformanceAdapter, fixtures: Fixture[]): Promise<string[]> {
   const dis: string[] = [];
   for (const f of projectFixtures(fixtures)) {
     if (!a.foldProject || !b.foldProject) continue;
     const host = f.host ? requireHost(f.host) : undefined;
-    const ra = a.foldProject(f.files, host), rb = b.foldProject(f.files, host);
+    const [ra, rb] = await Promise.all([a.foldProject(f.files, host), b.foldProject(f.files, host)]);
     if (ra === "unavailable" || rb === "unavailable") continue;
     for (const path of new Set([...Object.keys(ra.verdicts), ...Object.keys(rb.verdicts)])) {
       const va = ra.verdicts[path]?.kind ?? "absent", vb = rb.verdicts[path]?.kind ?? "absent";
       if (va !== vb) dis.push(`${f.id} ${path}: ${a.name} ${va}, ${b.name} ${vb}`);
+      // The verdict alone cannot tell a seed from a taint casualty, and both of
+      // those are "run". Where both implementations report the tentative
+      // verdict and the edge, compare them: that is where J3 actually lives.
+      if (ra.tentative && rb.tentative && ra.tentative[path] !== rb.tentative[path]) {
+        dis.push(`${f.id} ${path}: tentative — ${a.name} ${ra.tentative[path] ?? "none"}, ${b.name} ${rb.tentative[path] ?? "none"}`);
+      }
+      if (ra.taintedBy && rb.taintedBy && ra.taintedBy[path] !== rb.taintedBy[path]) {
+        dis.push(`${f.id} ${path}: tainted by — ${a.name} ${ra.taintedBy[path] ?? "nothing"}, ${b.name} ${rb.taintedBy[path] ?? "nothing"}`);
+      }
     }
   }
   for (const f of expressionFixtures(fixtures)) {

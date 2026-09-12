@@ -32,9 +32,14 @@ export interface ConformanceAdapter {
   foldExport(source: string, exportName: string): FoldResult;
   /**
    * J2 + J3 over a whole build: every file's final verdict. Optional, and
-   * "unavailable" when the implementation exposes no project-level entry —
-   * chant's public API is per-file, so its project fixtures are reported
-   * skipped rather than silently passing.
+   * "unavailable" when the implementation cannot answer — no whole-build
+   * entry at all, or a host it has no way to install. Such a fixture is
+   * reported skipped rather than silently passing.
+   *
+   * May be async: a real implementation resolves modules from a filesystem.
    */
-  foldProject?(files: Map<string, string>, host?: ConformanceHost): ProjectResult | "unavailable";
+  foldProject?(
+    files: Map<string, string>,
+    host?: ConformanceHost,
+  ): ProjectResult | "unavailable" | Promise<ProjectResult | "unavailable">;
 }
