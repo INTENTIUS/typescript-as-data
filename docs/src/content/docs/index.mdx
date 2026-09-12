@@ -1,56 +1,67 @@
 ---
 title: typescript-as-data
-description: A specification for a statically evaluable subset of TypeScript, its reference implementation, and its conformance suite.
+description: TypeScript in place of YAML. A file that is data is typed JSON, and it means the same thing whether it is folded or run.
 template: splash
 hero:
-  tagline: A statically evaluable subset of TypeScript, specified, implemented, and conformance-tested.
+  tagline: TypeScript in place of YAML. Typed, checked at the keystroke, and turned into the artifact without running.
   actions:
-    - text: Start here
-      link: /typescript-as-data/introduction/what-this-is/
+    - text: Try it in ten minutes
+      link: /typescript-as-data/try-it/
       icon: right-arrow
-    - text: Read the specification
-      link: /typescript-as-data/spec/
-      icon: document
+    - text: Add it to your platform
+      link: /typescript-as-data/for-your-platform/
+      icon: rocket
       variant: minimal
-    - text: View on GitHub
-      link: https://github.com/INTENTIUS/typescript-as-data
-      icon: external
+    - text: The specification
+      link: /typescript-as-data/introduction/what-this-is/
+      icon: document
       variant: minimal
 ---
 
-The subset is the part of TypeScript whose value is fixed by its source:
-literals, constants, and symbolic references. A tool can reduce it to data
-without running it. Most configuration languages get this property by
-inventing a language. This specification carves a fragment out of an existing
-one and defines the edge: source outside the subset falls back to real
-execution, and the two paths must agree.
+import { Card, CardGrid } from '@astrojs/starlight/components';
 
-The repository is three things and a site.
+<CardGrid>
+  <Card title="Pure synthesis, no execution" icon="approve-check">
+    The file becomes the artifact without being run. The output is a function of the source and nothing else. [How](/typescript-as-data/what-it-enables/no-execution/)
+  </Card>
+  <Card title="Semantic linting" icon="magnifier">
+    The same check at the keystroke and in CI, over real values, across resources. [How](/typescript-as-data/what-it-enables/semantic-linting/)
+  </Card>
+  <Card title="Round-trip generation" icon="random">
+    Live state or an existing artifact becomes source that folds back to exactly what it came from. [How](/typescript-as-data/what-it-enables/round-trip/)
+  </Card>
+</CardGrid>
 
-| Path | Holds |
-|---|---|
-| `spec/` | The normative specification |
-| `spec/fixtures/` | Conformance fixtures, one directory per rule |
-| `packages/reference` | The reference implementation (`@intentius/tsad-reference`) |
-| `packages/conformance` | The adapter interface, fixture format, runner, and the chant adapter |
-| `docs/` | This site, generated in part from `spec/` |
+## The same policy, twice
 
-## Where to go
+```yaml title="governance.yml"
+orgs:
+  my-org:
+    repos:
+      api:
+        hasWiki: false
+        deleteBranchOnMerge: true
+        topics: [service, api]
+        branchProtection:
+          - pattern: main
+            requirePullRequestReviews: true
+            requiredApprovingReviewCount: 1
+```
 
-- [What this is](/typescript-as-data/introduction/what-this-is/) for the scope
-  of the specification, what the name claims, and what it does not.
-- [Rules and judgments](/typescript-as-data/introduction/rules-and-judgments/)
-  for the two identifier families and the four judgments.
-- [Reading the specification](/typescript-as-data/introduction/reading-the-spec/)
-  for the order the normative files are meant to be read in.
-- [The specification](/typescript-as-data/spec/) itself, published from
-  `spec/*.md`.
-- [The reference implementation](/typescript-as-data/reference/overview/) and
-  [what it does not do](/typescript-as-data/reference/limits/).
-- [Conformance](/typescript-as-data/conformance/overview/), the fixtures, the
-  coverage gate, and the two cross-checks against chant.
+```ts title="governance.ts"
+import type { GovernanceConfig } from "@intentius/forgejo-warden";
 
-This page and the introduction, reference and conformance sections are written
-by hand. The specification section is generated from `spec/*.md` by
-`docs/scripts/sync-spec.mjs`; `spec/` is the normative source, and the
-generated pages are build output.
+const protectedMain = { pattern: "main", requirePullRequestReviews: true, requiredApprovingReviewCount: 1 };
+
+export default {
+  orgs: {
+    "my-org": {
+      repos: {
+        api: { hasWiki: false, deleteBranchOnMerge: true, topics: ["service", "api"], branchProtection: [protectedMain] },
+      },
+    },
+  },
+} satisfies GovernanceConfig;
+```
+
+The second one has completion, a type error on a misspelt key, and a `const` it can reuse across forty repositories. The tool that reads it gets the same object either way, and it never runs the file to get it.

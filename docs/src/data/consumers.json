@@ -1,0 +1,4 @@
+[
+  { "name": "forgejo-warden", "kind": "org governance", "status": "in flight", "link": "/typescript-as-data/for-your-platform/forgejo-warden/", "repo": "https://github.com/INTENTIUS/forgejo-warden", "note": "reads governance.ts through the published reference; the first consumer that is not this repository or chant" },
+  { "name": "chant", "kind": "infrastructure toolchain", "status": "reference platform", "link": "/typescript-as-data/for-your-platform/chant/", "repo": "https://github.com/INTENTIUS/chant", "note": "the implementation the specification was extracted from; seventeen lexicons, round-trip generators, semantic lint" }
+]
