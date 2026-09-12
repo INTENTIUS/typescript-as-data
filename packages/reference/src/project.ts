@@ -23,7 +23,7 @@ export type Verdict =
   | { kind: "fold"; exports: Map<string, unknown>; captures: Set<string> }
   | { kind: "run"; rule: string; reason: string };
 
-/** F-Import's identity test: `typeof` object or function. Broader than F-Val-Live; see CAVEATS.md. */
+/** F-Identity's reference test, which F-Import uses: `typeof` object or function, not recursive. */
 const hasIdentity = (v: unknown): boolean => v !== null && (typeof v === "object" || typeof v === "function");
 
 const parse = (path: string, source: string) => ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);

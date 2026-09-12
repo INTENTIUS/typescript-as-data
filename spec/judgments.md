@@ -357,18 +357,46 @@ J2 gives each `f` a tentative verdict `w(f) ∈ {fold, run}`; when
 
 ### Definitions
 
+**F-Identity.** Two identity predicates appear in this specification and they
+are not interchangeable.
+
+- The **entity test** (F-Val-Live) recurses through plain objects and arrays.
+- The **reference test** (F-Import) is `typeof` object **or** function. It does
+  not recurse and it admits a plain `{ a: 1 }` that the entity test rejects.
+
+The proposition below is about *entities* — the values a build names and
+serializes — and the entity test is the normative one for it. Two structurally
+equal plain objects that no `AttrRef` points at cannot be told apart in the
+output, so
+duplicating one breaks nothing claimed here. Recursion is what makes that test
+usable, a plain object *holding* an entity being itself live.
+
+F-Import uses the reference test anyway, as a deliberate over-approximation.
+An imported binding is nearly always an entity, and one `typeof` is cheaper
+than a recursive walk of every resolved import. The cost is coverage rather
+than correctness (F-Direction): a file capturing only plain data from an
+import falls back where it need not. Whether to narrow F-Import to the entity
+test is a question for measurement, since it changes which files fold.
+
+F-CallLeak uses the entity test, and has to. A parameter helper returning
+computed plain data must taint nothing, and under the reference test every
+one of them would be a taint source.
+
 **F-Capture.** `f` *captures* `g`, written `f ⇝ g`, iff `w(f) = fold` and some
 value in `X(f)` is a **non-primitive** obtained from `X(g)`, a `Declarable`, a
 `CompositeInstance`, or any other object reached through `f`'s resolved
 imports of `g`. Recorded as `g ∈ L(f)`. A primitive is never a capture: it
-has no identity to disagree about (L8.5).
+has no identity to disagree about (L8.5). The test here is F-Identity's
+reference test, so the relation is an over-approximation of the entity
+relation the proposition needs.
 
 **F-CallLeak.** Let `φ` be a project-local function defined in `g` and called
 from `f` during `f`'s fold. If the call **returns** a value that carries a live
 object (R1.4) *which was not already carried in by the arguments*, then the
 call leaked `g`'s identity into `f`: `leakedIdentity(φ)` is set and `g ∈ L(f)`
-(L5.9). A function returning only plain data never leaks, which is what keeps
-a parameter helper from tainting anything. F-CallLeak is F-Capture through
+(L5.9). The test here is F-Identity's entity test. A function returning only
+plain data never leaks, which is what keeps a parameter helper from tainting
+anything. F-CallLeak is F-Capture through
 invocation rather than through import; the edge it records is the same edge.
 
 **F-Memo.** Within one build, `w`, `X` and `L` are computed **at most once per
