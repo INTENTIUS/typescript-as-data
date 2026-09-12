@@ -12,9 +12,22 @@ import { referenceAdapter } from "@intentius/tsad-reference";
 const all = loadFixtures(join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "spec", "fixtures")).filter((f) => f.profiles.includes("full"));
 // chant#2435 held S-CallLocal out of the shape half from spec 1.2 until
 // chant-v0.72.0 admitted a project-local call in its classifier (#2437);
-// nothing is held out now, and a future hold-out needs a chant issue as its
-// reason, the way this one had.
-const fixtures = all;
+// nothing is held out of the shape comparison now, and a future hold-out
+// needs a chant issue as its reason, the way this one had.
+//
+// chant#2441 — chant evaluates a helper or intrinsic call inside a folded
+// function body, which F-Div-Depth (L3.16) says the folder must refuse, and
+// produces the envelope the fixture's own note warns about. Unlike every other
+// F-Div row this is not a fallback, so it is a chant bug rather than a
+// tolerated divergence; these three are held out of the whole-build comparison
+// by name until it is fixed, and by name rather than by rule so a new fixture
+// citing F-Div-Depth is compared rather than silently excused.
+const foldsAtDepth = new Set([
+  "F-Eval-CallIntrinsic/inside-function-body",
+  "F-Eval-CallHelper/inside-function-body",
+  "F-Div-Provenance/helper-name-from-project-import",
+]);
+const fixtures = all.filter((f) => !foldsAtDepth.has(f.id));
 
 describe("chant cross-check (#11)", () => {
   test("chant passes every fixture through its public fold API", async () => {
@@ -45,6 +58,16 @@ describe("chant cross-check (#11)", () => {
   test("chant and the reference agree on every whole-build fixture chant can answer (#62)", async () => {
     const dis = await compareAdapters(referenceAdapter, chantAdapter, projectFixtures(fixtures));
     expect(dis, dis.join("\n")).toEqual([]);
+  });
+
+  test("the depth hold-out is exactly the three fixtures chant#2441 names, and still disagrees", async () => {
+    // A hold-out that quietly outlived its bug would be worse than the bug.
+    // Both halves are asserted: every held-out fixture exists, and every one
+    // still disagrees, so the list empties itself the moment chant#2441 lands.
+    const held = projectFixtures(all).filter((f) => foldsAtDepth.has(f.id));
+    expect(held.map((f) => f.id).sort()).toEqual([...foldsAtDepth].sort());
+    const dis = await compareAdapters(referenceAdapter, chantAdapter, held);
+    expect(dis.length, "chant#2441 looks fixed — drop the hold-out").toBeGreaterThan(0);
   });
   test("chant's shape classifier is available (chant-v0.64.0+, chant#2362) and agrees on every fixture", async () => {
     // The pinned chant carries the export, so "unavailable" would mean the adapter

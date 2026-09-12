@@ -11,6 +11,7 @@ import { createRequire } from "node:module";
 import * as ts from "typescript";
 import * as chant from "@intentius/chant";
 import type { ConformanceAdapter, ProjectResult, ProjectVerdict } from "../adapter.js";
+import type { ConformanceHost } from "../host.js";
 
 function exportInitializer(sf: ts.SourceFile, name: string): ts.Expression | undefined {
   for (const st of sf.statements) {
@@ -53,14 +54,115 @@ type ChantVerdict = {
   taintedBy?: { from: string; kind: "importer" | "capture" };
   exports?: ReadonlyMap<string, unknown>;
 };
+/**
+ * Whether the pinned chant takes `FoldProjectOptions.lexiconPackages`
+ * (chant#2438).
+ *
+ * Probed, not inferred from a version string. An older pin ignores an unknown
+ * option silently, so every hosted fixture would come back `run` and read as a
+ * real disagreement rather than as a missing feature. The probe is the smallest
+ * possible instance of the thing itself: one file importing one generated
+ * package. Memoized, since every hosted fixture asks.
+ */
+let hostPackageSupport: Promise<boolean> | undefined;
+
+function acceptsHostPackages(): Promise<boolean> {
+  hostPackageSupport ??= (async () => {
+    if (!projectFn) return false;
+    const root = mkdtempSync(join(tmpdir(), "tsad-probe-"));
+    try {
+      const dir = join(root, "node_modules", "@tsad", "probe");
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(
+        join(dir, "package.json"),
+        JSON.stringify({ name: "@tsad/probe", version: "0.0.0", type: "module", main: "index.js" }),
+        "utf8",
+      );
+      writeFileSync(join(dir, "index.js"), "export const PROBE = 1;\n", "utf8");
+      const file = join(root, "probe.ts");
+      writeFileSync(file, 'import { PROBE } from "@tsad/probe";\nexport const p = PROBE;\n', "utf8");
+      const verdicts = await projectFn([file], [], { lexiconPackages: ["@tsad/probe"] });
+      return verdicts.get(file)?.verdict === "fold";
+    } catch {
+      return false;
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  })();
+  return hostPackageSupport;
+}
+
 const projectFn = (
   chant as unknown as {
-    foldProject?: (files: readonly string[], intrinsics?: readonly unknown[]) => Promise<Map<string, ChantVerdict>>;
+    foldProject?: (
+      files: readonly string[],
+      intrinsics?: readonly unknown[],
+      options?: { lexiconPackages?: readonly string[] },
+    ) => Promise<Map<string, ChantVerdict>>;
   }
 ).foldProject;
 
+/**
+ * The key a generated host package reads its values back out of (#2438).
+ *
+ * A host's values are live JavaScript — classes revival must `new`, functions
+ * it must call — so the package written next to a fixture cannot be their
+ * source. It reads them off the process instead, which is sound because chant
+ * imports it in this same process.
+ */
+const HOST_VALUES = Symbol.for("tsad.conformance.hostValues");
+
+/**
+ * Write the host's packages into `root/node_modules`, so chant's own module
+ * resolution finds them from the fixture sources (#2438).
+ *
+ * Returns the specifiers written, which is what chant has to be told to follow
+ * a bare import into: its allowlist is `@intentius/chant-lexicon-*` unless a
+ * caller names a package outright, and `@tsad/shapes` is not that shape.
+ */
+function installHost(root: string, host: ConformanceHost): string[] {
+  const globals = (globalThis as Record<symbol, unknown>)[HOST_VALUES] as
+    | Map<string, ReadonlyMap<string, unknown>>
+    | undefined;
+  const registry = globals ?? new Map<string, ReadonlyMap<string, unknown>>();
+  (globalThis as Record<symbol, unknown>)[HOST_VALUES] = registry;
+
+  const specifiers: string[] = [];
+  for (const [specifier, values] of host.values) {
+    registry.set(specifier, values);
+    const dir = join(root, "node_modules", ...specifier.split("/"));
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      join(dir, "package.json"),
+      JSON.stringify({ name: specifier, version: "0.0.0", type: "module", main: "index.js" }),
+      "utf8",
+    );
+    // One binding per export, read back from the process. `export const` with a
+    // computed initializer is still a static export, so a named import of it
+    // resolves exactly as it would from a hand-written module.
+    const lines = [
+      `const values = globalThis[Symbol.for(${JSON.stringify("tsad.conformance.hostValues")})].get(${JSON.stringify(specifier)});`,
+      ...[...values.keys()].map((name) => `export const ${name} = values.get(${JSON.stringify(name)});`),
+    ];
+    writeFileSync(join(dir, "index.js"), lines.join("\n") + "\n", "utf8");
+    specifiers.push(specifier);
+  }
+  return specifiers;
+}
+
+/** The host's registered intrinsics, in chant's own `IntrinsicDef` shape (#2438). */
+function hostIntrinsics(host: ConformanceHost): unknown[] {
+  return host.intrinsics.map((i) => ({
+    name: i.name,
+    isTag: i.isTag,
+    ...(i.foldsAsCall ? { foldsAsCall: true } : {}),
+    ...(i.foldsEagerly ? { foldsEagerly: true } : {}),
+    ...(i.outputKey ? { outputKey: i.outputKey } : {}),
+  }));
+}
+
 /** chant resolves modules from disk, so a fixture's sources are written out and the paths handed over. */
-async function foldOnDisk(files: Map<string, string>): Promise<ProjectResult> {
+async function foldOnDisk(files: Map<string, string>, host?: ConformanceHost): Promise<ProjectResult> {
   const root = mkdtempSync(join(tmpdir(), "tsad-conformance-"));
   try {
     const paths: string[] = [];
@@ -70,7 +172,8 @@ async function foldOnDisk(files: Map<string, string>): Promise<ProjectResult> {
       writeFileSync(abs, source, "utf8");
       paths.push(abs);
     }
-    const verdicts = await projectFn!(paths, []);
+    const lexiconPackages = host ? installHost(root, host) : [];
+    const verdicts = await projectFn!(paths, host ? hostIntrinsics(host) : [], { lexiconPackages });
     const out: ProjectResult = { verdicts: {}, tentative: {}, taintedBy: {} };
     const relOf = (abs: string) => abs.slice(root.length + 1).split(/[\\/]/).join("/");
     for (const [abs, v] of verdicts) {
@@ -107,11 +210,15 @@ export const chantAdapter: ConformanceAdapter = {
   },
   async foldProject(files, host) {
     if (!projectFn) return "unavailable";
-    // A named host's entity classes come from a package chant cannot resolve,
-    // and its entry takes an intrinsic registry rather than a whole host, so a
-    // host-dependent fixture is not answerable here.
-    if (host) return "unavailable";
-    return foldOnDisk(files);
+    // #2438 — a host used to make a fixture unanswerable here: its entity
+    // classes come from a package chant's allowlist could not name, and the
+    // entry took an intrinsic registry rather than a host. Both are addressed:
+    // the host's packages are written next to the sources and named to chant
+    // outright, and its registrations are translated. A chant too old for the
+    // `lexiconPackages` option would resolve none of it, so say so rather than
+    // report a wrong verdict.
+    if (host && !(await acceptsHostPackages())) return "unavailable";
+    return foldOnDisk(files, host);
   },
   foldExport(source, exportName) {
     const sf = parse(source); const init = exportInitializer(sf, exportName);
