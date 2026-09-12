@@ -61,6 +61,11 @@ function docFiles(dir) {
 }
 
 /** The frontmatter block replaced by spaces, so every offset after it is unchanged. */
+// An MDX expression such as `{figures.corpus.files}` is a value, not prose; the
+// dots inside it would end sentences. It is read as the number it renders.
+function blankExpressions(text) {
+  return text.replace(/\{[^{}\n]*\}/g, "0");
+}
 function blankFrontmatter(text) {
   const m = /^---\r?\n[\s\S]*?\r?\n---[ \t]*(\r?\n|$)/.exec(text);
   return m ? m[0].replace(/[^\n]/g, " ") + text.slice(m[0].length) : text;
@@ -85,7 +90,7 @@ for (const file of files) {
   // tables and inline code but leaves the `---` block, whose delimiters read
   // as em dashes and whose `key: value` lines read as colon nameplates; every
   // page was paying for its own frontmatter. Blank it, offsets preserved.
-  const prose = extractProse(blankFrontmatter(text));
+  const prose = extractProse(blankExpressions(blankFrontmatter(text)));
   const doc = buildDocAnalysis(prose);
   const { findings, errors } = runRules(RULES, doc);
   for (const e of errors) detail.push(`${rel}: rule ${e.ruleId} errored: ${e.message}`);

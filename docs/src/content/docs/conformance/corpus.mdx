@@ -1,9 +1,11 @@
 ---
 title: The corpus cross-check
-description: Running chant's whole example corpus through both implementations, the four named limits, and what the numbers mean.
+description: Running chant's whole example corpus through both implementations, the two named limits, and what the numbers mean.
 sidebar:
   order: 5
 ---
+
+import figures from "../../../data/figures.json";
 
 `packages/conformance/src/corpus.ts` runs chant's example corpus through both
 implementations and compares verdicts file by file, and export namespaces where
@@ -53,10 +55,10 @@ gives the reason, and it is the same reason the port was removed from the
 reference: a transcription would make the cross-check a test of the
 transcription.
 
-## The four limits
+## The two limits
 
 A file is comparable when nothing disarmed either implementation before the
-comparison started. Four things do, and each is counted apart from the
+comparison started. Two things do, and each is counted apart from the
 agreement figure. `corpus.ts` defines them as a closed union and records which
 side each one disarms, because a limit can only make its own side refuse more.
 
@@ -64,8 +66,11 @@ side each one disarms, because a limit can only make its own side refuse more.
 |---|---|---|
 | `composite` | the reference | The reference implements no composite factory form. |
 | `host` | the reference | The reference has no bindings for a package it cannot load. |
-| `lexicon-list` | chant | chant's whole-build entry takes no lexicon list, so `F-Host-Trust` arm 1 is off on its side, exactly as inventory row L9.4 requires for a build with no package list. |
-| `build-params` | chant | chant's whole-build entry takes no build parameters, so a file reading one cannot fold on its side. |
+
+Both are the reference's. chant is given each entry's lexicons and build
+parameters through `foldProject`'s options, the inputs a real build has, since
+chant#2422 (#96); before that two more limits stood for what its entry point
+could not be told.
 
 A limit spreads. `corpus.ts` propagates each one along two edges: `F-Import`,
 because a file that imports an unfoldable module cannot resolve what it
@@ -88,21 +93,21 @@ From `paper/measurements.md`:
 
 | Corpus | Files | Comparable | Agreed | Both fold, namespaces identical |
 |---|---|---|---|---|
-| chant-v0.70.1 at `730e7f7e`, 108 entries | 409 | 65 | 65 | 50 |
+| chant <code>{figures.corpus.corpusVersion}</code> at <code>{figures.corpus.revision}</code>, {figures.corpus.entries} entries | {figures.corpus.files} | {figures.corpus.comparable} | {figures.corpus.agreed} | {figures.corpus.bothFold} |
 
-And the limits, from the same file: 272 files reach a composite factory call, a
-form the reference does not implement. 52 read a host data export as a value.
-19 sit in entries that declare build parameters. 1 imports a package the host
-cannot load.
+And the limits, from the same file: {figures.corpus.noComposite} files reach a
+composite factory call, a form the reference does not implement, and
+{figures.corpus.noHost} imports a package the host cannot load.
 
-`paper/measurements.md` states what this establishes: on 65 files nobody wrote
-for the purpose, the two implementations agree on every verdict, and on the 50
+`paper/measurements.md` states what this establishes: on
+{figures.corpus.comparable} files nobody wrote for the purpose, the two
+implementations agree on every verdict, and on the {figures.corpus.bothFold}
 that fold on both sides the export namespaces are structurally identical,
 entity class and properties included. It is the first agreement between the two
 that was observed rather than designed.
 
-It also states the limit, and the limit is the more useful half. 65 of 409 is
-the comparable set, not the corpus, and every limit is an over-approximation,
+It also states the limit, and the limit is the more useful half.
+{figures.corpus.comparable} of {figures.corpus.files} is the comparable set, not the corpus, and every limit is an over-approximation,
 so a file under one may also be hiding a disagreement. The composite limit
 alone removes two thirds of the corpus, and the most common form in real
 projects is therefore the one the cross-check cannot yet speak to.
@@ -148,8 +153,15 @@ without a host because an unrevived entity is a plain object. The defect is
 issue #68: `F-Eval-Ident` step 1 read an instance as "J2 pre-built" that no
 rule of J2 built, so the reference refused 22 files chant folds, and
 `F-Prebuild` now states the rule. The artifact was 21 files on which the
-harness had asked the two implementations different questions, now counted
-under the lexicon-list limit.
+harness had asked the two implementations different questions, counted under
+a lexicon-list limit until chant#2422 retired it.
+
+The second run had that limit and the build-parameters one gone; it exposed 79
+more files and 10 of them disagreed. All ten were the harness or the
+reference: build parameters bound to the module's live export, a `../`
+specifier never joined to the importer's directory, and a capture decided over
+the namespace alone where `F-Import` records it at the import.
+`paper/measurements.md` lists them, and every one agrees now.
 
 ## In CI
 

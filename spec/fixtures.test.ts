@@ -34,6 +34,11 @@ describe("fixture coverage gate (#8)", () => {
     const bad = [...cited].filter((c) => !defined.has(c));
     expect(bad, `fixtures cite undefined rules: ${bad.join(", ")}`).toEqual([]);
   });
+  test("the header states the count the gate computes", () => {
+    const header = /^(\d+) of (\d+) rules have fixtures\./m.exec(readFileSync(join(specDir, "fixtures", "UNCOVERED.md"), "utf8"));
+    const covered = [...defined].filter((d) => cited.has(d)).length;
+    expect(header && `${header[1]} of ${header[2]}`, "UNCOVERED.md's header count").toBe(`${covered} of ${defined.size}`);
+  });
   test("every defined rule is exercised by a fixture or deliberately listed as uncovered", () => {
     const missing = [...defined].filter((d) => !cited.has(d) && !allow.has(d)).sort();
     expect(missing, `rules with no fixture and no UNCOVERED entry:\n${missing.join("\n")}`).toEqual([]);

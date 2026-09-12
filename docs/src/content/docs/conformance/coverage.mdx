@@ -5,16 +5,19 @@ sidebar:
   order: 3
 ---
 
+import figures from "../../../data/figures.json";
+
 One of the process rules in `spec/README.md` is that every identifier is
 exercised by at least one fixture, and every fixture cites a real identifier,
 in both directions, in CI. `spec/fixtures.test.ts` is that gate.
 
-## The three assertions
+## The four assertions
 
 The test collects every `S-` and `F-` identifier defined across `grammar.md`,
-`judgments.md`, `values.md`, `divergence.md` and `hosts.md`. It also collects
+`judgments.md`, `values.md`, `divergence.md`, `hosts.md` and `rules.md`. It also
+collects
 every identifier cited by a fixture's `rules` array, and reads
-`spec/fixtures/UNCOVERED.md` as an allowlist. Then it asserts three things.
+`spec/fixtures/UNCOVERED.md` as an allowlist. Then it asserts four things.
 
 Every rule a fixture cites is defined. A fixture citing an identifier that no
 spec file introduces is a citation of nothing.
@@ -26,6 +29,9 @@ The uncovered list contains only rules that are still uncovered. An entry that
 now has a fixture, or that names a rule that no longer exists, fails the gate.
 That is what makes the list shrink-only: you cannot leave a stale exemption
 behind.
+
+The header's count is the one the gate computes, so a rule added without
+touching the file is noticed there rather than on a downstream page.
 
 The identifier collection is keyed on the identifiers themselves and never on
 document structure. `spec/coverage.test.ts` carries the reason in a comment,
@@ -50,14 +56,13 @@ rule identifier in backticks, an em dash, and a reason. `fixtures.test.ts`
 parses exactly that shape with a regular expression, so an entry written any
 other way is not an exemption and the gate will still fail on the rule.
 
-The file's own header states the count. At the time of writing it says 100 of
-127 rules have fixtures, and `paper/measurements.md` reports the same figure
-for the chant `0.70.1` pin.
+The file's own header states the count, {figures.rulesWithFixture} of
+{figures.rulesTotal} rules with a fixture.
 
-`paper/measurements.md` also groups the 27 rules that are still uncovered: five
-wait on a form the reference implementation does not implement, the composite
-factory and isolation mode; one waits on a specification decision, issue #71,
-the call-depth bound; and the rest wait on the corpus growing, issue #24.
+`paper/measurements.md` sorts the rest by what each waits on. Five need a
+form the reference implementation lacks, the composite factory and isolation
+mode. The six of `rules.md` need the harness half of the rules contract
+(#101), and the remainder are waiting for the corpus to grow (#24).
 
 A few entries are worth reading as a group, because they say something about
 where the limits of a conformance suite are rather than where the gaps in the
