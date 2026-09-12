@@ -31,6 +31,9 @@ import { foldProject as chantFoldProject } from "@intentius/chant";
 import { findInfraFiles } from "@intentius/chant/discovery/files";
 import { FOLDABLE_AUTHORING_HELPERS, isChantOwnedSpecifier } from "@intentius/chant/fold/foldable-helpers";
 import { foldProject as referenceFoldProject, type Host } from "@intentius/tsad-reference";
+import type { ConformanceAdapter } from "./adapter.js";
+import type { ConformanceHost } from "./host.js";
+import { rustAdapter, rustEvaluatorPath } from "./adapters/rust.js";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
@@ -125,6 +128,15 @@ export async function discoverCorpus(checkout: ChantCheckout): Promise<CorpusEnt
  * A specifier whose module will not load is reported, not skipped silently:
  * every file that imports it is host-limited, and the count has to show it.
  */
+/**
+ * The third column (#86): the evaluator with no JavaScript runtime, judged in
+ * `data-host` against the reference judged in the same profile with the same
+ * host description. Present when the binary is built; the column is omitted
+ * from the report otherwise, never silently empty.
+ */
+const rust: ConformanceAdapter | undefined = (() => { const p = rustEvaluatorPath(REPO_ROOT); return p ? rustAdapter(p) : undefined; })();
+export const dataHostEvaluator = rust ? { name: rust.name, specVersion: rust.specVersion } : undefined;
+
 export interface CorpusHost extends Host {
   /** Host-owned specifiers whose module could not be loaded. */
   readonly unloadable: ReadonlySet<string>;
@@ -186,12 +198,22 @@ export type Limit =
  */
 export const LIMIT_SIDE: Readonly<Record<Limit, "reference">> = { host: "reference", composite: "reference" };
 
+/** The data-host column of one file: the reference and the Rust evaluator, both in `data-host`. */
+export interface DataHostComparison {
+  reference: Side;
+  rust: Side;
+  agreed: boolean;
+  diff?: string;
+}
+
 export interface FileComparison {
   readonly file: string;
   readonly chant: Side;
   readonly reference: Side;
   /** The first limit that applies, for the comparable-set accounting. */
   readonly limit?: Limit;
+  /** The data-host column, when the evaluator with no JavaScript runtime was present (#86). */
+  readonly dataHost?: DataHostComparison;
   /** Both folded, and their export namespaces were compared as data. */
   readonly values?: "equal" | "differ" | "not-data";
   /** Where the two encodings first differ, with a little context either side, so a difference is a diff and not a verdict. */
@@ -411,8 +433,27 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
   const hostLimited = spread(hostSeed, sources, reference.taintSource);
   const compositeLimited = spread(compositeSeed, sources, reference.taintSource);
 
+  // The data-host column: the same host as a description, no code in it.
+  const description: Host = { profile: "data-host", intrinsics: host.intrinsics, helpers: [], ownedSpecifierPrefixes: host.ownedSpecifierPrefixes, values: new Map() };
+  const conformanceHost: ConformanceHost = { name: "chant", ownedSpecifierPrefixes: host.ownedSpecifierPrefixes, intrinsics: host.intrinsics, helpers: [], values: new Map() };
+  const dataHostReference = rust ? referenceFoldProject(sources, description) : undefined;
+  const dataHostRust = rust?.foldProject ? await rust.foldProject(new Map(sources), conformanceHost) : undefined;
+
   const comparisons: FileComparison[] = paths.map((abs) => {
     const file = keyOf(abs);
+    let dataHost: DataHostComparison | undefined;
+    if (dataHostReference && dataHostRust && dataHostRust !== "unavailable") {
+      const dr = dataHostReference.verdicts.get(file), xr = dataHostRust.verdicts[file];
+      const referenceSide: Side = dr?.kind === "fold" ? "fold" : "run", rustSide: Side = xr?.kind === "fold" ? "fold" : "run";
+      let agreed = referenceSide === rustSide, diff: string | undefined;
+      if (agreed && dr?.kind === "fold" && xr?.kind === "fold") {
+        const c = compareData(Object.fromEntries(dr.exports), xr.exports);
+        if (c.values === "differ") { agreed = false; diff = c.valuesDiff; }
+      } else if (!agreed) {
+        diff = dr?.kind === "run" ? `reference ${dr.rule}: ${dr.reason}` : xr?.kind === "run" ? `rust ${xr.rule ?? ""}: ${xr.reason}` : undefined;
+      }
+      dataHost = { reference: referenceSide, rust: rustSide, agreed, diff };
+    }
     const cv = chant.get(abs);
     const rv = reference.verdicts.get(file);
     const chantSide: Side = cv?.verdict === "fold" ? "fold" : "run";
@@ -423,6 +464,7 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
       chant: chantSide,
       reference: referenceSide,
       limit,
+      dataHost,
       referenceRule: rv?.kind === "run" ? rv.rule : undefined,
       referenceReason: rv?.kind === "run" ? rv.reason : undefined,
       chantReason:
@@ -461,6 +503,8 @@ export interface CorpusSummary {
    * reaches and chant does not has no benign explanation wherever it appears.
    */
   readonly referenceMorePermissive: readonly Disagreement[];
+  /** The data-host column, when the evaluator with no JavaScript runtime was present. */
+  readonly dataHost?: { readonly files: number; readonly agreed: number; readonly bothFold: number; readonly disagreements: readonly Disagreement[] };
 }
 
 export function summarize(reports: readonly EntryReport[]): CorpusSummary {
@@ -468,9 +512,15 @@ export function summarize(reports: readonly EntryReport[]): CorpusSummary {
   const limited: Record<Limit, number> = { host: 0, composite: 0 };
   const disagreements: Disagreement[] = [];
   const referenceMorePermissive: Disagreement[] = [];
+  let dhFiles = 0, dhAgreed = 0, dhBothFold = 0;
+  const dhDisagreements: Disagreement[] = [];
   for (const report of reports) {
     files += report.files;
     for (const c of report.comparisons) {
+      if (c.dataHost) {
+        dhFiles++;
+        if (c.dataHost.agreed) { dhAgreed++; if (c.dataHost.reference === "fold") dhBothFold++; } else dhDisagreements.push({ ...c, entry: report.name });
+      }
       if (c.reference === "fold" && c.chant === "run") referenceMorePermissive.push({ ...c, entry: report.name });
       if (c.limit) { limited[c.limit]++; continue; }
       comparable++;
@@ -483,6 +533,7 @@ export function summarize(reports: readonly EntryReport[]): CorpusSummary {
   return {
     entries: reports.length, files, comparable, comparableAgreed, comparableBothFold,
     comparableValuesNotData, limited, disagreements, referenceMorePermissive,
+    dataHost: dhFiles ? { files: dhFiles, agreed: dhAgreed, bothFold: dhBothFold, disagreements: dhDisagreements } : undefined,
   };
 }
 
@@ -530,6 +581,20 @@ export function renderCorpusReport(
       ? "None."
       : summary.referenceMorePermissive.map(line).join("\n"),
     "",
+    ...(summary.dataHost && dataHostEvaluator ? [
+      "## The data-host column",
+      "",
+      `- evaluator: \`${dataHostEvaluator.name}\`, declaring spec \`${dataHostEvaluator.specVersion}\`, no JavaScript runtime`,
+      "",
+      "| Files | Agreed | Both fold |",
+      "|---|---|---|",
+      `| ${summary.dataHost.files} | ${summary.dataHost.agreed} | ${summary.dataHost.bothFold} |`,
+      "",
+      "The reference and the evaluator are both judged in `data-host`, on the same host description and no code. A file that folds on both sides has the same namespace on both, envelopes included.",
+      "",
+      summary.dataHost.disagreements.length === 0 ? "No disagreements." : summary.dataHost.disagreements.map((d) => `- \`${d.entry}/${d.file}\`: reference ${d.dataHost!.reference}, evaluator ${d.dataHost!.rust}${d.dataHost!.diff ? ` (${d.dataHost!.diff})` : ""}`).join("\n"),
+      "",
+    ] : []),
     "## Per entry",
     "",
     "| Entry | Files | Comparable | Agreed | No host | No composite form |",

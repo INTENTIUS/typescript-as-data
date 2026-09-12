@@ -34,6 +34,13 @@ describe.skipIf(!checkout)("the corpus against both implementations (#25)", () =
     }
   }, 600_000);
 
+  test("the data-host column agrees, wherever the evaluator with no JavaScript runtime is present (#86)", () => {
+    if (!summary.dataHost) return;
+    const dis = summary.dataHost.disagreements.map((d) => `${d.entry}/${d.file}: reference ${d.dataHost!.reference}, evaluator ${d.dataHost!.rust} ${d.dataHost!.diff ?? ""}`);
+    expect(dis, dis.join("\n")).toEqual([]);
+    expect(summary.dataHost.files).toBe(summary.files);
+  });
+
   test("the corpus is the whole one, not a fragment of it", () => {
     // A checkout whose dependencies are not installed, or a corpus discovery
     // that quietly returned less, would otherwise read as a clean run.

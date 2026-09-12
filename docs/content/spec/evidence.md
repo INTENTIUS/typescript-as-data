@@ -19,5 +19,6 @@ No figure on this site was typed by hand. Each one below is read from an artifac
 | Corpus | {{< figure "corpus.entries" >}} projects, {{< figure "corpus.files" >}} files | chant <code>{{< figure "corpus.corpusVersion" >}}</code> at <code>{{< figure "corpus.revision" >}}</code> | chant's own examples, not a sample of real-world source |
 | Comparable files | {{< figure "corpus.comparable" >}}, all agreed | `packages/conformance/corpus-report.md` | {{< figure "corpus.noComposite" >}} need a form the reference lacks, {{< figure "corpus.noHost" >}} loads no package |
 | Both fold, identical namespaces | {{< figure "corpus.bothFold" >}} | same | Entities compared as class plus properties, on one shared host |
+| The data-host column | {{< figure "corpus.dataHost.agreed" >}} of {{< figure "corpus.dataHost.files" >}} agree, {{< figure "corpus.dataHost.bothFold" >}} fold on both | same, with `evaluators/rust` built | Two evaluators on one profile; neither runs anything |
 
 `paper/measurements.md` is the full statement of each measurement and the history of what changed. The chant-side measurements (the fold differential, the execution-boundary profile) live in chant's repository and are cited there.
