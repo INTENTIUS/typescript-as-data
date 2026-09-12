@@ -4,7 +4,11 @@ The versioned history of the rule set. The policy is in [`README.md`](./README.m
 
 Each entry lists the rules that changed and how, in the four kinds the policy defines. A change confined to non-normative text is not versioned and is not listed here; the rationale sections and the inventory are the usual cases.
 
-## Unreleased
+## 1.1, 2026-09-12
+
+Tag `spec-1.1`. One addition, and a clarification that rode along.
+
+The added rules `F-Profile` and `F-Profile-DataHost` (J2's preamble) name the two profiles an implementation may declare. `full` is every rule. `data-host` is the specification for an evaluator with no JavaScript runtime, defined as a table of subtractions from `full`; the table is the rule, and its rows say what is absent (J3, helpers, eager intrinsics), what is altered (isolation always on, revival as serialization, interpretation-only composites) and what is permitted without being required (`new`). A fixture is tagged with the profiles it belongs to (#78). Nothing in `full` changed, so an implementation of 1.0 implements 1.1's `full` profile unchanged; the minor moves because a profile is normative text.
 
 Clarified, no rule widened or narrowed: `F-Val-Undefined` now says that an `undefined`-valued property is present in the folded namespace and travels through a spread, and that only emission drops it (#82). Both implementations already did this; the text had said only what emission does.
 

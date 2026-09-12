@@ -1,0 +1,39 @@
+{
+  "rules": [
+    "F-Profile",
+    "F-Profile-DataHost"
+  ],
+  "project": true,
+  "profiles": [
+    "full",
+    "data-host"
+  ],
+  "verdicts": {
+    "defaults.ts": "fold",
+    "service.ts": "fold"
+  },
+  "exports": {
+    "service.ts": {
+      "service": {
+        "name": "svc-platform",
+        "labels": {
+          "team": "platform",
+          "tier": "gold",
+          "exposed": true
+        },
+        "ports": [
+          {
+            "containerPort": 8080,
+            "protocol": "TCP"
+          },
+          {
+            "containerPort": 8443,
+            "protocol": "TCP"
+          }
+        ],
+        "replicas": 3
+      }
+    }
+  },
+  "note": "The whole of what a data-host evaluator needs: literals, a shared const, a spread, a template, a conditional, a cross-file import, and a project-local function folded by interpretation. No host, no new, no run path, and the same answer whether folded or run in JavaScript."
+}

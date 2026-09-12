@@ -14,6 +14,13 @@ describe("conformance runner (#7) over the reference implementation (#10)", () =
     const failed = reports.filter((r) => !r.pass).map((r) => `${r.fixture}: ${r.failures.join("; ")}`);
     expect(failed, failed.join("\n")).toEqual([]);
   });
+  test("the data-host profile: the reference with an empty host passes every fixture tagged for it (#78)", async () => {
+    const tagged = fixtures.filter((f) => f.profiles.includes("data-host"));
+    expect(tagged.length).toBeGreaterThan(40);
+    expect(tagged.every((f) => f.kind === "expression" || !f.host)).toBe(true);
+    const failed = (await runFixtures(referenceAdapter, tagged)).filter((r) => !r.pass).map((r) => `${r.fixture}: ${r.failures.join("; ")}`);
+    expect(failed, failed.join("\n")).toEqual([]);
+  });
   test("the project fixtures are actually exercised, not all skipped (#24)", async () => {
     const reports = (await runFixtures(referenceAdapter, fixtures)).filter((r) => projectFixtures(fixtures).some((p) => p.id === r.fixture));
     expect(reports.length).toBe(projectFixtures(fixtures).length);
@@ -24,7 +31,7 @@ describe("conformance runner (#7) over the reference implementation (#10)", () =
     // sound and useless, and must not pass. Without this, F-Taint's "least set"
     // would be untested.
     const stub = {
-      name: "always-runs", specVersion: "1.0", shape: () => "unavailable" as const,
+      name: "always-runs", specVersion: "1.1", shape: () => "unavailable" as const,
       foldExport: () => ({ ok: false as const, line: 1, column: 1, message: "runs" }),
       foldProject: (files: Map<string, string>) => ({ verdicts: Object.fromEntries([...files.keys()].map((p) => [p, { kind: "run" as const, reason: "runs" }])) }),
     };
@@ -32,7 +39,7 @@ describe("conformance runner (#7) over the reference implementation (#10)", () =
     expect(failed.length).toBeGreaterThan(0);
   });
   test("a stub adapter that folds everything to null fails the reject fixture and the value fixtures", async () => {
-    const stub = { name: "stub", specVersion: "1.0", shape: () => ({ accepted: true } as const), foldExport: () => ({ ok: true as const, value: null }) };
+    const stub = { name: "stub", specVersion: "1.1", shape: () => ({ accepted: true } as const), foldExport: () => ({ ok: true as const, value: null }) };
     const reports = await runFixtures(stub, fixtures);
     expect(reports.some((r) => !r.pass)).toBe(true);
   });

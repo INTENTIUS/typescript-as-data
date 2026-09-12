@@ -52,9 +52,11 @@ The chant side's `false` is also an unsampled invariant: the run fails unless ev
 
 | Pin | Fixtures | Rules with a fixture | Shape and fold agreement |
 |---|---|---|---|
-| chant 0.70.1 | 81, of which 30 are whole-build | 101 of 127 | all, on the 65 the pin can answer |
+| chant 0.70.1 | 82, of which 31 are whole-build | 101 of 127 | all, on the 66 the pin can answer |
 
 The 26 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a reason each; five wait on a form the reference does not implement (the composite factory and isolation mode), one on a spec decision (#71, the call-depth bound), and the rest on the corpus growing (#24). One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
+
+**Two profiles.** Spec 1.1 names `full` and `data-host` (F-Profile, F-Profile-DataHost); the second is the specification for an evaluator with no JavaScript runtime, and it is what a platform in another language implements. Fixtures carry profile tags: 53 of the 82 belong to `data-host`, and the reference with an empty host passes every one of them. That is a JavaScript implementation passing a profile defined by the absence of JavaScript, so it establishes that the profile is consistent, not that it is implementable without an engine; the latter is #86's to establish.
 
 **Coercion, stated as fixtures.** Thirteen expression fixtures pin the parts of ECMAScript an evaluator in another language has to reproduce bit for bit. Number formatting in template literals is the largest of them (shortest round-trip digits; `1e+21`; `-0` as `0`; a literal beyond 2^53 rounded before it is printed). The others are `+`'s string-or-number dispatch and relational comparison on strings; the logical operators returning an operand; unary coercion and IEEE division; and the one deliberate departure, array spread refusing a string (R10.6). The same family pins that an `undefined`-valued property is present in the folded namespace and travels through a spread, which is what a selective-by-omission consumer reads (#82). Both implementations agree on all thirteen. Their sufficiency is not established by that: the reference is JavaScript and passes them for free, so whether they are enough is known only once an evaluator with no JavaScript engine runs them (#86).
 

@@ -19,7 +19,7 @@ That is the whole cost. The evaluator is a package; the types are yours; nothing
 
 ## The profile you implement
 
-An evaluator with no JavaScript runtime implements the data-host profile: expression evaluation, the per-file verdict with a failed fold as an error rather than a fallback, envelopes as the output, no helpers, no live constructors. It is a subset of the full specification, and it is being written down as [issue #78](https://github.com/INTENTIUS/typescript-as-data/issues/78). Until it lands, the reference with `EMPTY_HOST` is the profile by example.
+An evaluator with no JavaScript runtime implements the data-host profile: expression evaluation, the per-file verdict with a failed fold as an error rather than a fallback, envelopes as the output, no helpers, no live constructors. It is `F-Profile-DataHost` in [the judgments](/typescript-as-data/spec/judgments/), a table of subtractions from the full specification, and the reference with an empty host is judged on it.
 
 ## What judges you
 
