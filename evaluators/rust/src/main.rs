@@ -15,7 +15,7 @@ use std::io::Read;
 use serde_json::{json, Value};
 
 /// The specification version this evaluator declares (spec/VERSION).
-const SPEC_VERSION: &str = "1.5";
+const SPEC_VERSION: &str = "1.6";
 const PROFILE: &str = "data-host";
 
 #[derive(serde::Deserialize)]

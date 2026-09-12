@@ -17,7 +17,7 @@ No figure on this site was typed by hand. Each one below is read from an artifac
 | Rules with a fixture | {{< figure "rulesWithFixture" >}} of {{< figure "rulesTotal" >}} | `spec/fixtures/UNCOVERED.md` | The rest are listed with a reason each |
 | Fixtures | {{< figure "fixtures" >}}, of which {{< figure "wholeBuildFixtures" >}} whole-build | `spec/fixtures/` | Cases somebody chose |
 | Corpus | {{< figure "corpus.entries" >}} projects, {{< figure "corpus.files" >}} files | chant <code>{{< figure "corpus.corpusVersion" >}}</code> at <code>{{< figure "corpus.revision" >}}</code> | chant's own examples, not a sample of real-world source |
-| Comparable files | {{< figure "corpus.comparable" >}}, all agreed | `packages/conformance/corpus-report.md` | {{< figure "corpus.noValueCall" >}} call a host factory outside declarator position (#110), {{< figure "corpus.noHost" >}} loads no package |
+| Comparable files | {{< figure "corpus.comparable" >}}, all agreed | `packages/conformance/corpus-report.md` | {{< figure "corpus.noHost" >}} loads no package |
 | Both fold, identical namespaces | {{< figure "corpus.bothFold" >}} | same | Entities compared as class plus properties, on one shared host |
 | The data-host column | {{< figure "corpus.dataHost.agreed" >}} of {{< figure "corpus.dataHost.files" >}} agree, {{< figure "corpus.dataHost.bothFold" >}} fold on both | same, with `evaluators/rust` built | Two evaluators on one profile; neither runs anything |
 

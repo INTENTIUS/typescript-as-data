@@ -186,9 +186,7 @@ export type Side = "fold" | "run";
  */
 export type Limit =
   /** The reference has no bindings for a package it cannot load (#20 is not finished). */
-  | "host"
-  /** A host factory called in value position, where J1 has no rule and chant invokes it anyway (#110). */
-  | "valueCall";
+  "host";
 
 /**
  * Both limits disarm the reference, and a limit can only make its own side
@@ -196,7 +194,7 @@ export type Limit =
  * build parameters chant's entry could not be given; chant-v0.71.0 takes both
  * (chant#2422) and they are gone (#96).
  */
-export const LIMIT_SIDE: Readonly<Record<Limit, "reference">> = { host: "reference", valueCall: "reference" };
+export const LIMIT_SIDE: Readonly<Record<Limit, "reference">> = { host: "reference" };
 
 /** The data-host column of one file: the reference and the Rust evaluator, both in `data-host`. */
 export interface DataHostComparison {
@@ -274,44 +272,6 @@ function hostBoundNames(source: string, path: string, host: CorpusHost): Set<str
  * message wording is explicitly non-normative, and a classifier that reads it
  * would silently stop classifying the day the wording changed.
  */
-/**
- * A call to a host-bound factory in value position: nested in an object, an
- * array, an argument, anywhere but the initializer of a top-level const (or a
- * member read on that call). At a declarator F-Call invokes it (J2); in value
- * position J1 has no rule for it and chant invokes it anyway, which is the
- * open spec question this limit stands for (#110), as is a non-exported
- * identifier const bound to such a call.
- */
-function usesHostCallInValuePosition(source: string, path: string, host: CorpusHost): boolean {
-  const bound = hostBoundNames(source, path, host);
-  if (bound.size === 0) return false;
-  const known = new Set([...host.intrinsics.map((i) => i.name), ...host.helpers.map((h) => h.name)]);
-  const sf = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
-  const isHostCall = (n: ts.Node): n is ts.CallExpression => ts.isCallExpression(n) && ts.isIdentifier(n.expression) && bound.has(n.expression.text) && !known.has(n.expression.text);
-  // Declarator position: an exported const's initializer, a member read on
-  // one, or a destructured const's initializer (F-Bind admits those locals).
-  // A non-exported identifier const bound to a call is the open question too.
-  const atDeclarator = new Set<ts.Node>();
-  for (const st of sf.statements) {
-    if (!ts.isVariableStatement(st)) continue;
-    const exported = st.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false;
-    for (const d of st.declarationList.declarations) {
-      let init = d.initializer;
-      while (init && ts.isParenthesizedExpression(init)) init = init.expression;
-      if (init && (ts.isPropertyAccessExpression(init) || ts.isElementAccessExpression(init))) init = init.expression;
-      if (init && isHostCall(init) && (exported || ts.isObjectBindingPattern(d.name))) atDeclarator.add(init);
-    }
-  }
-  let found = false;
-  const visit = (node: ts.Node): void => {
-    if (found) return;
-    if (isHostCall(node) && !atDeclarator.has(node)) { found = true; return; }
-    ts.forEachChild(node, visit);
-  };
-  ts.forEachChild(sf, visit);
-  return found;
-}
-
 /** The reference's own resolution: a relative specifier against the project's key set. */
 function resolveKey(from: string, spec: string, keys: ReadonlySet<string>): string | undefined {
   const base = from.includes("/") ? from.slice(0, from.lastIndexOf("/") + 1) : "";
@@ -444,14 +404,11 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
   const reference = referenceFoldProject(sources, host);
 
   const hostSeed = new Set<string>();
-  const valueCallSeed = new Set<string>();
   for (const [key, source] of sources) {
     const { bare } = specifiersOf(source, key);
     if (bare.some((s) => !isChantOwnedSpecifier(s) || host.unloadable.has(s))) hostSeed.add(key);
-    if (usesHostCallInValuePosition(source, key, host)) valueCallSeed.add(key);
   }
   const hostLimited = spread(hostSeed, sources, reference.taintSource);
-  const valueCallLimited = spread(valueCallSeed, sources, reference.taintSource);
 
   // The data-host column: the same host as a description, no code in it.
   const description: Host = { profile: "data-host", intrinsics: host.intrinsics, helpers: [], ownedSpecifierPrefixes: host.ownedSpecifierPrefixes, values: new Map() };
@@ -478,7 +435,7 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
     const rv = reference.verdicts.get(file);
     const chantSide: Side = cv?.verdict === "fold" ? "fold" : "run";
     const referenceSide: Side = rv?.kind === "fold" ? "fold" : "run";
-    const limit: Limit | undefined = hostLimited.has(file) ? "host" : valueCallLimited.has(file) ? "valueCall" : undefined;
+    const limit: Limit | undefined = hostLimited.has(file) ? "host" : undefined;
     const base: FileComparison = {
       file,
       chant: chantSide,
@@ -529,7 +486,7 @@ export interface CorpusSummary {
 
 export function summarize(reports: readonly EntryReport[]): CorpusSummary {
   let files = 0, comparable = 0, comparableAgreed = 0, comparableBothFold = 0, comparableValuesNotData = 0;
-  const limited: Record<Limit, number> = { host: 0, valueCall: 0 };
+  const limited: Record<Limit, number> = { host: 0 };
   const disagreements: Disagreement[] = [];
   const referenceMorePermissive: Disagreement[] = [];
   let dhFiles = 0, dhAgreed = 0, dhBothFold = 0;
@@ -566,7 +523,7 @@ export function renderCorpusReport(
 ): string {
   const rows = reports.map((r) => {
     const s = summarize([r]);
-    return `| \`${r.name}\` | ${r.files} | ${s.comparable} | ${s.comparableAgreed} | ${s.limited.host} | ${s.limited.valueCall} |`;
+    return `| \`${r.name}\` | ${r.files} | ${s.comparable} | ${s.comparableAgreed} | ${s.limited.host} |`;
   });
   const line = (d: Disagreement) =>
     `- \`${d.entry}/${d.file}\`: chant ${d.chant}, reference ${d.reference}${d.values ? `, values ${d.values}` : ""}${d.valuesDiff ? ` (${d.valuesDiff})` : ""}` +
@@ -582,12 +539,12 @@ export function renderCorpusReport(
     "",
     "## Totals",
     "",
-    "| Files | Comparable | Agreed | Both fold | No host | Host call in value position |",
-    "|---|---|---|---|---|---|",
+    "| Files | Comparable | Agreed | Both fold | No host |",
+    "|---|---|---|---|---|",
     `| ${summary.files} | ${summary.comparable} | ${summary.comparableAgreed} | ${summary.comparableBothFold} |` +
-      ` ${summary.limited.host} | ${summary.limited.valueCall} |`,
+      ` ${summary.limited.host} |`,
     "",
-    "Both limits disarm the reference. chant is given the entry's lexicons and build parameters, the inputs a real build has.",
+    "The one limit disarms the reference. chant is given the entry's lexicons and build parameters, the inputs a real build has.",
     "",
     `Of the comparable files both implementations folded, ${summary.comparableValuesNotData} held something that is not data on one side or the other, so only the verdict was compared there.`,
     "",
@@ -617,8 +574,8 @@ export function renderCorpusReport(
     ] : []),
     "## Per entry",
     "",
-    "| Entry | Files | Comparable | Agreed | No host | Host call in value position |",
-    "|---|---|---|---|---|---|",
+    "| Entry | Files | Comparable | Agreed | No host |",
+    "|---|---|---|---|---|",
     ...rows,
     "",
   ].join("\n");

@@ -59,6 +59,24 @@ export interface EvalHost {
   readonly hostBound?: ReadonlySet<string>;
   /** F-Obs-Counters, when the module layer keeps them. */
   readonly counters?: { factoryInvocations: number; factoryInterpretations: number };
+  /** F-Call by node, from the module layer, for a nested composite in a factory body; resolved once per call site (F-Count). */
+  readonly fcall?: (call: ts.CallExpression) => unknown;
+  /**
+   * F-Declarator (spec 1.6): the call a declarator's initializer is, whose
+   * direct arguments resolve a package call through F-Call before J1 sees
+   * them; `resolveArg` answers `undefined` for an argument that is not one.
+   */
+  readonly declaratorCall?: ts.CallExpression;
+  readonly resolveArg?: (a: ts.Expression) => { value: unknown } | undefined;
+}
+
+/**
+ * A composite definition a host published (F-Host-Interface item 6 names the
+ * registration form; what it returns carries `compositeName`, as chant's
+ * `CompositeDefinition` does), or one F-Host-Composite registered here.
+ */
+export function isCompositeDefinition(v: unknown): boolean {
+  return isCompositeFactory(v) || (typeof v === "function" && "compositeName" in v);
 }
 
 /**
@@ -605,16 +623,22 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
     if (ts.isIdentifier(callee) && !scope.consts.has(callee.text)) {
       const name = callee.text;
 
+      // At a declarator, a direct argument that is itself a package call is F-Call's (F-Declarator, spec 1.6).
+      const arg = (a: ts.Expression, fallback: (a: ts.Expression) => unknown): unknown => {
+        if (node === host.declaratorCall && host.resolveArg) { const r = host.resolveArg(a); if (r) return r.value; }
+        return fallback(a);
+      };
+
       // F-Eval-CallHelper
       if (isFoldableHelperName(name)) {
         if (scope.depth > 0 && !scope.factory) reject("F-Eval-CallHelper", node, "an authoring helper call inside a folded function body is not foldable");
-        return { __helper: name, args: node.arguments.map((a) => F(a)) };
+        return { __helper: name, args: node.arguments.map((a) => arg(a, F)) };
       }
 
       // F-Eval-CallIntrinsic
       if (host.intrinsics.some((i) => i.name === name && intrinsicCallFolds(i))) {
         if (scope.depth > 0 && !scope.factory) reject("F-Eval-CallIntrinsic", node, "an intrinsic call inside a folded function body is not foldable");
-        return { __intrinsic: name, args: node.arguments.map((a) => foldInterior(a, scope, host)) };
+        return { __intrinsic: name, args: node.arguments.map((a) => arg(a, (x) => foldInterior(x, scope, host))) };
       }
 
       // F-Eval-CallLocal, after the two registered shapes
@@ -628,19 +652,10 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
       }
 
       // S-FactoryBody rule 5: inside a factory body a call through a bare
-      // identifier is admitted, a nested composite interpreted or a host
-      // factory invoked, the way F-Call would at a declarator.
+      // identifier is admitted: a nested composite, registered or host-published.
       if (scope.factory) {
         if (isCompositeFactory(local)) return interpret(local, node.arguments.map((a) => F(a)), node, scope.depth, host);
-        if (typeof local === "function" && host.hostBound?.has(name) && host.live) {
-          const args = node.arguments.map((a) => host.live!(F(a), a, name));
-          if (host.counters) host.counters.factoryInvocations += 1;
-          let result: unknown;
-          try { result = (local as (...a: unknown[]) => unknown)(...args); }
-          catch (err) { reject("F-Call", node, `invoking "${name}" threw: ${err instanceof Error ? err.message : String(err)}`); }
-          if (!isLiveObject(result)) reject("F-Call", node, `"${name}" returned plain data, not an entity or a composite instance`);
-          return result;
-        }
+        if (isCompositeDefinition(local) && host.fcall) return host.fcall(node);
       }
     }
 

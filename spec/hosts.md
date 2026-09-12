@@ -90,8 +90,12 @@ helpers and `propagate` mutates in place; `createResource()`/
 
 A call into a **package** folds only through a closed allowlist, a
 registered intrinsic or helper, checked by name *and* by the provenance of
-the binding (R3.3, F-Div-Provenance). A call into a **project file** folds
-whenever the callee's body is itself in the subset (R6.5), with no allowlist.
+the binding (R3.3, F-Div-Provenance), or at a declarator by invocation
+(F-Call), reached directly or through a const alias (F-Declarator), where
+since `1.6` the result is a value whatever it is. A call nested inside an
+expression never folds through a package. A call into a **project file**
+folds whenever the callee's body is itself in the subset (R6.5), with no
+allowlist.
 
 The asymmetry is the trust boundary (R2.1, #36). Package code is already
 loaded and executed by the build before discovery begins; admitting a call

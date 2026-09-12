@@ -6,11 +6,40 @@
   "project": true,
   "host": "shapes",
   "verdicts": {
-    "app.ts": "run",
-    "plain.ts": "run"
+    "app.ts": "fold",
+    "plain.ts": "fold",
+    "nested.ts": "run"
   },
   "rejectRule": {
-    "plain.ts": "F-Call"
+    "nested.ts": "F-Eval-Reject"
   },
-  "note": "Step 6 invokes a host-bound factory with the resolved arguments; step 7 requires an entity or a composite instance back, so describe, a host function returning plain data, is a run at the declarator. In app.ts the call in nested value position is not a declarator: F-Call applies at the declarator only, and J1 has no rule for a bare call to a host function, so the file runs there too."
+  "exports": {
+    "app.ts": {
+      "bucket": {
+        "entityType": "Bucket",
+        "lexicon": "shapes",
+        "props": {
+          "name": "b"
+        },
+        "attributes": {}
+      },
+      "pair": {
+        "left": "left",
+        "right": {
+          "__attrRef": {
+            "entity": "bucket",
+            "attribute": "name"
+          }
+        },
+        "entityType": "Pair",
+        "lexicon": "shapes"
+      }
+    },
+    "plain.ts": {
+      "d": {
+        "described": "x"
+      }
+    }
+  },
+  "note": "Step 6 invokes a host-bound factory with the resolved arguments, an attribute reference among them left symbolic (L6.9), and since 1.6 step 7 binds whatever came back, so describe's plain data folds in plain.ts. F-Call is a declarator rule: the same call nested in an object literal is J1's, which has no rule for a call, so nested.ts runs."
 }

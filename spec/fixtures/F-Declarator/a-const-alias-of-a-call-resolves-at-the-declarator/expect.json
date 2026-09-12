@@ -1,0 +1,50 @@
+{
+  "rules": [
+    "F-Declarator",
+    "F-Call",
+    "F-Count"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "store.ts": "run",
+    "app.ts": "fold",
+    "nested.ts": "run"
+  },
+  "rejectRule": {
+    "store.ts": "F-Eval-Function",
+    "nested.ts": "F-Eval-Reject"
+  },
+  "exports": {
+    "app.ts": {
+      "pair": {
+        "left": 1,
+        "right": 2,
+        "entityType": "Pair",
+        "lexicon": "shapes"
+      },
+      "data": {
+        "entityType": "Bucket",
+        "lexicon": "shapes",
+        "props": {
+          "name": "b"
+        },
+        "attributes": {}
+      },
+      "whole": {
+        "left": "l",
+        "right": "r",
+        "entityType": "Pair",
+        "lexicon": "shapes"
+      },
+      "left": "l",
+      "chained": {
+        "left": 1,
+        "right": 2,
+        "entityType": "Pair",
+        "lexicon": "shapes"
+      }
+    }
+  },
+  "note": "At a declarator a top-level const alias of a package call resolves through F-Call: a host-published composite invoked, a registered one interpreted, a plain factory invoked, an alias of an alias, and a destructure of one; the whole value or a member of it. The same read nested inside an expression (nested.ts) is J1's, which has no rule for a call, so it runs, as it does at chant."
+}

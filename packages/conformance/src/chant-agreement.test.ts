@@ -28,21 +28,7 @@ const foldsAtDepth = new Set([
   "F-Div-Provenance/helper-name-from-project-import",
 ]);
 
-/**
- * Held out because the specification has not settled the question, not because
- * chant is wrong. Kept apart from {@link foldsAtDepth} because the two empty on
- * different events — a chant fix retires that one, a J1 ruling retires this one
- * — and a single list would let either reason quietly cover for the other.
- *
- * tsad#110 — a host factory called outside declarator position. chant has no
- * step-7 refusal at all: `applyResolvedValue` sets the export unconditionally
- * and its `isDeclarable || isCompositeInstance` test only tallies entities. So
- * what a host call may return, and where it may be called, is an open J1
- * question rather than a chant defect.
- */
-const openSpecQuestion = new Set(["F-Call/a-host-factory-is-invoked"]);
-
-const heldOut = new Set([...foldsAtDepth, ...openSpecQuestion]);
+const heldOut = new Set([...foldsAtDepth]);
 const fixtures = all.filter((f) => !heldOut.has(f.id));
 
 describe("chant cross-check (#11)", () => {
@@ -78,12 +64,9 @@ describe("chant cross-check (#11)", () => {
   test("every held-out fixture exists and still disagrees, so neither list outlives its reason", async () => {
     // A hold-out that quietly outlived its cause would be worse than the cause.
     // Run per list rather than over the union, so each empties itself on its
-    // own event: a chant fix retires foldsAtDepth, a J1 ruling retires
-    // openSpecQuestion, and neither can go on excusing the other's fixtures.
-    for (const [reason, names] of [
-      ["chant#2441", foldsAtDepth],
-      ["tsad#110", openSpecQuestion],
-    ] as const) {
+    // own event, so one reason cannot go on excusing another's fixtures.
+    // (tsad#110's list emptied when spec 1.6 gave J1 F-Eval-CallHost.)
+    for (const [reason, names] of [["chant#2441", foldsAtDepth]] as const) {
       const held = projectFixtures(all).filter((f) => names.has(f.id));
       expect(held.map((f) => f.id).sort(), `${reason}: a held-out fixture no longer exists`).toEqual([...names].sort());
 

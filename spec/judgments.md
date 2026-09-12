@@ -332,11 +332,23 @@ F-IsolatedRefusal like any other.
   here; a second construction would put two entities where running puts one
   (F-Count). Under `isolated`, a `T` from a project file is
   F-IsolatedRefusal.
-- *single* `export const x = e`: if `e` is a call, F-Call; if a member or
-  element access on a call's result, F-Call then index (base must be an
-  indexable object); otherwise J1 on `e`, revived.
-- *destructure* `export const { a, b: c } = e`: `e` must resolve to a
-  composite instance or an indexable object; each element indexes it.
+- *single* `export const x = e`: if `e` is a call, its direct arguments are
+  resolved first. An argument that is itself a package call resolves by
+  F-Call, as does a member read on such a call or a const alias of either;
+  every other argument is J1's (`1.6`, #110, `L2.18`). Then the call is
+  F-Call for an unregistered callee, or J1's registered form for a helper or
+  an intrinsic. If `e` is a member or element access on a
+  call's result, F-Call then index (base must be an indexable object); when
+  `e` is an identifier bound by a top-level `const`,
+  through any chain of such aliases (`L7.7`), to a call or to a member access
+  on one, the same again, with the call resolved once per file (F-Count);
+  otherwise J1 on `e`, revived. The alias case was added in `1.6` (#110),
+  since chant had followed it for a composite and for any package export
+  alike (`L2.18`); a call reached any other way, nested inside an expression,
+  stays J1's rejection.
+- *destructure* `export const { a, b: c } = e`: `e`, through the same
+  aliases, must resolve to a composite instance or an indexable object; each
+  element indexes it.
 - *named-export* `export { a, b as c }`: each local name resolves through
   `locals` then `externals`, by F-Eval-Ident and not by re-folding the
   initializer, so a name bound to a same-file `new` reads F-Prebuild's
@@ -362,10 +374,14 @@ F-IsolatedRefusal like any other.
 6. Otherwise the module is imported (once per build) and `c` **invoked** with
    the resolved arguments; `factoryInvocations += 1`, and
    `projectFactoryInvocations += 1` if the specifier is a project file.
-   Arguments that are live objects pass through unchanged; a `{__attrRef}`
-   among them stays symbolic (R1.2, L6.9).
-7. The result must be a `CompositeInstance` or a `Declarable`; otherwise
-   `run`.
+   An argument is resolved as F-Declarator says, a direct package call by
+   this rule in turn and the rest by J1; a call nested deeper inside an
+   argument is J1's rejection. Arguments that are live objects pass
+   through unchanged; a `{__attrRef}` among them stays symbolic (R1.2, `L6.9`).
+7. The result is a value, live or plain, and is what the declarator binds
+   (`1.6`, #110); a destructured declarator needs an indexable object
+   (F-Declarator). Before `1.6` the text required an entity or a composite
+   instance here, which chant never implemented (`L8.19`).
 
 **F-Count.** Within `f`, a composite call reached by several member accesses
 or destructured names is resolved once (`ResolveCtx.memo`); a same-file
@@ -880,7 +896,7 @@ position and calls through a bare identifier. A body that references one of
 its module's own module-level resources declines (L7.6), that resource is a
 singleton the run path shares, and interpretation would not, and
 `constResolvesToResource` follows alias chains so it cannot be smuggled in
-(L7.7). The defining module is never imported; members are built by the
+(`L7.7`). The defining module is never imported; members are built by the
 lexicon's constructors from the folded props.
 
 **F-Eval-CallEager, F-Eval-CallMethod** *(was R7.3. Evaluate eagerly)*

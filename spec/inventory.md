@@ -59,6 +59,7 @@ Shape only. No resolution, no evaluation.
 | L2.15 | call; `<call>(...).step` | admitted unconditionally at the property-access node | S-CompositeStep; F-Eval-Member step 2 |
 | L2.16 | any other call | violation, `callExpressionMessage` | S-Reject; F-Eval-Reject |
 | L2.17 | project-local call shape (added #95) | the classifier rejected it while the build folded it until chant-v0.72.0 (chant#2435, #2437); `1.2` gives it S-CallLocal | S-CallLocal (grammar.md) |
+| L2.18 | a const alias of a package call at a declarator (added #110) | `resolveLiveValue` follows a top-level const, through alias chains, to a call of any lexicon export or a member access on one, and resolves the call there; the same read nested inside an expression stays `callExpressionMessage`. `1.6` writes it into F-Declarator | F-Declarator; F-Call; F-Count |
 
 ## L3. Expression reduction (`fold`)
 
@@ -172,6 +173,7 @@ module is never imported.
 | L8.15 | composite-call result type (added #14 read) | must be a `CompositeInstance` or `Declarable`, else run | F-Call step 7 (judgments.md) |
 | L8.16 | destructure source (added #14 read) | must be a composite instance or indexable object | F-Declarator (judgments.md) |
 | L8.17 | a re-export is a capture (added #14 read) | `export { a } from "./g"` adds `g` to `liveSources` when the value has identity | F-Declarator (judgments.md) |
+| L8.19 | `applyResolvedValue` (added #110) | sets the export to whatever the invoked factory returned, unconditionally; the `isDeclarable \|\| isCompositeInstance` test after it only tallies entities for the fold line. There is no step-7 refusal in chant, which `1.6` wrote into F-Call | F-Call step 7 |
 | L8.18 | same-file construction pre-pass (added #68) | every top-level `new`-valued const constructed once, in source order, before any declarator; the exported-declarator loop reuses the instance rather than constructing a second one (`preresolveResourceConsts`, chant#1169) | F-Prebuild; F-Count |
 
 ## L9. Trust and isolation
