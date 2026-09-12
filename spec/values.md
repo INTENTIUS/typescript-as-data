@@ -111,10 +111,15 @@ R10.8, R1.5).
 
 ## F-Val-Undefined (`undefined` in the domain)
 
-`undefined` is a scalar of the domain (L4.3). In a property position it is
-dropped at emission; in an array position it becomes `null`, for both JSON
-and YAML, because YAML is round-tripped through the JSON emitter (R10.7). For
-a lexicon that serializes YAML itself, the rule is that serializer's own.
+`undefined` is a scalar of the domain (L4.3). A property whose value is
+`undefined` is **present** in the folded namespace, with that value, and a
+spread copies it like any other own entry; the namespace therefore keeps the
+distinction between an absent key and an `undefined` one, which a consumer
+whose contract is selective-by-omission depends on (#82). Emission is where
+the key is dropped, and an `undefined` array element becomes `null` there,
+for both JSON and YAML, because YAML is round-tripped through the JSON
+emitter (R10.7). For a lexicon that serializes YAML itself, the rule is that
+serializer's own.
 
 ## F-Val-Symbol-Scope (where `__symbol` may appear)
 

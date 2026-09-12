@@ -1,0 +1,18 @@
+{
+  "rules": [
+    "F-Eval-Binary"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "fold",
+  "value": [
+    true,
+    true,
+    false,
+    true,
+    false,
+    true,
+    true
+  ],
+  "note": "Relational operators compare two strings by code unit (\"10\" < \"9\") and coerce a string against a number (\"10\" < 9 is 10 < 9). Strict equality never coerces. All ECMAScript, and all easy to get wrong in a port that reaches for its host language's comparison."
+}

@@ -1,0 +1,19 @@
+{
+  "rules": [
+    "F-Eval-Binary"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "fold",
+  "value": [
+    "12",
+    "34",
+    "33",
+    "123",
+    2,
+    1,
+    0.30000000000000004,
+    0.7999999999999999
+  ],
+  "note": "+ dispatches on the operands after ToPrimitive: one string makes it concatenation, left to right, so 1 + 2 + \"3\" is \"33\" and \"1\" + 2 + 3 is \"123\"; booleans and null go through ToNumber. The two float results are the doubles ECMAScript produces, not what decimal arithmetic would (R10.1)."
+}

@@ -1,0 +1,15 @@
+{
+  "rules": [
+    "F-Val-Undefined",
+    "F-Eval-Array"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "fold",
+  "value": [
+    1,
+    "$undefined",
+    3
+  ],
+  "note": "In an array position undefined stays undefined in the namespace and becomes null at emission, not absent: the array keeps its length (F-Val-Undefined)."
+}

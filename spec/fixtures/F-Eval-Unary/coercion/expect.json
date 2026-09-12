@@ -1,0 +1,19 @@
+{
+  "rules": [
+    "F-Eval-Unary"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "fold",
+  "value": [
+    true,
+    false,
+    false,
+    false,
+    -3,
+    -12,
+    -1,
+    0
+  ],
+  "note": "! is ¬truthy: the empty string is falsy and \"0\" is truthy, every object and array is truthy. Unary minus is −ToNumber: a numeric string with surrounding whitespace parses, true is 1, null is 0, and -null is -0, which the comparison form writes as 0 (R10.1)."
+}

@@ -1,0 +1,20 @@
+{
+  "rules": [
+    "F-Eval-Binary",
+    "F-Exc-Lazy"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "fold",
+  "value": [
+    "x",
+    "",
+    0,
+    0,
+    "",
+    null,
+    "b",
+    null
+  ],
+  "note": "&&, || and ?? return an operand, never a boolean, and ?? tests nullish where || tests falsy: 0 ?? 1 is 0 and \"\" ?? \"y\" is \"\". The untaken side is not folded (F-Exc-Lazy)."
+}

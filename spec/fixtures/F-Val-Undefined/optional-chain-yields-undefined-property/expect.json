@@ -1,0 +1,13 @@
+{
+  "rules": [
+    "F-Val-Undefined",
+    "F-Eval-Member"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "fold",
+  "value": {
+    "b": "$undefined"
+  },
+  "note": "A short-circuited chain yields undefined, and the property it lands in is present with that value, exactly as running the expression leaves it."
+}

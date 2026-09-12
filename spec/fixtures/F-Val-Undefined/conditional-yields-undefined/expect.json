@@ -1,0 +1,13 @@
+{
+  "rules": [
+    "F-Val-Undefined",
+    "F-Eval-Conditional"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "fold",
+  "value": {
+    "a": "$undefined"
+  },
+  "note": "The idiom a selective-by-omission consumer will write: a field set only when a condition holds. The untaken branch is never folded; the taken one yields undefined and the key is present with it."
+}

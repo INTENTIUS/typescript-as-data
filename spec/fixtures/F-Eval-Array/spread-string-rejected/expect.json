@@ -1,0 +1,14 @@
+{
+  "rules": [
+    "F-Eval-Array",
+    "F-Div-SpreadType"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "run",
+  "note": "The one place array evaluation departs from ECMAScript on purpose (R10.6): spread requires Array.isArray, so a string, iterable in JavaScript, is refused rather than split into characters. Shape accepts any spread operand; the folder rejects at the spread. A port that assumes \"as ECMAScript\" would fold this to [\"a\", \"b\"].",
+  "rejectAt": {
+    "line": 1,
+    "column": 19
+  }
+}

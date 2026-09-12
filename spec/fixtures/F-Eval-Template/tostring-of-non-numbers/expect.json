@@ -1,0 +1,10 @@
+{
+  "rules": [
+    "F-Eval-Template"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "fold",
+  "value": "true|null|undefined|1,2||s",
+  "note": "ToString for the rest of the scalars and for an array, which joins on a comma with no brackets. An envelope in a span is refused instead (F-Div-TemplateEnvelope); a plain object would print as [object Object] and is deliberately not exercised here."
+}

@@ -4,6 +4,10 @@ The versioned history of the rule set. The policy is in [`README.md`](./README.m
 
 Each entry lists the rules that changed and how, in the four kinds the policy defines. A change confined to non-normative text is not versioned and is not listed here; the rationale sections and the inventory are the usual cases.
 
+## Unreleased
+
+Clarified, no rule widened or narrowed: `F-Val-Undefined` now says that an `undefined`-valued property is present in the folded namespace and travels through a spread, and that only emission drops it (#82). Both implementations already did this; the text had said only what emission does.
+
 ## 1.0, 2026-09-11
 
 The first tagged version, `spec-1.0`. It is the rule set as it stands after the corpus cross-check of #25 ran both implementations over projects nobody wrote for the purpose, which is the first point at which the text had been checked against something other than the code it was written from.
