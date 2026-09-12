@@ -52,7 +52,7 @@ The chant side's `false` is also an unsampled invariant: the run fails unless ev
 
 | Pin | Fixtures | Rules with a fixture | Shape and fold agreement |
 |---|---|---|---|
-| chant 0.69.1 | 41, of which 12 are whole-build | 57 of 126 | all, on the 29 the pin can answer |
+| chant 0.70.1 | 42, of which 13 are whole-build | 58 of 126 | all, on the 38 the pin can answer |
 
 One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
 
@@ -60,7 +60,7 @@ One disagreement existed between the reference and chant, on an envelope inside 
 
 Two limits on that. The rewrite's author had read chant's implementation closely while writing the specification from it, so this establishes that the specification is complete enough to implement from, not that a reader who had never seen chant would arrive at the same place. And the agreement covers the expression and single-file layers. It does not cover J3, for the reason the next section gives.
 
-**What the whole-build fixtures establish, and against how many implementations.** The reference now implements J2's per-file verdict and J3's fixpoint from `judgments.md` (#21, #22), and revival from `values.md` (#61), so a folded declarator yields a real instance of the class the host supplies rather than an envelope. Twelve whole-build fixtures assert the verdicts of an entire build rather than the value of one expression. Four of them fire a taint edge on purpose:
+**What the whole-build fixtures establish, and against how many implementations.** The reference implements J2's per-file verdict, J3's fixpoint and revival from the specification (#21, #22, #61). Thirteen whole-build fixtures assert the verdicts of an entire build rather than the value of one expression, and four fire a taint edge on purpose:
 
 | Fixture | What it fires |
 |---|---|
@@ -71,9 +71,11 @@ Two limits on that. The rewrite's author had read chant's implementation closely
 
 The control is the one with teeth. An implementation that falls back on every file in a build with any fallback satisfies the other three and fails this, so the suite asserts it against a stub that does exactly that.
 
-chant cannot answer any of them. Its public entry folds one expression or one file's resource exports; nothing in it takes a set of files, and a taint edge does not exist inside a single file. The whole-build fixtures therefore run against one implementation. The suite asserts that chant reports no project entry, so it fails the day one lands rather than letting the comparison lapse (chant#2408). What supports Theorem 1 across two implementations is the differential, not these fixtures.
+Until `chant-v0.70.1` chant had no entry that took a set of files, so none of these were answerable there: a taint edge does not exist inside a single file. chant#2408 added one, and the nine fixtures that need no host now run against both implementations. They agree on every file's final verdict and its tentative verdict, and for every taint casualty they agree on the file the edge came from and on which rule it was. The four that name a host still reach one implementation, their entity classes coming from a package chant cannot resolve, and a skip with no host to explain it fails the suite.
 
-Writing J2 and J3 from the specification alone found one more gap in it. `F-Import` and `F-Val-Live` stated two different identity predicates — a value with `typeof` object or function, against one with a prototype other than `Object` or `Array` — and nothing said they answer different questions. Using either for both uses is wrong, in one direction unsoundly. `F-Identity` now settles it: the recursive test is normative, because the proposition is about entities the build names, and `F-Import`'s broader test is an over-approximation whose cost is coverage (#59).
+Two agreements are worth naming. chant classifies the capturing sibling as reached by a capture rather than an import, the distinction chant#2406 was filed for. And a file whose only tie to another is a call returning computed plain data folds in both, which is `F-Identity`'s entity test holding in an implementation that has never read it.
+
+Writing J2 and J3 from the specification found one more gap in it, which that test is the resolution of. `F-Import` and `F-Val-Live` stated two identity predicates and nothing said they answer different questions, so either choice for both uses is wrong, in one direction unsoundly. `F-Identity` makes the recursive test normative and `F-Import`'s broader one an over-approximation whose cost is coverage (#59).
 
 The port's own failure mode is worth recording because it is the one this section should not paper over: chant-v0.69.0 extended an envelope check from three kinds to five while the port still had three, and because no fixture covered the shape, the suite stayed green against a stale port until the drift was found by reading the release diff. Two fixtures now cover it, and the port that made the drift possible is gone.
 
@@ -109,7 +111,7 @@ The corpus is chant's own examples, and chant's documentation says the number is
 ## Limits
 
 - Twelve mixed entries and one adversarial build are a small sample, all from one project.
-- Fixture coverage is 57 of 126 rules. The 69 without one are listed with a reason, and the list may only shrink.
-- Only the differential puts J3 in front of both implementations at once; the fixtures for it reach one (chant#2408).
+- Fixture coverage is 58 of 126 rules. The 68 without one are listed with a reason, and the list may only shrink.
+- J3's whole-build fixtures reach both implementations where no host is involved, and one where a host is. Comparing verdicts alone would not be enough, since a seed and a taint casualty are both `run`; the tentative verdict and the taint edge are compared too.
 - Revival is implemented for five of the six envelopes; `{__compositeStep}` needs a composite factory form the reference does not have (`packages/reference/CAVEATS.md`).
 - The independent rewrite found two specification gaps. Two is a small sample, and it is the sample a single author working alone can produce.

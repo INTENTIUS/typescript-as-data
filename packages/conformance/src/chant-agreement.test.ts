@@ -28,12 +28,10 @@ describe("chant cross-check (#11)", () => {
     const skipped = reports.filter((r) => r.skipped).map((r) => r.fixture);
     const hosted = new Set(projects.filter((f) => f.host).map((f) => f.id));
     const unexpected = skipped.filter((id) => !hosted.has(id));
-    if (chantAdapter.foldProject && (await chantAdapter.foldProject(new Map([["a.ts", "export const a = 1;"]]))) !== "unavailable") {
-      expect(unexpected, `skipped without a host to explain it:\n${unexpected.join("\n")}`).toEqual([]);
-    } else {
-      // The pin predates chant#2408. Recorded, not silently tolerated.
-      expect(skipped.length, "an older pin skips every whole-build fixture").toBe(projects.length);
-    }
+    expect(unexpected, `skipped without a host to explain it:\n${unexpected.join("\n")}`).toEqual([]);
+    // The pin carries the entry, so "unavailable" everywhere would mean the
+    // comparison silently stopped happening. Asserted, not assumed.
+    expect(skipped.length, "every hostless whole-build fixture must reach chant").toBeLessThan(projects.length);
   });
 
   test("chant and the reference agree on every whole-build fixture chant can answer (#62)", async () => {
