@@ -1,0 +1,9 @@
+{
+  "rules": ["F-Val-Live", "F-Identity"],
+  "project": true,
+  "verdicts": { "source.ts": "run", "breaker.ts": "run", "quiet.ts": "fold" },
+  "tentative": { "source.ts": "fold", "breaker.ts": "run", "quiet.ts": "fold" },
+  "taintedBy": { "source.ts": "breaker.ts" },
+  "exports": { "quiet.ts": { "data": { "n": 2, "nested": { "deeper": [2, 2] } } } },
+  "note": "The entity test earning its keep. breaker.ts is in the seed and taints source.ts forward. quiet.ts calls the same function and survives, because nothing the call returned carries a live object: under the reference test every parameter helper would be a taint source and quiet.ts would fall back with it."
+}

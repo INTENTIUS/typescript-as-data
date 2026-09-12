@@ -1,6 +1,7 @@
 import type { ConformanceAdapter } from "./adapter";
 import type { ExpressionFixture, Fixture, ProjectFixture } from "./fixture";
 import { expressionFixtures, projectFixtures } from "./fixture";
+import { requireHost } from "./host";
 
 export interface FixtureReport { fixture: string; adapter: string; pass: boolean; skipped?: string; failures: string[] }
 
@@ -32,7 +33,7 @@ export function runFixtures(adapter: ConformanceAdapter, fixtures: Fixture[]): F
 export function runProjectFixture(adapter: ConformanceAdapter, f: ProjectFixture): FixtureReport {
   const base = { fixture: f.id, adapter: adapter.name };
   if (!adapter.foldProject) return { ...base, pass: true, skipped: "no project entry", failures: [] };
-  const r = adapter.foldProject(f.files);
+  const r = adapter.foldProject(f.files, f.host ? requireHost(f.host) : undefined);
   if (r === "unavailable") return { ...base, pass: true, skipped: "project entry unavailable", failures: [] };
   const failures: string[] = [];
   for (const [path, want] of Object.entries(f.verdicts)) {
@@ -66,7 +67,8 @@ export function compareAdapters(a: ConformanceAdapter, b: ConformanceAdapter, fi
   const dis: string[] = [];
   for (const f of projectFixtures(fixtures)) {
     if (!a.foldProject || !b.foldProject) continue;
-    const ra = a.foldProject(f.files), rb = b.foldProject(f.files);
+    const host = f.host ? requireHost(f.host) : undefined;
+    const ra = a.foldProject(f.files, host), rb = b.foldProject(f.files, host);
     if (ra === "unavailable" || rb === "unavailable") continue;
     for (const path of new Set([...Object.keys(ra.verdicts), ...Object.keys(rb.verdicts)])) {
       const va = ra.verdicts[path]?.kind ?? "absent", vb = rb.verdicts[path]?.kind ?? "absent";

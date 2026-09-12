@@ -3,6 +3,8 @@
  * foreign implementation (chant, or one in another language behind a shim)
  * can satisfy it without exposing internals: source in, verdict out.
  */
+import type { ConformanceHost } from "./host";
+
 export type ShapeResult =
   | { accepted: true }
   | { accepted: false; rule?: string; line: number; column: number; message: string }
@@ -34,5 +36,5 @@ export interface ConformanceAdapter {
    * chant's public API is per-file, so its project fixtures are reported
    * skipped rather than silently passing.
    */
-  foldProject?(files: Map<string, string>): ProjectResult | "unavailable";
+  foldProject?(files: Map<string, string>, host?: ConformanceHost): ProjectResult | "unavailable";
 }

@@ -1,0 +1,8 @@
+{
+  "rules": ["F-CallLeak", "F-Val-Live"],
+  "project": true,
+  "host": "shapes",
+  "verdicts": { "leaky.ts": "fold", "pure.ts": "fold", "caller.ts": "fold" },
+  "exports": { "caller.ts": { "data": { "doubled": 42 } } },
+  "note": "Two project-local calls in one file, one leaking and one not. shared() returns a live object the caller's arguments did not carry in, so caller.ts captures leaky.ts; twice() returns computed plain data, so pure.ts is not captured. Everything folds here, and the difference is only visible in the edges — which is why the taint fixtures are the ones that make it observable."
+}

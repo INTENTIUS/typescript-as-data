@@ -1,0 +1,14 @@
+{
+  "rules": ["F-Val-Arity"],
+  "project": true,
+  "host": "shapes",
+  "verdicts": { "arities.ts": "fold" },
+  "exports": {
+    "arities.ts": {
+      "withProps": { "entityType": "Bucket", "lexicon": "shapes", "props": { "name": "a" }, "attributes": {} },
+      "withAttributes": { "entityType": "Bucket", "lexicon": "shapes", "props": { "name": "b" }, "attributes": { "region": "eu" } },
+      "spread": { "left": 1, "right": "two", "entityType": "Pair", "lexicon": "shapes" }
+    }
+  },
+  "note": "Both arms. A leading object literal is props, a second one is attributes, and anything else is spread positionally. The three forms are distinguished at fold time by the shape of the argument list, so revival has only to honour what the envelope recorded."
+}

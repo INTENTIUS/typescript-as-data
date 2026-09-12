@@ -13,19 +13,24 @@ reference test for import and re-export captures, the entity test for call
 leaks. Kept here as a pointer, because the code comments cite F-Identity and
 a reader of an older revision will not find it (#59).
 
-## No revival
+## Revival needs a host, and one envelope has no fate here
 
-**F-Val-Fate** has a resource envelope revived into a real instance by the
-class the declarator's `new` resolves to. Revival needs a host that supplies
-real constructors; this package ships `EMPTY_HOST`, so a `{__resource}`
-envelope stays an envelope in the namespace.
+**F-Val-Fate** is implemented (#61): a declarator's value is revived through
+the folding file's own imports, so a `{__resource}` becomes a real instance of
+the class the host supplies, `{__intrinsic}` and `{__helper}` are invoked, and
+`{__symbol}` resolves as a dotted chain. `{__attrRef}` passes through, and is
+rejected inside a host call's arguments per **F-Val-Position**.
 
-This does not change a verdict. F-Import asks only whether a value has
-identity, and an envelope is an object either way. It does change two things:
-a project fixture cannot assert a revived instance's class, and **F-CallLeak**
-is not reachable at all, because no body this package can evaluate produces a
-value that F-Val-Live calls live. That is why F-CallLeak is still listed in
-`spec/fixtures/UNCOVERED.md` with a reason of its own.
+Two limits remain.
+
+`{__compositeStep}` has no fate here. Its revival is "resolve the composite
+(J2 F-Call), then read `.step` off the real result", and this package has no
+composite factory form, so revival rejects rather than guessing.
+
+Revival can only construct what a host supplies. With `EMPTY_HOST` an envelope
+has no class to become and revival rejects, which is correct rather than
+silent: a build that folds a resource and cannot revive it has not folded the
+file. Conformance fixtures name the host they need.
 
 ## No filesystem, no module resolution algorithm
 
