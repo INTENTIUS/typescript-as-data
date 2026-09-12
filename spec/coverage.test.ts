@@ -11,7 +11,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const specDir = dirname(fileURLToPath(import.meta.url));
-const RULE_FILES = ["grammar.md", "judgments.md", "values.md", "divergence.md", "hosts.md"];
+const RULE_FILES = ["grammar.md", "judgments.md", "values.md", "divergence.md", "hosts.md", "rules.md"];
 const ID = /\b([SF]-[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*)\b/g;
 
 function definedIds(): Set<string> {

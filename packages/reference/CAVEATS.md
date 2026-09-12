@@ -71,6 +71,10 @@ chant as F-Import's text says; it now does both (#96). A project-local
 function is excluded at the import, since it is a callable rather than a
 value and F-CallLeak decides its edge at the call.
 
+## No rules, and no provenance
+
+`rules.md` (spec `1.4`) specifies the contract a semantic rule runs under. This package runs none: it has no rule hook, and no value provenance, so a finding it produced could name no source line. Both wait on the harness half (#101).
+
 ## No filesystem, no module resolution algorithm
 
 `foldProject` takes a map of path to source. Specifier resolution joins the
