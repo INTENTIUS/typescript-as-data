@@ -34,8 +34,13 @@ describe.skipIf(!checkout)("the corpus against both implementations (#25)", () =
     }
   }, 600_000);
 
-  test("the data-host column agrees, wherever the evaluator with no JavaScript runtime is present (#86)", () => {
-    if (!summary.dataHost) return;
+  test("the data-host column is present and agrees (#86, #116)", () => {
+    // A missing evaluator must not read as a clean pass: the column is asserted
+    // unless a local run opts out of it by name, and then the report says so.
+    if (!summary.dataHost) {
+      expect(process.env.TSAD_CORPUS_NO_RUST, "no data-host column: build evaluators/rust (cargo build --release) or set TSAD_CORPUS_NO_RUST=1 to run the two-implementation comparison only").toBeTruthy();
+      return;
+    }
     const dis = summary.dataHost.disagreements.map((d) => `${d.entry}/${d.file}: reference ${d.dataHost!.reference}, evaluator ${d.dataHost!.rust} ${d.dataHost!.diff ?? ""}`);
     expect(dis, dis.join("\n")).toEqual([]);
     expect(summary.dataHost.files).toBe(summary.files);

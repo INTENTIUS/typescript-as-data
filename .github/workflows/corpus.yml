@@ -59,6 +59,24 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # The data-host column (#86): the evaluator with no JavaScript runtime,
+      # judged beside the reference on the same host description. Without the
+      # binary the column vanishes from the report, and the corpus test now
+      # fails on that rather than passing without it (#116).
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.98.1
+      - uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            evaluators/rust/target
+          key: rust-${{ runner.os }}-${{ hashFiles('evaluators/rust/Cargo.lock') }}
+      - name: Build the Rust evaluator
+        working-directory: evaluators/rust
+        run: cargo build --release --locked
+
       # Everything from here to the corpus step is chant's own check job setup,
       # copied from .github/workflows/chant.yml at the pinned ref. The cache key
       # and the lexicon list are kept the same so this job hits the same schema
