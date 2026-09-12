@@ -32,7 +32,7 @@
       {{ $page := site.GetPage (printf "/for-your-platform/%s" .id) }}
       <li class="picker-row status-{{ .status }}" data-name="{{ .name | lower }}">
         {{ with $page }}<a href="{{ .RelPermalink }}">{{ end }}<span class="picker-name">{{ .name }}</span>{{ if $page }}</a>{{ end }}
-        {{ if eq .status "reference" }}<span class="badge badge-proven">reference platform</span>{{ else if eq .status "pr-open" }}<span class="badge">PR open</span>{{ end }}
+        {{ if eq .status "reference" }}<span class="badge badge-proven">reference platform</span>{{ else if eq .status "merged" }}<span class="badge">on main</span>{{ end }}
         <span class="picker-status">{{ .status_label | markdownify }}</span>
       </li>
       {{ end }}

@@ -1,0 +1,73 @@
+name: demo
+
+# Distinct title so it isn't confused with the ci workflow on the same commit.
+run-name: demo — ${{ github.head_ref || github.ref_name }}
+
+# The tutorial (#84) is the first artifact whose correctness depends on three
+# repositories at once: this one, forgejo-warden and the published reference.
+# This job runs its six steps against forgejo-warden's own Docker Compose
+# sandbox, with the policy cut out of the tutorial page by scripts/demo.sh,
+# so the page and the job cannot drift apart. Like corpus.yml it has no
+# pull_request or push trigger: it pulls a container image and a second
+# repository, and either being unavailable would fail the main gate on a
+# change that has nothing to do with it.
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays, early UTC, after the corpus run.
+    - cron: '41 6 * * 1'
+
+concurrency:
+  group: demo-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # forgejo-warden at the commit the tutorial was last run against. Move it
+  # when the tutorial changes or warden's loader does.
+  WARDEN_REF: 3e20374d79ea7780245acfe49b053d76ad6b516f
+  WARDEN_DIR: .forgejo-warden
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check out forgejo-warden
+        uses: actions/checkout@v6
+        with:
+          repository: INTENTIUS/forgejo-warden
+          ref: ${{ env.WARDEN_REF }}
+          path: ${{ env.WARDEN_DIR }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      # warden's dependencies include the published @intentius/tsad-reference,
+      # which is the evaluator the tutorial runs on.
+      - name: Install and build forgejo-warden
+        working-directory: ${{ env.WARDEN_DIR }}
+        run: |
+          npm ci
+          npm run build
+
+      # bootstrap.sh appends FORGEJO_E2E_URL and FORGEJO_E2E_TOKEN to
+      # $GITHUB_ENV when it runs under Actions, so later steps inherit them.
+      - name: Stand up the sandbox
+        working-directory: ${{ env.WARDEN_DIR }}
+        run: bash e2e/bootstrap.sh
+
+      - name: The six steps
+        env:
+          TUTORIAL: docs/content/try-it/_index.md
+        run: WARDEN_DIR="${{ github.workspace }}/${{ env.WARDEN_DIR }}" bash scripts/demo.sh
+
+      - name: Tear down
+        if: always()
+        working-directory: ${{ env.WARDEN_DIR }}
+        run: docker compose -f e2e/docker-compose.yml down -v

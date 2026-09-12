@@ -16,7 +16,7 @@
         {{ $page := site.GetPage (printf "/for-your-platform/%s" .id) }}
         <li{{ if eq $page $cur }} class="current"{{ end }}>
           {{ with $page }}<a href="{{ .RelPermalink }}">{{ end }}{{ .name }}{{ if $page }}</a>{{ end }}
-          {{ if eq .status "reference" }}<span class="badge badge-proven">reference</span>{{ else if eq .status "pr-open" }}<span class="badge">PR open</span>{{ end }}
+          {{ if eq .status "reference" }}<span class="badge badge-proven">reference</span>{{ else if eq .status "merged" }}<span class="badge">on main</span>{{ end }}
         </li>
         {{ end }}
       </ul>

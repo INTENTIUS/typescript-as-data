@@ -5,7 +5,7 @@ weight: 2
 diataxis: how-to
 ---
 
-[forgejo-warden](https://github.com/INTENTIUS/forgejo-warden) keeps a Forgejo org and its repos in a declared state. It diffs against live and applies guardrails. Runs are dry by default, and deletes happen only where the policy says `owned`. Its policy is one file, and the `.ts` form of that file is [forgejo-warden#33](https://github.com/INTENTIUS/forgejo-warden/pull/33).
+[forgejo-warden](https://github.com/INTENTIUS/forgejo-warden) keeps a Forgejo org and its repos in a declared state. It diffs against live and applies guardrails. Runs are dry by default, and deletes happen only where the policy says `owned`. Its policy is one file, and the `.ts` form of that file landed in [forgejo-warden#33](https://github.com/INTENTIUS/forgejo-warden/pull/33).
 
 ## Author
 
