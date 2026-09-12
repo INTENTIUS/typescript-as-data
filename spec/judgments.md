@@ -64,6 +64,8 @@ another language embeds, or a JavaScript tool that folds and never runs. It is
 | `F-Eval-CallHelper`, `F-Eval-CallEager`, `F-Host-Admission`, `F-Host-NoSubstitution` | absent: there is nothing to invoke. A registered helper or eager name is an ordinary unresolved identifier |
 | `F-Eval-Tagged`, `F-Eval-CallIntrinsic` | apply; the envelope stays an envelope |
 | `F-Call`, `F-Host-Composite` | interpretation only (step 4). A factory that is not interpretable is an error, never invoked |
+| `S-LocalFunction`, `S-CallLocal` | apply in full: a same-file or project-imported function is called by interpretation, which needs no runtime |
+| `S-ExportDefault` | applies: a default export is the declarator named `default`. In `full` it is permitted, not required, and chant does not yet admit it |
 | `F-Eval-New`, `F-Prebuild`, `F-Count` | permitted, not required. An implementation that supports `new` folds it to a `{__resource}` envelope and binds the same envelope at every reference; one that does not rejects `new` under `F-Eval-Reject`. A fixture that uses `new` is tagged `full` unless it says otherwise |
 | `F-Host-Interface` | the host is a description, not code: the intrinsic registry (item 3), the trust set (item 5), and the serialization mapping for envelopes. Items 1, 2, 4 and 6 are absent |
 | `F-Obs-Counters` | trivially satisfied: every counter is zero |
@@ -249,7 +251,8 @@ about what may be *imported*; this is about what may be *folded*.
 **F-Scan.** The statement gate (grammar §1). If any exported statement matches
 S-Disqualify, `run(reason)` naming the construct. Otherwise the admitted
 declarators are, in source order: resource, single, destructure,
-named-export, re-export, function.
+named-export, re-export, function. In `data-host` a seventh kind, default,
+is admitted as well (S-ExportDefault).
 
 **F-NoExports.** If the gate admits the module but yields **zero**
 declarators, a file with no exports, or only type-only ones, the verdict is
@@ -259,10 +262,13 @@ folding to have anything to produce; it is not folded to an empty namespace.
 ### Scope
 
 **F-Bind.** `consts` is every top-level `const ⟨Identifier⟩ = e` (R6.6,
-exported or not); `locals` is every top-level binding the resolver may read
-by name, the same set, plus destructured locals from a composite call
-(`const { a } = C({…})`). Resolution consults `locals`/`consts` before
-`externals` (R6.6).
+exported or not) whose `e` is not a function; `locals` is every top-level
+binding the resolver may read by name, the same set, plus destructured locals
+from a composite call (`const { a } = C({…})`). Every S-LocalFunction binds
+its name in `externals` to a `FoldableFunction` for the file's own scope
+whether or not it is exported (spec `1.2`). A same-file call therefore
+reaches F-Eval-CallLocal, and a use as a value is step 3's rejection.
+Resolution consults `locals`/`consts` before `externals` (R6.6).
 
 **F-Import.** For each named import binding `n` of `f`:
 
@@ -326,8 +332,10 @@ F-IsolatedRefusal like any other.
   instance rather than building another.
 - *re-export* `export { a } from "./g"`: `X_g[a]`, with `g ∈ L(f)` if it has
   identity, a re-export is a capture.
-- *function* `export function φ`: `X[φ]` is a `FoldableFunction` marker
-  (R1.3); the body's own foldability is judged at the call, never here.
+- *function* `export function φ`: `X[φ]` is the `FoldableFunction` F-Bind
+  bound (R1.3); the body's own foldability is judged at the call, never here.
+- *default* `export default e` (`data-host`, S-ExportDefault): `X["default"]`
+  is `⟦e⟧` revived, as *single* is; `import n from "./g"` binds it (F-Import).
 
 **F-Call.** A call in declarator position, callee `c`:
 

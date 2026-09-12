@@ -1,0 +1,21 @@
+{
+  "rules": [
+    "S-ExportDefault",
+    "F-Declarator",
+    "F-Scan"
+  ],
+  "export": "default",
+  "shape": "accept",
+  "fold": "fold",
+  "value": {
+    "a": 1,
+    "b": [
+      2,
+      3
+    ]
+  },
+  "profiles": [
+    "data-host"
+  ],
+  "note": "The idiom of every configuration file (spec 1.2, #94). The export is named default. Tagged data-host only: the full profile keeps export default under S-Disqualify until chant admits it, and the first consumer worked around it with a named export."
+}

@@ -29,7 +29,7 @@ The gate that runs before any expression is classified. Disqualifies whole files
 | # | Decision | Behaviour | Covers |
 |---|---|---|---|
 | L1.1 | admissible export shapes | `export const X = new Type(...)`, `export const X = <expr>`, `export const {a,b} = <expr>`, `export {a,b}`, `export {a,b} from "./m"`, `export function f(){}` | S-Module, S-ExportResource … S-ExportTypeOnly (grammar.md) |
-| L1.2 | `export default` | disqualifies the file | S-Disqualify (grammar.md) |
+| L1.2 | `export default` | disqualifies the file in `full`; the declarator named `default` in `data-host` since spec `1.2` | S-Disqualify; S-ExportDefault (grammar.md) |
 | L1.3 | `export * from` | disqualifies; no enumerable element list | S-Disqualify (grammar.md) |
 | L1.4 | exported class, `let`/`var` | disqualifies | S-Disqualify (grammar.md) |
 | L1.5 | destructured export with rest, nested, or defaulted element | disqualifies | S-Disqualify (grammar.md) |
@@ -58,6 +58,7 @@ Shape only. No resolution, no evaluation.
 | L2.14 | call; method (`x.y()`) | admitted unconditionally, receiver and args recursed | S-CallMethod; F-Eval-CallMethod |
 | L2.15 | call; `<call>(...).step` | admitted unconditionally at the property-access node | S-CompositeStep; F-Eval-Member step 2 |
 | L2.16 | any other call | violation, `callExpressionMessage` | S-Reject; F-Eval-Reject |
+| L2.17 | project-local call shape (added #95) | the classifier rejects it today while the build folds it (chant#2435); `1.2` gives it S-CallLocal | S-CallLocal (grammar.md) |
 
 ## L3. Expression reduction (`fold`)
 
@@ -116,6 +117,7 @@ Shape only. No resolution, no evaluation.
 | L5.13 | namespace import of a project file (added #14 read) | resolves to a synthetic plain object of the target's `exportedValues`; capture if any entry has identity | F-Namespace (judgments.md) |
 | L5.14 | namespace import of a package (added #14 read) | never resolved; the reason `new ns.Type(...)` is unreachable | F-Namespace (judgments.md), |
 | L5.15 | unresolved import never referenced (added #14 read) | does not force run; failure recorded for diagnostics only | F-Reference (judgments.md) |
+| L5.16 | same-file project-local functions (added #95, probed at chant-v0.71.0) | a top-level `function` declaration, exported or not, and a `const` bound to an arrow both fold when called; chant did this before the text said so | S-LocalFunction; F-Bind |
 
 ## L6. Revival (`reviveFoldedValue`)
 

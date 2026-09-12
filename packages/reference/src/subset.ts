@@ -73,8 +73,8 @@ export function isUnclaimedCallee(call: ts.CallExpression, intrinsics?: readonly
  * unrecognisable and their shapes fall to S-Reject, which is F-Exc-Registry:
  * the one place this classifier is stricter than the folder.
  */
-export function findShapeViolation(node: ts.Node, intrinsics?: readonly IntrinsicDef[]): ShapeViolation | undefined {
-  const recur = (n: ts.Node) => findShapeViolation(n, intrinsics);
+export function findShapeViolation(node: ts.Node, intrinsics?: readonly IntrinsicDef[], localCallees?: ReadonlySet<string>): ShapeViolation | undefined {
+  const recur = (n: ts.Node) => findShapeViolation(n, intrinsics, localCallees);
 
   // S-Unwrap
   if (
@@ -204,6 +204,10 @@ export function findShapeViolation(node: ts.Node, intrinsics?: readonly Intrinsi
     if (ts.isIdentifier(node.expression)) {
       const name = node.expression.text;
       if (isFoldableHelperName(name)) return args(); // S-CallHelper
+      // S-CallLocal (spec 1.2): the callee is bound in this file by
+      // S-LocalFunction or by an import from a project specifier. The body's
+      // admissibility is the fold's question (S-FnBody at the call).
+      if (localCallees?.has(name)) return args();
       const def = intrinsics?.find((i) => i.name === name);
       // S-CallIntrinsic / S-CallEager, registry-gated. Without ρ neither is
       // recognisable and the call falls to S-Reject (F-Exc-Registry).
