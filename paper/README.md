@@ -33,6 +33,7 @@ Each draft feeds one section of the paper.
 | `theorem.md` | #28 | the two claims and their proof sketches |
 | `measurements.md` | #29 | evaluation |
 | `discussion.md` | #54 | discussion |
+| `enables.md` | #87 | what the fold enables, placed after the mechanism and before the evaluation |
 | `figures/` | #57 | two SVGs: the taint boundary, and the two-phase shape |
 | `../spec/prior-art.md` | #31 | the novelty narrowing, cited from related work |
 
@@ -42,7 +43,7 @@ Every section has a draft. What remains is the pass that turns seven Markdown fi
 
 ## Artifact
 
-The paper cites one specification version, by its tag (`spec-1.0` at the time of writing; `spec/VERSION` is current), and every number that depends on the rule set says which version produced it. If the track offers artifact evaluation, the artifact is this repository at a tag. It holds:
+The paper cites one specification version, by its tag (`spec-1.1` at the time of writing; `spec/VERSION` is current), and every number that depends on the rule set says which version produced it. If the track offers artifact evaluation, the artifact is this repository at a tag, and the thing an evaluator runs is the tutorial on the docs site (typescript-as-data#84). It declares a governance policy as data and plans and applies it against a throwaway Forgejo on the evaluator's own machine, which needs no account and no credentials. The repository holds:
 
 - the specification
 - the reference implementation
