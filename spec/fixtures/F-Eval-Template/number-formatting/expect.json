@@ -1,0 +1,11 @@
+{
+  "rules": [
+    "F-Eval-Template",
+    "F-Eval-Binary"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "fold",
+  "value": "0.30000000000000004|1e+21|0|0.3333333333333333|100|1.5e-7|9007199254740992|Infinity|123456789012345680000",
+  "note": "ToString of a Number is ECMAScript Number::toString: shortest round-trip digits, exponent form at and above 1e21, -0 prints as 0, an integer literal beyond 2^53 rounds to the nearest double before it is ever formatted. An evaluator in another language has to reproduce every one of these or the same file prints differently per platform (#81)."
+}

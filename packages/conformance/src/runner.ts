@@ -5,6 +5,26 @@ import { requireHost } from "./host.js";
 
 export interface FixtureReport { fixture: string; adapter: string; pass: boolean; skipped?: string; failures: string[] }
 
+/**
+ * The comparison form of a folded value. `JSON.stringify` drops an
+ * `undefined`-valued key and turns an `undefined` element into `null`, which
+ * is exactly the distinction F-Val-Undefined draws (#82): a fixture that wants
+ * to see it writes the sentinel `"$undefined"` where the fold must yield
+ * `undefined`, and this encoding maps the fold's `undefined` to the same
+ * sentinel before the two are compared. Non-finite numbers, which JSON cannot
+ * write either, encode as ToString would print them.
+ */
+export function encodeValue(v: unknown): string {
+  const walk = (x: unknown): unknown => {
+    if (x === undefined) return "$undefined";
+    if (typeof x === "number" && !Number.isFinite(x)) return String(x);
+    if (x === null || typeof x !== "object") return x;
+    if (Array.isArray(x)) return x.map(walk);
+    return Object.fromEntries(Object.entries(x).map(([k, e]) => [k, walk(e)]));
+  };
+  return JSON.stringify(walk(v));
+}
+
 export function runFixture(adapter: ConformanceAdapter, f: ExpressionFixture): FixtureReport {
   const failures: string[] = []; let skipped: string | undefined;
   const s = adapter.shape(f.input, f.exportName);
@@ -13,8 +33,7 @@ export function runFixture(adapter: ConformanceAdapter, f: ExpressionFixture): F
   const r = adapter.foldExport(f.input, f.exportName);
   if (f.fold === "fold") {
     if (!r.ok) failures.push(`fold: expected fold, got run (${r.message})`);
-    else if (f.value === "$undefined") { if (r.value !== undefined) failures.push(`fold: value ${JSON.stringify(r.value)} ≠ expected undefined`); }
-    else if (JSON.stringify(r.value) !== JSON.stringify(f.value)) failures.push(`fold: value ${JSON.stringify(r.value)} ≠ expected ${JSON.stringify(f.value)}`);
+    else if (encodeValue(r.value) !== encodeValue(f.value)) failures.push(`fold: value ${encodeValue(r.value)} ≠ expected ${encodeValue(f.value)}`);
   } else {
     if (r.ok) failures.push(`fold: expected run, got fold with ${JSON.stringify(r.value)}`);
     else if (f.rejectAt && (r.line !== f.rejectAt.line || r.column !== f.rejectAt.column))
@@ -59,8 +78,8 @@ export async function runProjectFixture(adapter: ConformanceAdapter, f: ProjectF
     const got = r.verdicts[path];
     if (got?.kind !== "fold") { failures.push(`${path}: expected exports, but the file did not fold`); continue; }
     for (const [name, value] of Object.entries(want)) {
-      if (JSON.stringify(got.exports[name]) !== JSON.stringify(value)) {
-        failures.push(`${path}: export ${name} = ${JSON.stringify(got.exports[name])} ≠ expected ${JSON.stringify(value)}`);
+      if (encodeValue(got.exports[name]) !== encodeValue(value)) {
+        failures.push(`${path}: export ${name} = ${encodeValue(got.exports[name])} ≠ expected ${encodeValue(value)}`);
       }
     }
   }
@@ -92,7 +111,7 @@ export async function compareAdapters(a: ConformanceAdapter, b: ConformanceAdapt
   for (const f of expressionFixtures(fixtures)) {
     const ra = a.foldExport(f.input, f.exportName), rb = b.foldExport(f.input, f.exportName);
     if (ra.ok !== rb.ok) dis.push(`${f.id}: ${a.name} ${ra.ok ? "folds" : "runs"}, ${b.name} ${rb.ok ? "folds" : "runs"}`);
-    else if (ra.ok && rb.ok && JSON.stringify(ra.value) !== JSON.stringify(rb.value)) dis.push(`${f.id}: values differ — ${a.name} ${JSON.stringify(ra.value)} vs ${b.name} ${JSON.stringify(rb.value)}`);
+    else if (ra.ok && rb.ok && encodeValue(ra.value) !== encodeValue(rb.value)) dis.push(`${f.id}: values differ — ${a.name} ${encodeValue(ra.value)} vs ${b.name} ${encodeValue(rb.value)}`);
     const sa = a.shape(f.input, f.exportName), sb = b.shape(f.input, f.exportName);
     if (sa !== "unavailable" && sb !== "unavailable" && sa.accepted !== sb.accepted) dis.push(`${f.id}: shape — ${a.name} ${sa.accepted ? "accepts" : "rejects"}, ${b.name} ${sb.accepted ? "accepts" : "rejects"}`);
   }

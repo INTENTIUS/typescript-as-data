@@ -2,7 +2,7 @@
 
 Deliberate, and this list may only shrink (#8). Each entry names the rule and why it is still uncovered. Remove an entry when its fixture lands; the gate fails if an entry is stale.
 
-100 of 127 rules have fixtures. Most of the rules below are uncovered because the corpus is still growing (#24); where a rule needs something the reference implementation does not have, the entry says so.
+101 of 127 rules have fixtures. Most of the rules below are uncovered because the corpus is still growing (#24); where a rule needs something the reference implementation does not have, the entry says so.
 
 - `F-Depth` — F-Eval-CallLocal fixes the bound at 32 and F-Depth's rationale says the bounds are undecided; chant folds 5000 deep (#71). A fixture waits on the decision.
 - `F-Div-Step` — needs `{__compositeStep}`, which has no fate in the reference implementation (no composite factory form)
@@ -16,7 +16,6 @@ Deliberate, and this list may only shrink (#8). Each entry names the rule and wh
 - `F-Obs-Provenance` — an optional capability, reported rather than asserted
 - `F-Val-Domain` — no fixture yet; corpus is #24's
 - `F-Val-Envelope` — no fixture yet; corpus is #24's
-- `F-Val-Serializable` — no fixture yet; corpus is #24's
 - `F-Val-Symbol-Scope` — no fixture yet; corpus is #24's
 - `S-Disqualify` — no fixture yet; corpus is #24's
 - `S-ExportDestructure` — no fixture yet; corpus is #24's

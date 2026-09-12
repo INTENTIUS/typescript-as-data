@@ -1,0 +1,14 @@
+{
+  "rules": [
+    "F-Val-Undefined",
+    "F-Eval-Object"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "fold",
+  "value": {
+    "a": "$undefined",
+    "b": 1
+  },
+  "note": "Object spread copies own enumerable entries, and an undefined-valued entry is one of them (R10.5). The key travels; only emission drops it."
+}

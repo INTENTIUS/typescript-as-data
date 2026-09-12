@@ -52,9 +52,11 @@ The chant side's `false` is also an unsampled invariant: the run fails unless ev
 
 | Pin | Fixtures | Rules with a fixture | Shape and fold agreement |
 |---|---|---|---|
-| chant 0.70.1 | 68, of which 30 are whole-build | 100 of 127 | all, on the 52 the pin can answer |
+| chant 0.70.1 | 81, of which 30 are whole-build | 101 of 127 | all, on the 65 the pin can answer |
 
-The 27 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a reason each; five wait on a form the reference does not implement (the composite factory and isolation mode), one on a spec decision (#71, the call-depth bound), and the rest on the corpus growing (#24). One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
+The 26 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a reason each; five wait on a form the reference does not implement (the composite factory and isolation mode), one on a spec decision (#71, the call-depth bound), and the rest on the corpus growing (#24). One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
+
+**Coercion, stated as fixtures.** Thirteen expression fixtures pin the parts of ECMAScript an evaluator in another language has to reproduce bit for bit. Number formatting in template literals is the largest of them (shortest round-trip digits; `1e+21`; `-0` as `0`; a literal beyond 2^53 rounded before it is printed). The others are `+`'s string-or-number dispatch and relational comparison on strings; the logical operators returning an operand; unary coercion and IEEE division; and the one deliberate departure, array spread refusing a string (R10.6). The same family pins that an `undefined`-valued property is present in the folded namespace and travels through a spread, which is what a selective-by-omission consumer reads (#82). Both implementations agree on all thirteen. Their sufficiency is not established by that: the reference is JavaScript and passes them for free, so whether they are enough is known only once an evaluator with no JavaScript engine runs them (#86).
 
 **What this agreement is worth.** Until #50 the reference implementation's evaluation layer was a *port* of chant's, so agreement on expression-level fixtures was guaranteed by construction rather than observed. It is now written from `grammar.md` §2 and `judgments.md` J1 without consulting chant's source, and the two implementations agree on every fixture, so the comparison is between two codebases rather than one code base with itself.
 
@@ -128,7 +130,7 @@ The corpus is chant's own examples, and chant's documentation says the number is
 ## Limits
 
 - Twelve mixed entries and one adversarial build are a small sample, all from one project.
-- Fixture coverage is 100 of 127 rules. The 27 without one are listed with a reason, and the list may only shrink.
+- Fixture coverage is 101 of 127 rules. The 26 without one are listed with a reason, and the list may only shrink.
 - J3's whole-build fixtures reach both implementations where no host is involved, and one where a host is. Comparing verdicts alone would not be enough, since a seed and a taint casualty are both `run`; the tentative verdict and the taint edge are compared too.
 - Revival is implemented for five of the six envelopes; `{__compositeStep}` needs a composite factory form the reference does not have (`packages/reference/CAVEATS.md`).
 - The independent rewrite found two specification gaps. Two is a small sample, and it is the sample a single author working alone can produce.

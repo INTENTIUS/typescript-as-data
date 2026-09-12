@@ -1,0 +1,19 @@
+{
+  "rules": [
+    "F-Eval-Binary"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "fold",
+  "value": [
+    3.5,
+    0.3333333333333333,
+    0.2,
+    2.9,
+    2.5,
+    "Infinity",
+    "-Infinity",
+    0.30000000000000004
+  ],
+  "note": "Division is IEEE double division: no integer division, and division by zero is an infinity, not an error. Infinity has no JSON form, so the expected value writes it as the string ToString would produce; the comparison encodes the fold the same way."
+}
