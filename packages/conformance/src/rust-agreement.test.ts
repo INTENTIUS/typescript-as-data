@@ -16,7 +16,8 @@ const suite = binary ? describe : describe.skip;
 if (!binary) console.warn("[rust] skipped: evaluators/rust is not built (cargo build --release) and TSAD_RUST_EVAL is unset");
 
 suite("the Rust evaluator (#86) in the data-host profile", () => {
-  const rust = rustAdapter(binary!);
+  // The callback is collected even when the suite is skipped, so the adapter is made only when the binary exists.
+  const rust = binary ? rustAdapter(binary) : (undefined as unknown as ReturnType<typeof rustAdapter>);
   const fixtures = loadFixtures(join(root, "spec", "fixtures")).filter((f) => f.profiles.includes("data-host"));
   test("declares the specification version the fixtures are at", () => {
     expect(rust.specVersion).toBe(referenceDataHostAdapter.specVersion);
