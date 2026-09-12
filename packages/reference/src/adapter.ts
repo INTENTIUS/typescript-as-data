@@ -17,6 +17,9 @@ function hostOf(h: ConformanceHost | undefined): Host {
 /** The reference reports spec rule identifiers directly: it is written from the spec. */
 export const referenceAdapter: ConformanceAdapter = {
   name: "reference",
+  // Bumped by hand when the rule set this package implements moves; the
+  // conformance suite fails when it and spec/VERSION disagree (#18).
+  specVersion: "1.0",
   shape(source, exportName) {
     const v = shapeOfExport(source, exportName);
     if (v === "no-such-export") return { accepted: false, line: 1, column: 1, message: `no export named ${exportName}` };

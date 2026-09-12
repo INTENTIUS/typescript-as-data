@@ -42,7 +42,7 @@ Every section has a draft. What remains is the pass that turns seven Markdown fi
 
 ## Artifact
 
-If the track offers artifact evaluation, the artifact is this repository at a tag. It holds:
+The paper cites one specification version, by its tag (`spec-1.0` at the time of writing; `spec/VERSION` is current), and every number that depends on the rule set says which version produced it. If the track offers artifact evaluation, the artifact is this repository at a tag. It holds:
 
 - the specification
 - the reference implementation

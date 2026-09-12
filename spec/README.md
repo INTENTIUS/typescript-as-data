@@ -22,7 +22,7 @@ Not rules of the mechanism; rules of this document set. No fixture cites them. C
 - **Every identifier is exercised by at least one fixture, and every fixture
    cites a real identifier.**Both directions, in CI (#8, #44).
 - **Rejections are located**- node and rule, wording unconstrained. Message stability is not normative (R9.4).
-- **The subset is versioned**(#18).
+- **The subset is versioned**(#18). The policy is the Versioning section below; the current version is `VERSION` and the history is `CHANGELOG.md`.
 
 **A disagreement between two implementations is triaged here first** (#25),
 and reclassified as an implementation bug only once this specification is
@@ -67,6 +67,47 @@ the subset can no longer change by editing code and a comment. That is the
 price of the paper being able to call this a specification, and of the
 conformance suite testing chant against a document chant cannot invalidate
 by itself.
+
+## Versioning (#18)
+
+**A version names a set of rules.** It is the `S-*` and `F-*` identifiers
+and their normative text at a point in time, recorded in
+[`VERSION`](./VERSION) as `major.minor` and tagged `spec-<major>.<minor>`
+on the commit that set it. It is not a chant release: chant declares which
+specification version it implements, and the two move separately. It is not
+a revision of the rationale, the inventory, a note or a fixture, none of
+which is normative; a change confined to those does not move the version
+and is not entered in [`CHANGELOG.md`](./CHANGELOG.md).
+
+**Four kinds of change, two of them breaking.** A rule is *added* or
+*widened* when source that did not fold now does; the minor version moves,
+existing source is unaffected, and an implementation claiming the new
+version must implement the rule. A rule is *narrowed* when source that
+folded no longer does, or a verdict changes; the major version moves,
+because a project that folded under the old version may not under the new.
+A rule is *retired* when it is struck through in place with a note naming
+its successor (the identifier rules above); that is also major, and the
+fixtures citing it move to the successor in the same change, which the
+coverage gate enforces, since a struck identifier is no longer defined and
+a citation of it fails.
+
+**An implementation declares the version it implements.** The conformance
+adapter carries `specVersion`, and the suite compares the reference
+implementation's declaration against `VERSION` so the two cannot drift
+apart unnoticed. chant declares its version in its own tree (#34's gate is
+where a stale declaration is caught); an implementation that declares none
+is reported as such, not assumed current.
+
+**What the paper cites** is one version, by tag, and the artifact is this
+repository at that tag (`paper/README.md`). Numbers in the paper that
+depend on the rule set say which version produced them.
+
+**How a change is proposed.** As an issue here labelled `area:spec` that
+carries the rule text with its identifier and the fixture that would pin it.
+It lands spec-first and then in implementations, as the ownership section
+says. The one exception is chant's provisional path above, which a release
+bounds. Anyone may propose. The decision is recorded on the issue and dated
+in the text, as the decisions above are.
 
 ## Scope, what the name claims, and what it does not
 
