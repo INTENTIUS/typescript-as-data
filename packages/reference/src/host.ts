@@ -30,6 +30,8 @@ export type Profile = "full" | "data-host";
 export interface Host {
   /** Defaults to `full`. `data-host` admits S-ExportDefault (spec 1.2) and is what an evaluator with no runtime declares. */
   readonly profile?: Profile;
+  /** J2's ι. `open` by default; under `isolated` a project factory that is not interpretable is F-IsolatedRefusal (F-Call step 5). */
+  readonly isolation?: "open" | "isolated";
   readonly intrinsics: readonly IntrinsicDef[];
   readonly helpers: readonly { name: string; module: string; note: string }[];
   readonly ownedSpecifierPrefixes: readonly string[];

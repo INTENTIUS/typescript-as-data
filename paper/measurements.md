@@ -140,5 +140,5 @@ The corpus is chant's own examples, and chant's documentation says the number is
 - Twelve mixed entries and one adversarial build are a small sample, all from one project.
 - Fixture coverage is 128 of 138 rules. The 10 without one are listed with a reason, and the list may only shrink.
 - J3's whole-build fixtures reach both implementations where no host is involved, and one where a host is. Comparing verdicts alone would not be enough, since a seed and a taint casualty are both `run`; the tentative verdict and the taint edge are compared too.
-- Revival is implemented for all six envelopes since #109; `{__compositeStep}` resolves the composite through F-Call. Isolation mode is still not implemented (`packages/reference/CAVEATS.md`).
+- Revival is implemented for all six envelopes since #109; `{__compositeStep}` resolves the composite through F-Call. Isolation is honoured at F-Call step 5; step 6 in open mode, invoking a project module, is what the reference cannot answer (`packages/reference/CAVEATS.md`).
 - The independent rewrite found two specification gaps. Two is a small sample, and it is the sample a single author working alone can produce.

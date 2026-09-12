@@ -16,7 +16,7 @@
 import { posix } from "node:path";
 import * as ts from "typescript";
 import { EMPTY_HOST, type Host } from "./host.js";
-import { foldExpr, collectConsts, collectLocalFunctions, FoldRejection, FoldableFunction, isFoldableFunction, isLiveObject, CompositeFactory, isCompositeFactory, interpret, type Scope, type EvalHost } from "./fold.js";
+import { foldExpr, collectConsts, collectLocalFunctions, FoldRejection, FoldableFunction, isFoldableFunction, isLiveObject, CompositeFactory, isCompositeFactory, interpret, findFactoryViolation, type Scope, type EvalHost } from "./fold.js";
 import { registerHelpers, registerHostSpecifiers, isHostOwnedSpecifier, isFoldableHelperName } from "./foldable-helpers.js";
 
 /** Marks a declarator initializer that F-Call does not resolve, so J1 does. */
@@ -390,6 +390,14 @@ function foldFile(path: string, session: Session): Verdict {
     });
     let result: unknown;
     if (isCompositeFactory(bound)) {
+      // Step 4 needs the factory interpretable; otherwise step 5 refuses under
+      // isolation, and step 6 would import the project module, which this
+      // implementation cannot do, so in open mode the file runs for want of it.
+      const why = findFactoryViolation(bound.fn);
+      if (why) {
+        if (session.host.isolation === "isolated") throw new FoldRejection("F-IsolatedRefusal", ...locate(call), `isolation: "${c.text}" (${bound.file}) is not interpretable (${why}) and a project module is not invoked under ι = isolated`);
+        throw new FoldRejection("F-Call", ...locate(call), `"${c.text}" (${bound.file}) is not interpretable (${why}); invoking a project module is not something this implementation does`);
+      }
       result = live(interpret(bound, folded, call, 0, evalHost), call, c.text);
     } else {
       // Step 6: invoked with the resolved arguments; a live argument passes through and an attribute reference stays symbolic (L6.9).

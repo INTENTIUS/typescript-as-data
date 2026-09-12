@@ -96,10 +96,14 @@ specification does not define a resolution algorithm, and does not need to:
 J3's `→` is "`f` imports `g`, `g ∈ F`" for whatever resolution the host uses.
 A conformance fixture therefore never depends on a resolution subtlety.
 
-## No isolation mode
+## Isolation is observable at one step
 
-`ι` is always `open`. **F-IsolatedRefusal** distinguishes a mode in which
-resolving a binding would import or invoke project code, and this package
-never imports or invokes anything: every call it admits is J1's project-local
-call, which F-IsolatedRefusal explicitly does not restrict. The mode is
-therefore unobservable here, not unimplemented.
+`Host.isolation` is `open` or `isolated`, and a project fixture asks for one
+with its `mode`. The one place the two differ here is F-Call step 5: a
+registered project composite that step 4 cannot interpret is
+**F-IsolatedRefusal** under `isolated`, and under `open` the file runs too,
+because step 6 would import and invoke the project module and this package
+never imports project code. So `open` is the mode this package cannot
+answer in full, not `isolated`: a fixture whose fold depends on step 6 has no
+verdict here, and F-Obs-Counters' `projectFactoryInvocations` is zero in
+either mode.

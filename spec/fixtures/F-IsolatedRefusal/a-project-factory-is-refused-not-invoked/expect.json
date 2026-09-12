@@ -1,0 +1,18 @@
+{
+  "rules": [
+    "F-IsolatedRefusal",
+    "F-Call"
+  ],
+  "project": true,
+  "host": "shapes",
+  "mode": "isolated",
+  "verdicts": {
+    "shapes.ts": "run",
+    "app.ts": "run"
+  },
+  "rejectRule": {
+    "shapes.ts": "F-Eval-Function",
+    "app.ts": "F-IsolatedRefusal"
+  },
+  "note": "Under ι = isolated a project factory that step 4 cannot interpret is refused at step 5 rather than imported and invoked at step 6, even though in open mode the build would fold this file by invocation. The refusal is what isolation costs, stated as a verdict; F-Obs-Counters' projectFactoryInvocations is zero across every folded file under isolated."
+}

@@ -24,6 +24,7 @@
  *                    "exports":   { "config.ts": { "port": 8080 } },              // optional, for files that finally fold
  *                    "rejectRule": { "app.ts": "F-Eval-CallLocal" },              // optional, the rule a run verdict must name; checked when the adapter reports one
  *                    "host":      "shapes",                                       // optional, a named host from host.ts; required if the sources import one
+ *                    "mode":      "isolated",                                     // optional, J2's ι; "open" by default. An adapter that cannot honour it reports "unavailable"
  *                    "findings":  { "bucket.ts": [ { "rule": "SHAPES001", "subject": "bad", "severity": "error" } ],   // optional (#101): the host's rules' findings, keyed by the
  *                                   "artifact":  [ { "rule": "SHAPES002", "subject": "missing: Bucket", "severity": "warning" } ] }, //   file whose namespace holds the subject (pre) or "artifact" (post); "at" optional
  *                    "profiles":  ["full"],                                       // optional; see profilesOf for the default
@@ -70,6 +71,8 @@ export interface ProjectFixture {
   rejectRule?: Record<string, string>;
   /** A named host from host.ts. Required for any fixture whose sources import one. */
   host?: string;
+  /** J2's ι, `open` unless the fixture says `isolated` (F-IsolatedRefusal). */
+  mode?: "open" | "isolated";
   /** The host's rules' findings, keyed by file (pre-synthesis) or "artifact" (post-synthesis). */
   findings?: Record<string, ExpectedFinding[]>;
   note?: string;
@@ -134,7 +137,7 @@ export function loadFixtures(root: string): Fixture[] {
         out.push(fx);
       } else if (e.project) {
         const fx: ProjectFixture = { kind: "project", id, dir: d, rules: e.rules, files: readProject(join(d, "project")), profiles: [],
-          verdicts: e.verdicts, tentative: e.tentative, taintedBy: e.taintedBy, exports: e.exports, rejectRule: e.rejectRule, host: e.host, findings: e.findings, note: e.note };
+          verdicts: e.verdicts, tentative: e.tentative, taintedBy: e.taintedBy, exports: e.exports, rejectRule: e.rejectRule, host: e.host, mode: e.mode, findings: e.findings, note: e.note };
         fx.profiles = profilesOf(fx, e.profiles);
         out.push(fx);
       } else {
