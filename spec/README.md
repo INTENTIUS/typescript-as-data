@@ -41,6 +41,18 @@ apart from the agreement figure. Folding it into drift overstates what the compa
 established, in the direction that flatters this document. The corpus
 cross-check names two such limits and counts each of them.
 
+**A generator's output is in the subset and folds to its input** (#80).
+A generator is any function from the value domain to source: a template
+importer, a live import, a carve-out. Its obligation is the fidelity half of
+the round trip, `fold(generate(v)) = v` in `data-host` and
+`fold(generate(v)) = revive(v)` in `full`, where `revive` is F-Val-Fate. The
+completeness half is F-Val-Source (values.md), which says such a form
+exists for every value; the generator itself is not specified, and how it
+factors its output is quality and not correctness. The conformance suite
+holds a generator to it through the `roundtrip` fixture kind: the input is
+a namespace as data, the implementation's generator writes the source, and
+the fold of that source is compared with the input.
+
 ## Ownership, this repository is normative; chant implements it
 
 Decided 2026-09-10 (#33). The subset is defined here. chant's

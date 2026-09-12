@@ -4,6 +4,10 @@ The versioned history of the rule set. The policy is in [`README.md`](./README.m
 
 Each entry lists the rules that changed and how, in the four kinds the policy defines. A change confined to non-normative text is not versioned and is not listed here; the rationale sections and the inventory are the usual cases.
 
+## 1.5, 2026-09-12
+
+Tag `spec-1.5`. One addition, `F-Val-Source` in `values.md` (#80), which says that for every value of the domain there is source in the subset that folds to it; the table names one form per case and requires only that one exists. It is the completeness half of the round trip, `fold(generate(v)) = v`; the fidelity half is an obligation on generators and not a rule, stated in `README.md` with the `roundtrip` fixture kind that tests it, per profile because in `full` the fold of a resource's form is a live instance. Inventory rows `L12.1` to `L12.4` record chant's generators and its Kubernetes round-trip suite, which compares structure and not bytes.
+
 ## 1.4, 2026-09-12
 
 Tag `spec-1.4`. One addition, `rules.md`, which is the `F-Rule-*` family (#79) and the contract a semantic rule runs under. It is extracted from chant's post-synthesis engine and policy layer the way the other files were, with inventory rows L11.1 to L11.8, and it adds item 7 to `F-Host-Interface`. A finding's subject is an artifact-side name and a source location is optional, because that is what chant does and what `F-Obs-Provenance` already allows. No fixture exercises the family yet; the harness half is #101.

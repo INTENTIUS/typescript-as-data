@@ -35,6 +35,14 @@
  * `findings` is what an F-Rule-* fixture asserts (#101): the findings of the
  * named host's rules, as data. Matched on rule, subject and severity; the
  * message is non-normative, and a location only when both sides give one.
+ *
+ * A *roundtrip* fixture (#80) has no source at all. Its input is a namespace
+ * as data and the implementation's generator writes the source:
+ *   value.json   — { "<export>": <value> }, envelopes as F-Val-Domain writes them, "$undefined" as in expect.json
+ *   expect.json  — { "rules": ["F-Val-Source"], "roundtrip": true, "host": "shapes", "profiles": ["data-host"], "note": "…" }
+ * The fold of the generated source must equal the input. Judged in
+ * `data-host` unless the fixture says otherwise, since in `full` the fold of
+ * a resource's form is a live instance and not the envelope (F-Val-Fate).
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -66,7 +74,15 @@ export interface ProjectFixture {
   findings?: Record<string, ExpectedFinding[]>;
   note?: string;
 }
-export type Fixture = ExpressionFixture | ProjectFixture;
+export interface RoundtripFixture {
+  kind: "roundtrip";
+  profiles: Profile[];
+  id: string; dir: string; rules: string[];
+  value: Record<string, unknown>;
+  host?: string;
+  note?: string;
+}
+export type Fixture = ExpressionFixture | ProjectFixture | RoundtripFixture;
 
 export type Profile = "full" | "data-host";
 
@@ -78,6 +94,7 @@ export type Profile = "full" | "data-host";
  */
 export function profilesOf(f: Fixture, explicit?: string[]): Profile[] {
   if (explicit) return explicit as Profile[];
+  if (f.kind === "roundtrip") return ["data-host"];
   const sources = f.kind === "expression" ? [f.input] : [...f.files.values()];
   const usesNew = sources.some((s) => /\bnew\s+[A-Za-z_$]/.test(s));
   if (f.kind === "project" && (f.host || f.tentative || f.taintedBy)) return ["full"];
@@ -87,6 +104,7 @@ export function profilesOf(f: Fixture, explicit?: string[]): Profile[] {
 /** Kept as the name the expression-only callers import; `kind` narrows. */
 export const expressionFixtures = (all: Fixture[]): ExpressionFixture[] => all.filter((f): f is ExpressionFixture => f.kind === "expression");
 export const projectFixtures = (all: Fixture[]): ProjectFixture[] => all.filter((f): f is ProjectFixture => f.kind === "project");
+export const roundtripFixtures = (all: Fixture[]): RoundtripFixture[] => all.filter((f): f is RoundtripFixture => f.kind === "roundtrip");
 
 function readProject(dir: string): Map<string, string> {
   const files = new Map<string, string>();
@@ -109,7 +127,12 @@ export function loadFixtures(root: string): Fixture[] {
       const d = join(rd, name); if (!statSync(d).isDirectory()) continue;
       const e = JSON.parse(readFileSync(join(d, "expect.json"), "utf8"));
       const id = `${rule}/${name}`;
-      if (e.project) {
+      if (e.roundtrip) {
+        const fx: RoundtripFixture = { kind: "roundtrip", id, dir: d, rules: e.rules, profiles: [], host: e.host, note: e.note,
+          value: JSON.parse(readFileSync(join(d, "value.json"), "utf8")) };
+        fx.profiles = profilesOf(fx, e.profiles);
+        out.push(fx);
+      } else if (e.project) {
         const fx: ProjectFixture = { kind: "project", id, dir: d, rules: e.rules, files: readProject(join(d, "project")), profiles: [],
           verdicts: e.verdicts, tentative: e.tentative, taintedBy: e.taintedBy, exports: e.exports, rejectRule: e.rejectRule, host: e.host, findings: e.findings, note: e.note };
         fx.profiles = profilesOf(fx, e.profiles);

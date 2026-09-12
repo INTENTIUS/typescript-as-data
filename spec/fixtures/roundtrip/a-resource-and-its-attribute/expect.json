@@ -1,0 +1,8 @@
+{
+  "rules": [
+    "F-Val-Source"
+  ],
+  "roundtrip": true,
+  "host": "shapes",
+  "note": "A resource with props and attributes, and attribute references to it at the top and nested. The generator names the same-file binding; F-Eval-Member step 1 folds the read back to the reference."
+}

@@ -202,6 +202,10 @@ module is never imported.
 | L11.6 | severity configuration (added #79) | `lint.config` overrides a check's own severity | F-Rule-Finding (rules.md) |
 | L11.7 | project policies under `--sandbox` (added #79) | `loadPolicyChecks` refuses in-process while the sandbox is armed; checks run in the child (chant#1131) | F-Rule-Pure; F-Rule-Supply (rules.md) |
 | L11.8 | rule registry (added #79) | lexicon checks and project policies keyed by id; a duplicate id is a registry error | F-Rule-Supply (rules.md) |
+| L12.1 | `TypeScriptGenerator.generate(ir)` (added #80) | one generator interface behind `chant import`, `--from` live import and carve-out (`import/generator.ts`, `cli/commands/import.ts`, `import-live.ts`, `carve-emit.ts`); a lexicon supplies the generator | F-Val-Source |
+| L12.2 | `export const <id> = new <Class>({…})` (added #80) | the k8s generator's form per resource: the logical id is the binding, the class is resolved from the kind, nested property entities are constructors (`K8sGenerator.generate`, `emitProps`) | F-Val-Source |
+| L12.3 | `emitLiteral` (added #80) | scalars, arrays and objects emitted as literals; a key that is not an identifier is quoted | F-Val-Source |
+| L12.4 | k8s round-trip suite (added #80) | `roundtrip.test.ts` parses YAML and generates; `scripts/full-roundtrip.sh` re-serializes and compares resource count and kinds, not bytes, over kubernetes/examples at a 95% pass threshold | F-Val-Source |
 
 ---
 

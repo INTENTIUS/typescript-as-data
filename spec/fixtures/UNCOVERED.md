@@ -2,7 +2,7 @@
 
 Deliberate, and this list may only shrink (#8). Each entry names the rule and why it is still uncovered. Remove an entry when its fixture lands; the gate fails if an entry is stale.
 
-128 of 138 rules have fixtures. Every rule below needs something the reference implementation does not have, or something no adapter can observe; the entry says which.
+129 of 139 rules have fixtures. Every rule below needs something the reference implementation does not have, or something no adapter can observe; the entry says which.
 
 - `F-Div-Step` — needs `{__compositeStep}`, which has no fate in the reference implementation (no composite factory form)
 - `F-Host-Composite` — needs the composite registration form `Composite(fn, "N")`, which the reference implementation does not have

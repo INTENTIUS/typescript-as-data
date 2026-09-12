@@ -1,0 +1,36 @@
+{
+  "logs": {
+    "__resource": "Bucket",
+    "props": {
+      "name": "logs"
+    }
+  },
+  "tagged": {
+    "__intrinsic": "join",
+    "strings": [
+      "arn:",
+      ":",
+      "/`${x}`"
+    ],
+    "values": [
+      {
+        "__symbol": "Region.Name"
+      },
+      {
+        "__attrRef": {
+          "entity": "logs",
+          "attribute": "arn"
+        }
+      }
+    ]
+  },
+  "called": {
+    "__intrinsic": "ref",
+    "args": [
+      "logs",
+      {
+        "__symbol": "Stack.Id"
+      }
+    ]
+  }
+}

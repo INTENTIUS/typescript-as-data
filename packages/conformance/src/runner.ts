@@ -1,6 +1,6 @@
 import type { ConformanceAdapter, Finding, RulePhase } from "./adapter.js";
-import type { ExpressionFixture, Fixture, ProjectFixture } from "./fixture.js";
-import { expressionFixtures, projectFixtures } from "./fixture.js";
+import type { ExpressionFixture, Fixture, ProjectFixture, RoundtripFixture } from "./fixture.js";
+import { expressionFixtures, projectFixtures, roundtripFixtures } from "./fixture.js";
 import { requireHost } from "./host.js";
 
 export interface FixtureReport { fixture: string; adapter: string; pass: boolean; skipped?: string; failures: string[] }
@@ -45,7 +45,42 @@ export async function runFixtures(adapter: ConformanceAdapter, fixtures: Fixture
   return [
     ...expressionFixtures(fixtures).map((f) => runFixture(adapter, f)),
     ...(await Promise.all(projectFixtures(fixtures).map((f) => runProjectFixture(adapter, f)))),
+    ...(await Promise.all(roundtripFixtures(fixtures).map((f) => runRoundtripFixture(adapter, f)))),
   ];
+}
+
+/**
+ * #80 — the round trip. The input is data; the implementation's generator
+ * writes source for it and the fold of that source must be the input. The
+ * "$undefined" sentinel in value.json is decoded before generation so the
+ * generator sees the value the domain has.
+ */
+export async function runRoundtripFixture(adapter: ConformanceAdapter, f: RoundtripFixture): Promise<FixtureReport> {
+  const base = { fixture: f.id, adapter: adapter.name };
+  if (!adapter.generate || !adapter.foldProject) return { ...base, pass: true, skipped: "no generator", failures: [] };
+  const host = f.host ? requireHost(f.host) : undefined;
+  const source = adapter.generate(decodeValue(f.value) as Record<string, unknown>, host);
+  if (source === "unavailable") return { ...base, pass: true, skipped: "generator unavailable for this value", failures: [] };
+  const r = await adapter.foldProject(new Map([["generated.ts", source]]), host);
+  if (r === "unavailable") return { ...base, pass: true, skipped: "project entry unavailable", failures: [] };
+  const failures: string[] = [];
+  const v = r.verdicts["generated.ts"];
+  if (v?.kind !== "fold") failures.push(`generated source does not fold${v?.kind === "run" ? ` (${v.reason})` : ""}:\n${source}`);
+  else {
+    for (const name of new Set([...Object.keys(f.value), ...Object.keys(v.exports)])) {
+      if (!(name in f.value)) { failures.push(`export ${name} generated but not in the input`); continue; }
+      if (encodeValue(v.exports[name]) !== encodeValue(f.value[name])) failures.push(`export ${name} = ${encodeValue(v.exports[name])} ≠ input ${encodeValue(f.value[name])}\n${source}`);
+    }
+  }
+  return { ...base, pass: failures.length === 0, failures };
+}
+
+/** The inverse of encodeValue's sentinel: "$undefined" in fixture data is the domain's undefined. */
+export function decodeValue(v: unknown): unknown {
+  if (v === "$undefined") return undefined;
+  if (v === null || typeof v !== "object") return v;
+  if (Array.isArray(v)) return v.map(decodeValue);
+  return Object.fromEntries(Object.entries(v).map(([k, e]) => [k, decodeValue(e)]));
 }
 
 /** #24 — a whole-build fixture. J3's edges are invisible in any single file, so this is the only shape that can test them. */

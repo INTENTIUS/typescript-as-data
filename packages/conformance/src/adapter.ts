@@ -81,4 +81,11 @@ export interface ConformanceAdapter {
     host: ConformanceHost,
     phase: RulePhase,
   ): Finding[] | "unavailable" | Promise<Finding[] | "unavailable">;
+  /**
+   * The round trip's generator (#80): source in the subset, as one module,
+   * whose fold is `namespace` (export name to value, envelopes included).
+   * "unavailable" for an implementation with no generator, or for a value it
+   * has no form for; F-Val-Source says a form exists for every value.
+   */
+  generate?(namespace: Record<string, unknown>, host?: ConformanceHost): string | "unavailable";
 }

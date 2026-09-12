@@ -1,0 +1,28 @@
+{
+  "scalars": {
+    "s": "text",
+    "n": 1.5,
+    "big": 1e+21,
+    "b": false,
+    "z": null,
+    "u": "$undefined"
+  },
+  "list": [
+    1,
+    "two",
+    [
+      3,
+      [
+        4
+      ]
+    ],
+    {
+      "five": 5
+    }
+  ],
+  "keys": {
+    "plain": 1,
+    "with-dash": 2,
+    "3": "three"
+  }
+}

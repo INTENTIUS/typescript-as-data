@@ -1,0 +1,29 @@
+{
+  "logs": {
+    "__resource": "Bucket",
+    "props": {
+      "name": "logs",
+      "tags": [
+        "a",
+        "b"
+      ]
+    },
+    "attributes": {
+      "region": "eu"
+    }
+  },
+  "arn": {
+    "__attrRef": {
+      "entity": "logs",
+      "attribute": "arn"
+    }
+  },
+  "site": {
+    "origin": {
+      "__attrRef": {
+        "entity": "logs",
+        "attribute": "website"
+      }
+    }
+  }
+}

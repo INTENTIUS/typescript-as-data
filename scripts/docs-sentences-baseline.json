@@ -43,7 +43,7 @@
   "anaphora/repeated-opening": 1
  },
  "spec/values.md": {
-  "claude/colon-reveal": 6,
+  "claude/colon-reveal": 5,
   "tricolon/comma-series": 3,
   "discourse/punchy-fragments": 6,
   "repetition/near-duplicate": 6

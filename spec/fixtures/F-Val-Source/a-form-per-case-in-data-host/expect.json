@@ -1,0 +1,74 @@
+{
+  "rules": [
+    "F-Val-Source"
+  ],
+  "project": true,
+  "host": "shapes",
+  "profiles": [
+    "data-host"
+  ],
+  "verdicts": {
+    "app.ts": "fold"
+  },
+  "exports": {
+    "app.ts": {
+      "scalars": {
+        "s": "text",
+        "n": 1.5,
+        "b": true,
+        "z": null,
+        "u": "$undefined"
+      },
+      "nested": [
+        1,
+        {
+          "a-b": [
+            2,
+            3
+          ]
+        }
+      ],
+      "logs": {
+        "__resource": "Bucket",
+        "props": {
+          "name": "logs"
+        },
+        "attributes": {
+          "region": "eu"
+        }
+      },
+      "arn": {
+        "__attrRef": {
+          "entity": "logs",
+          "attribute": "arn"
+        }
+      },
+      "tagged": {
+        "__intrinsic": "join",
+        "strings": [
+          "arn:",
+          ":",
+          ""
+        ],
+        "values": [
+          {
+            "__symbol": "Region.Name"
+          },
+          {
+            "__attrRef": {
+              "entity": "logs",
+              "attribute": "arn"
+            }
+          }
+        ]
+      },
+      "called": {
+        "__intrinsic": "ref",
+        "args": [
+          "logs"
+        ]
+      }
+    }
+  },
+  "note": "F-Val-Source's table, written by hand: the form it names for each case that data-host has, scalar, array, object, resource, attribute reference, both intrinsic forms and a symbol inside an interior, and the value each folds to. The roundtrip family is the same table with the source written by the implementation's generator."
+}

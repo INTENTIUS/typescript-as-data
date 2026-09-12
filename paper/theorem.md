@@ -38,11 +38,15 @@ Let `shape(e, ρ)` be the classifier's verdict on expression `e` with optional r
 
 **Corollary.** Every disagreement outside `F-Exc` costs coverage and never correctness: a file the classifier passes and the folder rejects falls back to run, and never produces wrong output.
 
-## Property 3, the round trip, stated and not yet proved
+## Property 3, the round trip
 
-Let `generate` be any function from the value domain to source in the subset, a generator in the sense of `enables.md`. The claim is that for every value `v` the domain admits, `fold(generate(v)) = v`, up to the identity of live objects.
+Let `generate` be any function from the value domain to source in the subset, a generator in the sense of `enables.md`.
 
-Neither part of it is in the specification yet. Completeness says every value in the domain has some source form the fold reverses. That is what the specification owes (`F-Val-Source`, typescript-as-data#80). The envelope kinds are the cases that need care. Two source forms already exist: `F-Eval-Member` step 1 reverses an attribute reference and `F-Prebuild` a same-file entity. Fidelity says a particular generator's output folds to its input. It is an obligation on the generator rather than a rule, checked by a fixture family whose input is data rather than source. chant's Kubernetes lexicon carries a round-trip suite; the AWS import path's measurement is not yet taken. The property is listed here so the paper can point at it as the reason the choice of language is a matter of correctness rather than taste, and so a reviewer sees that it is a claim in flight and not a result.
+**Claim.** For every value `v` the domain admits, `fold(generate(v)) = v` in the `data-host` profile, and `fold(generate(v)) = revive(v)` in `full`, where `revive` is `F-Val-Fate`.
+
+The argument has two halves. Completeness is `F-Val-Source` (`spec/values.md`, spec `1.5`), a table with one source form per case of `F-Val-Domain`; each form folds to its value by the rule the table cites, and the domain is closed, so the table is exhaustive. Fidelity is an obligation on each generator rather than a rule: its output is in the subset and folds to its input. The specification states the obligation in `spec/README.md`. The suite tests it through the `roundtrip` fixture kind, whose input is a namespace as data and whose expectation is that the fold of the generated source equals it. The profile split is forced, since in `full` the fold of a resource's form is a live instance and the value the round trip returns to is the revived one.
+
+The reference carries the smallest generator that makes the property testable, one form per case with no factoring, and it passes the four `roundtrip` fixtures. One holds scalars inside containers and one a resource with attribute references to it; a third constructs a resource by spread arguments and the last carries a symbol through both intrinsic forms. Two `F-Val-Source` fixtures write the table by hand for each profile in turn. chant's three generators emit through one pipeline whose forms are the table's (inventory `L12.1` to `L12.3`). Its Kubernetes round-trip suite re-serializes generated source and compares resource count and kinds rather than bytes (`L12.4`), so the byte-level measurement over real templates is still to be taken, and chant's adapter has no `generate` hook yet. Until both exist the property is proved for the reference and stated for chant.
 
 ## Mechanisation
 

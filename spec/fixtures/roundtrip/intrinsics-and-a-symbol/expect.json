@@ -1,0 +1,8 @@
+{
+  "rules": [
+    "F-Val-Source"
+  ],
+  "roundtrip": true,
+  "host": "shapes",
+  "note": "Both intrinsic forms with a symbol, an attribute reference and a span that needs escaping inside them. A symbol has a form only inside an interior, which is where the generator puts it."
+}

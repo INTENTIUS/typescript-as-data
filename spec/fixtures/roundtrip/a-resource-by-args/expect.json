@@ -1,0 +1,8 @@
+{
+  "rules": [
+    "F-Val-Source"
+  ],
+  "roundtrip": true,
+  "host": "shapes",
+  "note": "A resource whose constructor arguments are not (props) or (props, attributes): args is authoritative and the generator spreads it; props is the first object-literal argument, reported for readers and never re-passed (F-Val-Arity)."
+}

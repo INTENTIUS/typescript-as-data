@@ -1,0 +1,14 @@
+{
+  "pair": {
+    "__resource": "Pair",
+    "props": {
+      "right": true
+    },
+    "args": [
+      "left",
+      {
+        "right": true
+      }
+    ]
+  }
+}
