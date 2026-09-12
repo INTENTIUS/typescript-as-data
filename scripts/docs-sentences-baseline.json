@@ -32,9 +32,9 @@
   "formatting/em-dash-density": 2
  },
  "spec/judgments.md": {
-  "discourse/punchy-fragments": 45,
+  "discourse/punchy-fragments": 44,
   "claude/colon-reveal": 21,
-  "repetition/near-duplicate": 17,
+  "repetition/near-duplicate": 12,
   "anaphora/repeated-opening": 10,
   "tricolon/comma-series": 12,
   "tricolon/density": 1

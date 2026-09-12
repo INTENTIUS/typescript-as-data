@@ -344,6 +344,8 @@ function foldFile(path: string, session: Session): Verdict {
     },
     hostBound: new Set(hostBound.keys()),
     counters,
+    fcall: (call) => fCall(call),
+    resolveArg: (a) => { const r = viaFCall(a); return r === NOT_FCALL ? undefined : { value: r }; },
   };
   const exports = new Map<string, unknown>();
   /**
@@ -384,9 +386,13 @@ function foldFile(path: string, session: Session): Verdict {
     if (callMemo.has(call)) return callMemo.get(call);
     const c = call.expression as ts.Identifier;
     const bound = externals.get(c.text);
+    // The arguments are resolved: one that is itself a package call, a member
+    // read on one, or a const alias of either is F-Call's (spec 1.6, L2.18);
+    // any other folds by J1.
     const folded = call.arguments.map((a) => {
       if (ts.isSpreadElement(a)) throw new FoldRejection("F-Call", ...locate(a), `a spread argument to "${c.text}" is not foldable`);
-      return foldExpr(a, scope, evalHost);
+      const resolved = viaFCall(a);
+      return resolved !== NOT_FCALL ? resolved : foldExpr(a, scope, evalHost);
     });
     let result: unknown;
     if (isCompositeFactory(bound)) {
@@ -409,9 +415,9 @@ function foldFile(path: string, session: Session): Verdict {
         // A factory that throws, a class called without `new` among them, is a run at the declarator (F-Call), never a crash.
         throw new FoldRejection("F-Call", ...locate(call), `invoking "${c.text}" threw: ${err instanceof Error ? err.message : String(err)}`);
       }
-      // Step 7: the result must be an entity or a composite instance; a
-      // destructured or member-read result need only be indexable (F-Declarator).
-      if (indexed ? result === null || typeof result !== "object" : !isLiveObject(result)) throw new FoldRejection("F-Call", ...locate(call), `"${c.text}" returned plain data, not an entity or a composite instance`);
+      // Step 7 (spec 1.6): the result is a value, live or plain; a
+      // destructured or member-read result must be indexable (F-Declarator).
+      if (indexed && (result === null || typeof result !== "object")) throw new FoldRejection("F-Declarator", ...locate(call), `"${c.text}" returned ${String(result)}, which cannot be indexed`);
     }
     callMemo.set(call, result);
     return result;
@@ -424,14 +430,38 @@ function foldFile(path: string, session: Session): Verdict {
       let r: unknown;
       try { r = (bound as (...a: unknown[]) => unknown)(...args); }
       catch (err) { throw new FoldRejection("F-Call", 1, 1, `invoking "${callee}" threw: ${err instanceof Error ? err.message : String(err)}`); }
-      if (!isLiveObject(r)) throw new FoldRejection("F-Call", 1, 1, `"${callee}" returned plain data, not an entity or a composite instance`);
+      if (r === null || typeof r !== "object") throw new FoldRejection("F-Call", 1, 1, `"${callee}" returned plain data, not an entity or a composite instance`);
       return r;
     }
     throw new FoldRejection("F-Call", 1, 1, `"${callee}" is not a composite this build can resolve`);
   };
-  /** A declarator initializer J2 resolves through F-Call rather than J1: a call, or a member or element access on one. */
+  /**
+   * A declarator initializer J2 resolves through F-Call rather than J1: a
+   * call, a member or element access on one, or (spec 1.6, L7.7) a top-level
+   * const alias of either, followed through a chain of such aliases.
+   */
+  // F-Eval-Unwrap: parentheses, `as`, `satisfies` and `!` are the expression inside.
+  const unwrap = (e: ts.Expression): ts.Expression =>
+    ts.isParenthesizedExpression(e) || ts.isAsExpression(e) || ts.isSatisfiesExpression(e) || ts.isNonNullExpression(e) ? unwrap(e.expression) : e;
+  const unalias = (e: ts.Expression, seen = new Set<string>()): ts.Expression => {
+    const inner = unwrap(e);
+    if (!ts.isIdentifier(inner) || seen.has(inner.text) || !consts.has(inner.text)) return inner;
+    seen.add(inner.text);
+    return unalias(consts.get(inner.text)!, seen);
+  };
   const viaFCall = (e: ts.Expression, indexed = false): unknown | undefined => {
-    const inner = ts.isParenthesizedExpression(e) ? e.expression : e;
+    let inner = unalias(e);
+    // A member access on an alias: `w.pair` where `w` is a const bound to a call.
+    if ((ts.isPropertyAccessExpression(inner) || ts.isElementAccessExpression(inner)) && ts.isIdentifier(inner.expression)) {
+      const base = unalias(inner.expression);
+      if (ts.isCallExpression(base) && fCallable(base.expression)) {
+        const value = fCall(base, true);
+        if (value === null || typeof value !== "object") throw new FoldRejection("F-Declarator", ...locate(inner), "a member read on a call's result needs an indexable object");
+        const key = ts.isPropertyAccessExpression(inner) ? inner.name.text : ts.isStringLiteral(inner.argumentExpression) || ts.isNumericLiteral(inner.argumentExpression) ? inner.argumentExpression.text : undefined;
+        if (key === undefined) throw new FoldRejection("F-Eval-Index", ...locate(inner), "a non-literal element-access key is not foldable");
+        return (value as Record<string, unknown>)[key];
+      }
+    }
     if (ts.isCallExpression(inner) && fCallable(inner.expression)) return fCall(inner, indexed);
     if ((ts.isPropertyAccessExpression(inner) || ts.isElementAccessExpression(inner)) && ts.isCallExpression(inner.expression) && fCallable(inner.expression.expression)) {
       const base = fCall(inner.expression, true);
@@ -498,7 +528,9 @@ function foldFile(path: string, session: Session): Verdict {
         exports.set(d.name, prebuilt.has(d.expr) ? prebuilt.get(d.expr) : live(foldExpr(d.expr, scope, evalHost), d.expr, d.name));
       } else if (d.kind === "single") {
         const viaCall = viaFCall(d.expr);
-        exports.set(d.name, viaCall !== NOT_FCALL ? viaCall : live(foldExpr(d.expr, scope, evalHost), d.expr, d.name));
+        const top = unwrap(d.expr);
+        const hostFor = ts.isCallExpression(top) ? { ...evalHost, declaratorCall: top } : evalHost;
+        exports.set(d.name, viaCall !== NOT_FCALL ? viaCall : live(foldExpr(d.expr, scope, hostFor), d.expr, d.name));
       } else if (d.kind === "destructure") {
         const viaCall = viaFCall(d.expr, true);
         const base = viaCall !== NOT_FCALL ? viaCall : live(foldExpr(d.expr, scope, evalHost), d.expr, "a destructured declaration");

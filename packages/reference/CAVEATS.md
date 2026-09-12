@@ -34,67 +34,16 @@ file. Conformance fixtures name the host they need.
 
 ## The composite factory form, and what F-Call does not do
 
-F-Call is implemented (#109): a registered project composite is interpreted
-under S-FactoryParams and S-FactoryBody against its defining module's scope,
-and a host-bound factory at a declarator is invoked once per call site with
-the resolved arguments, its result required to be an entity or a composite
-instance. Two things it does not do. A host factory called outside declarator
-position, in value position or as a non-exported const's initializer, has no
-rule in J1 and is rejected here while chant invokes it; that is #110 and the
-corpus counts those files under the `valueCall` limit. And `ι = isolated`
-is not implemented, so step 5 never refuses; the corpus is judged in open
-mode.
-
-## Capture reaches inside an entity
-
-**F-Capture** is decided over the produced namespace, and the walk that decides
-it descends through an entity's own data properties, enumerable or not, and
-through a `WeakRef` to what it holds. chant's entity classes keep their props
-on a non-enumerable property and an attribute reference keeps its entity
-behind a `WeakRef`, so a walk over `Object.values` records no capture for the
-two ordinary cases: a shared object passed to a constructor, and an output
-built from another file's attribute. Neither was visible until the corpus ran
-against a real host (#25), because with `EMPTY_HOST` an entity never becomes
-an instance. Accessors are skipped, not invoked; one of chant's throws when
-read too early.
-
-## Same-file constructions are pre-built
-
-**F-Prebuild** (#68) is implemented: every top-level `const n = new T(…)` is
-constructed once, in source order, before any declarator is evaluated, and a
-reference to it reads that instance. This package originally rejected such a
-reference, which was the reading F-Eval-Ident step 1 licensed before the rule
-existed; the corpus found twelve chant examples that fold the shape.
-
-## Capture at the import, and over the namespace
-
-**F-Import** records a capture at the import for any imported value with
-identity, by F-Identity's reference test; **F-Capture** is decided over the
-produced namespace as well. This package did only the second until the
-corpus at `chant-v0.71.0` showed three files that read a primitive out of an
-imported object, held no object in their namespace, and were tainted by
-chant as F-Import's text says; it now does both (#96). A project-local
-function is excluded at the import, since it is a callable rather than a
-value and F-CallLeak decides its edge at the call.
-
-## The smallest generator
-
-`generate.ts` (#80) writes one module for a namespace of values, one form per case of `F-Val-Source` and nothing factored: no shared `const`, no parameter, every value inline. It is what makes the round trip executable, not a generator anyone would ship. A value with no form here, a helper call or a composite step in `data-host`, a symbol outside an interior, a live instance, is reported as such and the fixture is skipped rather than approximated.
-
-## Two rules, and no provenance
-
-`rules.md` (spec `1.4`) specifies the contract a semantic rule runs under. This package carries the two rules the `shapes` host names, `SHAPES001` over the folded namespace and `SHAPES002` over its JSON serialization (`rules.ts`, #101), and nothing else: a host that names a rule this file does not carry gets `"unavailable"`. A file that runs has no folded namespace here, so no rule sees it; chant answers that case by executing the file. There is no value provenance, so a finding names an export and never a source line, which `F-Rule-Finding` allows.
-
-## No filesystem, no module resolution algorithm
-
-`foldProject` takes a map of path to source. Specifier resolution joins the
-specifier to the importer's directory, normalises `..` segments, and tries
-the three obvious candidates, `g`, `g.ts`, `g/index.ts`, against that map's
-keys. An earlier version left `../` specifiers unjoined, which dropped an
-import edge and a forward taint with it; the corpus found it (#96). The
-specification does not define a resolution algorithm, and does not need to:
-J3's `→` is "`f` imports `g`, `g ∈ F`" for whatever resolution the host uses.
-A conformance fixture therefore never depends on a resolution subtlety.
+F-Call is implemented (#109, #110): a registered project composite is
+interpreted under S-FactoryParams and S-FactoryBody against its defining
+module's scope; a host-bound export at a declarator, reached directly,
+through a const alias or as the declarator's direct argument, is invoked once
+per call site with the resolved arguments, and whatever it returns is the
+value. A package call anywhere else, nested inside an expression, is J1's
+rejection, which is what chant does too. What F-Call does not do here is
+step 6 for a *project* module: this package never imports project code, so
+in open mode a registered composite that step 4 cannot interpret runs for
+want of the invocation chant would perform.
 
 ## Isolation is observable at one step
 

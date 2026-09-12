@@ -4,6 +4,10 @@ The versioned history of the rule set. The policy is in [`README.md`](./README.m
 
 Each entry lists the rules that changed and how, in the four kinds the policy defines. A change confined to non-normative text is not versioned and is not listed here; the rationale sections and the inventory are the usual cases.
 
+## 1.6, 2026-09-12
+
+Tag `spec-1.6`. Two widenings from one corpus finding (#110), both written to what chant does and no more. F-Call step 7 no longer requires an entity or a composite instance back from an invoked factory: the result is a value, whatever it is, and chant had never checked (`L8.19`). F-Declarator's single and destructure cases now reach a call through a top-level const alias, so `const w = Stack({…}); export const v = w.pair` resolves the call at the declarator, once per file; a call nested inside an expression stays J1's rejection, which chant also refuses (`L2.18`). F-Host-Closed-vs-Open says so in one sentence. The corpus cross-check found it: chant folded 68 of 441 files by these two routes and the text had neither. No J1 rule is added, so `data-host` is unchanged.
+
 ## 1.5, 2026-09-12
 
 Tag `spec-1.5`. One addition, `F-Val-Source` in `values.md` (#80), which says that for every value of the domain there is source in the subset that folds to it; the table names one form per case and requires only that one exists. It is the completeness half of the round trip, `fold(generate(v)) = v`; the fidelity half is an obligation on generators and not a rule, stated in `README.md` with the `roundtrip` fixture kind that tests it, per profile because in `full` the fold of a resource's form is a live instance. Inventory rows `L12.1` to `L12.4` record chant's generators and its Kubernetes round-trip suite, which compares structure and not bytes.

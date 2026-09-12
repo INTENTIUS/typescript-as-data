@@ -1,6 +1,6 @@
 ---
 title: "The corpus cross-check"
-description: "Running chant's whole example corpus through both implementations, the two named limits, and what the numbers mean."
+description: "Running chant's whole example corpus through both implementations, the one named limit, and what the numbers mean."
 weight: 5
 aliases: ["/conformance/corpus/"]
 ---
@@ -53,19 +53,18 @@ gives the reason, and it is the same reason the port was removed from the
 reference: a transcription would make the cross-check a test of the
 transcription.
 
-## The two limits
+## The one limit
 
 A file is comparable when nothing disarmed either implementation before the
-comparison started. Two things do, and each is counted apart from the
-agreement figure. `corpus.ts` defines them as a closed union and records which
-side each one disarms, because a limit can only make its own side refuse more.
+comparison started. One thing does, and it is counted apart from the
+agreement figure. `corpus.ts` defines it as a closed union of one and records
+which side it disarms, because a limit can only make its own side refuse more.
 
 | Limit | Disarms | What it is |
 |---|---|---|
-| `valueCall` | the reference | A host factory called outside declarator position, in value position or as a non-exported const's initializer, which chant invokes and J1 has no rule for (#110). |
 | `host` | the reference | The reference has no bindings for a package it cannot load. |
 
-Both are the reference's. chant is given each entry's lexicons and build
+That limit is the reference's. chant is given each entry's lexicons and build
 parameters through `foldProject`'s options, the inputs a real build has, since
 chant#2422 (#96); before that two more limits stood for what its entry point
 could not be told.
@@ -93,25 +92,23 @@ From `paper/measurements.md`:
 |---|---|---|---|---|
 | chant <code>{{< figure "corpus.corpusVersion" >}}</code> at <code>{{< figure "corpus.revision" >}}</code>, {{< figure "corpus.entries" >}} entries | {{< figure "corpus.files" >}} | {{< figure "corpus.comparable" >}} | {{< figure "corpus.agreed" >}} | {{< figure "corpus.bothFold" >}} |
 
-And the limits, from the same file: {{< figure "corpus.noValueCall" >}} files call a
-host factory outside declarator position, the open question of #110, and
-{{< figure "corpus.noHost" >}} imports a package the host cannot load. The
-composite limit that once carved out two thirds of the corpus is gone:
-F-Call is implemented (#109), a host factory at a declarator is invoked and
-a registered project composite interpreted.
+And the limit, from the same file: {{< figure "corpus.noHost" >}} file imports a
+package the host cannot load. Two limits retired on the way. The composite
+one, which carved out two thirds of the corpus, went when F-Call was
+implemented (#109); the value-position one, 68 files, went when spec `1.6`
+wrote into F-Declarator and F-Call what chant already did with a package
+call reached through a const alias or as a call's direct argument (#110).
 
 `paper/measurements.md` states what this establishes: on
 {{< figure "corpus.comparable" >}} files nobody wrote for the purpose, the two
 implementations agree on every verdict, and on the {{< figure "corpus.bothFold" >}}
 that fold on both sides the export namespaces are structurally identical,
-entity class and properties included. It is the first agreement between the two
-that was observed rather than designed.
+entity class and properties included. This agreement was observed rather than
+designed, the first between the two.
 
 It also states the limit, and the limit is the more useful half.
 {{< figure "corpus.comparable" >}} of {{< figure "corpus.files" >}} is the comparable set, not the corpus, and every limit is an over-approximation,
-so a file under one may also be hiding a disagreement. What remains under
-the value-position limit is one shape, and it retires with the decision on
-#110.
+so a file under one may also be hiding a disagreement.
 
 Namespace comparison is structural. `corpus.ts` compares entities rather than
 skipping them, which is only sound because both implementations construct them
