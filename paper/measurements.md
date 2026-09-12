@@ -77,7 +77,7 @@ A file is comparable when nothing disarmed either implementation before the comp
 
 Two limits on that. The rewrite's author had read chant's implementation closely while writing the specification from it, so this establishes that the specification is complete enough to implement from, not that a reader who had never seen chant would arrive at the same place. And the agreement covers the expression and single-file layers. It does not cover J3, for the reason the next section gives.
 
-**What the whole-build fixtures establish, and against how many implementations.** The reference implements J2's per-file verdict, J3's fixpoint and revival from the specification (#21, #22, #61). Thirteen whole-build fixtures assert the verdicts of an entire build rather than the value of one expression, and four fire a taint edge on purpose:
+**What the whole-build fixtures establish, and against how many implementations.** The reference implements J2's per-file verdict, J3's fixpoint and revival from the specification (#21, #22, #61). Thirty whole-build fixtures assert the verdicts of an entire build rather than the value of one expression, and four fire a taint edge on purpose:
 
 | Fixture | What it fires |
 |---|---|
@@ -128,7 +128,7 @@ The corpus is chant's own examples, and chant's documentation says the number is
 ## Limits
 
 - Twelve mixed entries and one adversarial build are a small sample, all from one project.
-- Fixture coverage is 58 of 126 rules. The 68 without one are listed with a reason, and the list may only shrink.
+- Fixture coverage is 100 of 127 rules. The 27 without one are listed with a reason, and the list may only shrink.
 - J3's whole-build fixtures reach both implementations where no host is involved, and one where a host is. Comparing verdicts alone would not be enough, since a seed and a taint casualty are both `run`; the tentative verdict and the taint edge are compared too.
 - Revival is implemented for five of the six envelopes; `{__compositeStep}` needs a composite factory form the reference does not have (`packages/reference/CAVEATS.md`).
 - The independent rewrite found two specification gaps. Two is a small sample, and it is the sample a single author working alone can produce.
