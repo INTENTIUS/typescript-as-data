@@ -92,6 +92,10 @@ export const chantAdapter: ConformanceAdapter = {
   // silently misreports the pin, and this name is what the paper's measurement
   // table cites.
   name: `chant@${chantVersion()}`,
+  // chant declares the specification version it implements in its own tree
+  // once it does so at all; a pin that exports none is reported as undeclared
+  // rather than assumed current (#18).
+  specVersion: (chant as unknown as { SPEC_VERSION?: string }).SPEC_VERSION ?? "undeclared",
   shape(source, exportName) {
     if (!shapeFn) return "unavailable";
     const sf = parse(source); const init = exportInitializer(sf, exportName);

@@ -24,7 +24,7 @@ describe("conformance runner (#7) over the reference implementation (#10)", () =
     // sound and useless, and must not pass. Without this, F-Taint's "least set"
     // would be untested.
     const stub = {
-      name: "always-runs", shape: () => "unavailable" as const,
+      name: "always-runs", specVersion: "1.0", shape: () => "unavailable" as const,
       foldExport: () => ({ ok: false as const, line: 1, column: 1, message: "runs" }),
       foldProject: (files: Map<string, string>) => ({ verdicts: Object.fromEntries([...files.keys()].map((p) => [p, { kind: "run" as const, reason: "runs" }])) }),
     };
@@ -32,7 +32,7 @@ describe("conformance runner (#7) over the reference implementation (#10)", () =
     expect(failed.length).toBeGreaterThan(0);
   });
   test("a stub adapter that folds everything to null fails the reject fixture and the value fixtures", async () => {
-    const stub = { name: "stub", shape: () => ({ accepted: true } as const), foldExport: () => ({ ok: true as const, value: null }) };
+    const stub = { name: "stub", specVersion: "1.0", shape: () => ({ accepted: true } as const), foldExport: () => ({ ok: true as const, value: null }) };
     const reports = await runFixtures(stub, fixtures);
     expect(reports.some((r) => !r.pass)).toBe(true);
   });

@@ -26,6 +26,13 @@ export interface ProjectResult {
 
 export interface ConformanceAdapter {
   readonly name: string;
+  /**
+   * The specification version this implementation declares it implements,
+   * as `spec/VERSION` spells it (`"1.0"`), or `"undeclared"`. Compared, never
+   * assumed: the suite checks the reference's declaration against `VERSION`,
+   * and reports an implementation that declares nothing as such (#18).
+   */
+  readonly specVersion: string;
   /** S-* verdict on the initializer of `exportName`. "unavailable" if the implementation exposes no shape classifier. */
   shape(source: string, exportName: string): ShapeResult;
   /** F-* verdict: fold the initializer of `exportName` to a JSON-comparable value, or a located rejection. */
