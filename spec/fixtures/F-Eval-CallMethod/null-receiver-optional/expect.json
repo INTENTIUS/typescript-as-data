@@ -1,0 +1,2 @@
+{ "rules": ["F-Eval-CallMethod", "S-CallMethod"], "export": "x", "shape": "accept", "fold": "fold", "value": "$undefined",
+  "note": "The same call with `?.`: the chain short-circuits to undefined, which is what running it does." }

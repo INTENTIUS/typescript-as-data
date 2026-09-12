@@ -1,0 +1,17 @@
+{
+  "rules": [
+    "F-Eval-CallLocal",
+    "S-FnBody"
+  ],
+  "project": true,
+  "verdicts": {
+    "rec.ts": "fold",
+    "shallow.ts": "fold"
+  },
+  "exports": {
+    "shallow.ts": {
+      "floor": 0
+    }
+  },
+  "note": "A recursive project-local function, called three deep: the body folds in the defining module's scope, where its own name is bound, and the conditional takes only the taken branch. The bound on depth is F-Depth's, and a fixture for it waits on the spec deciding whether the number is normative."
+}

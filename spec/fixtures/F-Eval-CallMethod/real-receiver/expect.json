@@ -1,0 +1,2 @@
+{ "rules": ["F-Eval-CallMethod", "S-CallMethod"], "export": "x", "shape": "accept", "fold": "fold", "value": "ABC",
+  "note": "A method call on a receiver that folds to a real value whose named property is a function: applied at fold time." }

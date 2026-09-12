@@ -1,0 +1,15 @@
+{
+  "rules": [
+    "F-Div-Tag",
+    "F-Eval-Tagged",
+    "S-Tagged"
+  ],
+  "export": "t",
+  "shape": "accept",
+  "fold": "run",
+  "note": "S-Tagged treats the interior as opaque and the tag as any identifier; the folder requires the tag to be a registered, tag-foldable intrinsic, and nothing is registered here.",
+  "rejectAt": {
+    "line": 1,
+    "column": 18
+  }
+}

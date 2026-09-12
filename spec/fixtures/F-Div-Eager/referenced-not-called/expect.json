@@ -1,0 +1,8 @@
+{
+  "rules": ["F-Div-Eager", "F-Eval-Ident"],
+  "project": true,
+  "host": "shapes",
+  "verdicts": { "app.ts": "run" },
+  "rejectRule": { "app.ts": "F-Eval-Ident" },
+  "note": "A registered eager name is called, not referenced: as a value it is a function, and F-Eval-Ident step 3 rejects it with \"call it instead\". Shape sees a bare identifier and accepts."
+}

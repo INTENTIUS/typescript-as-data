@@ -1,0 +1,7 @@
+{
+  "rules": ["F-Eval-CallLocal", "S-FnBody", "S-FnParams", "S-ExportFunction", "S-Call"],
+  "project": true,
+  "verdicts": { "pure.ts": "fold", "app.ts": "fold" },
+  "exports": { "app.ts": { "x": { "doubled": 42 } } },
+  "note": "A call into a project file folds whenever the callee's body is in the subset (S-FnBody), with no allowlist: the argument folds in the caller's scope, the body in the defining module's, and the result is plain data."
+}

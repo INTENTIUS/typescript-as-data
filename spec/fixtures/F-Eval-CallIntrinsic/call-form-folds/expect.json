@@ -1,0 +1,8 @@
+{
+  "rules": ["F-Eval-CallIntrinsic", "F-Host-Registry", "F-Host-Interface", "S-CallIntrinsic"],
+  "project": true,
+  "host": "shapes",
+  "verdicts": { "app.ts": "fold" },
+  "exports": { "app.ts": { "r": { "Ref": "Bucket" } } },
+  "note": "An intrinsic registered with foldsAsCall: J1 yields an {__intrinsic} envelope and revival invokes the function the file imported. The registry entry is what admits the call form; the same name without the flag is F-Host-Registry's tag-called-as-function fixture."
+}

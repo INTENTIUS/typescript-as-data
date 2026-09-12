@@ -1,0 +1,17 @@
+{
+  "rules": [
+    "F-Eval-CallMethod",
+    "F-Div-Method",
+    "F-Div",
+    "F-Direction",
+    "S-CallMethod"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "run",
+  "note": "The receiver folds, but its `m` is not a function. Shape accepts (receiver and arguments are valid expressions; the method name is unconstrained); the folder rejects at the call. F-Direction: the divergence runs the permitted way.",
+  "rejectAt": {
+    "line": 1,
+    "column": 18
+  }
+}

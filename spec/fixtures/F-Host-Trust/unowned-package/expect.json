@@ -1,0 +1,6 @@
+{
+  "rules": ["F-Host-Trust", "F-Import", "F-Reference"],
+  "project": true,
+  "verdicts": { "app.ts": "run" },
+  "note": "A bare specifier outside both trust arms is never resolved: the binding is absent and a reference to it is an unresolved identifier. Not an error in the import, an unresolved name at the use."
+}

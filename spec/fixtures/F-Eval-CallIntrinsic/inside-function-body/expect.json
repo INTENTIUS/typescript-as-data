@@ -1,0 +1,22 @@
+{
+  "rules": [
+    "F-Eval-CallIntrinsic",
+    "F-Div-Depth"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "fn.ts": "run",
+    "app.ts": "run"
+  },
+  "rejectRule": {
+    "app.ts": "F-Eval-CallIntrinsic"
+  },
+  "note": "The call form is refused at depth > 0: an intrinsic reached through a project-local call would be an envelope the file's own declarators never produced. fn.ts would fold on its own; app.ts imports it and runs, so the forward edge (F-Succ) takes it along.",
+  "tentative": {
+    "fn.ts": "fold"
+  },
+  "taintedBy": {
+    "fn.ts": "app.ts"
+  }
+}

@@ -50,6 +50,11 @@ export async function runProjectFixture(adapter: ConformanceAdapter, f: ProjectF
     if (!r.taintedBy) { failures.push(`${path}: fixture expects a taint source, adapter reports none`); continue; }
     if (r.taintedBy[path] !== want) failures.push(`${path}: tainted by ${r.taintedBy[path] ?? "nothing"}, expected ${want}`);
   }
+  for (const [path, want] of Object.entries(f.rejectRule ?? {})) {
+    const got = r.verdicts[path];
+    if (got?.kind !== "run") { failures.push(`${path}: expected a ${want} rejection, but the file folded`); continue; }
+    if (got.rule !== undefined && got.rule !== want) failures.push(`${path}: rejected under ${got.rule}, expected ${want} (${got.reason})`);
+  }
   for (const [path, want] of Object.entries(f.exports ?? {})) {
     const got = r.verdicts[path];
     if (got?.kind !== "fold") { failures.push(`${path}: expected exports, but the file did not fold`); continue; }

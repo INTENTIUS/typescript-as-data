@@ -1,0 +1,13 @@
+{
+  "rules": [
+    "F-Eval-CallMethod"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "run",
+  "note": "A `.` method call on a receiver that folds to null: running it would throw, so the folder refuses rather than guess.",
+  "rejectAt": {
+    "line": 2,
+    "column": 18
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "rules": [
+    "F-Div-NsNew",
+    "F-Div",
+    "F-Direction",
+    "F-Eval-New",
+    "S-New",
+    "F-Obs-Messages"
+  ],
+  "export": "b",
+  "shape": "accept",
+  "fold": "run",
+  "note": "S-New leaves the callee's shape unconstrained, so the classifier accepts; the folder requires a plain identifier, because a class is unreachable through a package namespace (F-Namespace). The rejection's location is asserted and its wording is not (F-Obs-Messages).",
+  "rejectAt": {
+    "line": 3,
+    "column": 18
+  }
+}

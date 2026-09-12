@@ -22,6 +22,7 @@
  *                    "tentative": { "config.ts": "fold" },                        // optional, J2 before J3 disposed
  *                    "taintedBy": { "config.ts": "app.ts" },                      // optional, the file whose taint reached it
  *                    "exports":   { "config.ts": { "port": 8080 } },              // optional, for files that finally fold
+ *                    "rejectRule": { "app.ts": "F-Eval-CallLocal" },              // optional, the rule a run verdict must name; checked when the adapter reports one
  *                    "host":      "shapes",                                       // optional, a named host from host.ts; required if the sources import one
  *                    "note": "why this fixture exists" }
  * `tentative` and `taintedBy` are what separate "folds because nothing
@@ -47,6 +48,8 @@ export interface ProjectFixture {
   tentative?: Record<string, "fold" | "run">;
   taintedBy?: Record<string, string>;
   exports?: Record<string, Record<string, unknown>>;
+  /** The rule a `run` verdict must name, per file. An adapter that reports no rule is not held to it. */
+  rejectRule?: Record<string, string>;
   /** A named host from host.ts. Required for any fixture whose sources import one. */
   host?: string;
   note?: string;
@@ -80,7 +83,7 @@ export function loadFixtures(root: string): Fixture[] {
       const id = `${rule}/${name}`;
       if (e.project) {
         out.push({ kind: "project", id, dir: d, rules: e.rules, files: readProject(join(d, "project")),
-          verdicts: e.verdicts, tentative: e.tentative, taintedBy: e.taintedBy, exports: e.exports, host: e.host, note: e.note });
+          verdicts: e.verdicts, tentative: e.tentative, taintedBy: e.taintedBy, exports: e.exports, rejectRule: e.rejectRule, host: e.host, note: e.note });
       } else {
         out.push({ kind: "expression", id, dir: d, input: readFileSync(join(d, "input.ts"), "utf8"),
           rules: e.rules, exportName: e.export, shape: e.shape, fold: e.fold, value: e.value, rejectAt: e.rejectAt, note: e.note });

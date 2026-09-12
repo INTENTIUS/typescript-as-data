@@ -1,0 +1,20 @@
+{
+  "rules": [
+    "F-Eval-CallLocal"
+  ],
+  "project": true,
+  "verdicts": {
+    "pure.ts": "run",
+    "app.ts": "run"
+  },
+  "rejectRule": {
+    "app.ts": "F-Eval-CallLocal"
+  },
+  "note": "Step 3: a spread argument rejects. The callee is fine; the call is not. pure.ts would fold on its own; app.ts imports it and runs, so the forward edge (F-Succ) takes it along.",
+  "tentative": {
+    "pure.ts": "fold"
+  },
+  "taintedBy": {
+    "pure.ts": "app.ts"
+  }
+}

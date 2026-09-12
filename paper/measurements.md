@@ -52,9 +52,9 @@ The chant side's `false` is also an unsampled invariant: the run fails unless ev
 
 | Pin | Fixtures | Rules with a fixture | Shape and fold agreement |
 |---|---|---|---|
-| chant 0.70.1 | 44, of which 14 are whole-build | 61 of 127 | all, on the 39 the pin can answer |
+| chant 0.70.1 | 68, of which 30 are whole-build | 100 of 127 | all, on the 52 the pin can answer |
 
-One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
+The 27 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a reason each; five wait on a form the reference does not implement (the composite factory and isolation mode), one on a spec decision (#71, the call-depth bound), and the rest on the corpus growing (#24). One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
 
 **What this agreement is worth.** Until #50 the reference implementation's evaluation layer was a *port* of chant's, so agreement on expression-level fixtures was guaranteed by construction rather than observed. It is now written from `grammar.md` §2 and `judgments.md` J1 without consulting chant's source, and the two implementations agree on every fixture, so the comparison is between two codebases rather than one code base with itself.
 

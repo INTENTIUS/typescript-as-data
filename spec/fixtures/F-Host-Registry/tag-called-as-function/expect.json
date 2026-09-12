@@ -1,0 +1,8 @@
+{
+  "rules": ["F-Host-Registry", "F-Eval-Reject"],
+  "project": true,
+  "host": "shapes",
+  "verdicts": { "app.ts": "run" },
+  "rejectRule": { "app.ts": "F-Eval-Reject" },
+  "note": "join is registered with isTag, and the three flags are mutually exclusive: the call form folds iff not a tag and foldsAsCall. Calling a tag as a function is admitted by no rule, and the flag is never inferred from the call's shape."
+}

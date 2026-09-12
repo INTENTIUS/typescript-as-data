@@ -1,0 +1,8 @@
+{
+  "rules": ["F-Eval-CallEager", "F-Host-Admission", "S-CallEager"],
+  "project": true,
+  "host": "shapes",
+  "verdicts": { "app.ts": "fold" },
+  "exports": { "app.ts": { "n": 3 } },
+  "note": "An eager intrinsic is invoked now, with the folded arguments, and the result is the value. F-Host-Admission is what makes that sound: count is a pure function of its arguments, so invoking it at fold time is indistinguishable from invoking it during a run."
+}

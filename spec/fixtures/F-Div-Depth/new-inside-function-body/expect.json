@@ -1,0 +1,21 @@
+{
+  "rules": [
+    "F-Div-Depth",
+    "F-Eval-New"
+  ],
+  "project": true,
+  "verdicts": {
+    "fn.ts": "run",
+    "app.ts": "run"
+  },
+  "rejectRule": {
+    "app.ts": "F-Eval-New"
+  },
+  "note": "A `new` inside a folded function body is refused before its callee is even looked up: a construction reached through a call would be an entity the file's own declarators never named. fn.ts itself folds; only calling it does not. fn.ts would fold on its own; app.ts imports it and runs, so the forward edge (F-Succ) takes it along.",
+  "tentative": {
+    "fn.ts": "fold"
+  },
+  "taintedBy": {
+    "fn.ts": "app.ts"
+  }
+}

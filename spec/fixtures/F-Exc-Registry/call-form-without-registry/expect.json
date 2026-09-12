@@ -1,0 +1,15 @@
+{
+  "rules": [
+    "F-Exc-Registry",
+    "F-Exc",
+    "S-CallIntrinsic"
+  ],
+  "export": "r",
+  "shape": "reject",
+  "fold": "run",
+  "note": "The call form of an intrinsic is admitted by registration. With no registry the classifier rejects conservatively rather than guess, which is the exception F-Exc-Registry states to the shape-accepts direction; the folder, also without one, has no rule for the call and rejects too.",
+  "rejectAt": {
+    "line": 1,
+    "column": 18
+  }
+}
