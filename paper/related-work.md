@@ -41,6 +41,8 @@ Nix import-from-derivation pauses evaluation, realises a store object, and resum
 
 Every row answers unsupported source with an error and so has no two-path agreement problem and no identity problem. This work's fallback (`F-Total`) is what removes that simplification.
 
+Pkl and CUE deserve one more sentence each, because a reader will have them open in the next tab. Both give a platform typed, deterministic configuration that emits YAML or JSON, and Pkl puts value constraints in the type where this work puts them in a separate semantic pass over folded values. What neither gives is the authoring surface being the artifact's own shape: a Pkl or CUE file is a second grammar pointed at the spec, where a typed object literal is the spec with its keys unquoted. On the fourteen operational properties chant's own comparison scores, the configuration languages answer the first three and leave the rest to a second abstraction that shares no types with what was authored; this work's claim to a platform is exactly those three, with the same file carrying the rest when the platform is chant. Pkl's bindings for other languages shell out to an evaluator binary; the `data-host` profile is what lets an evaluator for this subset be a library in the platform's own language instead.
+
 ## Infrastructure tools
 
 CDK, Pulumi and Alchemy execute the program that builds the resource graph; the graph exists only as the output of a run. Terraform evaluates HCL with functions against state. Formae compiles Pkl to data. chant's own comparison covers these; the paper cites it and adds nothing.

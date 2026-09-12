@@ -1,0 +1,19 @@
+# What the fold enables
+
+Draft for #87. The other sections say what the fold is. This one says what it is for, because a reviewer who grants every property in `mechanism.md` can still ask why anyone would want them, and the answer is three capabilities that neither a syntax linter nor a configuration language provides.
+
+## Synthesis with no execution
+
+A file in the subset becomes its artifact by being read. Nothing runs, so the artifact is a function of the source and the build-parameter binding and nothing else. The same file yields the same artifact on any machine and in any evaluator, whatever language the evaluator is written in. A reviewer reading a diff sees exactly what will ship. The user never meets the fold as a mechanism; they meet it as a lint that says at the keystroke whether the file is data and points at the line that makes it not data. That lint is the shape classifier of `grammar.md`, and it needs no evaluator to run. `F-NoOwnExecution` is the rule, and chant's execution-boundary profile (`measurements.md`) is the measurement.
+
+## Semantic rules over values
+
+A syntax linter sees tokens and can say a key is misspelt. A configuration language with constraints in the type can say a port is out of range. Neither can say that two fields of one resource contradict each other, or that a resource in one file makes a resource in another file incoherent, because neither has the values of every file in the build before anything is emitted. The fold does. A rule that runs over folded values is a pure function of its input, deterministic and free of I/O, which is what lets it run in an editor, and it sees the same data in the editor that it sees in CI, because the data is a function of the source. Two phases follow from this: rules over the declared values before serialization, and rules over the emitted artifact after. chant's lexicons carry the first kind and its post-synth checks the second; a governance tool built on the same evaluator carries both without naming them, in its config loader and in its plan guardrails. The contract those rules run under is not yet in the specification and is stated here as a forward reference (typescript-as-data#79).
+
+## Round-trip generation
+
+The fold goes from source to data. A generator goes from data to source. Composed, an existing artifact or a live system becomes source that folds back to exactly what it came from, `fold(generate(v)) = v`. This is where the choice of a general-purpose language stops being taste and becomes correctness. A generator decides what each value is, and each decision needs a source form the subset can express and the fold can reverse. A literal is a literal. A value that is another resource's attribute is `bucket.Arn`, which `F-Eval-Member` step 1 turns back into an attribute reference. A repetition across forty resources is one `const`, spread where it is used, which `F-Eval-Object` folds back to the same forty objects. YAML cannot express the second or the third; a configuration language can, but then the source is no longer the artifact's own shape. chant has three generators through one pipeline and a round-trip suite for one target. The property itself is stated as a forward reference (typescript-as-data#80): every value in the domain has a source form that folds to it, and a generator's output is held to folding to its input.
+
+## Which profile each needs
+
+The first two need only the `data-host` profile (`F-Profile-DataHost`, `judgments.md`), and so they are available to an evaluator with no JavaScript runtime. The third needs whichever profile the generator targets. None of the three needs the `run` fallback or J3; those exist so that source outside the subset can still be built by an implementation that has a runtime, and they are the part of the specification the paper is about. The capabilities are the part a platform adopts.

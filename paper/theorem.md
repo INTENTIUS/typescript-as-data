@@ -38,6 +38,12 @@ Let `shape(e, ρ)` be the classifier's verdict on expression `e` with optional r
 
 **Corollary.** Every disagreement outside `F-Exc` costs coverage and never correctness: a file the classifier passes and the folder rejects falls back to run, and never produces wrong output.
 
+## Property 3, the round trip, stated and not yet proved
+
+Let `generate` be any function from the value domain to source in the subset, a generator in the sense of `enables.md`. The claim is that for every value `v` the domain admits, `fold(generate(v)) = v`, up to the identity of live objects.
+
+Neither part of it is in the specification yet. Completeness says every value in the domain has some source form the fold reverses. That is what the specification owes (`F-Val-Source`, typescript-as-data#80). The envelope kinds are the cases that need care. Two source forms already exist: `F-Eval-Member` step 1 reverses an attribute reference and `F-Prebuild` a same-file entity. Fidelity says a particular generator's output folds to its input. It is an obligation on the generator rather than a rule, checked by a fixture family whose input is data rather than source. chant's Kubernetes lexicon carries a round-trip suite; the AWS import path's measurement is not yet taken. The property is listed here so the paper can point at it as the reason the choice of language is a matter of correctness rather than taste, and so a reviewer sees that it is a claim in flight and not a result.
+
 ## Mechanisation
 
 Declined for the submission. The venue accepts compelling arguments, exploratory implementations and substantial examples as validation. Theorem 1 has the argument above and three executed artifacts: the differential over every corpus entry including the mixed ones (`paper/measurements.md`), an adversarial build that fires both taint edges on purpose, and a second implementation held to whole-build fixtures. Theorem 2 has the shared-classifier construction and the enumerated table; a fixture per row is still owed (#24). A mechanised proof would make the claim airtight rather than accepted; if pursued it belongs in `spec/mechanization/` on its own CI job.

@@ -36,6 +36,6 @@ The identity theorem is the paper's centre, so it is worth saying what would bre
 
 Two things, and only two.
 
-**An independent implementation of the module layer and the fixpoint.** The reference implementation covers the expression layer, written from the specification and agreeing with the production implementation on every fixture. The identity theorem is not in that layer. Until a second implementation of the fixpoint exists, that theorem has one implementation's evidence and an argument.
+**An implementation by someone who has not read chant.** The reference implementation now covers the module layer and the fixpoint as well as the expression layer, written from the specification and agreeing with the production implementation on every fixture and on every comparable file of chant's corpus. It shares an author with chant. An evaluator of the `data-host` profile in a language with no JavaScript engine (typescript-as-data#86) would be the first implementation that could not lean on one, and it would test the coercion fixtures in a way a JavaScript implementation cannot.
 
 **A corpus nobody here maintains.** Every measurement comes from one project's examples, written by people who know the subset. The measurement that would mean the most is the one not yet taken: source written against the specification by someone who has not read the implementation.
