@@ -1,6 +1,6 @@
 {
   "name": "@intentius/tsad-conformance",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "The conformance suite of the typescript-as-data specification: fixture loader, runner, and the named hosts. An implementation supplies an adapter and gets a report.",
   "license": "Apache-2.0",
   "repository": {

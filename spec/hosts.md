@@ -37,6 +37,11 @@ what the trust rules need.
    with `Composite` imported from the host, that makes a project-defined
    factory *interpretable* (R7.2).
 
+In the `data-host` profile (F-Profile-DataHost, judgments.md) a host is a
+description rather than code: item 3, item 5, and a serialization mapping
+that says what each envelope becomes in the artifact. Items 1, 2, 4 and 6
+need something to invoke and are absent.
+
 ## F-Host-Registry (the shape of an intrinsic registration)
 
 ```

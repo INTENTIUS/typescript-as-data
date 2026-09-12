@@ -52,6 +52,10 @@ envelopes:
 | `__compositeStep` | revived: the composite is resolved (J2 F-Call), then `.step` is read off the real result (L6.5) |
 | `__symbol` | revived: the text must match a simple dotted chain; its root resolves through the file's imports and the rest is real property access (L6.2) |
 
+In the `data-host` profile (F-Profile-DataHost, judgments.md) none of these
+fates runs: revival is serialization, every envelope is the output, and the
+host's serialization mapping is what turns it into the artifact.
+
 **Exactly one envelope survives to serialization: `__attrRef`.** The other
 five must never reach a serializer (R1.2). An implementation that emits a
 `__resource` envelope has produced wrong output, not a placeholder.

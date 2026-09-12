@@ -24,6 +24,7 @@
  *                    "exports":   { "config.ts": { "port": 8080 } },              // optional, for files that finally fold
  *                    "rejectRule": { "app.ts": "F-Eval-CallLocal" },              // optional, the rule a run verdict must name; checked when the adapter reports one
  *                    "host":      "shapes",                                       // optional, a named host from host.ts; required if the sources import one
+ *                    "profiles":  ["full"],                                       // optional; see profilesOf for the default
  *                    "note": "why this fixture exists" }
  * `tentative` and `taintedBy` are what separate "folds because nothing
  * reached it" from "would have folded, and an edge killed it" — without them
@@ -34,6 +35,7 @@ import { join, relative } from "node:path";
 
 export interface ExpressionFixture {
   kind: "expression";
+  profiles: Profile[];
   id: string; dir: string; input: string;
   rules: string[]; exportName: string;
   shape: "accept" | "reject"; fold: "fold" | "run";
@@ -41,6 +43,7 @@ export interface ExpressionFixture {
 }
 export interface ProjectFixture {
   kind: "project";
+  profiles: Profile[];
   id: string; dir: string; rules: string[];
   /** Path relative to project/, to source. Paths use "/" on every platform. */
   files: Map<string, string>;
@@ -55,6 +58,22 @@ export interface ProjectFixture {
   note?: string;
 }
 export type Fixture = ExpressionFixture | ProjectFixture;
+
+export type Profile = "full" | "data-host";
+
+/**
+ * The profiles a fixture is judged in (F-Profile, #78). Explicit
+ * `"profiles"` wins. Otherwise: a fixture that names a host, asserts J3's
+ * tentative verdicts or taint edges, or constructs with `new` needs the
+ * runtime, so it is `full` only; anything else is data and belongs to both.
+ */
+export function profilesOf(f: Fixture, explicit?: string[]): Profile[] {
+  if (explicit) return explicit as Profile[];
+  const sources = f.kind === "expression" ? [f.input] : [...f.files.values()];
+  const usesNew = sources.some((s) => /\bnew\s+[A-Za-z_$]/.test(s));
+  if (f.kind === "project" && (f.host || f.tentative || f.taintedBy)) return ["full"];
+  return usesNew ? ["full"] : ["full", "data-host"];
+}
 
 /** Kept as the name the expression-only callers import; `kind` narrows. */
 export const expressionFixtures = (all: Fixture[]): ExpressionFixture[] => all.filter((f): f is ExpressionFixture => f.kind === "expression");
@@ -82,11 +101,15 @@ export function loadFixtures(root: string): Fixture[] {
       const e = JSON.parse(readFileSync(join(d, "expect.json"), "utf8"));
       const id = `${rule}/${name}`;
       if (e.project) {
-        out.push({ kind: "project", id, dir: d, rules: e.rules, files: readProject(join(d, "project")),
-          verdicts: e.verdicts, tentative: e.tentative, taintedBy: e.taintedBy, exports: e.exports, rejectRule: e.rejectRule, host: e.host, note: e.note });
+        const fx: ProjectFixture = { kind: "project", id, dir: d, rules: e.rules, files: readProject(join(d, "project")), profiles: [],
+          verdicts: e.verdicts, tentative: e.tentative, taintedBy: e.taintedBy, exports: e.exports, rejectRule: e.rejectRule, host: e.host, note: e.note };
+        fx.profiles = profilesOf(fx, e.profiles);
+        out.push(fx);
       } else {
-        out.push({ kind: "expression", id, dir: d, input: readFileSync(join(d, "input.ts"), "utf8"),
-          rules: e.rules, exportName: e.export, shape: e.shape, fold: e.fold, value: e.value, rejectAt: e.rejectAt, note: e.note });
+        const fx: ExpressionFixture = { kind: "expression", id, dir: d, input: readFileSync(join(d, "input.ts"), "utf8"), profiles: [],
+          rules: e.rules, exportName: e.export, shape: e.shape, fold: e.fold, value: e.value, rejectAt: e.rejectAt, note: e.note };
+        fx.profiles = profilesOf(fx, e.profiles);
+        out.push(fx);
       }
     }
   }

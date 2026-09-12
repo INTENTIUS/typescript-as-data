@@ -38,6 +38,45 @@ identity across the fold/run boundary, which is why J2 and J3 exist.
 
 ---
 
+## Profiles (#78)
+
+A profile names the subset of this specification an implementation claims.
+Two exist. An implementation declares which it implements alongside the
+version (README, Versioning), and the conformance suite judges it on the
+fixtures tagged for that profile and no others.
+
+**F-Profile.** The `full` profile is every rule in this document set,
+including the `run` fallback and J3, which need a JavaScript runtime. It is
+the profile chant implements. A rule with no profile annotation belongs to it.
+
+**F-Profile-DataHost.** The `data-host` profile is the specification for an
+evaluator that has no JavaScript runtime: the evaluator a platform written in
+another language embeds, or a JavaScript tool that folds and never runs. It is
+`full` with the following subtractions and alterations, and nothing else.
+
+| Rule or family | In `data-host` |
+|---|---|
+| J1, every `F-Eval-*` rule, with ECMAScript coercion reproduced (R10) | applies in full |
+| `S-*`, `F-Div-*`, `F-Direction` | apply in full |
+| J2, `F-Bind` through `F-Total` | apply, with `ι = isolated` always and F-IsolatedRefusal the only fallback: a file that does not fold is an **error**, never a demotion to `run` |
+| J3, `F-Seed` through `F-Verdict`, `F-Capture`, `F-CallLeak`, `F-Memo` | absent. Nothing runs, so nothing taints, and every file's verdict is its own |
+| `F-Val-Fate` | altered: revival is serialization. An envelope is the output; `{__resource}`, `{__intrinsic}` and `{__attrRef}` reach the artifact as data for the host's serializer to map. No constructor and no function is invoked |
+| `F-Eval-CallHelper`, `F-Eval-CallEager`, `F-Host-Admission`, `F-Host-NoSubstitution` | absent: there is nothing to invoke. A registered helper or eager name is an ordinary unresolved identifier |
+| `F-Eval-Tagged`, `F-Eval-CallIntrinsic` | apply; the envelope stays an envelope |
+| `F-Call`, `F-Host-Composite` | interpretation only (step 4). A factory that is not interpretable is an error, never invoked |
+| `F-Eval-New`, `F-Prebuild`, `F-Count` | permitted, not required. An implementation that supports `new` folds it to a `{__resource}` envelope and binds the same envelope at every reference; one that does not rejects `new` under `F-Eval-Reject`. A fixture that uses `new` is tagged `full` unless it says otherwise |
+| `F-Host-Interface` | the host is a description, not code: the intrinsic registry (item 3), the trust set (item 5), and the serialization mapping for envelopes. Items 1, 2, 4 and 6 are absent |
+| `F-Obs-Counters` | trivially satisfied: every counter is zero |
+| `F-NoOwnExecution`, `F-Obs-Report`, `F-Obs-Messages`, `F-Reason` | apply in full |
+
+The objective above still holds, read against any JavaScript engine: a
+`data-host` fold of a file and a run of the same file in JavaScript are
+observationally equivalent on every file the profile folds, and a consumer
+may offer both and diff them. Where the profile refuses, the run is not
+consulted.
+
+---
+
 ## J1. Expression evaluation `Γ, H ⊢ e ⇓ v` (#13)
 
 Formalises R1, R3, R6.3–R6.6, R7.3, R10. `Γ = (consts, externals, depth)`

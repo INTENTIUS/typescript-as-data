@@ -91,6 +91,13 @@ fixtures citing it move to the successor in the same change, which the
 coverage gate enforces, since a struck identifier is no longer defined and
 a citation of it fails.
 
+**Two profiles, and a fixture knows which it belongs to.** `judgments.md`
+defines `full` and `data-host` (F-Profile, F-Profile-DataHost); the second is
+the first with nothing that needs a JavaScript runtime, for an evaluator
+embedded in a platform written in another language. Fixtures carry profile
+tags, and the suite judges an implementation on its own profile's fixtures
+only.
+
 **An implementation declares the version it implements.** The conformance
 adapter carries `specVersion`, and the suite compares the reference
 implementation's declaration against `VERSION` so the two cannot drift
@@ -158,13 +165,14 @@ TypeScript's node kinds, and ECMAScript coercion (R10).
 
 ### What the reference implementation covers
 
-Per issue #3's re-cut for the
-paper: at submission time the reference implementation implements the
-expression layer and the host-hook interface, and does **not** implement the
-module layer or the identity-taint fixpoint. Those are carried by the judgment
-text and validated against chant with the differential corpus. A partial
-reference implementation is fine; a reader assuming it is complete is not,
-which is why this sentence is here.
+The reference implementation covers J1, J2, J3 and revival through a host's
+real constructors (#60, #64), and declares the `full` profile at the version
+in `VERSION`. With an empty host it is also an implementation of `data-host`
+without `new`, and the suite judges it on that profile's fixtures too. What it
+does not cover is `packages/reference/CAVEATS.md`; the composite factory form
+and isolation mode are the two that cost fixtures. A partial reference
+implementation is fine; a reader assuming it is complete is not, which is why
+this paragraph is here.
 
 
 ## Identifiers (#6)
