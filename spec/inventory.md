@@ -58,7 +58,7 @@ Shape only. No resolution, no evaluation.
 | L2.14 | call; method (`x.y()`) | admitted unconditionally, receiver and args recursed | S-CallMethod; F-Eval-CallMethod |
 | L2.15 | call; `<call>(...).step` | admitted unconditionally at the property-access node | S-CompositeStep; F-Eval-Member step 2 |
 | L2.16 | any other call | violation, `callExpressionMessage` | S-Reject; F-Eval-Reject |
-| L2.17 | project-local call shape (added #95) | the classifier rejects it today while the build folds it (chant#2435); `1.2` gives it S-CallLocal | S-CallLocal (grammar.md) |
+| L2.17 | project-local call shape (added #95) | the classifier rejected it while the build folded it until chant-v0.72.0 (chant#2435, #2437); `1.2` gives it S-CallLocal | S-CallLocal (grammar.md) |
 
 ## L3. Expression reduction (`fold`)
 
