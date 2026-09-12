@@ -4,9 +4,10 @@
  * — `findSubsetViolation` for the shape half. If an older chant is pinned the
  * adapter reports shape "unavailable" rather than guessing.
  */
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { createRequire } from "node:module";
 import * as ts from "typescript";
 import * as chant from "@intentius/chant";
 import type { ConformanceAdapter, ProjectResult, ProjectVerdict } from "../adapter";
@@ -19,10 +20,28 @@ function exportInitializer(sf: ts.SourceFile, name: string): ts.Expression | und
   return undefined;
 }
 const parse = (src: string) => ts.createSourceFile("fixture.ts", src, ts.ScriptTarget.Latest, true);
+function chantVersion(): string {
+  const declared = (chant as unknown as { VERSION?: string }).VERSION;
+  if (typeof declared === "string") return declared;
+  // The package does not export its own manifest, so walk up from the resolved
+  // entry to the nearest one.
+  let dir = dirname(createRequire(import.meta.url).resolve("@intentius/chant"));
+  for (;;) {
+    const candidate = join(dir, "package.json");
+    if (existsSync(candidate)) {
+      const version = (JSON.parse(readFileSync(candidate, "utf8")) as { version?: string }).version;
+      if (typeof version === "string") return version;
+    }
+    const up = dirname(dir);
+    if (up === dir) throw new Error("cannot determine the pinned chant version");
+    dir = up;
+  }
+}
+
 const shapeFn = (chant as unknown as { findSubsetViolation?: (n: ts.Node) => { node: ts.Node; ruleId: string; message: string } | undefined }).findSubsetViolation;
 
 /**
- * The whole-build entry, chant-v0.71.0+ (chant#2408). Absent on an older pin,
+ * The whole-build entry, chant-v0.70.1+ (chant#2408). Absent on an older pin,
  * in which case the project fixtures report "unavailable" rather than passing
  * vacuously.
  */
@@ -69,7 +88,10 @@ async function foldOnDisk(files: Map<string, string>): Promise<ProjectResult> {
 }
 
 export const chantAdapter: ConformanceAdapter = {
-  name: `chant@${(chant as unknown as { VERSION?: string }).VERSION ?? "0.69.1"}`,
+  // Read from the installed package, never a literal: a hardcoded fallback
+  // silently misreports the pin, and this name is what the paper's measurement
+  // table cites.
+  name: `chant@${chantVersion()}`,
   shape(source, exportName) {
     if (!shapeFn) return "unavailable";
     const sf = parse(source); const init = exportInitializer(sf, exportName);
