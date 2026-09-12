@@ -31,7 +31,7 @@ describe("the citation check (#34)", () => {
     expect(f.map((x) => x.kind)).toEqual(["quote-not-in-rule"]);
   });
   test("a marker with no quote, and a declared version that is not the index's", () => {
-    const f = checkCitations(`{/* rule: F-Depth */}\nprose instead of a quote\n`, index, "0.9");
+    const f = checkCitations(`{/* rule: F-Depth */}\nprose instead of a quote\n`, index, "2.0");
     expect(f.map((x) => x.kind).sort()).toEqual(["marker-without-quote", "version-mismatch"]);
   });
 });

@@ -13,9 +13,10 @@
  * object either way as far as F-Capture's identity test is concerned. What
  * this file does not do is in `CAVEATS.md`.
  */
+import { posix } from "node:path";
 import * as ts from "typescript";
 import { EMPTY_HOST, type Host } from "./host.js";
-import { foldExpr, collectConsts, FoldRejection, FoldableFunction, type Scope } from "./fold.js";
+import { foldExpr, collectConsts, FoldRejection, FoldableFunction, isFoldableFunction, type Scope } from "./fold.js";
 import { registerHelpers, registerHostSpecifiers, isHostOwnedSpecifier } from "./foldable-helpers.js";
 import { revive } from "./revive.js";
 import type { FnDecl } from "./fnbody.js";
@@ -27,10 +28,16 @@ export type Verdict =
 const parse = (path: string, source: string) => ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
 const isProjectSpecifier = (s: string) => s.startsWith(".") || s.startsWith("/");
 
-/** Resolve a relative specifier against the project's own key set. */
+/**
+ * Resolve a relative specifier against the project's own key set: the
+ * specifier joined to the importer's directory and normalised, then the three
+ * obvious candidates. `..` segments are resolved; the corpus found a version
+ * of this that left `../../config` unjoined, which dropped the import edge and
+ * with it the forward taint, so a file chant ran folded here (#96).
+ */
 function resolveKey(from: string, spec: string, files: ReadonlyMap<string, string>): string | undefined {
   const base = from.includes("/") ? from.slice(0, from.lastIndexOf("/") + 1) : "";
-  const joined = spec.startsWith("./") ? base + spec.slice(2) : spec.startsWith("../") ? spec : base + spec;
+  const joined = posix.normalize(base + spec).replace(/^\.\//, "");
   for (const cand of [joined, `${joined}.ts`, `${joined}/index.ts`]) if (files.has(cand)) return cand;
   return undefined;
 }
@@ -274,6 +281,14 @@ function foldFile(path: string, session: Session): Verdict {
         if (!tv.exports.has(imported)) continue;
         const value = tv.exports.get(imported);
         externals.set(el.name.text, value);
+        // F-Import: an imported value with identity is a capture at the
+        // import, by F-Identity's reference test, whether or not it reaches
+        // X(f). A project-local function is a callable, not a value, and
+        // F-CallLeak decides its edge at the call instead. The corpus found
+        // the walk over X(f) below is not enough on its own: a file that
+        // reads only primitives out of an imported object holds no object in
+        // its namespace, and chant taints it anyway, as the text says (#96).
+        if (value !== null && typeof value === "object" && !isFoldableFunction(value)) captures.add(target);
       }
     }
   }

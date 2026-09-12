@@ -38,7 +38,7 @@ implementation has no answer to give, for want of a host or of a form it does
 not implement, the difference is counted under a named limit and reported
 apart from the agreement figure. Folding it into drift overstates what the comparison
 established, in the direction that flatters this document. The corpus
-cross-check names four such limits and counts each of them.
+cross-check names two such limits and counts each of them.
 
 ## Ownership, this repository is normative; chant implements it
 

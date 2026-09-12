@@ -31,7 +31,7 @@ permissions:
 env:
   # chant is public, and the corpus is read at the version this repository
   # pins in its devDependencies (0.70.1). Bump both together.
-  CHANT_REF: chant-v0.70.1
+  CHANT_REF: chant-v0.71.0
   CHANT_DIR: .chant-corpus
 
 jobs:
