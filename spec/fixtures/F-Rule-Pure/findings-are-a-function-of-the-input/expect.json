@@ -1,0 +1,21 @@
+{
+  "rules": [
+    "F-Rule-Pure"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "buckets.ts": "fold",
+    "clock.ts": "run"
+  },
+  "findings": {
+    "buckets.ts": [
+      {
+        "rule": "SHAPES001",
+        "subject": "bad",
+        "severity": "error"
+      }
+    ]
+  },
+  "note": "The runner asks for each phase twice and requires the same findings both times; a rule that read a clock or the environment would fail there before any comparison. clock.ts runs, so it has no folded namespace and no rule sees it; the findings are the same whether or not it exists."
+}

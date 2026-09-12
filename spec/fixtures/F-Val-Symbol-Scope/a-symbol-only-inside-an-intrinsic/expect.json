@@ -1,0 +1,32 @@
+{
+  "rules": [
+    "F-Val-Symbol-Scope",
+    "F-Eval-Interior"
+  ],
+  "project": true,
+  "host": "shapes",
+  "profiles": [
+    "data-host"
+  ],
+  "verdicts": {
+    "interior.ts": "fold",
+    "top.ts": "run"
+  },
+  "exports": {
+    "interior.ts": {
+      "inside": {
+        "__intrinsic": "join",
+        "strings": [
+          "arn:",
+          ":logs"
+        ],
+        "values": [
+          {
+            "__symbol": "Region.Name"
+          }
+        ]
+      }
+    }
+  },
+  "note": "The same unresolved chain twice. Inside a tag's interpolation it folds to a __symbol envelope, which the intrinsic will resolve; at the top of an expression it is a located rejection and the file runs. A __symbol never appears at the top of a folded tree."
+}

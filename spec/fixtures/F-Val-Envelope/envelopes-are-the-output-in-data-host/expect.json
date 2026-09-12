@@ -1,0 +1,41 @@
+{
+  "rules": [
+    "F-Val-Envelope",
+    "F-Profile-DataHost"
+  ],
+  "project": true,
+  "host": "shapes",
+  "profiles": [
+    "data-host"
+  ],
+  "verdicts": {
+    "app.ts": "fold"
+  },
+  "exports": {
+    "app.ts": {
+      "tagged": {
+        "__intrinsic": "join",
+        "strings": [
+          "bucket-",
+          ""
+        ],
+        "values": [
+          1
+        ]
+      },
+      "called": {
+        "__intrinsic": "ref",
+        "args": [
+          "Logs"
+        ]
+      },
+      "resource": {
+        "__resource": "Bucket",
+        "props": {
+          "name": "logs"
+        }
+      }
+    }
+  },
+  "note": "Three envelopes, recognised by key, as the data-host profile emits them: no fate runs, the envelope is the output. Each is a finished value that denotes something not yet constructed, never a thunk. A helper call is not here because the profile has no helpers: there is nothing to invoke."
+}

@@ -1,4 +1,4 @@
-import type { ConformanceAdapter } from "./adapter.js";
+import type { ConformanceAdapter, Finding, RulePhase } from "./adapter.js";
 import type { ExpressionFixture, Fixture, ProjectFixture } from "./fixture.js";
 import { expressionFixtures, projectFixtures } from "./fixture.js";
 import { requireHost } from "./host.js";
@@ -83,7 +83,53 @@ export async function runProjectFixture(adapter: ConformanceAdapter, f: ProjectF
       }
     }
   }
+  if (f.findings) {
+    const got = await collectFindings(adapter, f);
+    if (got === "unavailable") return { ...base, pass: failures.length === 0, skipped: "rules unavailable", failures };
+    failures.push(...compareFindings(f.findings, got));
+  }
   return { ...base, pass: failures.length === 0, failures };
+}
+
+/** The key a finding is filed under: the file whose namespace holds the subject, or the artifact. */
+const findingKey = (x: Finding, phase: RulePhase): string => (phase === "post" ? "artifact" : x.file ?? "artifact");
+const findingSig = (x: { rule: string; subject: string; severity: string }): string => `${x.rule} ${x.severity} ${x.subject}`;
+
+/**
+ * Every finding of both phases (#101). Each phase is run twice and the two
+ * runs must agree: F-Rule-Pure says a rule is a function of its input, and
+ * a rule that reads a clock or the environment fails here before its
+ * findings are compared with anything.
+ */
+export async function collectFindings(adapter: ConformanceAdapter, f: ProjectFixture): Promise<Map<string, Finding[]> | "unavailable"> {
+  if (!adapter.rules || !f.host) return "unavailable";
+  const host = requireHost(f.host);
+  const out = new Map<string, Finding[]>();
+  for (const phase of ["pre", "post"] as const) {
+    const first = await adapter.rules(f.files, host, phase);
+    if (first === "unavailable") return "unavailable";
+    const second = await adapter.rules(f.files, host, phase);
+    if (second === "unavailable") return "unavailable";
+    const a = first.map((x) => `${findingKey(x, phase)}: ${findingSig(x)}`).sort(), b = second.map((x) => `${findingKey(x, phase)}: ${findingSig(x)}`).sort();
+    if (a.join("\n") !== b.join("\n")) throw new Error(`${f.id}: ${phase}-synthesis findings differ between two runs of the same input (F-Rule-Pure)\n${a.join("\n")}\n---\n${b.join("\n")}`);
+    for (const x of first) { const k = findingKey(x, phase); out.set(k, [...(out.get(k) ?? []), x]); }
+  }
+  return out;
+}
+
+/** Findings matched on rule, subject and severity; `at` only when both sides carry one. */
+export function compareFindings(want: Record<string, { rule: string; subject: string; severity: string; at?: { line: number; column: number } }[]>, got: Map<string, Finding[]>): string[] {
+  const failures: string[] = [];
+  for (const key of new Set([...Object.keys(want), ...got.keys()])) {
+    const w = want[key] ?? [], g = got.get(key) ?? [];
+    for (const x of w) {
+      const hit = g.find((y) => findingSig(y) === findingSig(x));
+      if (!hit) { failures.push(`${key}: expected finding ${findingSig(x)}, not reported`); continue; }
+      if (x.at && hit.at && (hit.at.line !== x.at.line || hit.at.column !== x.at.column)) failures.push(`${key}: ${findingSig(x)} at ${hit.at.line}:${hit.at.column}, expected ${x.at.line}:${x.at.column}`);
+    }
+    for (const y of g) if (!w.some((x) => findingSig(x) === findingSig(y))) failures.push(`${key}: finding ${findingSig(y)} reported but not expected (${y.message})`);
+  }
+  return failures;
 }
 
 /** #11 — two implementations must agree on every fixture, independently of what the fixture expects. */
@@ -105,6 +151,15 @@ export async function compareAdapters(a: ConformanceAdapter, b: ConformanceAdapt
       }
       if (ra.taintedBy && rb.taintedBy && ra.taintedBy[path] !== rb.taintedBy[path]) {
         dis.push(`${f.id} ${path}: tainted by — ${a.name} ${ra.taintedBy[path] ?? "nothing"}, ${b.name} ${rb.taintedBy[path] ?? "nothing"}`);
+      }
+    }
+    // F-Rule-Equivalence, across implementations: the same host rules over
+    // the same source report the same findings, whichever path each took.
+    if (f.findings) {
+      const [fa, fb] = await Promise.all([collectFindings(a, f), collectFindings(b, f)]);
+      if (fa !== "unavailable" && fb !== "unavailable") {
+        const sig = (m: Map<string, Finding[]>) => [...m.entries()].flatMap(([k, xs]) => xs.map((x) => `${k}: ${findingSig(x)}`)).sort().join("\n");
+        if (sig(fa) !== sig(fb)) dis.push(`${f.id}: findings — ${a.name}\n${sig(fa)}\n${b.name}\n${sig(fb)}`);
       }
     }
   }

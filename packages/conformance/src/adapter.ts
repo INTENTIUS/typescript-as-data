@@ -24,6 +24,27 @@ export interface ProjectResult {
   taintedBy?: Record<string, string>;
 }
 
+/** F-Rule-Finding's closed severity set. */
+export type Severity = "error" | "warning" | "info";
+/** F-Rule-Phase: named by the input the rule reads, the folded namespace or the artifact. */
+export type RulePhase = "pre" | "post";
+/**
+ * A finding, as data (F-Rule-Finding). `rule`, `severity` and `subject` are
+ * compared; `message` is not (F-Obs-Messages); `at` only when the fixture
+ * gives one and the implementation reports one (F-Obs-Provenance is
+ * optional). `file` names the file whose namespace holds the subject for a
+ * pre-synthesis finding; a post-synthesis finding concerns the artifact and
+ * carries none.
+ */
+export interface Finding {
+  rule: string;
+  severity: Severity;
+  subject: string;
+  message: string;
+  file?: string;
+  at?: { line: number; column: number };
+}
+
 export interface ConformanceAdapter {
   readonly name: string;
   /**
@@ -49,4 +70,15 @@ export interface ConformanceAdapter {
     files: Map<string, string>,
     host?: ConformanceHost,
   ): ProjectResult | "unavailable" | Promise<ProjectResult | "unavailable">;
+  /**
+   * The findings of the host's rules of one phase over the build (#101).
+   * A rule is host code, so the harness carries only its identifier and its
+   * findings; an implementation that cannot run a rule the host names
+   * reports "unavailable" and the fixture is skipped visibly.
+   */
+  rules?(
+    files: Map<string, string>,
+    host: ConformanceHost,
+    phase: RulePhase,
+  ): Finding[] | "unavailable" | Promise<Finding[] | "unavailable">;
 }

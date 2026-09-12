@@ -1,0 +1,17 @@
+{
+  "rules": [
+    "S-Module"
+  ],
+  "project": true,
+  "verdicts": {
+    "app.ts": "fold"
+  },
+  "exports": {
+    "app.ts": {
+      "x": {
+        "answer": 42
+      }
+    }
+  },
+  "note": "The gate examines only statements carrying export. A non-exported let, an assignment, an if, a class and a bare call are neither admitted nor disqualifiers; they are invisible and their effects are never performed, so the file folds on its one export."
+}

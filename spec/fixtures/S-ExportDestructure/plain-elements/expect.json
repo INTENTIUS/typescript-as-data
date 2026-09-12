@@ -1,0 +1,16 @@
+{
+  "rules": [
+    "S-ExportDestructure"
+  ],
+  "project": true,
+  "verdicts": {
+    "app.ts": "fold"
+  },
+  "exports": {
+    "app.ts": {
+      "port": 8080,
+      "hostname": "localhost"
+    }
+  },
+  "note": "A destructured export with plain elements only, one of them renamed. Each element becomes an export bound to the property of the folded initializer; the property nobody named is not exported."
+}

@@ -1,0 +1,21 @@
+{
+  "rules": [
+    "S-ExportSingle",
+    "S-Object"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "fold",
+  "value": {
+    "a": 1,
+    "b": [
+      true,
+      null,
+      "s"
+    ],
+    "c": {
+      "d": 2
+    }
+  },
+  "note": "The plain declarator: export const, one identifier, one expression. The initializer is judged by the expression grammar and folds to its value."
+}

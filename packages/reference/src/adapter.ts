@@ -2,16 +2,25 @@ import type { ConformanceAdapter, ConformanceHost, ProjectResult } from "@intent
 import { EMPTY_HOST, type Host, type Profile } from "./host.js";
 import { shapeOfExport, foldExport } from "./module.js";
 import { foldProject } from "./project.js";
+import { canRun, runRules } from "./rules.js";
 
-/** A named conformance host, in this implementation's own terms. */
+/**
+ * A named conformance host, in this implementation's own terms. In
+ * `data-host` the host is a description and not code (F-Profile-DataHost,
+ * F-Host-Interface): the intrinsic registry and the trust set are kept, and
+ * the helpers, the classes and the live values, items 1, 2, 4 and 6, are
+ * absent.
+ */
 function hostOf(h: ConformanceHost | undefined, profile: Profile): Host {
   if (!h) return { ...EMPTY_HOST, profile };
+  const data = profile === "data-host";
   return {
     profile,
     intrinsics: h.intrinsics.map((i) => ({ name: i.name, isTag: i.isTag, foldsAsCall: i.foldsAsCall, foldsEagerly: i.foldsEagerly, outputKey: i.outputKey })),
-    helpers: h.helpers,
+    helpers: data ? [] : h.helpers,
     ownedSpecifierPrefixes: h.ownedSpecifierPrefixes,
-    values: h.values,
+    values: data ? new Map() : h.values,
+    rules: h.rules,
   };
 }
 
@@ -39,6 +48,11 @@ function adapterFor(profile: Profile): ConformanceAdapter {
     for (const [path, v] of r.tentative) out.tentative![path] = v.kind;
     for (const [path, from] of r.taintSource) out.taintedBy![path] = from;
     return out;
+  },
+  rules(files, host, phase) {
+    const h = hostOf(host, profile);
+    if (!canRun(h)) return "unavailable";
+    return runRules(foldProject(files, h), h, phase);
   },
   };
 }

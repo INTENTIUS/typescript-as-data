@@ -1,0 +1,26 @@
+{
+  "rules": [
+    "S-ExportResource",
+    "F-Val-Fate"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "app.ts": "fold"
+  },
+  "exports": {
+    "app.ts": {
+      "logs": {
+        "entityType": "Bucket",
+        "lexicon": "shapes",
+        "props": {
+          "BucketName": "logs"
+        },
+        "attributes": {
+          "region": "eu"
+        }
+      }
+    }
+  },
+  "note": "The resource declarator: export const, an identifier, a new expression with arguments. J1 yields a __resource envelope and revival constructs the class the file imported from props and attributes."
+}

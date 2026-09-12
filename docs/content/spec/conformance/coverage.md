@@ -59,8 +59,8 @@ The file's own header states the count, {{< figure "rulesWithFixture" >}} of
 
 `paper/measurements.md` sorts the rest by what each waits on. Five need a
 form the reference implementation lacks, the composite factory and isolation
-mode. The six of `rules.md` need the harness half of the rules contract
-(#101), and the remainder are waiting for the corpus to grow (#24).
+mode, and five are properties no adapter can observe, such as execution
+counters and provenance.
 
 A few entries are worth reading as a group, because they say something about
 where the limits of a conformance suite are rather than where the gaps in the

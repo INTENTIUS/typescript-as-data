@@ -1,0 +1,16 @@
+{
+  "rules": [
+    "S-TopConst"
+  ],
+  "project": true,
+  "verdicts": {
+    "binding.ts": "fold",
+    "invisible.ts": "run"
+  },
+  "exports": {
+    "binding.ts": {
+      "x": 42
+    }
+  },
+  "note": "A top-level const with an identifier and an initializer binds its name whether or not it is exported, so binding.ts folds through base. A destructured top-level const is not a binding: q is invisible, and invisible.ts runs because y reads a name nothing bound."
+}

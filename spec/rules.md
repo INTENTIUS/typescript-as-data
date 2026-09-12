@@ -96,7 +96,10 @@ refuses to load one into its own process while the sandbox is armed and
 runs it in the child instead (chant#1131), which is the isolation mode's
 boundary drawn once more around rules.
 
-**Fixtures.** No `F-Rule-*` rule has a fixture yet: the harness has no hook
-that runs a rule and no fixture kind whose expectation is a finding. That
-work is #101; until it lands the family is listed in `fixtures/UNCOVERED.md`
-with that reason.
+The fixtures for this family carry the finding as data and not the rule,
+since a rule is host code (#101): the `shapes` host names two rules by id and
+phase, a fixture's `findings` says what they report, and an implementation
+that carries no rule of that id says so and is skipped visibly. The runner
+asks for each phase twice and holds the two runs to the same answer, which
+is F-Rule-Pure tested before anything else, and `compareAdapters` holds two
+implementations to the same findings, which is F-Rule-Equivalence.

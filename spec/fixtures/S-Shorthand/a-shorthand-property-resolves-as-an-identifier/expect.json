@@ -1,0 +1,14 @@
+{
+  "rules": [
+    "S-Shorthand",
+    "S-Ident"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "fold",
+  "value": {
+    "name": "svc",
+    "port": 80
+  },
+  "note": "A shorthand property is always shape-valid; its name resolves the way an identifier does, here to two top-level consts."
+}
