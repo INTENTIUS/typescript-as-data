@@ -10,7 +10,7 @@ import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
 import * as ts from "typescript";
 import * as chant from "@intentius/chant";
-import type { ConformanceAdapter, IsolationMode, ProjectResult, ProjectVerdict } from "../adapter.js";
+import type { ConformanceAdapter, Finding, IsolationMode, ProjectResult, ProjectVerdict, RulePhase, Severity } from "../adapter.js";
 import type { ConformanceHost } from "../host.js";
 
 function exportInitializer(sf: ts.SourceFile, name: string): ts.Expression | undefined {
@@ -64,6 +64,16 @@ type ChantVerdict = {
  * possible instance of the thing itself: one file importing one generated
  * package. Memoized, since every hosted fixture asks.
  */
+/** chant's post-synthesis engine, which is what runs the host's rules (#101). */
+const runChecks = (
+  chant as unknown as {
+    runPostSynthChecks?: (
+      checks: unknown[],
+      buildResult: { outputs: Map<string, string>; entities: Map<string, unknown> },
+    ) => Array<{ checkId: string; severity: string; message: string; entity?: string }>;
+  }
+).runPostSynthChecks;
+
 let hostPackageSupport: Promise<boolean> | undefined;
 
 function acceptsHostPackages(): Promise<boolean> {
@@ -195,6 +205,100 @@ async function foldOnDisk(
   }
 }
 
+/**
+ * The `shapes` host's two rules, as chant post-synthesis checks (#101, chant#2438).
+ *
+ * A rule is host code and the harness carries only its identifier, so an
+ * implementation supplies the code. These are written against chant's own
+ * `PostSynthCheck` contract and run through chant's own `runPostSynthChecks`,
+ * because that engine is where the rules contract was extracted from. Writing
+ * them against the fold output directly would re-implement the reference inside
+ * the adapter, and `F-Rule-Equivalence` would then be comparing this file with
+ * itself rather than two implementations.
+ *
+ * chant's engine has one phase where the specification has two, so the phase is
+ * expressed in the input each check is given rather than in the engine: the
+ * pre-synthesis rule is handed the folded namespace as `entities`, the
+ * post-synthesis rule the serialized artifact as `outputs`. The runner asks for
+ * each phase separately, so each gets a context built for it.
+ */
+interface ChantCheck {
+  id: string;
+  description: string;
+  check(ctx: { entities: Map<string, unknown>; outputs: Map<string, string> }): Array<{
+    checkId: string;
+    severity: string;
+    message: string;
+    entity?: string;
+  }>;
+}
+
+const isBucket = (v: unknown): v is { props?: Record<string, unknown> } =>
+  typeof v === "object" && v !== null && (v as { entityType?: unknown }).entityType === "Bucket";
+
+/**
+ * The namespace a rule sees, with callables removed.
+ *
+ * A callable is never a value (`F-Val-Callable`) and never reaches a serializer
+ * (`F-Val-Serializable`), so an exported function is not part of what a rule
+ * reads. chant exports a project-local function as a `FoldableFunction` marker
+ * carrying the AST it would interpret, so leaving them in also means the
+ * post-synthesis artifact cannot be serialized at all.
+ */
+function ruleNamespace(exports: Record<string, unknown>): Map<string, unknown> {
+  const isCallable = (chant as unknown as { isFoldableFunction?: (v: unknown) => boolean }).isFoldableFunction;
+  return new Map(
+    Object.entries(exports).filter(([, v]) => typeof v !== "function" && !(isCallable?.(v) ?? false)),
+  );
+}
+
+function shapesChecks(severityOf: (id: string) => Severity): Record<RulePhase, ChantCheck> {
+  return {
+    pre: {
+      id: "SHAPES001",
+      description: "every Bucket declares a BucketName",
+      check(ctx) {
+        const out = [];
+        for (const [name, value] of ctx.entities) {
+          if (isBucket(value) && !(value.props && "BucketName" in value.props)) {
+            out.push({
+              checkId: "SHAPES001",
+              severity: severityOf("SHAPES001"),
+              message: `Bucket ${name} declares no BucketName`,
+              entity: name,
+            });
+          }
+        }
+        return out;
+      },
+    },
+    post: {
+      id: "SHAPES002",
+      description: "the artifact declares at least one Bucket",
+      check(ctx) {
+        // The artifact, not the namespace: this reads the serialized form, which
+        // is what makes it a post-synthesis rule (F-Rule-Phase).
+        const declaresBucket = [...ctx.outputs.values()].some((doc) => {
+          const parsed = JSON.parse(doc) as Record<string, Record<string, unknown>>;
+          return Object.values(parsed).some((exports) => Object.values(exports).some(isBucket));
+        });
+        return declaresBucket
+          ? []
+          : [
+              {
+                checkId: "SHAPES002",
+                severity: severityOf("SHAPES002"),
+                // Nothing to attach it to, so the subject states what is absent
+                // (F-Rule-Finding, L11.5).
+                message: "the artifact declares no Bucket",
+                entity: "missing: Bucket",
+              },
+            ];
+      },
+    },
+  };
+}
+
 export const chantAdapter: ConformanceAdapter = {
   // Read from the installed package, never a literal: a hardcoded fallback
   // silently misreports the pin, and this name is what the paper's measurement
@@ -238,6 +342,51 @@ export const chantAdapter: ConformanceAdapter = {
     // reporting a verdict nobody asked for.
     if (mode === "isolated") return "unavailable";
     return foldOnDisk(files, host, mode);
+  },
+
+  async rules(files, host, phase) {
+    if (!projectFn || !runChecks) return "unavailable";
+    if (!(await acceptsHostPackages())) return "unavailable";
+
+    // Every rule the host names must be one this implementation carries, and at
+    // the phase the host declared. A host naming a rule chant has no code for
+    // is reported unavailable and the fixture is skipped visibly, rather than
+    // answered with a silence that would read as "no findings".
+    const declared = host.rules ?? [];
+    if (declared.length === 0) return "unavailable";
+    const checks = shapesChecks((id) => declared.find((r) => r.id === id)?.severity ?? "error");
+    if (!declared.every((r) => checks[r.phase]?.id === r.id)) return "unavailable";
+
+    const folded = await foldOnDisk(files, host);
+    const wanted = declared.filter((r) => r.phase === phase);
+    if (wanted.length === 0) return [];
+
+    const out: Finding[] = [];
+    for (const rule of wanted) {
+      const check = checks[rule.phase];
+      // A file that ran has no folded namespace, so no rule sees it
+      // (F-Rule-Input). Pre runs per file, so a finding carries the file whose
+      // namespace holds its subject; post reads one artifact over the whole
+      // build and carries none.
+      const folds = Object.entries(folded.verdicts).filter(([, v]) => v.kind === "fold");
+      if (phase === "pre") {
+        for (const [file, verdict] of folds) {
+          const entities = ruleNamespace((verdict as { exports: Record<string, unknown> }).exports);
+          for (const d of runChecks([check as never], { outputs: new Map(), entities } as never)) {
+            out.push({ rule: d.checkId, severity: d.severity as Severity, subject: d.entity ?? "", message: d.message, file });
+          }
+        }
+        continue;
+      }
+      const artifact = Object.fromEntries(
+        folds.map(([file, v]) => [file, Object.fromEntries(ruleNamespace((v as { exports: Record<string, unknown> }).exports))]),
+      );
+      const outputs = new Map([["artifact", JSON.stringify(artifact)]]);
+      for (const d of runChecks([check as never], { outputs, entities: new Map() } as never)) {
+        out.push({ rule: d.checkId, severity: d.severity as Severity, subject: d.entity ?? "", message: d.message });
+      }
+    }
+    return out;
   },
   foldExport(source, exportName) {
     const sf = parse(source); const init = exportInitializer(sf, exportName);
