@@ -6,15 +6,15 @@ sidebar:
   order: 2
 ---
 
-[forgejo-warden](https://github.com/INTENTIUS/forgejo-warden) keeps a Forgejo org and its repos in a declared state: diff against live, guardrails, dry-run by default, deletes only where the policy says `owned`. Its policy is one file, and the `.ts` form of that file is [forgejo-warden#33](https://github.com/INTENTIUS/forgejo-warden/pull/33).
+[forgejo-warden](https://github.com/INTENTIUS/forgejo-warden) keeps a Forgejo org and its repos in a declared state. It diffs against live and applies guardrails. Runs are dry by default, and deletes happen only where the policy says `owned`. Its policy is one file, and the `.ts` form of that file is [forgejo-warden#33](https://github.com/INTENTIUS/forgejo-warden/pull/33).
 
 ## Author
 
-A `governance.ts` typed by the package's own `GovernanceConfig`, `satisfies` on `export const policy`; a default export does not fold ([#94](https://github.com/INTENTIUS/typescript-as-data/issues/94)), and a shared helper lives in a sibling file ([#95](https://github.com/INTENTIUS/typescript-as-data/issues/95)). The schema is 195 lines of hand-written interfaces covering eight cycles: org settings, membership, teams, repo settings, branch protection, repo baseline, secrets and variables, webhooks. Everything the YAML parser could not do, flow style, multi-line scalars, anchors, is ordinary TypeScript: a template literal, a `const`, a spread.
+A `governance.ts` is typed by the package's own `GovernanceConfig`, with `satisfies` on `export const policy`; a default export does not fold ([#94](https://github.com/INTENTIUS/typescript-as-data/issues/94)), and a shared helper lives in a sibling file ([#95](https://github.com/INTENTIUS/typescript-as-data/issues/95)). The schema is 195 lines of hand-written interfaces covering eight cycles: org settings, membership and teams; repo settings, branch protection and repo baseline; secrets and variables, and webhooks. Everything the YAML parser could not do, flow style and multi-line scalars and anchors, is ordinary TypeScript: a template literal, a `const`, a spread.
 
 ## Check
 
-Two phases, both already in the tool. The loader validates the declared policy and reports the exact field path on a bad shape; that is a pre-synthesis rule over the folded values. The guardrails (`removalDeltaCap`, `adminFloor`) run over the computed plan before any apply; that is a post-synthesis rule over the artifact. Selective-by-omission, an absent field is never touched, is why [absent versus `undefined`](https://github.com/INTENTIUS/typescript-as-data/issues/82) has to be pinned in the specification.
+Both phases are already in the tool. The loader validates the declared policy and reports the exact field path on a bad shape, which is a pre-synthesis rule over the folded values. The guardrails (`removalDeltaCap`, `adminFloor`) run over the computed plan before any apply, a post-synthesis rule over the artifact. Selective-by-omission, where an absent field is never touched, is why [absent versus `undefined`](https://github.com/INTENTIUS/typescript-as-data/issues/82) has to be pinned in the specification.
 
 ## Generate
 
@@ -22,4 +22,4 @@ Warden reads live reality and diffs it against the declared source; the plan it 
 
 ## Proof
 
-The `.ts` and `.yml` forms of the same policy load to the same object, asserted in warden's tests, and `--config-mode check` asserts it for any policy by folding and running it. The evaluator is the published reference, not chant, so the consumer needs the evaluator and nothing else. The whole loop runs against the e2e sandbox, which is [the tutorial](/typescript-as-data/try-it/).
+The `.ts` and `.yml` forms of the same policy load to the same object, asserted in warden's tests, and `--config-mode check` asserts it for any policy by folding and running it. The evaluator is the published reference rather than chant, so the consumer needs nothing else. The whole loop runs against the e2e sandbox, which is [the tutorial](/typescript-as-data/try-it/).

@@ -22,7 +22,7 @@ hero:
 - Semantic linting. The same check at the keystroke and in CI, over real values, across resources. [How](/typescript-as-data/what-it-enables/semantic-linting/)
 - Round-trip generation. Live state or an existing artifact becomes source that folds back to what it came from. [How](/typescript-as-data/what-it-enables/round-trip/)
 
-## The same policy, twice
+## The same policy twice
 
 ```yaml title="governance.yml"
 orgs:
@@ -52,4 +52,4 @@ export const policy = {
 } satisfies GovernanceConfig;
 ```
 
-The second one has completion, a type error on a misspelt key, and a helper it reuses across repositories. The tool reads the same object from either file, and it never runs the second one to get it.
+The second one has completion and a type error on a misspelt key. It reuses one helper across repositories. The tool reads the same object from either file and never runs the second one to get it.

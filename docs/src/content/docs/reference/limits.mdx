@@ -19,9 +19,9 @@ goes in `CAVEATS.md`.
 This is the largest gap, and it bounds the
 [corpus cross-check](/typescript-as-data/conformance/corpus/) more than
 anything else does. The package has no composite factory form, so
-`{__compositeStep}` has no fate: its revival would be "resolve the composite,
-then read `.step` off the real result", and with no factory form the package
-rejects rather than guessing.
+`{__compositeStep}` has no fate. Reviving one would mean "resolve the
+composite, then read `.step` off the real result", and with no factory form
+the package rejects rather than guessing.
 
 `CAVEATS.md` puts a number on it, taken from the corpus cross-check: 272 of
 chant's 409 corpus files reach a composite factory call, directly or through a
@@ -36,9 +36,9 @@ class the host supplies, `{__intrinsic}` and `{__helper}` are invoked, and
 `{__symbol}` resolves as a dotted chain. `{__attrRef}` passes through, and is
 rejected inside a host call's arguments per `F-Val-Position`.
 
-Revival can only construct what a host supplies. With `EMPTY_HOST` an envelope
-has no class to become and revival rejects, which `CAVEATS.md` calls correct
-rather than silent: a build that folds a resource and cannot revive it has not
+Only what a host supplies can be constructed. With `EMPTY_HOST` an envelope
+has no class to become and the attempt is rejected, which `CAVEATS.md` calls
+correct rather than silent: a build that folds a resource and cannot revive it has not
 folded the file. Conformance fixtures therefore name the host they need, and
 the named hosts live in `packages/conformance/src/host.ts`.
 
@@ -76,8 +76,8 @@ real host, because with `EMPTY_HOST` an entity never becomes an instance.
 Accessors are skipped rather than invoked, since one of chant's throws when
 read too early.
 
-`F-Prebuild` is implemented: every top-level `const n = new T(…)` is
-constructed once, in source order, before any declarator is evaluated, and a
+`F-Prebuild` is implemented. Every top-level `const n = new T(…)` is
+constructed once in source order, before any declarator is evaluated, and a
 reference to it reads that instance. The package originally rejected such a
 reference, which was the reading `F-Eval-Ident` step 1 licensed before the rule
 existed, and the corpus found twelve chant examples that fold the shape.
@@ -88,16 +88,15 @@ existed, and the corpus found twelve chant examples that fold the shape.
 ambiguity and are now resolved in the specification by `F-Identity`. The rule
 names the entity test and the reference test, says the entity test is the
 normative one, and says `F-Import` over-approximates on purpose. The package
-follows it: the reference test for import and re-export captures, the entity
-test for call leaks. The entry stays in `CAVEATS.md` because the code comments
+follows it, using the reference test for import and re-export captures and the
+entity test for call leaks. The entry stays in `CAVEATS.md` because the code comments
 cite `F-Identity` and a reader of an older revision of the specification will
 not find it.
 
 ## How the gaps are accounted for
 
-None of these gaps is allowed to be reported as a disagreement. `spec/README.md`
-states the rule: a difference that a missing capability explains is counted
-under a named limit and reported apart from the agreement figure, because
-folding it into drift overstates what the comparison established, in the
-direction that flatters the specification. Two of the corpus cross-check's four
+None of these gaps is allowed to be reported as a disagreement. The rule in `spec/README.md` is that a difference which a missing capability
+explains is counted under a named limit and reported apart from the agreement
+figure, because folding it into drift overstates what the comparison
+established, in the direction that flatters the specification. Two of the corpus cross-check's four
 limits, `composite` and `host`, are this page's gaps counted that way.
