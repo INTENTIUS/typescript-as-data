@@ -41,7 +41,9 @@ import { buildDocAnalysis } from "sentences/lint/build-doc";
 import { extractProse } from "sentences/lint/markdown-prose";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const ROOTS = [join(here, "..", "spec"), join(here, "..", "paper"), join(here, "..", "README.md")];
+// The docs site's authored pages are prose too (#85); the spec/ directory
+// under it is generated from spec/*.md and is linted at its source.
+const ROOTS = [join(here, "..", "spec"), join(here, "..", "paper"), join(here, "..", "README.md"), join(here, "..", "docs", "src", "content", "docs")];
 const BASELINE = join(here, "docs-sentences-baseline.json");
 const GATED_SEVERITIES = new Set(["medium", "high"]);
 
@@ -64,7 +66,7 @@ function lineOf(text, offset) {
   return text.slice(0, offset).split("\n").length;
 }
 
-const files = ROOTS.flatMap((r) => (statSync(r).isDirectory() ? docFiles(r) : [r])).filter((f) => !f.includes("/fixtures/"));
+const files = ROOTS.flatMap((r) => (statSync(r).isDirectory() ? docFiles(r) : [r])).filter((f) => !f.includes("/fixtures/") && !f.includes("/content/docs/spec/"));
 const current = {}; // relPath -> ruleId -> count (gated severities only)
 let total = 0;
 let gated = 0;
