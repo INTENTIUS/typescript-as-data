@@ -1,6 +1,102 @@
 ---
 title: Reference implementation
-description: Placeholder — the minimal implementation and its host-hook interface.
+description: What @intentius/tsad-reference covers, where it came from, and how to run it.
+sidebar:
+  order: 1
 ---
 
-Placeholder.
+`packages/reference` is `@intentius/tsad-reference`, a reference
+implementation of the specification in `spec/`. It is a workspace package in
+this repository and is not published.
+
+It is deliberately partial, and the partiality is the point of
+[what it does not do](/typescript-as-data/reference/limits/), which summarises
+`packages/reference/CAVEATS.md`. A reader who assumes the reference is complete
+will misread the conformance numbers.
+
+## What it covers
+
+The core of it is the expression layer: the `S-*` productions of
+`spec/grammar.md` §2 and the `F-Eval-*` rules of `spec/judgments.md` J1, over
+the value domain of `spec/values.md`. `packages/reference/README.md` lists
+shape classification, expression evaluation, the value domain's envelope
+shapes, and three of the six items of the host interface, `F-Host-Interface`
+items 3, 4 and 5: the registry, the helper allowlist and the owned-specifier
+prefixes.
+
+Since then the module and build layers have been written too.
+`packages/reference/src/project.ts` implements J2, the per-file verdict, and
+J3, the identity-taint fixpoint, from `spec/judgments.md` rather than from any
+implementation. A project there is a map of path to source; there is no
+filesystem and no real module system, which is enough for both judgments
+because each is defined over a finite set of files and the edges between them.
+`paper/measurements.md` records the same thing: the reference implements J2's
+per-file verdict, J3's fixpoint and revival from the specification.
+
+That is what makes the whole-build fixtures possible. A taint edge does not
+exist inside a single file, so J3 could not be tested at all until an
+implementation could be handed a set of files.
+
+The source layout is small enough to read:
+
+| File | Holds |
+|---|---|
+| `subset.ts` | the shape classifier, `S-*` |
+| `fold.ts` | expression evaluation, `F-Eval-*` |
+| `fnbody.ts` | the project-local function body rules |
+| `host.ts` | the host interface and `EMPTY_HOST` |
+| `foldable-helpers.ts` | the helper allowlist and owned-specifier tests |
+| `module.ts`, `project.ts` | J2 and J3 |
+| `revive.ts` | revival of envelopes, `F-Val-Fate` |
+| `adapter.ts` | the conformance adapter, exported as `referenceAdapter` |
+
+## Where it came from
+
+The provenance matters for reading any agreement figure, and
+`packages/reference/README.md` states it plainly.
+
+From issue #19 until issue #50, these files were a *port* of chant's, kept
+current by a sync script and a list of recorded cuts. That guaranteed agreement
+and made agreement uninformative: the cross-check was comparing the same code
+with itself. Issue #50 replaced the ported evaluation layer with one written
+from the specification text.
+
+`packages/reference/README.md` then records one honest limit on how independent
+that is. The author of the rewrite had previously read chant's implementation
+closely, while writing the specification from it. The rewrite was done from
+`grammar.md` and `judgments.md` without consulting the source, but it is not
+the test a reader who had never seen chant would constitute. What it does
+establish is that the specification text is complete enough to implement from.
+
+It also found places where the text was not complete enough, which is the more
+useful result. `paper/measurements.md` lists three. `spec/grammar.md` used an
+*unclaimed* callee in four normative sentences and defined it in none, so
+`S-Unclaimed` was added (#51). `F-Import` and `F-Val-Live` stated two identity
+predicates and nothing said they answer different questions, so `F-Identity`
+was added (#59). And `F-Eval-Ident` step 1 read an instance as "J2 pre-built"
+that no rule of J2 built, so `F-Prebuild` now states the rule (#68).
+
+## Running it
+
+Node 24 and npm. From the repository root:
+
+```bash
+npm install
+npm run typecheck
+npm test
+```
+
+`npm run typecheck` is `tsc -p tsconfig.json` over the whole repository.
+`npm test` is `vitest run --passWithNoTests`, which covers more than this
+package: it runs the reference's own tests, the conformance runner against the
+reference, the chant cross-check, and the two `spec/` gates. Both are what CI
+runs, in `.github/workflows/ci.yml`.
+
+To run only the reference's own tests, point vitest at the directory:
+
+```bash
+npx vitest run packages/reference
+```
+
+The [corpus cross-check](/typescript-as-data/conformance/corpus/) is not part
+of `npm test`. It needs a chant checkout and has its own command.

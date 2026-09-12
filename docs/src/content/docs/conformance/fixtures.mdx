@@ -1,0 +1,125 @@
+---
+title: The fixture format
+description: The two kinds of conformance fixture, expression and project, with an example of each from spec/fixtures/.
+sidebar:
+  order: 2
+---
+
+A fixture is a directory under `spec/fixtures/<Rule>/<name>/`. The format is
+defined in `packages/conformance/src/fixture.ts`, which is also the loader.
+There are two kinds, and the loader tells them apart by what the directory
+contains.
+
+Every fixture's `expect.json` carries a `rules` array naming the identifiers
+the fixture exercises. That array is what the
+[coverage gate](/typescript-as-data/conformance/coverage/) reads in both
+directions, so it is not decoration. Most carry a `note` saying why the fixture
+exists.
+
+## Expression fixtures
+
+An expression fixture judges one export of one file. The directory holds
+`input.ts` and `expect.json`.
+
+`spec/fixtures/S-Template/const-span/input.ts`:
+
+```ts
+const name = "World";
+export const x = `Hello ${name}!`;
+```
+
+`spec/fixtures/S-Template/const-span/expect.json`:
+
+```json
+{ "rules": ["S-Template", "F-Eval-Template", "F-Eval-Ident"], "export": "x", "shape": "accept", "fold": "fold", "value": "Hello World!",
+  "note": "The claim chant#2306 found stated backwards in the docs: a template interpolating a const folds." }
+```
+
+The fields:
+
+`export` names which export is judged. `shape` is the `S-*` verdict, `"accept"`
+or `"reject"`. `fold` is the `F-*` verdict, `"fold"` or `"run"`. `value` is
+required when `fold` is `"fold"`, and the sentinel `"$undefined"` means the
+folded value is `undefined`, which JSON cannot write. `rejectAt` is optional
+and only meaningful when `fold` is `"run"`: it is the line and column the
+rejection must point at, which is `F-Reason`'s located-rejection requirement
+made testable.
+
+Both verdicts are checked on every fixture, so a fixture exercises the shape
+classifier and the folder at once. `F-Direction` is the reason that is worth
+doing: the classifier may accept what the folder rejects, never the reverse, so
+a fixture with `"shape": "accept"` and `"fold": "run"` is a legitimate and
+interesting shape.
+
+## Project fixtures
+
+A project fixture judges every file of a small build, which is what J3 needs: a
+taint edge cannot be seen in one file. The directory holds a `project/`
+subdirectory with one or more `.ts` files, nesting allowed, and `expect.json`
+with `"project": true`.
+
+`spec/fixtures/F-Succ/forward-into-imports/project/config.ts`:
+
+```ts
+export const settings = { port: 8080 };
+```
+
+`spec/fixtures/F-Succ/forward-into-imports/project/app.ts`:
+
+```ts
+import { settings } from "./config";
+
+export function ensure(p: number) {
+  if (p > 0) {
+    return p;
+  }
+  return 1;
+}
+
+export const port = ensure(settings.port);
+```
+
+`spec/fixtures/F-Succ/forward-into-imports/expect.json`:
+
+```json
+{
+  "rules": ["F-Succ", "F-Taint", "F-Import"],
+  "project": true,
+  "verdicts": { "app.ts": "run", "config.ts": "run" },
+  "tentative": { "app.ts": "run", "config.ts": "fold" },
+  "taintedBy": { "config.ts": "app.ts" },
+  "note": "The forward edge. config.ts folds on its own, and runs anyway because app.ts, which imports it, runs: app.ts's real import would construct a second settings object. This is chant#1107's observation, that fixing a leaf buys nothing while an importer still runs."
+}
+```
+
+The fields:
+
+`verdicts` is every file's final verdict, after J3. `tentative` is J2's
+proposal, before J3 disposed of it, and is optional because an implementation
+that cannot separate the two phases reports none. `taintedBy` names, for a file
+J3 tainted, the file whose taint reached it. `exports` is optional and gives
+expected export values for files that finally fold. `rejectRule` names the rule
+a `run` verdict must cite, and is checked only when the adapter reports one.
+`host` names a host from `packages/conformance/src/host.ts`, and is required
+for any fixture whose sources import one.
+
+`fixture.ts` says why `tentative` and `taintedBy` exist: without them a project
+fixture cannot tell "folds because nothing reached it" from "would have folded,
+and an edge killed it". Both of those produce the verdict `run`, so comparing
+verdicts alone would not distinguish a seed from a taint casualty. The fixture
+above is exactly that case. `config.ts` folds on its own account, which
+`tentative` records, and `taintedBy` records that `app.ts` is what killed it.
+
+## How they are run
+
+`runFixtures(adapter, fixtures)` runs both kinds. `runFixture` handles an
+expression fixture; `runProjectFixture` handles a project one and reports a
+skip when the adapter has no whole-build entry or returns `"unavailable"`.
+
+`compareAdapters(a, b, fixtures)` is a separate pass, and it does not read the
+expectation at all. It asks two implementations the same questions and reports
+where they differ. On project fixtures it compares the final verdict, the
+tentative verdict and the taint source, for the reason above.
+
+`paper/measurements.md` gives the size of the set at the chant 0.70.1 pin: 68
+fixtures, of which 30 are whole-build.

@@ -3,16 +3,54 @@ title: typescript-as-data
 description: A specification for a statically evaluable subset of TypeScript, its reference implementation, and its conformance suite.
 template: splash
 hero:
-  tagline: A statically evaluable subset of TypeScript — specified, implemented, and conformance-tested.
+  tagline: A statically evaluable subset of TypeScript, specified, implemented, and conformance-tested.
   actions:
-    - text: Read the specification
-      link: /typescript-as-data/spec/overview/
+    - text: Start here
+      link: /typescript-as-data/introduction/what-this-is/
       icon: right-arrow
+    - text: Read the specification
+      link: /typescript-as-data/spec/
+      icon: document
+      variant: minimal
     - text: View on GitHub
       link: https://github.com/INTENTIUS/typescript-as-data
       icon: external
       variant: minimal
 ---
 
-This site is a skeleton. Content lands issue by issue; see the
-[project board](https://github.com/INTENTIUS/typescript-as-data/issues).
+The subset is the part of TypeScript whose value is fixed by its source:
+literals, constants, and symbolic references. A tool can reduce it to data
+without running it. Most configuration languages get this property by
+inventing a language. This specification carves a fragment out of an existing
+one and defines the edge: source outside the subset falls back to real
+execution, and the two paths must agree.
+
+The repository is three things and a site.
+
+| Path | Holds |
+|---|---|
+| `spec/` | The normative specification |
+| `spec/fixtures/` | Conformance fixtures, one directory per rule |
+| `packages/reference` | The reference implementation (`@intentius/tsad-reference`) |
+| `packages/conformance` | The adapter interface, fixture format, runner, and the chant adapter |
+| `docs/` | This site, generated in part from `spec/` |
+
+## Where to go
+
+- [What this is](/typescript-as-data/introduction/what-this-is/) for the scope
+  of the specification, what the name claims, and what it does not.
+- [Rules and judgments](/typescript-as-data/introduction/rules-and-judgments/)
+  for the two identifier families and the four judgments.
+- [Reading the specification](/typescript-as-data/introduction/reading-the-spec/)
+  for the order the normative files are meant to be read in.
+- [The specification](/typescript-as-data/spec/) itself, published from
+  `spec/*.md`.
+- [The reference implementation](/typescript-as-data/reference/overview/) and
+  [what it does not do](/typescript-as-data/reference/limits/).
+- [Conformance](/typescript-as-data/conformance/overview/), the fixtures, the
+  coverage gate, and the two cross-checks against chant.
+
+This page and the introduction, reference and conformance sections are written
+by hand. The specification section is generated from `spec/*.md` by
+`docs/scripts/sync-spec.mjs`; `spec/` is the normative source, and the
+generated pages are build output.
