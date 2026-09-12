@@ -1,8 +1,8 @@
-export * from "./host";
-export * from "./subset";
-export * from "./fnbody";
-export * from "./fold";
-export * from "./foldable-helpers";
-export * from "./module";
-export * from "./project";
-export { referenceAdapter } from "./adapter";
+export * from "./host.js";
+export * from "./subset.js";
+export * from "./fnbody.js";
+export * from "./fold.js";
+export * from "./foldable-helpers.js";
+export * from "./module.js";
+export * from "./project.js";
+export { referenceAdapter } from "./adapter.js";

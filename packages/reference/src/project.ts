@@ -14,11 +14,11 @@
  * identity, and an envelope is an object either way.
  */
 import * as ts from "typescript";
-import { EMPTY_HOST, type Host } from "./host";
-import { foldExpr, collectConsts, FoldRejection, FoldableFunction, type Scope } from "./fold";
-import { registerHelpers, registerHostSpecifiers, isHostOwnedSpecifier } from "./foldable-helpers";
-import { revive } from "./revive";
-import type { FnDecl } from "./fnbody";
+import { EMPTY_HOST, type Host } from "./host.js";
+import { foldExpr, collectConsts, FoldRejection, FoldableFunction, type Scope } from "./fold.js";
+import { registerHelpers, registerHostSpecifiers, isHostOwnedSpecifier } from "./foldable-helpers.js";
+import { revive } from "./revive.js";
+import type { FnDecl } from "./fnbody.js";
 
 export type Verdict =
   | { kind: "fold"; exports: Map<string, unknown>; captures: Set<string> }

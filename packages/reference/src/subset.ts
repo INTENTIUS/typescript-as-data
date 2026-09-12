@@ -8,8 +8,8 @@
  * F-Exc-Registry.
  */
 import * as ts from "typescript";
-import { intrinsicCallFolds, intrinsicCallFoldsEagerly, type IntrinsicDef } from "./host";
-import { isFoldableHelperName } from "./foldable-helpers";
+import { intrinsicCallFolds, intrinsicCallFoldsEagerly, type IntrinsicDef } from "./host.js";
+import { isFoldableHelperName } from "./foldable-helpers.js";
 
 export interface ShapeViolation {
   /** The S-* production that refused it. */

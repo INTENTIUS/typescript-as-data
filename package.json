@@ -12,7 +12,10 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
     "corpus": "TSAD_CORPUS_REPORT=1 vitest run packages/conformance/src/corpus.test.ts",
-    "lint:prose": "node scripts/lint-docs-sentences.mjs"
+    "lint:prose": "node scripts/lint-docs-sentences.mjs",
+    "build": "npm run build --workspaces",
+    "release:preflight": "bash scripts/release-preflight.sh",
+    "smoke:published": "bash scripts/smoke-published.sh"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

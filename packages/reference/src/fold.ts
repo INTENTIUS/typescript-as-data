@@ -12,10 +12,10 @@ import {
   intrinsicCallFoldsEagerly,
   intrinsicTagFolds,
   type IntrinsicDef,
-} from "./host";
-import { isFoldableHelperName } from "./foldable-helpers";
-import { isLiteralKey, isLiteralElementKey, isUnclaimedCallee } from "./subset";
-import { findFnBodyViolation, plainBindingKey, type FnDecl } from "./fnbody";
+} from "./host.js";
+import { isFoldableHelperName } from "./foldable-helpers.js";
+import { isLiteralKey, isLiteralElementKey, isUnclaimedCallee } from "./subset.js";
+import { findFnBodyViolation, plainBindingKey, type FnDecl } from "./fnbody.js";
 
 /** A located rejection, per R9.3: the node and the rule, wording unconstrained. */
 export class FoldRejection extends Error {

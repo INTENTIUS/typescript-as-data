@@ -13,7 +13,7 @@
  * answer the expression fixtures compare; `F-Declarator` revives what the
  * declarator produced.
  */
-import { FoldRejection, isEnvelope, isLiveObject } from "./fold";
+import { FoldRejection, isEnvelope, isLiveObject } from "./fold.js";
 
 /** Where a revival happened, for the located rejection F-Reason wants. */
 export interface RevivalSite {

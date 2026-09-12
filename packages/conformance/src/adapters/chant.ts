@@ -10,7 +10,7 @@ import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
 import * as ts from "typescript";
 import * as chant from "@intentius/chant";
-import type { ConformanceAdapter, ProjectResult, ProjectVerdict } from "../adapter";
+import type { ConformanceAdapter, ProjectResult, ProjectVerdict } from "../adapter.js";
 
 function exportInitializer(sf: ts.SourceFile, name: string): ts.Expression | undefined {
   for (const st of sf.statements) {

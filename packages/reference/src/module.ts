@@ -1,8 +1,8 @@
 import * as ts from "typescript";
-import { foldExpr, collectConsts, FoldRejection } from "./fold";
-import { findShapeViolation, type ShapeViolation } from "./subset";
-import { registerHelpers, registerHostSpecifiers } from "./foldable-helpers";
-import { EMPTY_HOST, type Host } from "./host";
+import { foldExpr, collectConsts, FoldRejection } from "./fold.js";
+import { findShapeViolation, type ShapeViolation } from "./subset.js";
+import { registerHelpers, registerHostSpecifiers } from "./foldable-helpers.js";
+import { EMPTY_HOST, type Host } from "./host.js";
 
 export function installHost(host: Host): void { registerHelpers(host.helpers); registerHostSpecifiers(host.ownedSpecifierPrefixes); }
 export function parse(source: string, fileName = "fixture.ts"): ts.SourceFile { return ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest, true); }

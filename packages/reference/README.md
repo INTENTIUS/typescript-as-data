@@ -1,19 +1,25 @@
 # @intentius/tsad-reference
 
-A reference implementation of the specification in `spec/`. It covers the
-expression layer: the `S-*` productions of `grammar.md` §2 and the `F-Eval-*`
-rules of `judgments.md` J1, over the value domain of `values.md`.
+A reference implementation of the specification in `spec/`, written from the
+specification text and nothing else (#50).
 
 ## What it implements, and what it does not
 
-Implemented: shape classification, expression evaluation, the value domain's
-envelope shapes, and the host interface's registry, helper allowlist and
-owned-specifier prefixes (`F-Host-Interface` items 3, 4 and 5).
+Implemented: shape classification, expression evaluation (J1), the per-file
+verdict and the identity-taint fixpoint (J2, J3, since #60), revival through
+a host's real constructors (F-Val-Fate, since #64), and the host interface's
+registry, helper allowlist, owned-specifier prefixes and values. It declares
+the specification version it implements (`specVersion` on its adapter), and
+the suite holds that to `spec/VERSION`.
 
-Not implemented: the module layer and the identity-taint fixpoint (J2, J3), so
-`externals` is only ever what a caller supplies and no `FoldableFunction` is
-ever produced. Tracked as #21 and #22. Items 1, 2 and 6 of the host interface
-belong to revival and interpretation and are absent for the same reason.
+Not implemented, with the reason for each: `CAVEATS.md`. The composite factory
+form and isolation mode are the two that cost fixtures.
+
+## As a package
+
+`@intentius/tsad-reference` depends on `@intentius/tsad-conformance` for the
+adapter and host types only. Its major and minor are the specification version
+it implements; the patch is its own.
 
 ## Provenance
 
