@@ -102,6 +102,74 @@ function acceptsHostPackages(): Promise<boolean> {
   return hostPackageSupport;
 }
 
+/**
+ * Does this chant interpret a composite the HOST registered, under sandbox?
+ *
+ * chant#2442, fixed in chant-v0.72.1. Before it, `findCompositeDefinition`
+ * required `Composite` to be chant's own, so a host's registration form was
+ * never recognised; and recognising it was not enough on its own, because
+ * chant wrapped the host's members in its own `Composite`, whose member
+ * validation asks for chant's `Declarable` and refused an entity carrying a
+ * different marker.
+ *
+ * Both halves are exercised here: the fixture folds only if the form is
+ * recognised AND the host's own entity survives, and it runs under `sandbox`
+ * so a chant that fell through to invocation reports `run` rather than
+ * folding by the wrong route.
+ */
+let hostCompositeSupport: Promise<boolean> | undefined;
+
+function interpretsHostComposites(): Promise<boolean> {
+  hostCompositeSupport ??= (async () => {
+    if (!projectFn) return false;
+    const root = mkdtempSync(join(tmpdir(), "tsad-probe-composite-"));
+    try {
+      const dir = join(root, "node_modules", "@tsad", "probe-composite");
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(
+        join(dir, "package.json"),
+        JSON.stringify({ name: "@tsad/probe-composite", version: "0.0.0", type: "module", main: "index.js" }),
+        "utf8",
+      );
+      writeFileSync(
+        join(dir, "index.js"),
+        [
+          "const MARK = Symbol.for('tsad.conformance.declarable');",
+          "export class Thing {",
+          "  constructor(props = {}) {",
+          "    this.entityType = 'Thing'; this.props = props;",
+          "    Object.defineProperty(this, MARK, { value: true, enumerable: false });",
+          "  }",
+          "}",
+          "export function Composite(factory, name) {",
+          "  const d = (props) => factory(props); d.compositeName = name; return d;",
+          "}",
+        ].join("\n") + "\n",
+        "utf8",
+      );
+      const defs = join(root, "defs.ts");
+      writeFileSync(
+        defs,
+        'import { Thing, Composite } from "@tsad/probe-composite";\n' +
+          'export const C = Composite(({ n }) => ({ t: new Thing({ n }) }), "C");\n',
+        "utf8",
+      );
+      const file = join(root, "probe.ts");
+      writeFileSync(file, 'import { C } from "./defs";\nexport const c = C({ n: "x" });\n', "utf8");
+      const verdicts = await projectFn([file], [], {
+        lexiconPackages: ["@tsad/probe-composite"],
+        sandbox: true,
+      });
+      return verdicts.get(file)?.verdict === "fold";
+    } catch {
+      return false;
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  })();
+  return hostCompositeSupport;
+}
+
 const projectFn = (
   chant as unknown as {
     foldProject?: (
@@ -187,7 +255,14 @@ async function foldOnDisk(
       paths.push(abs);
     }
     const lexiconPackages = host ? installHost(root, host) : [];
-    const verdicts = await projectFn!(paths, host ? hostIntrinsics(host) : [], { lexiconPackages });
+    const verdicts = await projectFn!(paths, host ? hostIntrinsics(host) : [], {
+      lexiconPackages,
+      // tsad#113 — `isolated` means "do not invoke". chant's `--sandbox`
+      // (chant#1093) is the setting that refuses to import project code, which
+      // is F-Call step 5 firing so step 6 never runs. It leaves interpretation
+      // alone, so the interpretable factories still fold.
+      ...(mode === "isolated" ? { sandbox: true } : {}),
+    });
     const out: ProjectResult = { verdicts: {}, tentative: {}, taintedBy: {} };
     const relOf = (abs: string) => abs.slice(root.length + 1).split(/[\\/]/).join("/");
     for (const [abs, v] of verdicts) {
@@ -326,21 +401,22 @@ export const chantAdapter: ConformanceAdapter = {
     // `lexiconPackages` option would resolve none of it, so say so rather than
     // report a wrong verdict.
     if (host && !(await acceptsHostPackages())) return "unavailable";
-    // tsad#113 — chant has no mode that means `isolated`.
+    // tsad#113 — `isolated` is answerable now, and it was not before.
     //
-    // Its nearest thing is `--sandbox` (chant#1093), and it is not the same
-    // rule. Isolated refuses to INVOKE, so F-Call step 5 fires and step 6 never
-    // imports; interpretation is untouched, which is why the positive cases of
-    // S-FactoryBody and S-FactoryParams still fold. chant's sandbox refuses to
-    // import project code at all, so it takes the interpretable factories down
-    // with the rest: wiring the two together makes the four negatives agree and
-    // breaks `good.ts` and `named.ts`, reference `fold` against chant `run`.
+    // The two rules are close but not identical: isolated refuses to INVOKE,
+    // so F-Call step 5 fires and step 6 never imports, while chant's
+    // `--sandbox` refuses to import project code at all. Wiring them together
+    // used to trade one disagreement for another, because chant took the
+    // interpretable factories down with the rest: the four negatives agreed
+    // and `good.ts` and `named.ts` broke, reference `fold` against chant `run`.
+    // That was chant#2442 — a host's `Composite` was not recognised as the
+    // registration form, so nothing was interpreted and everything fell to the
+    // invocation arm the sandbox refuses.
     //
-    // Trading one disagreement for another is not honouring the mode. The
-    // contract says an adapter that cannot answer in the mode asked for says
-    // so, so this skips visibly rather than folding in the other mode and
-    // reporting a verdict nobody asked for.
-    if (mode === "isolated") return "unavailable";
+    // A chant without that fix would report exactly those wrong verdicts, so
+    // the probe is a behaviour test rather than a version comparison, the same
+    // posture as `acceptsHostPackages` above.
+    if (mode === "isolated" && !(await interpretsHostComposites())) return "unavailable";
     return foldOnDisk(files, host, mode);
   },
 
