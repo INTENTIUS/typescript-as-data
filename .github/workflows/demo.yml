@@ -27,7 +27,7 @@ permissions:
 env:
   # forgejo-warden at the commit the tutorial was last run against. Move it
   # when the tutorial changes or warden's loader does.
-  WARDEN_REF: 3e20374d79ea7780245acfe49b053d76ad6b516f
+  WARDEN_REF: 86dc640600314ef01793a42b59893ac59d01f66a
   WARDEN_DIR: .forgejo-warden
 
 jobs:
