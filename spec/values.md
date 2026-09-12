@@ -82,7 +82,9 @@ unchanged** (L6.1): the generic walk would rebuild a plain copy and destroy
 the identity J3 exists to preserve. `isIntrinsic` is keyed on a global
 `Symbol.for`, so this holds across separately loaded copies of the core.
 
-Liveness is what F-Capture (J3) and F-CallLeak test.
+Liveness is the *entity test* of F-Identity (J3), and is what F-CallLeak
+tests. F-Capture and F-Import test something broader; F-Identity says which
+is normative and what the difference costs.
 
 ## F-Val-Callable (functions are callable, never values)
 

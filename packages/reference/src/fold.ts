@@ -77,9 +77,9 @@ const isChain = (v: unknown): boolean => v === CHAIN;
 /**
  * F-Val-Live: carries a live object when it, or anything reachable through
  * plain objects and arrays, has a prototype other than the plain ones, or is
- * a function. Distinct from J2's F-Import identity test, which is the broader
- * `typeof object or function`. The specification states both predicates and
- * does not reconcile them; see packages/reference/CAVEATS.md.
+ * a function. This is F-Identity's entity test, the normative one, and the
+ * test F-CallLeak uses. F-Import uses the broader reference test instead, on
+ * purpose; F-Identity in J3 says why.
  */
 export function carriesLiveObject(v: unknown, seen = new Set<unknown>()): boolean {
   if (v === null || typeof v !== "object") return typeof v === "function";

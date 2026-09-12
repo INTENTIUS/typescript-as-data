@@ -1,8 +1,24 @@
 {
-  "rules": ["F-Succ", "F-Capture", "F-Taint"],
+  "rules": [
+    "F-Succ",
+    "F-Capture",
+    "F-Identity",
+    "F-Taint"
+  ],
   "project": true,
-  "verdicts": { "breaker.ts": "run", "shared.ts": "run", "sibling.ts": "run" },
-  "tentative": { "breaker.ts": "run", "shared.ts": "fold", "sibling.ts": "fold" },
-  "taintedBy": { "shared.ts": "breaker.ts", "sibling.ts": "shared.ts" },
-  "note": "The backward edge, two hops. breaker.ts is in the seed and taints shared.ts forward; shared.ts then taints sibling.ts backward because sibling.ts captured its registry object. Nothing in sibling.ts predicts its own verdict, which is why a fallback report has to be able to name the capture."
+  "verdicts": {
+    "breaker.ts": "run",
+    "shared.ts": "run",
+    "sibling.ts": "run"
+  },
+  "tentative": {
+    "breaker.ts": "run",
+    "shared.ts": "fold",
+    "sibling.ts": "fold"
+  },
+  "taintedBy": {
+    "shared.ts": "breaker.ts",
+    "sibling.ts": "shared.ts"
+  },
+  "note": "The backward edge, two hops. breaker.ts is in the seed and taints shared.ts forward; shared.ts then taints sibling.ts backward because sibling.ts captured its registry object. Nothing in sibling.ts predicts its own verdict, which is why a fallback report has to be able to name the capture. The captured value is a plain object, which F-Identity's reference test admits and its entity test would not: the edge exists here because F-Capture over-approximates on purpose."
 }

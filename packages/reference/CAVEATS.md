@@ -4,24 +4,14 @@ This package is written from `spec/` and nothing else (#50). Where the
 specification is silent, ambiguous, or asks for something the package cannot
 supply, the gap is recorded here rather than papered over in the code.
 
-## Two identity predicates, never reconciled
+## Two identity predicates
 
-J2's **F-Import** tests a captured value for identity with "`typeof` object
-**or function**". J4's **F-Val-Live** tests for "a prototype other than
-`Object` or `Array`, or a function". A plain `{ a: 1 }` satisfies the first
-and not the second.
-
-Both appear deliberate. The broad test is right for an import capture: two
-files holding one shared plain object still disagree about which copy is the
-build's, so the capture edge has to exist. The narrow test is right for
-F-CallLeak: a helper that takes a parameter and returns computed plain data
-taints nothing, and a narrower predicate is what keeps it from doing so.
-
-The specification states both and never says they are different tests for
-different questions. This implementation uses F-Import's predicate for import
-and re-export captures and F-Val-Live's for call leaks, which reproduces the
-intent; a reader of the specification alone could implement either one twice
-and be wrong in one of two directions. Filed as #59.
+Resolved in the specification by **F-Identity** (J3), which names the entity
+test and the reference test, says the entity test is the normative one, and
+says F-Import over-approximates on purpose. This package follows it: the
+reference test for import and re-export captures, the entity test for call
+leaks. Kept here as a pointer, because the code comments cite F-Identity and
+a reader of an older revision will not find it (#59).
 
 ## No revival
 
