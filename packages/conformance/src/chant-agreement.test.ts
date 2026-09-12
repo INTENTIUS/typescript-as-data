@@ -26,17 +26,6 @@ const foldsAtDepth = new Set([
   "F-Eval-CallIntrinsic/inside-function-body",
   "F-Eval-CallHelper/inside-function-body",
   "F-Div-Provenance/helper-name-from-project-import",
-  // The composite factory form, from #109, and NOT the same class as the three
-  // above. Triaged with #109's author: these are F-Call step 6 in open mode.
-  // Step 4 fails, step 5 refuses only under isolated, so step 6 imports the
-  // project module and invokes the registered factory, which chant does. The
-  // reference never imports project code, so it behaves as if isolated
-  // everywhere; the fixtures were written to that. The fixtures are wrong for
-  // open mode rather than chant being wrong, and the fix is the harness's
-  // `"mode": "isolated" | "open"` field, after which these run under isolated
-  // with F-IsolatedRefusal and come off this list.
-  "S-FactoryBody/consts-then-a-final-return",
-  "S-FactoryParams/one-plainly-bound-parameter",
   // #110's own corpus limit: a host factory called outside declarator
   // position. chant has no step-7 refusal at all — `applyResolvedValue` sets
   // the export unconditionally and its `isDeclarable || isCompositeInstance`
@@ -83,6 +72,16 @@ describe("chant cross-check (#11)", () => {
     // still disagrees, so the list empties itself the moment chant#2441 lands.
     const held = projectFixtures(all).filter((f) => foldsAtDepth.has(f.id));
     expect(held.map((f) => f.id).sort()).toEqual([...foldsAtDepth].sort());
+
+    // A skip is not agreement. `compareAdapters` reports nothing when one side
+    // answers "unavailable", so without this a chant that had stopped
+    // answering hosted fixtures at all would read as "these now agree, drop
+    // the hold-out" — which is exactly the false signal this guard exists to
+    // prevent, one level up.
+    const reports = await Promise.all(held.map((f) => runProjectFixture(chantAdapter, f)));
+    const skipped = reports.filter((r) => r.skipped).map((r) => r.fixture);
+    expect(skipped, `chant answered none of these, so agreement cannot be read from them:\n${skipped.join("\n")}`).toEqual([]);
+
     const dis = await compareAdapters(referenceAdapter, chantAdapter, held);
     expect(dis.length, "a held-out fixture now agrees — drop it from the hold-out").toBeGreaterThan(0);
   });

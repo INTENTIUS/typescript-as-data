@@ -10,7 +10,7 @@ import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
 import * as ts from "typescript";
 import * as chant from "@intentius/chant";
-import type { ConformanceAdapter, ProjectResult, ProjectVerdict } from "../adapter.js";
+import type { ConformanceAdapter, IsolationMode, ProjectResult, ProjectVerdict } from "../adapter.js";
 import type { ConformanceHost } from "../host.js";
 
 function exportInitializer(sf: ts.SourceFile, name: string): ts.Expression | undefined {
@@ -97,7 +97,7 @@ const projectFn = (
     foldProject?: (
       files: readonly string[],
       intrinsics?: readonly unknown[],
-      options?: { lexiconPackages?: readonly string[] },
+      options?: { lexiconPackages?: readonly string[]; sandbox?: boolean },
     ) => Promise<Map<string, ChantVerdict>>;
   }
 ).foldProject;
@@ -162,7 +162,11 @@ function hostIntrinsics(host: ConformanceHost): unknown[] {
 }
 
 /** chant resolves modules from disk, so a fixture's sources are written out and the paths handed over. */
-async function foldOnDisk(files: Map<string, string>, host?: ConformanceHost): Promise<ProjectResult> {
+async function foldOnDisk(
+  files: Map<string, string>,
+  host?: ConformanceHost,
+  mode?: IsolationMode,
+): Promise<ProjectResult> {
   const root = mkdtempSync(join(tmpdir(), "tsad-conformance-"));
   try {
     const paths: string[] = [];
@@ -208,7 +212,7 @@ export const chantAdapter: ConformanceAdapter = {
     const { line, character } = sf.getLineAndCharacterOfPosition(v.node.getStart());
     return { accepted: false, rule: v.ruleId, line: line + 1, column: character + 1, message: v.message };
   },
-  async foldProject(files, host) {
+  async foldProject(files, host, mode) {
     if (!projectFn) return "unavailable";
     // #2438 — a host used to make a fixture unanswerable here: its entity
     // classes come from a package chant's allowlist could not name, and the
@@ -218,7 +222,22 @@ export const chantAdapter: ConformanceAdapter = {
     // `lexiconPackages` option would resolve none of it, so say so rather than
     // report a wrong verdict.
     if (host && !(await acceptsHostPackages())) return "unavailable";
-    return foldOnDisk(files, host);
+    // tsad#113 — chant has no mode that means `isolated`.
+    //
+    // Its nearest thing is `--sandbox` (chant#1093), and it is not the same
+    // rule. Isolated refuses to INVOKE, so F-Call step 5 fires and step 6 never
+    // imports; interpretation is untouched, which is why the positive cases of
+    // S-FactoryBody and S-FactoryParams still fold. chant's sandbox refuses to
+    // import project code at all, so it takes the interpretable factories down
+    // with the rest: wiring the two together makes the four negatives agree and
+    // breaks `good.ts` and `named.ts`, reference `fold` against chant `run`.
+    //
+    // Trading one disagreement for another is not honouring the mode. The
+    // contract says an adapter that cannot answer in the mode asked for says
+    // so, so this skips visibly rather than folding in the other mode and
+    // reporting a verdict nobody asked for.
+    if (mode === "isolated") return "unavailable";
+    return foldOnDisk(files, host, mode);
   },
   foldExport(source, exportName) {
     const sf = parse(source); const init = exportInitializer(sf, exportName);
