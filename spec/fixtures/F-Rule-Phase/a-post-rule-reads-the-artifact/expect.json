@@ -1,0 +1,21 @@
+{
+  "rules": [
+    "F-Rule-Phase",
+    "F-Rule-Finding"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "pairs.ts": "fold"
+  },
+  "findings": {
+    "artifact": [
+      {
+        "rule": "SHAPES002",
+        "subject": "missing: Bucket",
+        "severity": "warning"
+      }
+    ]
+  },
+  "note": "No Bucket anywhere, so the post-synthesis rule, which reads the serialized artifact and not the namespace, reports the missing-resource form: the subject states what is absent because there is nothing to attach it to (L11.5). The pre-synthesis rule has nothing to say, and a finding it did not make must not appear."
+}

@@ -17,6 +17,18 @@ export interface HostIntrinsic {
   readonly outputKey?: string;
 }
 
+/**
+ * A rule the host supplies (F-Rule-Supply), by identifier. The rule's code is
+ * the implementation's; what the harness carries is the id, the phase, the
+ * rule's own severity (L11.6) and what it checks, in words.
+ */
+export interface HostRule {
+  readonly id: string;
+  readonly phase: "pre" | "post";
+  readonly severity: "error" | "warning" | "info";
+  readonly description: string;
+}
+
 export interface ConformanceHost {
   readonly name: string;
   /** F-Host-Trust arm 1: the specifiers this host owns. */
@@ -25,6 +37,8 @@ export interface ConformanceHost {
   readonly helpers: readonly { name: string; module: string; note: string }[];
   /** Specifier, then export name, to the real value. Revival calls these (F-Val-Fate). */
   readonly values: ReadonlyMap<string, ReadonlyMap<string, unknown>>;
+  /** F-Host-Interface item 7: the rules this host supplies, if any. */
+  readonly rules?: readonly HostRule[];
 }
 
 const DECLARABLE = Symbol.for("tsad.conformance.declarable");
@@ -79,6 +93,14 @@ const SHAPES: ConformanceHost = {
     { name: "count", isTag: false, foldsEagerly: true },
   ],
   helpers: [{ name: "upper", module: "@tsad/shapes", note: "pure string transform, no environment read" }],
+  // Two rules, one per phase (F-Rule-Phase). The pre-synthesis one reads
+  // the folded namespace and names the export it concerns; the
+  // post-synthesis one reads the artifact and, finding nothing to attach
+  // to, reports the missing-resource form (F-Rule-Finding, L11.5).
+  rules: [
+    { id: "SHAPES001", phase: "pre", severity: "error", description: "every Bucket declares a BucketName; the subject is the export that does not" },
+    { id: "SHAPES002", phase: "post", severity: "warning", description: "the artifact declares at least one Bucket; otherwise the subject is `missing: Bucket`" },
+  ],
   values: new Map([
     [
       "@tsad/shapes",

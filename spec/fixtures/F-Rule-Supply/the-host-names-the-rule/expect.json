@@ -1,0 +1,21 @@
+{
+  "rules": [
+    "F-Rule-Supply",
+    "F-Rule-Finding"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "app.ts": "fold"
+  },
+  "findings": {
+    "app.ts": [
+      {
+        "rule": "SHAPES001",
+        "subject": "store",
+        "severity": "error"
+      }
+    ]
+  },
+  "note": "The shapes host supplies two rules by id and phase and no code; the code is the implementation's, and an implementation that carries no rule of that id reports the hook unavailable and the fixture is skipped visibly. Here a Bucket exists, so the post-synthesis rule is silent and only the host's pre-synthesis rule speaks, under the severity the host declared for it (L11.6)."
+}

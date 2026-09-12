@@ -34,5 +34,7 @@ export interface Host {
   readonly helpers: readonly { name: string; module: string; note: string }[];
   readonly ownedSpecifierPrefixes: readonly string[];
   readonly values: HostValues;
+  /** F-Host-Interface item 7: the rules the host supplies, by id. The code for each is this implementation's (rules.ts). */
+  readonly rules?: readonly { id: string; phase: "pre" | "post"; severity: "error" | "warning" | "info" }[];
 }
 export const EMPTY_HOST: Host = { profile: "full", intrinsics: [], helpers: [], ownedSpecifierPrefixes: [], values: new Map() };

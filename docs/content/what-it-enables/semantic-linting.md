@@ -19,4 +19,4 @@ chant's lexicons carry semantic lint rules for each target, running over folded 
 
 ## Where the rule lives
 
-Evaluability, "is this file data", is already specified as the `S-*` classifier and `F-Div-*`. The contract for semantic rules over values, `F-Rule-*`, is [issue #79](https://github.com/INTENTIUS/typescript-as-data/issues/79). It fixes the input a rule sees and its purity, along with its located findings and the two phases. It is stated here as a forward reference rather than a claim.
+Evaluability, "is this file data", is already specified as the `S-*` classifier and `F-Div-*`. The contract for semantic rules over values, `F-Rule-*`, is [`rules.md`](/typescript-as-data/spec/normative/rules/) since spec `1.4`. It fixes the input a rule sees and its purity, along with its findings and the two phases, and each of its six rules has a fixture whose expectation is a set of findings as data.

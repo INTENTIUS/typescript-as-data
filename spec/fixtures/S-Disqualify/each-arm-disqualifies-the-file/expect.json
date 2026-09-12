@@ -1,0 +1,34 @@
+{
+  "rules": [
+    "S-Disqualify",
+    "F-Scan"
+  ],
+  "project": true,
+  "verdicts": {
+    "ok.ts": "fold",
+    "let.ts": "run",
+    "var.ts": "run",
+    "class.ts": "run",
+    "star.ts": "run",
+    "uninitialized.ts": "run",
+    "array.ts": "run",
+    "rest.ts": "run",
+    "default-function.ts": "run"
+  },
+  "rejectRule": {
+    "let.ts": "F-Scan",
+    "var.ts": "F-Scan",
+    "class.ts": "F-Scan",
+    "star.ts": "F-Scan",
+    "uninitialized.ts": "F-Scan",
+    "array.ts": "F-Scan",
+    "rest.ts": "F-Scan",
+    "default-function.ts": "F-Scan"
+  },
+  "exports": {
+    "ok.ts": {
+      "fine": 1
+    }
+  },
+  "note": "One file per disqualifying statement form, and one that folds. A single match rejects the whole file at F-Scan before any expression is judged; export default with an expression is the arm S-ExportDefault admits in data-host, so it is not here."
+}

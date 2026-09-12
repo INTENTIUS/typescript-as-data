@@ -1,0 +1,18 @@
+{
+  "rules": [
+    "S-ReExport",
+    "F-Import"
+  ],
+  "project": true,
+  "verdicts": {
+    "config.ts": "fold",
+    "app.ts": "fold"
+  },
+  "exports": {
+    "app.ts": {
+      "listenOn": 8080,
+      "host": "localhost"
+    }
+  },
+  "note": "A re-export list with a specifier: each element exports the sibling's folded value under the name given, and nothing in this file is evaluated. The values are scalars, so no capture edge is recorded."
+}

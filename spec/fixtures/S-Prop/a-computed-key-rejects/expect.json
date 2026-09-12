@@ -1,0 +1,10 @@
+{
+  "rules": [
+    "S-Prop",
+    "S-Reject"
+  ],
+  "export": "x",
+  "shape": "reject",
+  "fold": "run",
+  "note": "A property key must be a literal key: an identifier, a string or a number. A computed key is a shape rejection even when it would evaluate to a constant."
+}

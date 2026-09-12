@@ -311,8 +311,13 @@ function foldFile(path: string, session: Session): Verdict {
   const scope: Scope = { consts, externals, depth: 0, captures };
   const evalHost = { intrinsics: session.host.intrinsics };
   const exports = new Map<string, unknown>();
-  /** F-Val-Fate: what the declarator produced, revived through this file's own imports. */
+  /**
+   * F-Val-Fate: what the declarator produced, revived through this file's own
+   * imports. In `data-host` revival is serialization (F-Profile-DataHost): no
+   * constructor and no function is invoked, and the envelope is the output.
+   */
   const live = (v: unknown, node: ts.Node, what: string) => {
+    if (session.host.profile === "data-host") return v;
     const { line, character } = sf.getLineAndCharacterOfPosition(node.getStart());
     return revive(v, externals, { line: line + 1, column: character + 1, what });
   };

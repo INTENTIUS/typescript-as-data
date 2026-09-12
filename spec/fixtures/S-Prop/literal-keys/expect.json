@@ -1,0 +1,15 @@
+{
+  "rules": [
+    "S-Prop",
+    "S-Object"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "fold",
+  "value": {
+    "plain": 1,
+    "with-dash": 2,
+    "3": "three"
+  },
+  "note": "The three literal key forms, each with an expression value; the numeric key folds to the string key JavaScript gives it."
+}

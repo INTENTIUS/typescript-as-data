@@ -1,0 +1,19 @@
+{
+  "rules": [
+    "S-ExportNamed",
+    "S-TopConst"
+  ],
+  "project": true,
+  "verdicts": {
+    "app.ts": "fold"
+  },
+  "exports": {
+    "app.ts": {
+      "a": 1,
+      "c": {
+        "two": 2
+      }
+    }
+  },
+  "note": "An export list over local names, one aliased. Each element exports the binding S-TopConst made under the name the list gives it."
+}

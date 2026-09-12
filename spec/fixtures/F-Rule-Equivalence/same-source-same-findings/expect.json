@@ -1,0 +1,21 @@
+{
+  "rules": [
+    "F-Rule-Equivalence"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "buckets.ts": "fold",
+    "helpers.ts": "fold"
+  },
+  "findings": {
+    "buckets.ts": [
+      {
+        "rule": "SHAPES001",
+        "subject": "b",
+        "severity": "error"
+      }
+    ]
+  },
+  "note": "Bucket props built three ways, a same-file arrow, a sibling-file function and a literal, and one finding either way. compareAdapters holds two implementations to the same findings from this source whichever path each took, folding or running; that is the property, and it is measured the day a second implementation exposes the rules hook."
+}

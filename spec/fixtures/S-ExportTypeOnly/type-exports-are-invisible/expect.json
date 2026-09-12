@@ -1,0 +1,19 @@
+{
+  "rules": [
+    "S-ExportTypeOnly",
+    "S-ExportNamed"
+  ],
+  "project": true,
+  "verdicts": {
+    "app.ts": "fold"
+  },
+  "exports": {
+    "app.ts": {
+      "square": {
+        "sides": 4
+      },
+      "x": 4
+    }
+  },
+  "note": "export type { }, an exported type alias and a type-only element of an export list are erased; the gate neither admits nor rejects them. What remains, a value export list and a const, folds."
+}

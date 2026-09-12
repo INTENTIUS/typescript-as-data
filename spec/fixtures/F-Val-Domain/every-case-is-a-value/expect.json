@@ -1,0 +1,49 @@
+{
+  "rules": [
+    "F-Val-Domain",
+    "F-Val-Serializable"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "app.ts": "fold"
+  },
+  "exports": {
+    "app.ts": {
+      "scalars": {
+        "s": "text",
+        "n": 1.5,
+        "b": false,
+        "z": null,
+        "u": "$undefined"
+      },
+      "list": [
+        1,
+        "two",
+        [
+          3
+        ],
+        {
+          "four": 4
+        }
+      ],
+      "bucket": {
+        "entityType": "Bucket",
+        "lexicon": "shapes",
+        "props": {
+          "name": "logs"
+        },
+        "attributes": {}
+      },
+      "reference": {
+        "arn": {
+          "__attrRef": {
+            "entity": "bucket",
+            "attribute": "arn"
+          }
+        }
+      }
+    }
+  },
+  "note": "The closed union's cases that can reach the namespace in the full profile: every scalar including undefined, arrays and objects of them, a resource revived to a live instance, and the one envelope that survives, an attribute reference. Nothing else is a value."
+}

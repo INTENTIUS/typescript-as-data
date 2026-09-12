@@ -1,0 +1,21 @@
+{
+  "rules": [
+    "F-Rule-Input",
+    "F-Rule-Finding"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "buckets.ts": "fold"
+  },
+  "findings": {
+    "buckets.ts": [
+      {
+        "rule": "SHAPES001",
+        "subject": "bad",
+        "severity": "error"
+      }
+    ]
+  },
+  "note": "The pre-synthesis rule reads final values: two Buckets, one without a BucketName. The finding names the export, the rule's id and the rule's own severity; its message is not compared, and no location is asked for because F-Obs-Provenance is optional."
+}

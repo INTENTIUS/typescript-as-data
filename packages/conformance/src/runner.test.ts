@@ -14,10 +14,14 @@ describe("conformance runner (#7) over the reference implementation (#10)", () =
     const failed = reports.filter((r) => !r.pass).map((r) => `${r.fixture}: ${r.failures.join("; ")}`);
     expect(failed, failed.join("\n")).toEqual([]);
   });
-  test("the data-host profile: the reference with an empty host passes every fixture tagged for it (#78)", async () => {
+  test("the data-host profile: the reference passes every fixture tagged for it, a named host reduced to its description (#78)", async () => {
     const tagged = fixtures.filter((f) => f.profiles.includes("data-host"));
     expect(tagged.length).toBeGreaterThan(40);
-    expect(tagged.every((f) => f.kind === "expression" || !f.host)).toBe(true);
+    // A data-host fixture may name a host for its intrinsic registry and trust
+    // set (F-Profile-DataHost, F-Host-Interface items 3 and 5); the adapter is
+    // what drops the classes, helpers and values, and these fixtures are what
+    // would fail if it did not.
+    expect(tagged.some((f) => f.kind === "project" && f.host)).toBe(true);
     const failed = (await runFixtures(referenceDataHostAdapter, tagged)).filter((r) => !r.pass).map((r) => `${r.fixture}: ${r.failures.join("; ")}`);
     expect(failed, failed.join("\n")).toEqual([]);
   });

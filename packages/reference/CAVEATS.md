@@ -71,9 +71,9 @@ chant as F-Import's text says; it now does both (#96). A project-local
 function is excluded at the import, since it is a callable rather than a
 value and F-CallLeak decides its edge at the call.
 
-## No rules, and no provenance
+## Two rules, and no provenance
 
-`rules.md` (spec `1.4`) specifies the contract a semantic rule runs under. This package runs none: it has no rule hook, and no value provenance, so a finding it produced could name no source line. Both wait on the harness half (#101).
+`rules.md` (spec `1.4`) specifies the contract a semantic rule runs under. This package carries the two rules the `shapes` host names, `SHAPES001` over the folded namespace and `SHAPES002` over its JSON serialization (`rules.ts`, #101), and nothing else: a host that names a rule this file does not carry gets `"unavailable"`. A file that runs has no folded namespace here, so no rule sees it; chant answers that case by executing the file. There is no value provenance, so a finding names an export and never a source line, which `F-Rule-Finding` allows.
 
 ## No filesystem, no module resolution algorithm
 
