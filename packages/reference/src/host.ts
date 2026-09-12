@@ -24,10 +24,15 @@ export function intrinsicCallFoldsEagerly(def: { isTag?: boolean; foldsEagerly?:
  */
 export type HostValues = ReadonlyMap<string, ReadonlyMap<string, unknown>>;
 
+/** F-Profile: which profile the implementation is being judged in. */
+export type Profile = "full" | "data-host";
+
 export interface Host {
+  /** Defaults to `full`. `data-host` admits S-ExportDefault (spec 1.2) and is what an evaluator with no runtime declares. */
+  readonly profile?: Profile;
   readonly intrinsics: readonly IntrinsicDef[];
   readonly helpers: readonly { name: string; module: string; note: string }[];
   readonly ownedSpecifierPrefixes: readonly string[];
   readonly values: HostValues;
 }
-export const EMPTY_HOST: Host = { intrinsics: [], helpers: [], ownedSpecifierPrefixes: [], values: new Map() };
+export const EMPTY_HOST: Host = { profile: "full", intrinsics: [], helpers: [], ownedSpecifierPrefixes: [], values: new Map() };

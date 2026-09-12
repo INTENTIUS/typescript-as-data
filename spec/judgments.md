@@ -64,8 +64,11 @@ another language embeds, or a JavaScript tool that folds and never runs. It is
 | `F-Eval-CallHelper`, `F-Eval-CallEager`, `F-Host-Admission`, `F-Host-NoSubstitution` | absent: there is nothing to invoke. A registered helper or eager name is an ordinary unresolved identifier |
 | `F-Eval-Tagged`, `F-Eval-CallIntrinsic` | apply; the envelope stays an envelope |
 | `F-Call`, `F-Host-Composite` | interpretation only (step 4). A factory that is not interpretable is an error, never invoked |
+| `S-LocalFunction`, `S-CallLocal` | apply in full: a same-file or project-imported function is called by interpretation, which needs no runtime |
+| `S-ExportDefault` | applies: a default export is the declarator named `default`. In `full` it is permitted, not required, and chant does not yet admit it |
 | `F-Eval-New`, `F-Prebuild`, `F-Count` | permitted, not required. An implementation that supports `new` folds it to a `{__resource}` envelope and binds the same envelope at every reference; one that does not rejects `new` under `F-Eval-Reject`. A fixture that uses `new` is tagged `full` unless it says otherwise |
 | `F-Host-Interface` | the host is a description, not code: the intrinsic registry (item 3), the trust set (item 5), and the serialization mapping for envelopes. Items 1, 2, 4 and 6 are absent |
+| `F-Rule-*` | apply; a rule is code in the evaluator's own language (F-Rule-Supply). A source location in a finding stays optional, since provenance is |
 | `F-Obs-Counters` | trivially satisfied: every counter is zero |
 | `F-NoOwnExecution`, `F-Obs-Report`, `F-Obs-Messages`, `F-Reason` | apply in full |
 
@@ -102,10 +105,12 @@ numeric literal to `Number(text)`; `true`, `false`, `null` to themselves.
    externals[n]` (the one instance F-Prebuild put there, R4.6); else
    **reject** - re-folding would construct a duplicate (F-Div-SameFileNew).
 2. `n ∈ consts` otherwise: `⟦n⟧ = ⟦consts[n]⟧`.
-3. `n ∈ externals`: if it is a `FoldableFunction`, **reject** (F-Val-Callable);
-   if it is a function and `ρ` registers `n` as eager, **reject** ("call it
-   instead"); otherwise `⟦n⟧ = externals[n]` unchanged, a live object passes
-   through (F-Val-Live).
+3. `n ∈ externals`: if it is callable, a `FoldableFunction` or any function
+   the host supplied, **reject** (F-Val-Callable): a callable is reached by
+   `new`, by a registered call or tag, or by F-Eval-CallLocal, never as a
+   value, and a registered eager name says "call it instead" (#69).
+   Otherwise `⟦n⟧ = externals[n]` unchanged, a live object passes through
+   (F-Val-Live).
 4. `n = process`: **reject** with the build-parameters message (R8).
 5. Otherwise **reject** `unresolved identifier: n` (F-Reference).
 
@@ -190,7 +195,9 @@ checked here (F-Div-Provenance); revival checks it.
 `FoldableFunction` (checked *after* the two registered shapes, so a
 registered name keeps its meaning):
 1. `φ`'s declaration must satisfy S-FnBody, else reject naming the reason.
-2. If `depth ≥ 32`, reject ("call depth exceeded").
+2. If the implementation's call-depth bound is exceeded (F-Depth), reject
+   ("call depth exceeded"). The value is the implementation's; exhaustion
+   is a fallback and never wrong output (#71).
 3. A spread argument rejects. Each `aᵢ` folds in the **caller's** `Γ`.
 4. The body folds in `Γ' = (consts_φ, externals_φ, depth + 1)`, the
    *defining* module's scope, with each parameter bound by removing its
@@ -249,7 +256,8 @@ about what may be *imported*; this is about what may be *folded*.
 **F-Scan.** The statement gate (grammar §1). If any exported statement matches
 S-Disqualify, `run(reason)` naming the construct. Otherwise the admitted
 declarators are, in source order: resource, single, destructure,
-named-export, re-export, function.
+named-export, re-export, function. In `data-host` a seventh kind, default,
+is admitted as well (S-ExportDefault).
 
 **F-NoExports.** If the gate admits the module but yields **zero**
 declarators, a file with no exports, or only type-only ones, the verdict is
@@ -259,10 +267,13 @@ folding to have anything to produce; it is not folded to an empty namespace.
 ### Scope
 
 **F-Bind.** `consts` is every top-level `const ⟨Identifier⟩ = e` (R6.6,
-exported or not); `locals` is every top-level binding the resolver may read
-by name, the same set, plus destructured locals from a composite call
-(`const { a } = C({…})`). Resolution consults `locals`/`consts` before
-`externals` (R6.6).
+exported or not) whose `e` is not a function; `locals` is every top-level
+binding the resolver may read by name, the same set, plus destructured locals
+from a composite call (`const { a } = C({…})`). Every S-LocalFunction binds
+its name in `externals` to a `FoldableFunction` for the file's own scope
+whether or not it is exported (spec `1.2`). A same-file call therefore
+reaches F-Eval-CallLocal, and a use as a value is step 3's rejection.
+Resolution consults `locals`/`consts` before `externals` (R6.6).
 
 **F-Import.** For each named import binding `n` of `f`:
 
@@ -271,7 +282,12 @@ by name, the same set, plus destructured locals from a composite call
   that resolves to it, then `externals[n] = P`.
 - *bare specifier, active lexicon package* (R2.1 arm 1): `externals[n]` is
   the package's real export, obtained by importing the already-loaded
-  package. A lexicon package is never a member of `F` and is never folded.
+  package. "Active" is F-Host-Interface item 5's trust set, the packages
+  this build resolved and loaded; a build that supplies no package list has
+  an empty set, and every bare specifier then takes the next arm
+  (F-Host-Trust, L9.4). A callable export is bound like any other and is
+  reached only by the form that invokes it (F-Eval-Ident step 3, #69). A
+  lexicon package is never a member of `F` and is never folded.
 - *bare specifier, anything else*: **not resolved**. `n` is absent from
   `externals`; a reference to it is an unresolved identifier (F-Reference).
 - *project specifier* `g`: `g` is folded first (F-Memo: at most once per
@@ -326,8 +342,10 @@ F-IsolatedRefusal like any other.
   instance rather than building another.
 - *re-export* `export { a } from "./g"`: `X_g[a]`, with `g ∈ L(f)` if it has
   identity, a re-export is a capture.
-- *function* `export function φ`: `X[φ]` is a `FoldableFunction` marker
-  (R1.3); the body's own foldability is judged at the call, never here.
+- *function* `export function φ`: `X[φ]` is the `FoldableFunction` F-Bind
+  bound (R1.3); the body's own foldability is judged at the call, never here.
+- *default* `export default e` (`data-host`, S-ExportDefault): `X["default"]`
+  is `⟦e⟧` revived, as *single* is; `import n from "./g"` binds it (F-Import).
 
 **F-Call.** A call in declarator position, callee `c`:
 
@@ -611,9 +629,13 @@ file *imported*; none of it is code the file *wrote*. (Was R2.)
 | `MAX_INTERPRETATION_DEPTH` | 16 | nested factory interpretation |
 | `MAX_RESOLUTION_DEPTH` | 200 | the cross-file resolution stack |
 
-- The values must be stated.
+- The values must be stated, and they are the implementation's to choose;
+  F-Eval-CallLocal step 2 names no number (#71).
 - Exhaustion must produce `run`, never a failure and never a silent change of
-  evaluation mode.
+  evaluation mode. How the recursion is counted is also the
+  implementation's: chant's call-depth bound counts nested folded bodies on
+  its expression path, a cross-file recursion is bounded by the engine's
+  stack instead, and the overflow is caught and reported as a fallback.
 - chant has met both for all three bounds since v0.68.0, when the
   interpretation bound stopped degrading to invocation under a `fold` verdict
   and began throwing a propagated depth error that names the bound and falls

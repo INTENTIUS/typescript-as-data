@@ -24,7 +24,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { relative, resolve, dirname } from "node:path";
+import { relative, resolve, dirname, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as ts from "typescript";
 import { foldProject as chantFoldProject } from "@intentius/chant";
@@ -49,8 +49,10 @@ export interface CorpusEntry {
   readonly srcDir: string;
   /** The intrinsic registry this entry builds with, from the lexicons its own config declares. */
   readonly intrinsics: readonly ChantIntrinsic[];
-  /** True when the entry's `chant.config.ts` declares build parameters — see {@link EntryReport}. */
-  readonly buildParams: boolean;
+  /** The lexicon names the entry's own config declares: F-Host-Trust arm 1's active set, which chant's entry takes since chant#2422. */
+  readonly lexicons: readonly string[];
+  /** The entry's build parameters, resolved the way the CLI resolves them, so a file reading `params.<name>` folds on chant's side. */
+  readonly buildParams: Readonly<Record<string, string | number | boolean>>;
 }
 
 export interface ChantCheckout {
@@ -92,8 +94,8 @@ export function findChantCheckout(): ChantCheckout | undefined {
  */
 export async function discoverCorpus(checkout: ChantCheckout): Promise<CorpusEntry[]> {
   const mod = (await import(/* @vite-ignore */ resolve(checkout.root, "examples", "differential-corpus.ts"))) as {
-    discoverCorpus(): Promise<{ name: string; srcDir: string; intrinsics: readonly ChantIntrinsic[] }[]>;
-    entryBuildParams(entry: unknown): Promise<readonly unknown[]>;
+    discoverCorpus(): Promise<{ name: string; srcDir: string; intrinsics: readonly ChantIntrinsic[]; lexicons: readonly string[] }[]>;
+    entryBuildParams(entry: unknown): Promise<readonly { name: string; value: string | number | boolean }[]>;
   };
   const entries = await mod.discoverCorpus();
   return Promise.all(
@@ -101,7 +103,8 @@ export async function discoverCorpus(checkout: ChantCheckout): Promise<CorpusEnt
       name: e.name,
       srcDir: e.srcDir,
       intrinsics: e.intrinsics,
-      buildParams: (await mod.entryBuildParams(e)).length > 0,
+      lexicons: e.lexicons,
+      buildParams: Object.fromEntries((await mod.entryBuildParams(e)).map((p) => [p.name, p.value])),
     })),
   );
 }
@@ -141,6 +144,12 @@ async function buildHost(checkout: ChantCheckout, entry: CorpusEntry, sources: R
       unloadable.add(specifier);
     }
   }
+  // F-Import's first arm: `params` is the build's binding, not the module's
+  // live export. chant substitutes the resolved parameters at fold time; the
+  // reference is handed the same values through the host.
+  if (specifiers.has("@intentius/chant/params")) {
+    values.set("@intentius/chant/params", new Map([["params", entry.buildParams]]));
+  }
   return {
     intrinsics: entry.intrinsics,
     helpers: FOLDABLE_AUTHORING_HELPERS,
@@ -167,25 +176,15 @@ export type Limit =
   /** The reference has no bindings for a package it cannot load (#20 is not finished). */
   | "host"
   /** The reference implements no composite factory form; see `packages/reference/CAVEATS.md`. */
-  | "composite"
-  /** chant's whole-build entry takes no build parameters, so a file reading one cannot fold on its side. */
-  | "build-params"
-  /**
-   * chant's whole-build entry takes no lexicon list, so F-Host-Trust arm 1 is
-   * disabled on its side (L9.4) and a host data export read as a value is an
-   * unresolved identifier there, exactly as the rule says it must be for a
-   * build with no package list. The reference was handed the same packages'
-   * real exports, so the two were asked different questions.
-   */
-  | "lexicon-list";
+  | "composite";
 
-/** Which implementation a limit disarms. A limit can only make its own side refuse more. */
-export const LIMIT_SIDE: Readonly<Record<Limit, "reference" | "chant">> = {
-  host: "reference",
-  composite: "reference",
-  "build-params": "chant",
-  "lexicon-list": "chant",
-};
+/**
+ * Both limits disarm the reference, and a limit can only make its own side
+ * refuse more. Two chant-side limits used to sit here, for a lexicon list and
+ * build parameters chant's entry could not be given; chant-v0.71.0 takes both
+ * (chant#2422) and they are gone (#96).
+ */
+export const LIMIT_SIDE: Readonly<Record<Limit, "reference">> = { host: "reference", composite: "reference" };
 
 export interface FileComparison {
   readonly file: string;
@@ -193,10 +192,10 @@ export interface FileComparison {
   readonly reference: Side;
   /** The first limit that applies, for the comparable-set accounting. */
   readonly limit?: Limit;
-  /** A chant-side limit that also applies, whichever side `limit` names. A file can be disarmed on both sides at once. */
-  readonly chantLimit?: "lexicon-list" | "build-params";
   /** Both folded, and their export namespaces were compared as data. */
   readonly values?: "equal" | "differ" | "not-data";
+  /** Where the two encodings first differ, with a little context either side, so a difference is a diff and not a verdict. */
+  readonly valuesDiff?: string;
   readonly referenceRule?: string;
   readonly referenceReason?: string;
   readonly chantReason?: string;
@@ -271,45 +270,10 @@ function usesCompositeFactory(source: string, path: string, host: CorpusHost): b
   return found;
 }
 
-/**
- * True when the file uses a host-owned binding in a position chant can only
- * resolve through its active-lexicon set: as a value, as the object of a
- * member read, or as the callee of a registered eager intrinsic. A
- * constructor, an intrinsic tag and a factory call are resolved by other
- * paths and do not need the list. Mirrors `resolveActiveLexiconExport`'s
- * gate in chant, from syntax alone.
- */
-function needsLexiconList(source: string, path: string, host: CorpusHost): boolean {
-  const bound = hostBoundNames(source, path, host);
-  if (bound.size === 0) return false;
-  const eager = new Set(host.intrinsics.filter((i) => i.foldsEagerly).map((i) => i.name));
-  const sf = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
-  let found = false;
-  const visit = (node: ts.Node): void => {
-    if (found) return;
-    if (ts.isIdentifier(node) && bound.has(node.text)) {
-      const parent = node.parent;
-      const isDeclarationSite = ts.isImportSpecifier(parent) || ts.isImportClause(parent) || ts.isNamespaceImport(parent);
-      const isPropertyName = ts.isPropertyAccessExpression(parent) && parent.name === node;
-      const isTypePosition = ts.isTypeReferenceNode(parent) || ts.isQualifiedName(parent);
-      const isConstructor = ts.isNewExpression(parent) && parent.expression === node;
-      const isTag = ts.isTaggedTemplateExpression(parent) && parent.tag === node;
-      const isCallee = ts.isCallExpression(parent) && parent.expression === node;
-      if (isDeclarationSite || isPropertyName || isTypePosition || isConstructor || isTag) return;
-      if (isCallee && !eager.has(node.text)) return;
-      found = true;
-      return;
-    }
-    ts.forEachChild(node, visit);
-  };
-  ts.forEachChild(sf, visit);
-  return found;
-}
-
 /** The reference's own resolution: a relative specifier against the project's key set. */
 function resolveKey(from: string, spec: string, keys: ReadonlySet<string>): string | undefined {
   const base = from.includes("/") ? from.slice(0, from.lastIndexOf("/") + 1) : "";
-  const joined = spec.startsWith("./") ? base + spec.slice(2) : spec.startsWith("../") ? spec : base + spec;
+  const joined = posix.normalize(base + spec).replace(/^\.\//, "");
   for (const cand of [joined, `${joined}.ts`, `${joined}/index.ts`]) if (keys.has(cand)) return cand;
   return undefined;
 }
@@ -374,9 +338,14 @@ function spread(
  * encoding at all, a function or a symbol, where only the verdict can be
  * compared.
  */
-function compareData(a: unknown, b: unknown): "equal" | "differ" | "not-data" {
+function compareData(a: unknown, b: unknown): { values: "equal" | "differ" | "not-data"; valuesDiff?: string } {
   const encode = (v: unknown): string | undefined => {
-    const seen = new WeakSet<object>();
+    // Ancestors on the current path, not everything seen: an object reached
+    // twice by different paths is shared, not cyclic, and F-Memo makes sharing
+    // the normal case. Marking it would report a difference between an
+    // implementation that shares and one that copies, which is not a value
+    // difference.
+    const ancestors = new Set<object>();
     let clean = true;
     const walk = (x: unknown, depth: number): unknown => {
       if (x === null || typeof x !== "object") {
@@ -387,18 +356,23 @@ function compareData(a: unknown, b: unknown): "equal" | "differ" | "not-data" {
       // A cycle and an exhausted budget both encode as a marker rather than as
       // a value, so two encodings that reach one agree there instead of both
       // becoming incomparable.
-      if (seen.has(x)) return "[cycle]";
+      if (ancestors.has(x)) return "[cycle]";
       if (depth > 24) return "[deep]";
-      seen.add(x);
-      if (Array.isArray(x)) return x.map((e) => walk(e, depth + 1));
-      const out: Record<string, unknown> = {};
-      const proto = Object.getPrototypeOf(x) as object | null;
-      if (proto !== Object.prototype && proto !== null) out["[class]"] = (x.constructor as { name?: string })?.name ?? "?";
-      for (const key of Reflect.ownKeys(x).filter((k): k is string => typeof k === "string").sort()) {
-        const descriptor = Object.getOwnPropertyDescriptor(x, key);
-        if (descriptor && "value" in descriptor) out[key] = walk(descriptor.value, depth + 1);
+      ancestors.add(x);
+      let result: unknown;
+      if (Array.isArray(x)) result = x.map((e) => walk(e, depth + 1));
+      else {
+        const out: Record<string, unknown> = {};
+        const proto = Object.getPrototypeOf(x) as object | null;
+        if (proto !== Object.prototype && proto !== null) out["[class]"] = (x.constructor as { name?: string })?.name ?? "?";
+        for (const key of Reflect.ownKeys(x).filter((k): k is string => typeof k === "string").sort()) {
+          const descriptor = Object.getOwnPropertyDescriptor(x, key);
+          if (descriptor && "value" in descriptor) out[key] = walk(descriptor.value, depth + 1);
+        }
+        result = out;
       }
-      return out;
+      ancestors.delete(x);
+      return result;
     };
     try {
       const encoded = JSON.stringify(walk(v, 0));
@@ -409,8 +383,12 @@ function compareData(a: unknown, b: unknown): "equal" | "differ" | "not-data" {
   };
   const left = encode(a);
   const right = encode(b);
-  if (left === undefined || right === undefined) return "not-data";
-  return left === right ? "equal" : "differ";
+  if (left === undefined || right === undefined) return { values: "not-data" };
+  if (left === right) return { values: "equal" };
+  let i = 0;
+  while (i < left.length && left[i] === right[i]) i++;
+  const at = (s: string) => s.slice(Math.max(0, i - 80), i + 120);
+  return { values: "differ", valuesDiff: `at ${i}: chant …${at(left)}… reference …${at(right)}…` };
 }
 
 /** Run one corpus entry through both implementations and classify every file. */
@@ -420,25 +398,18 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
   const sources = new Map(paths.map((p) => [keyOf(p), readFileSync(p, "utf8")]));
 
   const host = await buildHost(checkout, entry, sources);
-  const chant = await chantFoldProject(paths, entry.intrinsics as never);
+  const chant = await chantFoldProject(paths, entry.intrinsics as never, { lexicons: entry.lexicons, buildParams: entry.buildParams });
   const reference = referenceFoldProject(sources, host);
 
   const hostSeed = new Set<string>();
   const compositeSeed = new Set<string>();
-  const lexiconSeed = new Set<string>();
   for (const [key, source] of sources) {
     const { bare } = specifiersOf(source, key);
     if (bare.some((s) => !isChantOwnedSpecifier(s) || host.unloadable.has(s))) hostSeed.add(key);
     if (usesCompositeFactory(source, key, host)) compositeSeed.add(key);
-    if (needsLexiconList(source, key, host)) lexiconSeed.add(key);
   }
   const hostLimited = spread(hostSeed, sources, reference.taintSource);
   const compositeLimited = spread(compositeSeed, sources, reference.taintSource);
-  // A chant-side limit spreads along chant's own edges: a file chant tainted
-  // from a lexicon-limited file is limited for the same reason.
-  const chantTaint = new Map<string, string>();
-  for (const [abs, v] of chant) if (v.taintedBy) chantTaint.set(keyOf(abs), keyOf(v.taintedBy.from));
-  const lexiconLimited = spread(lexiconSeed, sources, chantTaint);
 
   const comparisons: FileComparison[] = paths.map((abs) => {
     const file = keyOf(abs);
@@ -446,22 +417,12 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
     const rv = reference.verdicts.get(file);
     const chantSide: Side = cv?.verdict === "fold" ? "fold" : "run";
     const referenceSide: Side = rv?.kind === "fold" ? "fold" : "run";
-    const limit: Limit | undefined = hostLimited.has(file)
-      ? "host"
-      : compositeLimited.has(file)
-        ? "composite"
-        : lexiconLimited.has(file)
-          ? "lexicon-list"
-          : entry.buildParams
-            ? "build-params"
-            : undefined;
-    const chantLimit = lexiconLimited.has(file) ? "lexicon-list" : entry.buildParams ? "build-params" : undefined;
+    const limit: Limit | undefined = hostLimited.has(file) ? "host" : compositeLimited.has(file) ? "composite" : undefined;
     const base: FileComparison = {
       file,
       chant: chantSide,
       reference: referenceSide,
       limit,
-      chantLimit,
       referenceRule: rv?.kind === "run" ? rv.rule : undefined,
       referenceReason: rv?.kind === "run" ? rv.reason : undefined,
       chantReason:
@@ -472,7 +433,7 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
     if (!cv || !rv || rv.kind !== "fold" || chantSide !== "fold") return base;
     const left = Object.fromEntries(cv.exports ?? new Map());
     const right = Object.fromEntries(rv.exports);
-    return { ...base, values: compareData(left, right) };
+    return { ...base, ...compareData(left, right) };
   });
   return { name: entry.name, files: paths.length, comparisons };
 }
@@ -495,25 +456,22 @@ export interface CorpusSummary {
   /** Differences inside the comparable set: real, and each one triaged. */
   readonly disagreements: readonly Disagreement[];
   /**
-   * A reference fold where chant runs, on every file where nothing disarmed
-   * chant. A reference-side limit can only make the reference refuse more,
-   * never less, so under one of those a fold the reference reaches and chant
-   * does not has no benign explanation and is listed wherever it appears.
+   * A reference fold where chant runs, anywhere in the corpus. Both limits are
+   * the reference's and can only make it refuse more, never less, so a fold it
+   * reaches and chant does not has no benign explanation wherever it appears.
    */
   readonly referenceMorePermissive: readonly Disagreement[];
 }
 
 export function summarize(reports: readonly EntryReport[]): CorpusSummary {
   let files = 0, comparable = 0, comparableAgreed = 0, comparableBothFold = 0, comparableValuesNotData = 0;
-  const limited: Record<Limit, number> = { host: 0, composite: 0, "build-params": 0, "lexicon-list": 0 };
+  const limited: Record<Limit, number> = { host: 0, composite: 0 };
   const disagreements: Disagreement[] = [];
   const referenceMorePermissive: Disagreement[] = [];
   for (const report of reports) {
     files += report.files;
     for (const c of report.comparisons) {
-      if (c.reference === "fold" && c.chant === "run" && !c.chantLimit) {
-        referenceMorePermissive.push({ ...c, entry: report.name });
-      }
+      if (c.reference === "fold" && c.chant === "run") referenceMorePermissive.push({ ...c, entry: report.name });
       if (c.limit) { limited[c.limit]++; continue; }
       comparable++;
       if (c.chant === c.reference && c.values !== "differ") comparableAgreed++;
@@ -531,16 +489,16 @@ export function summarize(reports: readonly EntryReport[]): CorpusSummary {
 /** The committed evidence artifact. Numbers here are produced by the run, never typed in. */
 export function renderCorpusReport(
   checkout: ChantCheckout,
-  engine: string,
+  engine: { name: string; specVersion: string },
   summary: CorpusSummary,
   reports: readonly EntryReport[],
 ): string {
   const rows = reports.map((r) => {
     const s = summarize([r]);
-    return `| \`${r.name}\` | ${r.files} | ${s.comparable} | ${s.comparableAgreed} | ${s.limited.host} | ${s.limited.composite} | ${s.limited["lexicon-list"]} | ${s.limited["build-params"]} |`;
+    return `| \`${r.name}\` | ${r.files} | ${s.comparable} | ${s.comparableAgreed} | ${s.limited.host} | ${s.limited.composite} |`;
   });
   const line = (d: Disagreement) =>
-    `- \`${d.entry}/${d.file}\`: chant ${d.chant}, reference ${d.reference}${d.values ? `, values ${d.values}` : ""}` +
+    `- \`${d.entry}/${d.file}\`: chant ${d.chant}, reference ${d.reference}${d.values ? `, values ${d.values}` : ""}${d.valuesDiff ? ` (${d.valuesDiff})` : ""}` +
     `${d.referenceReason ? ` — reference ${d.referenceRule}: ${d.referenceReason}` : ""}` +
     `${d.chantReason ? ` — chant: ${d.chantReason}` : ""}`;
   return [
@@ -548,17 +506,17 @@ export function renderCorpusReport(
     "",
     "Generated by `npm run corpus` (#25). Do not edit.",
     "",
-    `- engine under test: \`${engine}\``,
+    `- engine under test: \`${engine.name}\`, declaring spec \`${engine.specVersion}\``,
     `- corpus: chant \`${checkout.corpusVersion}\` at \`${checkout.revision}\`, ${summary.entries} entries, ${summary.files} files`,
     "",
     "## Totals",
     "",
-    "| Files | Comparable | Agreed | Both fold | No host | No composite form | No lexicon list | Build params |",
-    "|---|---|---|---|---|---|---|---|",
+    "| Files | Comparable | Agreed | Both fold | No host | No composite form |",
+    "|---|---|---|---|---|---|",
     `| ${summary.files} | ${summary.comparable} | ${summary.comparableAgreed} | ${summary.comparableBothFold} |` +
-      ` ${summary.limited.host} | ${summary.limited.composite} | ${summary.limited["lexicon-list"]} | ${summary.limited["build-params"]} |`,
+      ` ${summary.limited.host} | ${summary.limited.composite} |`,
     "",
-    "The first two limits disarm the reference; the last two disarm chant, whose whole-build entry takes neither a lexicon list nor build parameters.",
+    "Both limits disarm the reference. chant is given the entry's lexicons and build parameters, the inputs a real build has.",
     "",
     `Of the comparable files both implementations folded, ${summary.comparableValuesNotData} held something that is not data on one side or the other, so only the verdict was compared there.`,
     "",
@@ -574,8 +532,8 @@ export function renderCorpusReport(
     "",
     "## Per entry",
     "",
-    "| Entry | Files | Comparable | Agreed | No host | No composite form | No lexicon list | Build params |",
-    "|---|---|---|---|---|---|---|---|",
+    "| Entry | Files | Comparable | Agreed | No host | No composite form |",
+    "|---|---|---|---|---|---|",
     ...rows,
     "",
   ].join("\n");

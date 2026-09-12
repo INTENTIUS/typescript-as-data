@@ -60,10 +60,28 @@ reference to it reads that instance. This package originally rejected such a
 reference, which was the reading F-Eval-Ident step 1 licensed before the rule
 existed; the corpus found twelve chant examples that fold the shape.
 
+## Capture at the import, and over the namespace
+
+**F-Import** records a capture at the import for any imported value with
+identity, by F-Identity's reference test; **F-Capture** is decided over the
+produced namespace as well. This package did only the second until the
+corpus at `chant-v0.71.0` showed three files that read a primitive out of an
+imported object, held no object in their namespace, and were tainted by
+chant as F-Import's text says; it now does both (#96). A project-local
+function is excluded at the import, since it is a callable rather than a
+value and F-CallLeak decides its edge at the call.
+
+## No rules, and no provenance
+
+`rules.md` (spec `1.4`) specifies the contract a semantic rule runs under. This package runs none: it has no rule hook, and no value provenance, so a finding it produced could name no source line. Both wait on the harness half (#101).
+
 ## No filesystem, no module resolution algorithm
 
-`foldProject` takes a map of path to source. Specifier resolution is the three
-obvious candidates, `g`, `g.ts`, `g/index.ts`, against that map's keys. The
+`foldProject` takes a map of path to source. Specifier resolution joins the
+specifier to the importer's directory, normalises `..` segments, and tries
+the three obvious candidates, `g`, `g.ts`, `g/index.ts`, against that map's
+keys. An earlier version left `../` specifiers unjoined, which dropped an
+import edge and a forward taint with it; the corpus found it (#96). The
 specification does not define a resolution algorithm, and does not need to:
 J3's `→` is "`f` imports `g`, `g ∈ F`" for whatever resolution the host uses.
 A conformance fixture therefore never depends on a resolution subtlety.

@@ -13,9 +13,10 @@
  * object either way as far as F-Capture's identity test is concerned. What
  * this file does not do is in `CAVEATS.md`.
  */
+import { posix } from "node:path";
 import * as ts from "typescript";
 import { EMPTY_HOST, type Host } from "./host.js";
-import { foldExpr, collectConsts, FoldRejection, FoldableFunction, type Scope } from "./fold.js";
+import { foldExpr, collectConsts, collectLocalFunctions, FoldRejection, FoldableFunction, isFoldableFunction, type Scope } from "./fold.js";
 import { registerHelpers, registerHostSpecifiers, isHostOwnedSpecifier } from "./foldable-helpers.js";
 import { revive } from "./revive.js";
 import type { FnDecl } from "./fnbody.js";
@@ -27,10 +28,16 @@ export type Verdict =
 const parse = (path: string, source: string) => ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
 const isProjectSpecifier = (s: string) => s.startsWith(".") || s.startsWith("/");
 
-/** Resolve a relative specifier against the project's own key set. */
+/**
+ * Resolve a relative specifier against the project's own key set: the
+ * specifier joined to the importer's directory and normalised, then the three
+ * obvious candidates. `..` segments are resolved; the corpus found a version
+ * of this that left `../../config` unjoined, which dropped the import edge and
+ * with it the forward taint, so a file chant ran folded here (#96).
+ */
 function resolveKey(from: string, spec: string, files: ReadonlyMap<string, string>): string | undefined {
   const base = from.includes("/") ? from.slice(0, from.lastIndexOf("/") + 1) : "";
-  const joined = spec.startsWith("./") ? base + spec.slice(2) : spec.startsWith("../") ? spec : base + spec;
+  const joined = posix.normalize(base + spec).replace(/^\.\//, "");
   for (const cand of [joined, `${joined}.ts`, `${joined}/index.ts`]) if (files.has(cand)) return cand;
   return undefined;
 }
@@ -41,14 +48,22 @@ type Declarator =
   | { kind: "destructure"; expr: ts.Expression; elements: { key: string; as: string }[] }
   | { kind: "named-export"; elements: { local: string; as: string }[] }
   | { kind: "re-export"; specifier: string; elements: { imported: string; as: string }[] }
-  | { kind: "function"; name: string; fn: FnDecl };
+  | { kind: "function"; name: string; fn: FnDecl }
+  | { kind: "default"; expr: ts.Expression };
 
 interface Scan { declarators: Declarator[]; disqualified?: string }
 
-function scanExports(sf: ts.SourceFile): Scan {
+function scanExports(sf: ts.SourceFile, admitDefault: boolean): Scan {
   const out: Declarator[] = [];
   for (const st of sf.statements) {
-    if (ts.isExportAssignment(st)) return { declarators: out, disqualified: "`export default` is not foldable" };
+    if (ts.isExportAssignment(st)) {
+      // S-ExportDefault (spec 1.2, #94): in data-host, `export default ⟨Expr⟩`
+      // is the declarator named `default`; in full it stays S-Disqualify until
+      // chant admits it. `export = …` disqualifies in both.
+      if (st.isExportEquals || !admitDefault) return { declarators: out, disqualified: "`export default` is not foldable" };
+      out.push({ kind: "default", expr: st.expression });
+      continue;
+    }
     if (ts.isExportDeclaration(st)) {
       if (st.isTypeOnly) continue;
       if (!st.exportClause || !ts.isNamedExports(st.exportClause)) {
@@ -69,7 +84,7 @@ function scanExports(sf: ts.SourceFile): Scan {
     );
     if (ts.isFunctionDeclaration(st) && exported) {
       if (st.modifiers?.some((m) => m.kind === ts.SyntaxKind.DefaultKeyword) || !st.name) {
-        return { declarators: out, disqualified: "`export default` is not foldable" };
+        return { declarators: out, disqualified: "`export default function` is not foldable" };
       }
       if (st.body) out.push({ kind: "function", name: st.name.text, fn: st });
       continue;
@@ -219,7 +234,7 @@ function foldFile(path: string, session: Session): Verdict {
   const sf = parse(path, source);
 
   // F-Scan
-  const scan = scanExports(sf);
+  const scan = scanExports(sf, session.host.profile === "data-host");
   if (scan.disqualified) return { kind: "run", rule: "F-Scan", reason: scan.disqualified };
   // F-NoExports
   if (scan.declarators.length === 0) return { kind: "run", rule: "F-NoExports", reason: "no foldable resource exports" };
@@ -261,6 +276,12 @@ function foldFile(path: string, session: Session): Verdict {
       for (const n of bindingNames(clause)) unresolved.set(n, { rule: tv.rule, reason: tv.reason });
       continue;
     }
+    if (clause.name && tv.exports.has("default")) {
+      // `import n from "./g"` binds the target's default export (S-ExportDefault, spec 1.2).
+      const value = tv.exports.get("default");
+      externals.set(clause.name.text, value);
+      if (value !== null && typeof value === "object" && !isFoldableFunction(value)) captures.add(target);
+    }
     if (clause.namedBindings && ts.isNamespaceImport(clause.namedBindings)) {
       // F-Namespace: a synthetic plain object of the target's entries.
       const ns = Object.fromEntries(tv.exports);
@@ -274,6 +295,14 @@ function foldFile(path: string, session: Session): Verdict {
         if (!tv.exports.has(imported)) continue;
         const value = tv.exports.get(imported);
         externals.set(el.name.text, value);
+        // F-Import: an imported value with identity is a capture at the
+        // import, by F-Identity's reference test, whether or not it reaches
+        // X(f). A project-local function is a callable, not a value, and
+        // F-CallLeak decides its edge at the call instead. The corpus found
+        // the walk over X(f) below is not enough on its own: a file that
+        // reads only primitives out of an imported object holds no object in
+        // its namespace, and chant taints it anyway, as the text says (#96).
+        if (value !== null && typeof value === "object" && !isFoldableFunction(value)) captures.add(target);
       }
     }
   }
@@ -287,6 +316,14 @@ function foldFile(path: string, session: Session): Verdict {
     const { line, character } = sf.getLineAndCharacterOfPosition(node.getStart());
     return revive(v, externals, { line: line + 1, column: character + 1, what });
   };
+
+  // F-Bind, S-LocalFunction: the file's own functions, exported or not, bound
+  // before anything can call them. The exported ones are also declarators
+  // below, and reuse the same marker so F-CallLeak's flag is one object.
+  for (const fn of collectLocalFunctions(sf, path, consts, externals)) {
+    mine.push(fn);
+    externals.set(fn.name, fn);
+  }
 
   // F-Prebuild: every same-file `const n = new T(…)`, exported or not, built
   // once in source order before any declarator reads it, and bound in
@@ -349,10 +386,9 @@ function foldFile(path: string, session: Session): Verdict {
         // A re-export is a capture, and the owner index below records it as one.
         for (const el of d.elements) exports.set(el.as, tv.exports.get(el.imported));
       } else if (d.kind === "function") {
-        const marker = new FoldableFunction(d.name, d.fn, path, consts, externals);
-        mine.push(marker);
-        externals.set(d.name, marker);
-        exports.set(d.name, marker);
+        exports.set(d.name, externals.get(d.name));
+      } else if (d.kind === "default") {
+        exports.set("default", live(foldExpr(d.expr, scope, evalHost), d.expr, "default"));
       }
     } catch (e) {
       // F-Total: one failed declarator is a failure of the whole file. F-Reason.

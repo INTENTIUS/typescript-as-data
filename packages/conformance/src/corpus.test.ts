@@ -30,7 +30,7 @@ describe.skipIf(!checkout)("the corpus against both implementations (#25)", () =
     summary = summarize(reports);
     if (process.env.TSAD_CORPUS_REPORT) {
       const out = resolve(dirname(fileURLToPath(import.meta.url)), "..", "corpus-report.md");
-      writeFileSync(out, renderCorpusReport(checkout as ChantCheckout, chantAdapter.name, summary, reports), "utf8");
+      writeFileSync(out, renderCorpusReport(checkout as ChantCheckout, { name: chantAdapter.name, specVersion: chantAdapter.specVersion }, summary, reports), "utf8");
     }
   }, 600_000);
 
@@ -56,10 +56,10 @@ describe.skipIf(!checkout)("the corpus against both implementations (#25)", () =
     expect(lines, lines.join("\n")).toEqual([]);
   });
 
-  test("the reference never folds what chant runs, wherever chant was not disarmed", () => {
-    // The asymmetry is the point: a reference-side limit can only make the
-    // reference refuse more. A fold it reaches and chant does not is a real
-    // disagreement wherever it appears, unless a chant-side limit explains it.
+  test("the reference never folds what chant runs", () => {
+    // The asymmetry is the point: both limits are the reference's and can only
+    // make it refuse more. A fold it reaches and chant does not is a real
+    // disagreement wherever it appears.
     const lines = summary.referenceMorePermissive.map((d) => `${d.entry}/${d.file}: ${d.chantReason ?? ""}`);
     expect(lines, lines.join("\n")).toEqual([]);
   });

@@ -2,9 +2,14 @@
 
 Deliberate, and this list may only shrink (#8). Each entry names the rule and why it is still uncovered. Remove an entry when its fixture lands; the gate fails if an entry is stale.
 
-101 of 127 rules have fixtures. Most of the rules below are uncovered because the corpus is still growing (#24); where a rule needs something the reference implementation does not have, the entry says so.
+107 of 132 rules have fixtures. Most of the rules below are uncovered because the corpus is still growing (#24); where a rule needs something the reference implementation does not have, the entry says so.
 
-- `F-Depth` — F-Eval-CallLocal fixes the bound at 32 and F-Depth's rationale says the bounds are undecided; chant folds 5000 deep (#71). A fixture waits on the decision.
+- `F-Rule-Input` — the harness has no rule hook and no findings-as-data fixture kind yet (#101)
+- `F-Rule-Phase` — the harness has no rule hook and no findings-as-data fixture kind yet (#101)
+- `F-Rule-Pure` — the harness has no rule hook and no findings-as-data fixture kind yet (#101)
+- `F-Rule-Finding` — the harness has no rule hook and no findings-as-data fixture kind yet (#101)
+- `F-Rule-Equivalence` — the harness has no rule hook and no findings-as-data fixture kind yet (#101)
+- `F-Rule-Supply` — the harness has no rule hook and no findings-as-data fixture kind yet (#101)
 - `F-Div-Step` — needs `{__compositeStep}`, which has no fate in the reference implementation (no composite factory form)
 - `F-Eval-Interior` — an unresolved chain inside an intrinsic call folds to a symbol only with a registry in scope, and an expression fixture names no host
 - `F-Host-Composite` — needs the composite registration form `Composite(fn, "N")`, which the reference implementation does not have

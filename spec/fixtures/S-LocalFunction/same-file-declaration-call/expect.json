@@ -1,0 +1,19 @@
+{
+  "rules": [
+    "S-LocalFunction",
+    "F-Bind",
+    "F-Eval-CallLocal"
+  ],
+  "project": true,
+  "verdicts": {
+    "twice.ts": "fold"
+  },
+  "exports": {
+    "twice.ts": {
+      "x": {
+        "doubled": 42
+      }
+    }
+  },
+  "note": "A same-file function declaration, not exported, binds a project-local function (spec 1.2, #95). chant's build folded this before the text said so; its classifier and its expression folder still refuse it (chant#2435), which is why this is a whole-build fixture."
+}

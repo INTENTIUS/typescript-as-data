@@ -36,6 +36,9 @@ what the trust rules need.
 6. **A composite registration form**, `export const N = Composite(fn, "N")`
    with `Composite` imported from the host, that makes a project-defined
    factory *interpretable* (R7.2).
+7. **Rules**: the host's semantic checks over the folded namespace and the
+   artifact, under the contract of `rules.md` (F-Rule-Supply). A project may
+   supply more as a policy.
 
 In the `data-host` profile (F-Profile-DataHost, judgments.md) a host is a
 description rather than code: item 3, item 5, and a serialization mapping

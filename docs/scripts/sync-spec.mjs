@@ -30,7 +30,7 @@ const BOLD_ID = /^\*\*((?:[SF]-[A-Za-z0-9-]+))[.\s]/;
 // listed ahead of its arrival (#18): spec/CHANGELOG.md does not exist yet, and
 // naming it here is inert until it does, because the loop below iterates the
 // directory rather than this list.
-const ORDER = ["README", "grammar", "judgments", "values", "divergence", "hosts", "inventory", "CHANGELOG", "prior-art"];
+const ORDER = ["README", "grammar", "judgments", "values", "divergence", "hosts", "rules", "inventory", "CHANGELOG", "prior-art"];
 
 for (const file of readdirSync(specDir).filter((f) => f.endsWith(".md"))) {
   const name = basename(file, ".md");
@@ -78,8 +78,10 @@ let corpus = null;
 try {
   const report = readFileSync(join(root, "packages", "conformance", "corpus-report.md"), "utf8");
   const rev = /corpus: chant `([^`]+)` at `([^`]+)`, (\d+) entries, (\d+) files/.exec(report);
-  const totals = /\n\| (\d+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \|/.exec(report);
-  if (rev && totals) corpus = { corpusVersion: rev[1], revision: rev[2], entries: +rev[3], files: +totals[1], comparable: +totals[2], agreed: +totals[3], bothFold: +totals[4], noHost: +totals[5], noComposite: +totals[6], noLexiconList: +totals[7], buildParams: +totals[8] };
+  // Two limits since #96; the two chant-side ones are gone from the report.
+  const totals = /\n\| (\d+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \|/.exec(report);
+  const declared = /declaring spec `([^`]+)`/.exec(report);
+  if (rev && totals) corpus = { corpusVersion: rev[1], revision: rev[2], entries: +rev[3], files: +totals[1], comparable: +totals[2], agreed: +totals[3], bothFold: +totals[4], noHost: +totals[5], noComposite: +totals[6], chantDeclares: declared ? declared[1] : null };
 } catch {}
 mkdirSync(dataDir, { recursive: true });
 const figures = { specVersion, chantPin, referenceVersion, conformanceVersion, rulesWithFixture: cov ? +cov[1] : null, rulesTotal: cov ? +cov[2] : null, fixtures: fixtureDirs.length, wholeBuildFixtures: wholeBuild, corpus };

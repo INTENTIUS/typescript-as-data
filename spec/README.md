@@ -6,7 +6,8 @@ The normative files, in reading order: [`grammar.md`](./grammar.md) (`S-*`),
 [`judgments.md`](./judgments.md) (`F-*`: J1 evaluation, J2 verdict, J3 taint,
 J4 properties and observables), [`values.md`](./values.md) (`F-Val-*`),
 [`divergence.md`](./divergence.md) (`F-Direction`, `F-Div-*`, `F-Exc-*`),
-[`hosts.md`](./hosts.md) (`F-Host-*`). Each ends with a non-normative
+[`hosts.md`](./hosts.md) (`F-Host-*`), [`rules.md`](./rules.md)
+(`F-Rule-*`). Each ends with a non-normative
 Rationale section. [`inventory.md`](./inventory.md) is the coverage ledger.
 Every decision point in chant core cites the rule that governs it, and #44
 gates on it. [`prior-art.md`](./prior-art.md) is the #31 finding.
@@ -38,7 +39,7 @@ implementation has no answer to give, for want of a host or of a form it does
 not implement, the difference is counted under a named limit and reported
 apart from the agreement figure. Folding it into drift overstates what the comparison
 established, in the direction that flatters this document. The corpus
-cross-check names four such limits and counts each of them.
+cross-check names two such limits and counts each of them.
 
 ## Ownership, this repository is normative; chant implements it
 
@@ -194,6 +195,7 @@ part of the meaning:
 | `F-Val-` | values.md |
 | `F-Div-`, `F-Exc-`, `F-Direction` | divergence.md |
 | `F-Host-` | hosts.md |
+| `F-Rule-` | rules.md |
 
 Names are `Prefix-CamelWords`, no digits in the name part, specific enough to
 read alone (`F-Eval-Member`, not `F-Eval-3`). A rule with numbered steps is

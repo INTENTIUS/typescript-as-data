@@ -322,9 +322,12 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
     }
     if (scope.externals.has(name)) {
       const value = scope.externals.get(name);
+      // F-Eval-Ident step 3, F-Val-Callable (#69): a callable of any kind is
+      // reached by the form that invokes it, never as a value.
       if (isFoldableFunction(value)) reject("F-Eval-Ident", node, `function "${name}" used as a value is not foldable`);
-      if (typeof value === "function" && host.intrinsics.some((i) => i.name === name && intrinsicCallFoldsEagerly(i))) {
-        reject("F-Eval-Ident", node, `function "${name}" used as a value is not foldable: call it instead`);
+      if (typeof value === "function") {
+        const eager = host.intrinsics.some((i) => i.name === name && intrinsicCallFoldsEagerly(i));
+        reject("F-Eval-Ident", node, `function "${name}" used as a value is not foldable${eager ? ": call it instead" : ""}`);
       }
       return value;
     }
@@ -537,7 +540,41 @@ export function collectConsts(sf: ts.SourceFile): Map<string, ts.Expression> {
     if (!ts.isVariableStatement(st)) continue;
     if ((st.declarationList.flags & ts.NodeFlags.Const) === 0) continue;
     for (const d of st.declarationList.declarations) {
-      if (ts.isIdentifier(d.name) && d.initializer) out.set(d.name.text, d.initializer);
+      // A const bound to a function is a project-local function, not a value
+      // (S-LocalFunction, F-Bind): it binds through collectLocalFunctions.
+      if (ts.isIdentifier(d.name) && d.initializer && !isFunctionInitializer(d.initializer)) out.set(d.name.text, d.initializer);
+    }
+  }
+  return out;
+}
+
+const isFunctionInitializer = (e: ts.Expression): e is ts.ArrowFunction | ts.FunctionExpression =>
+  ts.isArrowFunction(e) || ts.isFunctionExpression(e);
+
+/**
+ * S-LocalFunction, F-Bind: every top-level `function` declaration, exported or
+ * not, and every top-level `const` bound to an arrow or function expression,
+ * as `FoldableFunction` markers for the file's own scope. A call reaches
+ * F-Eval-CallLocal; a use as a value is F-Eval-Ident step 3's rejection. The
+ * body is judged by S-FnBody at the call, never here (spec 1.2, #95).
+ */
+export function collectLocalFunctions(
+  sf: ts.SourceFile,
+  file: string,
+  consts: Map<string, ts.Expression>,
+  externals: ReadonlyMap<string, unknown>,
+): FoldableFunction[] {
+  const out: FoldableFunction[] = [];
+  for (const st of sf.statements) {
+    if (ts.isFunctionDeclaration(st) && st.name && st.body && !st.modifiers?.some((m) => m.kind === ts.SyntaxKind.DefaultKeyword)) {
+      out.push(new FoldableFunction(st.name.text, st, file, consts, externals));
+      continue;
+    }
+    if (!ts.isVariableStatement(st) || (st.declarationList.flags & ts.NodeFlags.Const) === 0) continue;
+    for (const d of st.declarationList.declarations) {
+      if (ts.isIdentifier(d.name) && d.initializer && isFunctionInitializer(d.initializer)) {
+        out.push(new FoldableFunction(d.name.text, d.initializer, file, consts, externals));
+      }
     }
   }
   return out;

@@ -1,6 +1,6 @@
 {
   "name": "@intentius/tsad-reference",
-  "version": "1.1.0",
+  "version": "1.4.0",
   "description": "The reference implementation of the typescript-as-data specification, written from the specification text and nothing else.",
   "license": "Apache-2.0",
   "repository": {
@@ -31,7 +31,7 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "@intentius/tsad-conformance": "^1.1.0",
+    "@intentius/tsad-conformance": "^1.4.0",
     "typescript": "^5.9.0"
   }
 }

@@ -29,7 +29,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 /** The five files that define rules, in reading order. The same list `spec/fixtures.test.ts` gates on. */
-export const RULE_FILES = ["grammar.md", "judgments.md", "values.md", "divergence.md", "hosts.md"] as const;
+export const RULE_FILES = ["grammar.md", "judgments.md", "values.md", "divergence.md", "hosts.md", "rules.md"] as const;
 
 export interface Rule {
   readonly id: string;
@@ -97,8 +97,14 @@ export function checkCitations(
   declared?: string,
 ): CitationFinding[] {
   const findings: CitationFinding[] = [];
-  if (declared !== undefined && declared !== index.version) {
-    findings.push({ kind: "version-mismatch", declared, spec: index.version });
+  // Same major, minor not ahead of the index: the policy says an addition
+  // leaves an older minor's rules unchanged, so a document written against
+  // 1.0 is held to 1.1's index. A different major, or a declaration ahead of
+  // the index, is a mismatch.
+  if (declared !== undefined) {
+    const [dm, dn] = declared.split(".").map(Number);
+    const [im, in_] = index.version.split(".").map(Number);
+    if (!(dm === im && dn <= in_)) findings.push({ kind: "version-mismatch", declared, spec: index.version });
   }
   const lines = document.split("\n");
   for (let i = 0; i < lines.length; i++) {

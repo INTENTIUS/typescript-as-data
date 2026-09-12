@@ -14,6 +14,7 @@ import type { ConformanceAdapter, ProjectResult, ProjectVerdict } from "../adapt
 
 function exportInitializer(sf: ts.SourceFile, name: string): ts.Expression | undefined {
   for (const st of sf.statements) {
+    if (name === "default" && ts.isExportAssignment(st) && !st.isExportEquals) return st.expression;
     if (!ts.isVariableStatement(st) || !st.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)) continue;
     for (const d of st.declarationList.declarations) if (ts.isIdentifier(d.name) && d.name.text === name) return d.initializer;
   }

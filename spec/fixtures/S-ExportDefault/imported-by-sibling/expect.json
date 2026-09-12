@@ -1,0 +1,30 @@
+{
+  "rules": [
+    "S-ExportDefault",
+    "F-Import",
+    "F-Declarator"
+  ],
+  "project": true,
+  "profiles": [
+    "data-host"
+  ],
+  "verdicts": {
+    "policy.ts": "fold",
+    "app.ts": "fold"
+  },
+  "exports": {
+    "policy.ts": {
+      "default": {
+        "name": "svc",
+        "replicas": 2
+      }
+    },
+    "app.ts": {
+      "doubled": {
+        "name": "svc",
+        "replicas": 4
+      }
+    }
+  },
+  "note": "A default import binds the target's default export (F-Import), and the value is data like any other."
+}

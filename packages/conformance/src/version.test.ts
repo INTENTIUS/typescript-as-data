@@ -20,10 +20,12 @@ describe("specification version (#18)", () => {
   test("the reference implementation declares the current version", () => {
     expect(referenceAdapter.specVersion).toBe(VERSION);
   });
-  test("chant's declaration is reported, not assumed", () => {
-    // The pin may declare nothing yet; what must not happen is a missing
-    // declaration reading as the current version.
-    expect(typeof chantAdapter.specVersion).toBe("string");
-    expect(chantAdapter.specVersion.length).toBeGreaterThan(0);
+  test("chant declares a version of this specification's major (chant#2424)", () => {
+    // chant-v0.71.0 exports SPEC_VERSION. It may lag the minor: the policy says
+    // an implementation of 1.0 implements 1.1's full profile unchanged, so what
+    // is asserted is a real declaration on the same major, never "undeclared".
+    expect(chantAdapter.specVersion).toMatch(/^\d+\.\d+$/);
+    expect(chantAdapter.specVersion.split(".")[0]).toBe(VERSION.split(".")[0]);
+    expect(Number(chantAdapter.specVersion.split(".")[1])).toBeLessThanOrEqual(Number(VERSION.split(".")[1]));
   });
 });

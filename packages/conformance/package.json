@@ -1,6 +1,6 @@
 {
   "name": "@intentius/tsad-conformance",
-  "version": "1.1.0",
+  "version": "1.4.0",
   "description": "The conformance suite of the typescript-as-data specification: fixture loader, runner, and the named hosts. An implementation supplies an adapter and gets a report.",
   "license": "Apache-2.0",
   "repository": {
@@ -28,7 +28,7 @@
     "spec/"
   ],
   "scripts": {
-    "build": "rm -rf dist fixtures spec && tsc -p tsconfig.build.json && cp -R ../../spec/fixtures fixtures && mkdir spec && cp ../../spec/VERSION ../../spec/grammar.md ../../spec/judgments.md ../../spec/values.md ../../spec/divergence.md ../../spec/hosts.md spec/",
+    "build": "rm -rf dist fixtures spec && tsc -p tsconfig.build.json && cp -R ../../spec/fixtures fixtures && mkdir spec && cp ../../spec/VERSION ../../spec/grammar.md ../../spec/judgments.md ../../spec/values.md ../../spec/divergence.md ../../spec/hosts.md ../../spec/rules.md spec/",
     "prepack": "npm run build"
   },
   "dependencies": {}
