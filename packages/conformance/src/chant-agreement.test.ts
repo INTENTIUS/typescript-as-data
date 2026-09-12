@@ -26,16 +26,22 @@ const foldsAtDepth = new Set([
   "F-Eval-CallIntrinsic/inside-function-body",
   "F-Eval-CallHelper/inside-function-body",
   "F-Div-Provenance/helper-name-from-project-import",
-  // The composite factory form, from #109. Same direction and same shape of
-  // problem, a value where the specification says decline, on the NEGATIVE
-  // cases of each subset: a factory body with no return or an empty one
-  // (S-FactoryBody), and a rest or second parameter (S-FactoryParams). The
-  // mechanism is not the one chant#2441 names and is not yet established, so
-  // these are held pending triage rather than attributed.
+  // The composite factory form, from #109, and NOT the same class as the three
+  // above. Triaged with #109's author: these are F-Call step 6 in open mode.
+  // Step 4 fails, step 5 refuses only under isolated, so step 6 imports the
+  // project module and invokes the registered factory, which chant does. The
+  // reference never imports project code, so it behaves as if isolated
+  // everywhere; the fixtures were written to that. The fixtures are wrong for
+  // open mode rather than chant being wrong, and the fix is the harness's
+  // `"mode": "isolated" | "open"` field, after which these run under isolated
+  // with F-IsolatedRefusal and come off this list.
   "S-FactoryBody/consts-then-a-final-return",
   "S-FactoryParams/one-plainly-bound-parameter",
   // #110's own corpus limit: a host factory called outside declarator
-  // position, which chant invokes and J1 has no rule for.
+  // position. chant has no step-7 refusal at all — `applyResolvedValue` sets
+  // the export unconditionally and its `isDeclarable || isCompositeInstance`
+  // test only tallies entities — so what a host call may return, and where it
+  // may be called, is an open J1 question rather than a chant defect.
   "F-Call/a-host-factory-is-invoked",
 ]);
 const fixtures = all.filter((f) => !foldsAtDepth.has(f.id));
