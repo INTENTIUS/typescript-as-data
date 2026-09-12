@@ -21,6 +21,8 @@ export interface RevivalSite {
   readonly column: number;
   /** The declarator or call this tree came from, for the message. */
   readonly what: string;
+  /** F-Call by name, for `__compositeStep`'s fate: resolve the composite, then read `.step` off the real result. */
+  readonly call?: (callee: string, args: unknown[]) => unknown;
 }
 
 const DOTTED = /^[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*$/;
@@ -115,6 +117,12 @@ function reviveEnvelope(e: Env, bindings: ReadonlyMap<string, unknown>, site: Re
     }
     return current;
   }
-  // __compositeStep
-  fail(site, "a composite step envelope needs a composite factory form, which this implementation does not have");
+  // __compositeStep: resolve the composite (J2 F-Call), then `.step` off the real result (F-Val-Fate).
+  const callee = e.__compositeStep as string;
+  if (!site.call) fail(site, `a composite step on "${callee}" needs the module layer's F-Call, which an expression-level fold does not have`);
+  const instance = site.call(callee, (e.args as unknown[]).map((x) => revive(x, bindings, site, false)));
+  if (instance === null || typeof instance !== "object") fail(site, `"${callee}" did not resolve to a composite instance`);
+  const step = (instance as Env).step;
+  if (step === undefined) fail(site, `the composite "${callee}" has no step member`);
+  return step;
 }

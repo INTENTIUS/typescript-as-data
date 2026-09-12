@@ -1,0 +1,36 @@
+{
+  "rules": [
+    "S-FactoryParams",
+    "F-Call"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "good-shapes.ts": "run",
+    "bad-shapes.ts": "run",
+    "named.ts": "fold",
+    "rest.ts": "run",
+    "two.ts": "run"
+  },
+  "rejectRule": {
+    "good-shapes.ts": "F-Eval-Function",
+    "bad-shapes.ts": "F-Eval-Function",
+    "rest.ts": "F-Call",
+    "two.ts": "F-Call"
+  },
+  "exports": {
+    "named.ts": {
+      "n": {
+        "bucket": {
+          "entityType": "Bucket",
+          "lexicon": "shapes",
+          "props": {
+            "name": "a"
+          },
+          "attributes": {}
+        }
+      }
+    }
+  },
+  "note": "At most one parameter, bound plainly: an identifier or an object pattern with plain elements. A rest parameter and a second parameter each make the factory not interpretable, so their callers run at F-Call; the registration modules run on their own (F-Eval-Function) and the good caller folds."
+}

@@ -1,0 +1,16 @@
+{
+  "rules": [
+    "F-Call",
+    "F-Host-Interface"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "app.ts": "run",
+    "plain.ts": "run"
+  },
+  "rejectRule": {
+    "plain.ts": "F-Call"
+  },
+  "note": "Step 6 invokes a host-bound factory with the resolved arguments; step 7 requires an entity or a composite instance back, so describe, a host function returning plain data, is a run at the declarator. In app.ts the call in nested value position is not a declarator: F-Call applies at the declarator only, and J1 has no rule for a bare call to a host function, so the file runs there too."
+}

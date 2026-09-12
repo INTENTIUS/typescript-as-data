@@ -62,7 +62,7 @@ side each one disarms, because a limit can only make its own side refuse more.
 
 | Limit | Disarms | What it is |
 |---|---|---|
-| `composite` | the reference | The reference implements no composite factory form. |
+| `valueCall` | the reference | A host factory called outside declarator position, in value position or as a non-exported const's initializer, which chant invokes and J1 has no rule for (#110). |
 | `host` | the reference | The reference has no bindings for a package it cannot load. |
 
 Both are the reference's. chant is given each entry's lexicons and build
@@ -93,9 +93,12 @@ From `paper/measurements.md`:
 |---|---|---|---|---|
 | chant <code>{{< figure "corpus.corpusVersion" >}}</code> at <code>{{< figure "corpus.revision" >}}</code>, {{< figure "corpus.entries" >}} entries | {{< figure "corpus.files" >}} | {{< figure "corpus.comparable" >}} | {{< figure "corpus.agreed" >}} | {{< figure "corpus.bothFold" >}} |
 
-And the limits, from the same file: {{< figure "corpus.noComposite" >}} files reach a
-composite factory call, a form the reference does not implement, and
-{{< figure "corpus.noHost" >}} imports a package the host cannot load.
+And the limits, from the same file: {{< figure "corpus.noValueCall" >}} files call a
+host factory outside declarator position, the open question of #110, and
+{{< figure "corpus.noHost" >}} imports a package the host cannot load. The
+composite limit that once carved out two thirds of the corpus is gone:
+F-Call is implemented (#109), a host factory at a declarator is invoked and
+a registered project composite interpreted.
 
 `paper/measurements.md` states what this establishes: on
 {{< figure "corpus.comparable" >}} files nobody wrote for the purpose, the two
@@ -106,9 +109,9 @@ that was observed rather than designed.
 
 It also states the limit, and the limit is the more useful half.
 {{< figure "corpus.comparable" >}} of {{< figure "corpus.files" >}} is the comparable set, not the corpus, and every limit is an over-approximation,
-so a file under one may also be hiding a disagreement. The composite limit
-alone removes two thirds of the corpus, and the most common form in real
-projects is therefore the one the cross-check cannot yet speak to.
+so a file under one may also be hiding a disagreement. What remains under
+the value-position limit is one shape, and it retires with the decision on
+#110.
 
 Namespace comparison is structural. `corpus.ts` compares entities rather than
 skipping them, which is only sound because both implementations construct them

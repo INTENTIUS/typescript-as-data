@@ -1,0 +1,48 @@
+{
+  "rules": [
+    "F-Div-Step",
+    "S-CompositeStep",
+    "S-Unclaimed",
+    "F-Val-Fate"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "pipeline.ts": "run",
+    "app.ts": "fold"
+  },
+  "exports": {
+    "app.ts": {
+      "first": {
+        "entityType": "Bucket",
+        "lexicon": "shapes",
+        "props": {
+          "name": "first"
+        },
+        "attributes": {}
+      },
+      "both": {
+        "a": {
+          "entityType": "Bucket",
+          "lexicon": "shapes",
+          "props": {
+            "name": "a"
+          },
+          "attributes": {}
+        },
+        "b": {
+          "entityType": "Bucket",
+          "lexicon": "shapes",
+          "props": {
+            "name": "b"
+          },
+          "attributes": {}
+        }
+      }
+    }
+  },
+  "note": "The .step idiom on an unclaimed callee: the classifier admits any call, J1 yields a __compositeStep envelope, and its fate is to resolve the composite through F-Call and read step off the real result. Stage is unclaimed because no helper, intrinsic, local function or const claims the name; its registration module runs, and the caller interprets it from source.",
+  "rejectRule": {
+    "pipeline.ts": "F-Eval-Function"
+  }
+}

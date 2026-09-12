@@ -65,6 +65,27 @@ class Pair {
   }
 }
 
+/**
+ * F-Host-Interface item 6: the registration form. What it returns is what a
+ * *running* file would call; a folding one never invokes it, because
+ * F-Host-Composite makes the registered factory interpretable instead. The
+ * instance keeps its members enumerable and carries a marker on the
+ * prototype, so it is live (F-Val-Live) and spreads to its members.
+ */
+const COMPOSITE = Symbol.for("tsad.conformance.composite");
+class CompositeInstance {
+  readonly [COMPOSITE]: true = true;
+}
+const Composite = <P>(factory: (props: P) => Record<string, unknown>, name = "anonymous") => {
+  const definition = (props: P) => Object.assign(new CompositeInstance(), factory(props));
+  return Object.assign(definition, { compositeName: name });
+};
+
+/** A host-published factory (F-Call step 6): invoked with the resolved arguments, it returns an entity. */
+const makePair = (left: unknown, right: unknown): Pair => new Pair(left, right);
+/** A host export that is a function but returns plain data: step 7 refuses its result. */
+const describe = (name: string): { described: string } => ({ described: name });
+
 /** A live object the host owns outright, for the F-CallLeak case: no construction involved. */
 const registry = new Map<string, string>([["one", "1"]]);
 
@@ -113,6 +134,9 @@ const SHAPES: ConformanceHost = {
         ["count", count],
         ["SIZES", SIZES],
         ["registry", registry],
+        ["Composite", Composite],
+        ["makePair", makePair],
+        ["describe", describe],
       ]),
     ],
   ]),

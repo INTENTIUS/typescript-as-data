@@ -1,9 +1,22 @@
 {
-  "rules": ["F-Host-Closed-vs-Open", "F-Eval-Reject"],
+  "rules": [
+    "F-Host-Closed-vs-Open",
+    "F-Call"
+  ],
   "project": true,
   "host": "shapes",
-  "verdicts": { "pure.ts": "fold", "open.ts": "fold", "closed.ts": "run" },
-  "exports": { "open.ts": { "v": "n1" } },
-  "rejectRule": { "closed.ts": "F-Eval-Reject" },
-  "note": "The asymmetry: a call into a project file folds whenever the body is in the subset, with no allowlist; a call into a package folds only through a registered name, and Bucket is registered as nothing but a constructor."
+  "verdicts": {
+    "pure.ts": "fold",
+    "open.ts": "fold",
+    "closed.ts": "run"
+  },
+  "exports": {
+    "open.ts": {
+      "v": "n1"
+    }
+  },
+  "rejectRule": {
+    "closed.ts": "F-Call"
+  },
+  "note": "The asymmetry: a call into a project file folds whenever the body is in the subset, with no allowlist; a call into a package folds only through a registered name. Bucket is registered as nothing but a constructor, so at the declarator F-Call invokes it (step 6), the call throws, and the file runs; a running file is what a package call outside the allowlist costs."
 }

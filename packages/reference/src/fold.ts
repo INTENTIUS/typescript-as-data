@@ -41,11 +41,44 @@ export interface Scope {
    * which is the same edge an import capture records.
    */
   readonly captures?: Set<string>;
+  /** Inside an interpreted factory body (S-FactoryBody): `new` and a call through a bare identifier are admitted at depth > 0. */
+  readonly factory?: boolean;
 }
 /** H = (ρ, helpers). The helper allowlist is consulted through foldable-helpers. */
 export interface EvalHost {
   readonly intrinsics: readonly IntrinsicDef[];
+  /**
+   * F-Val-Fate at a call inside a factory body: what J2 would revive a folded
+   * argument to before a host factory is invoked with it. Absent in an
+   * expression-level fold, where nothing is invoked.
+   */
+  readonly live?: (value: unknown, node: ts.Node, what: string) => unknown;
+  /** F-Val-Fate through a given module's bindings: an interpreted factory's members revive through the defining module's imports. */
+  readonly reviveIn?: (bindings: ReadonlyMap<string, unknown>, value: unknown, node: ts.Node, what: string) => unknown;
+  /** Names bound by an import from a host package (F-Host-Trust arm 1), which F-Call may invoke. */
+  readonly hostBound?: ReadonlySet<string>;
+  /** F-Obs-Counters, when the module layer keeps them. */
+  readonly counters?: { factoryInvocations: number; factoryInterpretations: number };
 }
+
+/**
+ * A project composite the host's registration form made interpretable
+ * (F-Host-Composite): `export const N = Composite(fn, "N")` with `Composite`
+ * bound in that module to an import of the host's own. A call folds the body
+ * against the defining module's scope (F-Call step 4) and never imports.
+ */
+export class CompositeFactory {
+  constructor(
+    readonly name: string,
+    readonly fn: FnDecl,
+    readonly file: string,
+    readonly consts: Map<string, ts.Expression>,
+    readonly externals: ReadonlyMap<string, unknown>,
+  ) {}
+}
+export const isCompositeFactory = (v: unknown): v is CompositeFactory => v instanceof CompositeFactory;
+/** F-Depth: nested factory interpretation. */
+export const MAX_INTERPRETATION_DEPTH = 16;
 
 /**
  * F-Val-Callable's marker. J1 may *call* one; it is never a value. Only the
@@ -98,7 +131,14 @@ export function isLiveObject(v: unknown): boolean {
   if (typeof v === "function") return true;
   if (v === null || typeof v !== "object") return false;
   const proto = Object.getPrototypeOf(v);
-  return proto !== Object.prototype && proto !== Array.prototype && proto !== null;
+  if (proto !== Object.prototype && proto !== Array.prototype && proto !== null) return true;
+  // L6.1: a Declarable or a CompositeInstance is live whatever its prototype.
+  // F-Host-Interface item 1 says an entity carries a non-enumerable declarable
+  // marker, and a composite instance keeps its bookkeeping non-enumerable, so
+  // a non-enumerable own property or an own symbol is the marker.
+  if (Array.isArray(v)) return false;
+  if (Object.getOwnPropertySymbols(v).length > 0) return true;
+  return Object.getOwnPropertyNames(v).some((k) => !Object.getOwnPropertyDescriptor(v, k)!.enumerable);
 }
 
 /** F-Val-Envelope: a non-array object carrying one of the six keys. */
@@ -157,7 +197,7 @@ function foldNew(node: ts.NewExpression, scope: Scope, host: EvalHost): unknown 
   if (!ts.isIdentifier(node.expression)) {
     reject("F-Eval-New", node, "a constructor reached through anything but a plain identifier is not foldable");
   }
-  if (scope.depth > 0) reject("F-Eval-New", node, "`new` inside a folded function body is not foldable");
+  if (scope.depth > 0 && !scope.factory) reject("F-Eval-New", node, "`new` inside a folded function body is not foldable");
   const name = node.expression.text;
   const args = node.arguments ?? ([] as unknown as ts.NodeArray<ts.Expression>);
   if (args.length === 0) return { __resource: name, props: {} };
@@ -277,6 +317,85 @@ function callLocal(callee: FoldableFunction, node: ts.CallExpression, scope: Sco
   return result;
 }
 
+/**
+ * F-Call step 4: interpretation of a registered project composite under
+ * S-FactoryParams and S-FactoryBody (R7.2 rules 3 to 5). The body folds
+ * against the defining module's scope with the one parameter bound; `new`
+ * and bare-identifier calls are admitted inside, and the result is the
+ * members record, which J2 revives.
+ */
+export function interpret(factory: CompositeFactory, args: unknown[], node: ts.Node, depth: number, host: EvalHost): unknown {
+  const label = `composite "${factory.name}" (${factory.file})`;
+  const why = findFactoryViolation(factory.fn);
+  if (why) reject("F-Call", node, `${label} is not interpretable: ${why}`);
+  if (depth >= MAX_INTERPRETATION_DEPTH) reject("F-Depth", node, `${label} is not interpretable: interpretation depth exceeded`);
+  if (host.counters) host.counters.factoryInterpretations += 1;
+  const consts = new Map(factory.consts);
+  const externals = new Map(factory.externals);
+  const bind = (n: string, v: unknown) => { consts.delete(n); externals.set(n, v); };
+  const inner: Scope = { consts, externals, depth: depth + 1, factory: true };
+  const param = factory.fn.parameters[0];
+  if (param) {
+    const value = args[0];
+    if (ts.isIdentifier(param.name)) bind(param.name.text, value);
+    else {
+      if (value === null || typeof value !== "object") reject("F-Call", node, `${label} is not interpretable: its argument is not an object`);
+      for (const el of (param.name as ts.ObjectBindingPattern).elements) bind((el.name as ts.Identifier).text, (value as Record<string, unknown>)[plainBindingKey(el)!]);
+    }
+  }
+  // The members revive through the DEFINING module's imports, since the body folded in its scope.
+  const done = (members: unknown) => (host.reviveIn ? host.reviveIn(factory.externals, members, node, label) : members);
+  try {
+    const body = factory.fn.body as ts.ConciseBody;
+    if (!ts.isBlock(body)) return done(foldExpr(body, inner, host));
+    for (const st of body.statements) {
+      if (ts.isReturnStatement(st)) return done(foldExpr(st.expression!, inner, host));
+      for (const d of (st as ts.VariableStatement).declarationList.declarations) {
+        const v = foldExpr(d.initializer!, inner, host);
+        if (ts.isIdentifier(d.name)) bind(d.name.text, v);
+        else {
+          if (v === null || typeof v !== "object") reject("F-Call", node, `${label} is not interpretable: a destructured const's source is not an object`);
+          for (const el of (d.name as ts.ObjectBindingPattern).elements) bind((el.name as ts.Identifier).text, (v as Record<string, unknown>)[plainBindingKey(el)!]);
+        }
+      }
+    }
+    return undefined;
+  } catch (e) {
+    if (e instanceof FoldRejection) {
+      reject(e.rule, node, `${label} is not interpretable: ${factory.file}:${e.line}:${e.column} - ${e.message.replace(/^\d+:\d+ - /, "")}`);
+    }
+    throw e;
+  }
+}
+
+/** S-FactoryParams and S-FactoryBody: at most one plainly bound parameter; consts then a final `return`, which must be present. */
+export function findFactoryViolation(fn: FnDecl): string | undefined {
+  if (fn.parameters.length > 1) return "a factory takes at most one parameter";
+  const p = fn.parameters[0];
+  if (p) {
+    if (p.dotDotDotToken) return "a rest parameter is not interpretable";
+    if (p.initializer) return "a parameter default is not interpretable";
+    if (!ts.isIdentifier(p.name)) {
+      if (!ts.isObjectBindingPattern(p.name)) return "an array-pattern parameter is not interpretable";
+      for (const el of p.name.elements) if (el.dotDotDotToken || el.initializer || !ts.isIdentifier(el.name) || !plainBindingKey(el)) return "a parameter pattern with a rest, default, nested or computed element is not interpretable";
+    }
+  }
+  const body = fn.body as ts.ConciseBody | undefined;
+  if (!body) return "a factory without a body is not interpretable";
+  if (!ts.isBlock(body)) return undefined;
+  if (body.statements.length === 0) return "an empty factory body is not interpretable";
+  const last = body.statements[body.statements.length - 1];
+  if (!ts.isReturnStatement(last) || !last.expression) return "a factory body must end in a return";
+  for (const st of body.statements.slice(0, -1)) {
+    if (!ts.isVariableStatement(st) || !(st.declarationList.flags & ts.NodeFlags.Const)) return "a factory body is consts then a final return";
+    for (const d of st.declarationList.declarations) {
+      if (!d.initializer) return "an uninitialized const is not interpretable";
+      if (!ts.isIdentifier(d.name) && !(ts.isObjectBindingPattern(d.name) && d.name.elements.every((el) => !el.dotDotDotToken && !el.initializer && ts.isIdentifier(el.name) && plainBindingKey(el)))) return "a destructuring const with a rest, default, nested or computed element is not interpretable";
+    }
+  }
+  return undefined;
+}
+
 /** Γ, H ⊢ e ⇓ v. */
 export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unknown {
   const F = (n: ts.Expression) => foldExpr(n, scope, host);
@@ -324,7 +443,7 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
       const value = scope.externals.get(name);
       // F-Eval-Ident step 3, F-Val-Callable (#69): a callable of any kind is
       // reached by the form that invokes it, never as a value.
-      if (isFoldableFunction(value)) reject("F-Eval-Ident", node, `function "${name}" used as a value is not foldable`);
+      if (isFoldableFunction(value) || isCompositeFactory(value)) reject("F-Eval-Ident", node, `function "${name}" used as a value is not foldable`);
       if (typeof value === "function") {
         const eager = host.intrinsics.some((i) => i.name === name && intrinsicCallFoldsEagerly(i));
         reject("F-Eval-Ident", node, `function "${name}" used as a value is not foldable${eager ? ": call it instead" : ""}`);
@@ -343,7 +462,7 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
 
   // F-Eval-Tagged
   if (ts.isTaggedTemplateExpression(node)) {
-    if (scope.depth > 0) reject("F-Eval-Tagged", node, "a tagged template inside a folded function body is not foldable");
+    if (scope.depth > 0 && !scope.factory) reject("F-Eval-Tagged", node, "a tagged template inside a folded function body is not foldable");
     const tag = node.tag.getText();
     if (!host.intrinsics.some((i) => i.name === tag && intrinsicTagFolds(i))) {
       reject("F-Eval-Tagged", node, `unregistered tagged template intrinsic: ${tag}`);
@@ -488,13 +607,13 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
 
       // F-Eval-CallHelper
       if (isFoldableHelperName(name)) {
-        if (scope.depth > 0) reject("F-Eval-CallHelper", node, "an authoring helper call inside a folded function body is not foldable");
+        if (scope.depth > 0 && !scope.factory) reject("F-Eval-CallHelper", node, "an authoring helper call inside a folded function body is not foldable");
         return { __helper: name, args: node.arguments.map((a) => F(a)) };
       }
 
       // F-Eval-CallIntrinsic
       if (host.intrinsics.some((i) => i.name === name && intrinsicCallFolds(i))) {
-        if (scope.depth > 0) reject("F-Eval-CallIntrinsic", node, "an intrinsic call inside a folded function body is not foldable");
+        if (scope.depth > 0 && !scope.factory) reject("F-Eval-CallIntrinsic", node, "an intrinsic call inside a folded function body is not foldable");
         return { __intrinsic: name, args: node.arguments.map((a) => foldInterior(a, scope, host)) };
       }
 
@@ -506,6 +625,22 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
       if (host.intrinsics.some((i) => i.name === name && intrinsicCallFoldsEagerly(i))) {
         if (typeof local !== "function") reject("F-Eval-CallEager", node, `"${name}" did not resolve to a function`);
         return (local as (...a: unknown[]) => unknown)(...node.arguments.map((a) => F(a)));
+      }
+
+      // S-FactoryBody rule 5: inside a factory body a call through a bare
+      // identifier is admitted, a nested composite interpreted or a host
+      // factory invoked, the way F-Call would at a declarator.
+      if (scope.factory) {
+        if (isCompositeFactory(local)) return interpret(local, node.arguments.map((a) => F(a)), node, scope.depth, host);
+        if (typeof local === "function" && host.hostBound?.has(name) && host.live) {
+          const args = node.arguments.map((a) => host.live!(F(a), a, name));
+          if (host.counters) host.counters.factoryInvocations += 1;
+          let result: unknown;
+          try { result = (local as (...a: unknown[]) => unknown)(...args); }
+          catch (err) { reject("F-Call", node, `invoking "${name}" threw: ${err instanceof Error ? err.message : String(err)}`); }
+          if (!isLiveObject(result)) reject("F-Call", node, `"${name}" returned plain data, not an entity or a composite instance`);
+          return result;
+        }
       }
     }
 

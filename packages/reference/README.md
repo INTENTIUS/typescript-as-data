@@ -12,8 +12,8 @@ registry, helper allowlist, owned-specifier prefixes and values. It declares
 the specification version it implements (`specVersion` on its adapter), and
 the suite holds that to `spec/VERSION`.
 
-Not implemented, with the reason for each: `CAVEATS.md`. The composite factory
-form and isolation mode are the two that cost fixtures.
+Not implemented, with the reason for each: `CAVEATS.md`. Isolation mode is
+the one that costs fixtures.
 
 ## As a package
 

@@ -16,10 +16,19 @@
 import { posix } from "node:path";
 import * as ts from "typescript";
 import { EMPTY_HOST, type Host } from "./host.js";
-import { foldExpr, collectConsts, collectLocalFunctions, FoldRejection, FoldableFunction, isFoldableFunction, type Scope } from "./fold.js";
-import { registerHelpers, registerHostSpecifiers, isHostOwnedSpecifier } from "./foldable-helpers.js";
+import { foldExpr, collectConsts, collectLocalFunctions, FoldRejection, FoldableFunction, isFoldableFunction, isLiveObject, CompositeFactory, isCompositeFactory, interpret, type Scope, type EvalHost } from "./fold.js";
+import { registerHelpers, registerHostSpecifiers, isHostOwnedSpecifier, isFoldableHelperName } from "./foldable-helpers.js";
+
+/** Marks a declarator initializer that F-Call does not resolve, so J1 does. */
+const NOT_FCALL: unique symbol = Symbol("not F-Call");
+/** A node's position as (line, column), 1-based, for a located rejection (R9.3). */
+function locate(n: ts.Node): [number, number] {
+  const { line, character } = n.getSourceFile().getLineAndCharacterOfPosition(n.getStart());
+  return [line + 1, character + 1];
+}
 import { revive } from "./revive.js";
 import type { FnDecl } from "./fnbody.js";
+import { plainBindingKey } from "./fnbody.js";
 
 export type Verdict =
   | { kind: "fold"; exports: Map<string, unknown>; captures: Set<string> }
@@ -119,6 +128,9 @@ function scanExports(sf: ts.SourceFile, admitDefault: boolean): Scan {
 
 // ── J2 ──────────────────────────────────────────────────────────────────────
 interface Session {
+  readonly counters: { factoryInvocations: number; factoryInterpretations: number };
+  /** F-Host-Composite: each file's registered composites, read from source, so a caller interprets one whether or not the defining module folds (F-Call step 4). */
+  readonly composites: Map<string, Map<string, CompositeFactory>>;
   readonly files: ReadonlyMap<string, string>;
   readonly host: Host;
   /** F-Memo: at most one verdict per file per build. */
@@ -242,6 +254,8 @@ function foldFile(path: string, session: Session): Verdict {
   // F-Bind
   const consts = collectConsts(sf);
   const externals = new Map<string, unknown>();
+  /** Names bound by an import from a host package, with the export each names (F-Host-Trust arm 1). F-Call may invoke these. */
+  const hostBound = new Map<string, string>();
   const captures = new Set<string>();
   const mine: FoldableFunction[] = [];
   session.locals.set(path, mine);
@@ -263,7 +277,7 @@ function foldFile(path: string, session: Session): Verdict {
         for (const el of clause.namedBindings.elements) {
           if (el.isTypeOnly) continue;
           const imported = (el.propertyName ?? el.name).text;
-          if (supplied.has(imported)) externals.set(el.name.text, supplied.get(imported));
+          if (supplied.has(imported)) { externals.set(el.name.text, supplied.get(imported)); hostBound.set(el.name.text, imported); }
         }
       }
       continue;
@@ -272,8 +286,18 @@ function foldFile(path: string, session: Session): Verdict {
     if (!target) continue;
     const tv = verdictOf(target, session);
     if (tv.kind !== "fold") {
-      // F-Import: the binding is not resolved, and the cause is kept for F-Reason.
-      for (const n of bindingNames(clause)) unresolved.set(n, { rule: tv.rule, reason: tv.reason });
+      // F-Call step 4: an interpretable composite is read from the defining
+      // module's source and the module is never imported, so the binding
+      // holds whatever that module's own verdict was. Everything else the
+      // module exports is not resolved, and the cause is kept for F-Reason.
+      const registered = session.composites.get(target);
+      if (clause.namedBindings && ts.isNamedImports(clause.namedBindings)) {
+        for (const el of clause.namedBindings.elements) {
+          const factory = registered?.get((el.propertyName ?? el.name).text);
+          if (factory) externals.set(el.name.text, factory);
+        }
+      }
+      for (const n of bindingNames(clause)) if (!externals.has(n)) unresolved.set(n, { rule: tv.rule, reason: tv.reason });
       continue;
     }
     if (clause.name && tv.exports.has("default")) {
@@ -309,26 +333,135 @@ function foldFile(path: string, session: Session): Verdict {
 
   // F-Declarator, into X
   const scope: Scope = { consts, externals, depth: 0, captures };
-  const evalHost = { intrinsics: session.host.intrinsics };
+  const counters = session.counters;
+  const evalHost: EvalHost = {
+    intrinsics: session.host.intrinsics,
+    live: (v, node, what) => live(v, node, what),
+    reviveIn: (bindings, v, node, what) => {
+      if (session.host.profile === "data-host") return v;
+      const { line, character } = sf.getLineAndCharacterOfPosition(node.getStart());
+      return revive(v, bindings, { line: line + 1, column: character + 1, what, call: byName });
+    },
+    hostBound: new Set(hostBound.keys()),
+    counters,
+  };
   const exports = new Map<string, unknown>();
   /**
    * F-Val-Fate: what the declarator produced, revived through this file's own
    * imports. In `data-host` revival is serialization (F-Profile-DataHost): no
    * constructor and no function is invoked, and the envelope is the output.
    */
-  const live = (v: unknown, node: ts.Node, what: string) => {
+  const live = (v: unknown, node: ts.Node, what: string): unknown => {
     if (session.host.profile === "data-host") return v;
     const { line, character } = sf.getLineAndCharacterOfPosition(node.getStart());
-    return revive(v, externals, { line: line + 1, column: character + 1, what });
+    return revive(v, externals, { line: line + 1, column: character + 1, what, call: byName });
   };
 
   // F-Bind, S-LocalFunction: the file's own functions, exported or not, bound
   // before anything can call them. The exported ones are also declarators
   // below, and reuse the same marker so F-CallLeak's flag is one object.
+  // F-Host-Composite: `const N = Composite(fn, "N")` with Composite bound to the
+  // host's own import makes N interpretable. Like a local function it is a
+  // binding in externals and not a const (F-Bind); a call reaches F-Call.
+  for (const [name, init] of consts) {
+    if (!ts.isCallExpression(init) || !ts.isIdentifier(init.expression) || hostBound.get(init.expression.text) !== "Composite") continue;
+    const [fn, label] = init.arguments;
+    if (!fn || !(ts.isArrowFunction(fn) || ts.isFunctionExpression(fn))) continue;
+    if (label && !ts.isStringLiteral(label)) continue;
+    externals.set(name, new CompositeFactory(name, fn, path, consts, externals));
+  }
+  for (const name of [...consts.keys()]) if (isCompositeFactory(externals.get(name))) consts.delete(name);
+  session.composites.set(path, new Map([...externals].filter((e): e is [string, CompositeFactory] => isCompositeFactory(e[1]))));
+
+  /**
+   * F-Call: a call in declarator position whose callee is a registered project
+   * composite (step 4, interpreted) or a host-bound factory (step 6, invoked
+   * once per call site, F-Count). Any other callee is J1's, or J1's rejection.
+   */
+  const callMemo = new Map<ts.CallExpression, unknown>();
+  const fCallable = (c: ts.Expression): c is ts.Identifier => ts.isIdentifier(c) && !consts.has(c.text) && (isCompositeFactory(externals.get(c.text)) || (hostBound.has(c.text) && typeof externals.get(c.text) === "function" && !isFoldableHelperName(c.text) && !session.host.intrinsics.some((i) => i.name === c.text)));
+  const fCall = (call: ts.CallExpression, indexed = false): unknown => {
+    if (callMemo.has(call)) return callMemo.get(call);
+    const c = call.expression as ts.Identifier;
+    const bound = externals.get(c.text);
+    const folded = call.arguments.map((a) => {
+      if (ts.isSpreadElement(a)) throw new FoldRejection("F-Call", ...locate(a), `a spread argument to "${c.text}" is not foldable`);
+      return foldExpr(a, scope, evalHost);
+    });
+    let result: unknown;
+    if (isCompositeFactory(bound)) {
+      result = live(interpret(bound, folded, call, 0, evalHost), call, c.text);
+    } else {
+      // Step 6: invoked with the resolved arguments; a live argument passes through and an attribute reference stays symbolic (L6.9).
+      const args = folded.map((v, i) => live(v, call.arguments[i], c.text));
+      counters.factoryInvocations += 1;
+      try {
+        result = (bound as (...a: unknown[]) => unknown)(...args);
+      } catch (err) {
+        // A factory that throws, a class called without `new` among them, is a run at the declarator (F-Call), never a crash.
+        throw new FoldRejection("F-Call", ...locate(call), `invoking "${c.text}" threw: ${err instanceof Error ? err.message : String(err)}`);
+      }
+      // Step 7: the result must be an entity or a composite instance; a
+      // destructured or member-read result need only be indexable (F-Declarator).
+      if (indexed ? result === null || typeof result !== "object" : !isLiveObject(result)) throw new FoldRejection("F-Call", ...locate(call), `"${c.text}" returned plain data, not an entity or a composite instance`);
+    }
+    callMemo.set(call, result);
+    return result;
+  };
+  const byName = (callee: string, args: unknown[]): unknown => {
+    const bound = externals.get(callee);
+    if (isCompositeFactory(bound)) return live(interpret(bound, args, sf, 0, evalHost), sf, callee);
+    if (hostBound.has(callee) && typeof bound === "function") {
+      counters.factoryInvocations += 1;
+      let r: unknown;
+      try { r = (bound as (...a: unknown[]) => unknown)(...args); }
+      catch (err) { throw new FoldRejection("F-Call", 1, 1, `invoking "${callee}" threw: ${err instanceof Error ? err.message : String(err)}`); }
+      if (!isLiveObject(r)) throw new FoldRejection("F-Call", 1, 1, `"${callee}" returned plain data, not an entity or a composite instance`);
+      return r;
+    }
+    throw new FoldRejection("F-Call", 1, 1, `"${callee}" is not a composite this build can resolve`);
+  };
+  /** A declarator initializer J2 resolves through F-Call rather than J1: a call, or a member or element access on one. */
+  const viaFCall = (e: ts.Expression, indexed = false): unknown | undefined => {
+    const inner = ts.isParenthesizedExpression(e) ? e.expression : e;
+    if (ts.isCallExpression(inner) && fCallable(inner.expression)) return fCall(inner, indexed);
+    if ((ts.isPropertyAccessExpression(inner) || ts.isElementAccessExpression(inner)) && ts.isCallExpression(inner.expression) && fCallable(inner.expression.expression)) {
+      const base = fCall(inner.expression, true);
+      if (base === null || typeof base !== "object") throw new FoldRejection("F-Call", ...locate(inner), "a member read on a call's result needs an indexable object");
+      const key = ts.isPropertyAccessExpression(inner) ? inner.name.text : ts.isStringLiteral(inner.argumentExpression) || ts.isNumericLiteral(inner.argumentExpression) ? inner.argumentExpression.text : undefined;
+      if (key === undefined) throw new FoldRejection("F-Eval-Index", ...locate(inner), "a non-literal element-access key is not foldable");
+      return (base as Record<string, unknown>)[key];
+    }
+    return NOT_FCALL;
+  };
+
   for (const fn of collectLocalFunctions(sf, path, consts, externals)) {
     mine.push(fn);
     externals.set(fn.name, fn);
   }
+
+  // F-Bind: destructured locals from a composite call, `const { a } = C({…})`,
+  // are bindings the resolver may read by name. A call that fails leaves them
+  // unbound, and a later reference is F-Reference's rejection.
+  for (const st of sf.statements) {
+    if (!ts.isVariableStatement(st) || (st.declarationList.flags & ts.NodeFlags.Const) === 0) continue;
+    if (st.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)) continue;
+    for (const d of st.declarationList.declarations) {
+      if (!ts.isObjectBindingPattern(d.name) || !d.initializer || !ts.isCallExpression(d.initializer) || !fCallable(d.initializer.expression)) continue;
+      try {
+        const base = fCall(d.initializer, true);
+        if (base === null || typeof base !== "object") continue;
+        for (const el of d.name.elements) {
+          if (el.dotDotDotToken || el.initializer || !ts.isIdentifier(el.name)) continue;
+          const key = plainBindingKey(el);
+          if (key) externals.set(el.name.text, (base as Record<string, unknown>)[key]);
+        }
+      } catch (e) {
+        if (!(e instanceof FoldRejection)) throw e;
+      }
+    }
+  }
+
 
   // F-Prebuild: every same-file `const n = new T(…)`, exported or not, built
   // once in source order before any declarator reads it, and bound in
@@ -356,9 +489,11 @@ function foldFile(path: string, session: Session): Verdict {
         // one exported; a second construction would be a second entity.
         exports.set(d.name, prebuilt.has(d.expr) ? prebuilt.get(d.expr) : live(foldExpr(d.expr, scope, evalHost), d.expr, d.name));
       } else if (d.kind === "single") {
-        exports.set(d.name, live(foldExpr(d.expr, scope, evalHost), d.expr, d.name));
+        const viaCall = viaFCall(d.expr);
+        exports.set(d.name, viaCall !== NOT_FCALL ? viaCall : live(foldExpr(d.expr, scope, evalHost), d.expr, d.name));
       } else if (d.kind === "destructure") {
-        const base = live(foldExpr(d.expr, scope, evalHost), d.expr, "a destructured declaration");
+        const viaCall = viaFCall(d.expr, true);
+        const base = viaCall !== NOT_FCALL ? viaCall : live(foldExpr(d.expr, scope, evalHost), d.expr, "a destructured declaration");
         if (base === null || typeof base !== "object") {
           return { kind: "run", rule: "F-Declarator", reason: "destructured source is not an object" };
         }
@@ -393,7 +528,8 @@ function foldFile(path: string, session: Session): Verdict {
       } else if (d.kind === "function") {
         exports.set(d.name, externals.get(d.name));
       } else if (d.kind === "default") {
-        exports.set("default", live(foldExpr(d.expr, scope, evalHost), d.expr, "default"));
+        const viaCall = viaFCall(d.expr);
+        exports.set("default", viaCall !== NOT_FCALL ? viaCall : live(foldExpr(d.expr, scope, evalHost), d.expr, "default"));
       }
     } catch (e) {
       // F-Total: one failed declarator is a failure of the whole file. F-Reason.
@@ -427,12 +563,14 @@ export interface ProjectResult {
   readonly taintReason: Map<string, string>;
   /** The file whose taint reached it, the other end of the F-Succ edge that fired. */
   readonly taintSource: Map<string, string>;
+  /** F-Obs-Counters: host factories invoked and project composites interpreted in this build. */
+  readonly counters: { factoryInvocations: number; factoryInterpretations: number };
 }
 
 export function foldProject(files: ReadonlyMap<string, string>, host: Host = EMPTY_HOST): ProjectResult {
   registerHelpers(host.helpers);
   registerHostSpecifiers(host.ownedSpecifierPrefixes);
-  const session: Session = { files, host, memo: new Map(), stack: [], locals: new Map(), owner: new Map() };
+  const session: Session = { files, host, memo: new Map(), stack: [], locals: new Map(), owner: new Map(), counters: { factoryInvocations: 0, factoryInterpretations: 0 }, composites: new Map() };
 
   const tentative = new Map<string, Verdict>();
   for (const path of files.keys()) tentative.set(path, verdictOf(path, session));
@@ -456,7 +594,7 @@ export function foldProject(files: ReadonlyMap<string, string>, host: Host = EMP
   // F-Profile-DataHost: J3 is absent. Nothing runs, so nothing taints, and
   // every file's verdict is its own.
   if (host.profile === "data-host") {
-    return { verdicts: new Map(tentative), tentative, taintReason: new Map(), taintSource: new Map() };
+    return { verdicts: new Map(tentative), tentative, taintReason: new Map(), taintSource: new Map(), counters: session.counters };
   }
 
   // F-Succ. Both directions from one tainted file.
@@ -502,5 +640,5 @@ export function foldProject(files: ReadonlyMap<string, string>, host: Host = EMP
       tainted.has(path) && v.kind === "fold" ? { kind: "run", rule: "F-Taint", reason: reason.get(path) ?? "tainted" } : v,
     );
   }
-  return { verdicts, tentative, taintReason: reason, taintSource: source };
+  return { verdicts, tentative, taintReason: reason, taintSource: source, counters: session.counters };
 }
