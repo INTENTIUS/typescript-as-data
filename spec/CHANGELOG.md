@@ -4,6 +4,10 @@ The versioned history of the rule set. The policy is in [`README.md`](./README.m
 
 Each entry lists the rules that changed and how, in the four kinds the policy defines. A change confined to non-normative text is not versioned and is not listed here; the rationale sections and the inventory are the usual cases.
 
+## 1.4, 2026-09-12
+
+Tag `spec-1.4`. One addition, `rules.md`, which is the `F-Rule-*` family (#79) and the contract a semantic rule runs under. It is extracted from chant's post-synthesis engine and policy layer the way the other files were, with inventory rows L11.1 to L11.8, and it adds item 7 to `F-Host-Interface`. A finding's subject is an artifact-side name and a source location is optional, because that is what chant does and what `F-Obs-Provenance` already allows. No fixture exercises the family yet; the harness half is #101.
+
 ## 1.3, 2026-09-12
 
 Tag `spec-1.3`. One widening and one clarification, the two open questions the corpus and the fixtures left.
@@ -16,7 +20,7 @@ The second change is a clarification of `F-Eval-Ident` step 3 and `F-Import`, wi
 
 Tag `spec-1.2`. Two widenings, both found by the first consumer of the published packages (forgejo-warden#33) in the first policy file anybody wrote.
 
-The added rule `S-LocalFunction` (#95) binds a top-level `function` declaration, exported or not, and a `const` bound to an arrow or function expression, as a project-local function in the file's own scope; `F-Bind` says so and `F-Eval-CallLocal` folds the call. chant folded both forms already and the text said so for neither, so this is the specification catching up with an implementation. The reference now does the same. The classifier's half is `S-CallLocal`: a call whose callee this file binds, by `S-LocalFunction` or by an import from a project specifier, is shape-valid; chant's classifier rejects every such call today, the direction `F-Direction` forbids, and chant#2435 tracks it.
+The added rule `S-LocalFunction` (#95) binds a top-level `function` declaration, exported or not, and a `const` bound to an arrow or function expression, as a project-local function in the file's own scope; `F-Bind` says so and `F-Eval-CallLocal` folds the call. chant folded both forms already and the text said so for neither, so this is the specification catching up with an implementation. The reference now does the same. The classifier's half is `S-CallLocal`, under which a call whose callee this file binds, by `S-LocalFunction` or by an import from a project specifier, is shape-valid; chant's classifier rejects every such call today, the direction `F-Direction` forbids, and chant#2435 tracks it.
 
 The added rule `S-ExportDefault` (#94) admits `export default ⟨Expr⟩` as the declarator named `default` in the `data-host` profile, with `F-Declarator` and `F-Import` extended for it. In `full` it stays a disqualifier and the profile table records it as permitted, not required, until chant admits it.
 

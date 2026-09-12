@@ -58,6 +58,12 @@ function docFiles(dir) {
   return out.sort();
 }
 
+/** The frontmatter block replaced by spaces, so every offset after it is unchanged. */
+function blankFrontmatter(text) {
+  const m = /^---\r?\n[\s\S]*?\r?\n---[ \t]*(\r?\n|$)/.exec(text);
+  return m ? m[0].replace(/[^\n]/g, " ") + text.slice(m[0].length) : text;
+}
+
 /** 1-based line of a prose-text offset — extractProse blanks non-prose but
  * preserves every offset, so spans map straight onto the source file. */
 function lineOf(text, offset) {
@@ -73,7 +79,11 @@ const detail = [];
 for (const file of files) {
   const rel = relative(join(here, ".."), file);
   const text = readFileSync(file, "utf8");
-  const prose = extractProse(text);
+  // YAML frontmatter is metadata, not prose. `extractProse` blanks fences,
+  // tables and inline code but leaves the `---` block, whose delimiters read
+  // as em dashes and whose `key: value` lines read as colon nameplates; every
+  // page was paying for its own frontmatter. Blank it, offsets preserved.
+  const prose = extractProse(blankFrontmatter(text));
   const doc = buildDocAnalysis(prose);
   const { findings, errors } = runRules(RULES, doc);
   for (const e of errors) detail.push(`${rel}: rule ${e.ruleId} errored: ${e.message}`);

@@ -30,7 +30,7 @@ const BOLD_ID = /^\*\*((?:[SF]-[A-Za-z0-9-]+))[.\s]/;
 // listed ahead of its arrival (#18): spec/CHANGELOG.md does not exist yet, and
 // naming it here is inert until it does, because the loop below iterates the
 // directory rather than this list.
-const ORDER = ["README", "grammar", "judgments", "values", "divergence", "hosts", "inventory", "CHANGELOG", "prior-art"];
+const ORDER = ["README", "grammar", "judgments", "values", "divergence", "hosts", "rules", "inventory", "CHANGELOG", "prior-art"];
 
 for (const file of readdirSync(specDir).filter((f) => f.endsWith(".md"))) {
   const name = basename(file, ".md");

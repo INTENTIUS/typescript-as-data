@@ -194,6 +194,14 @@ module is never imported.
 | L10.3 | per-file decision line | `[fold:fold]` / `[fold:run] <reason>`, summarized without `--verbose` | F-Obs-Report |
 | L10.4 | `FoldError` | located, carries an EVL rule id, constructed with `stackTraceLimit = 0` | F-Reason |
 | L10.5 | one wording per rejection kind | shared message builders so two sites cannot drift | F-Obs-Messages |
+| L11.1 | `PostSynthContext.entities` (added #79) | every declared entity by name, the folded namespace after J3 | F-Rule-Input (rules.md) |
+| L11.2 | `PostSynthContext.outputs` (added #79) | the serialized output per lexicon, text | F-Rule-Input (rules.md) |
+| L11.3 | `PostSynthContext.docs` (added #79) | the outputs parsed once per build, cached (chant#975) | F-Rule-Input (rules.md) |
+| L11.4 | `PostSynthContext.env` (added #79) | the environment or stack name, so a policy may branch on it | F-Rule-Input (rules.md) |
+| L11.5 | `PostSynthDiagnostic` (added #79) | `checkId`, `severity`, `message`, an artifact-side `entity` or a missing-resource marker (chant#2113), never a source line | F-Rule-Finding (rules.md) |
+| L11.6 | severity configuration (added #79) | `lint.config` overrides a check's own severity | F-Rule-Finding (rules.md) |
+| L11.7 | project policies under `--sandbox` (added #79) | `loadPolicyChecks` refuses in-process while the sandbox is armed; checks run in the child (chant#1131) | F-Rule-Pure; F-Rule-Supply (rules.md) |
+| L11.8 | rule registry (added #79) | lexicon checks and project policies keyed by id; a duplicate id is a registry error | F-Rule-Supply (rules.md) |
 
 ---
 

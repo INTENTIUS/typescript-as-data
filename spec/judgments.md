@@ -68,6 +68,7 @@ another language embeds, or a JavaScript tool that folds and never runs. It is
 | `S-ExportDefault` | applies: a default export is the declarator named `default`. In `full` it is permitted, not required, and chant does not yet admit it |
 | `F-Eval-New`, `F-Prebuild`, `F-Count` | permitted, not required. An implementation that supports `new` folds it to a `{__resource}` envelope and binds the same envelope at every reference; one that does not rejects `new` under `F-Eval-Reject`. A fixture that uses `new` is tagged `full` unless it says otherwise |
 | `F-Host-Interface` | the host is a description, not code: the intrinsic registry (item 3), the trust set (item 5), and the serialization mapping for envelopes. Items 1, 2, 4 and 6 are absent |
+| `F-Rule-*` | apply; a rule is code in the evaluator's own language (F-Rule-Supply). A source location in a finding stays optional, since provenance is |
 | `F-Obs-Counters` | trivially satisfied: every counter is zero |
 | `F-NoOwnExecution`, `F-Obs-Report`, `F-Obs-Messages`, `F-Reason` | apply in full |
 

@@ -29,7 +29,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 /** The five files that define rules, in reading order. The same list `spec/fixtures.test.ts` gates on. */
-export const RULE_FILES = ["grammar.md", "judgments.md", "values.md", "divergence.md", "hosts.md"] as const;
+export const RULE_FILES = ["grammar.md", "judgments.md", "values.md", "divergence.md", "hosts.md", "rules.md"] as const;
 
 export interface Rule {
   readonly id: string;
