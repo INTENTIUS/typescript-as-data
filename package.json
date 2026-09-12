@@ -11,6 +11,7 @@
     "docs:build": "npm --prefix docs run build",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
+    "corpus": "TSAD_CORPUS_REPORT=1 vitest run packages/conformance/src/corpus.test.ts",
     "lint:prose": "node scripts/lint-docs-sentences.mjs"
   },
   "devDependencies": {

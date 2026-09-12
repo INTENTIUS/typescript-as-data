@@ -70,7 +70,7 @@ Shape only. No resolution, no evaluation.
 | L3.5 | array spread of a non-array | rejected | F-Eval-Array; F-Div-SpreadType |
 | L3.6 | identifier not in `consts` | consult `externals`; else unresolved | F-Eval-Ident |
 | L3.7 | bare `process` | pointed rejection naming build parameters | F-Eval-Ident step 4 |
-| L3.8 | identifier bound to same-file `new` | only `externals` may answer; else rejected, to avoid constructing a duplicate | F-Eval-Ident step 1; F-Div-SameFileNew; F-Count |
+| L3.8 | identifier bound to same-file `new` | only `externals` may answer, which F-Prebuild is what makes possible; a folder with no module graph cannot construct, so it rejects and the file falls back to run | F-Eval-Ident step 1; F-Prebuild; F-Div-SameFileNew; F-Count |
 | L3.9 | property access on a resource-bound const | `{__attrRef}` keyed by the const's name | F-Eval-Member step 1 |
 | L3.10 | property access on `null`/`undefined` | ~~returns `undefined`~~ **refused** since chant-v0.63.0 (#2328); a located rejection pointing at `?.`; file falls back to run, where it throws | F-Eval-Member step 4; F-Div-Nullish |
 | L3.11 | property access on a `{__resource}` envelope | `{__attrRef}` when the object is a plain identifier; **rejected otherwise** (chant#1535; silent wrong output otherwise) | F-Eval-Member step 5 |
@@ -102,7 +102,7 @@ Shape only. No resolution, no evaluation.
 | # | Decision | Behaviour | Covers |
 |---|---|---|---|
 | L5.1 | `collectConsts` | top-level `const` with an identifier name and an initializer, single file | F-Bind |
-| L5.2 | `externals` | pre-resolved imported bindings, consulted only when `consts` misses | F-Eval-Ident |
+| L5.2 | `externals` | pre-resolved imported bindings, and the instances F-Prebuild constructed for this file's `new`-valued consts; consulted only when `consts` misses | F-Eval-Ident; F-Prebuild |
 | L5.3 | shadowing | `consts` before `externals`; a local `const` defeats a registered helper or intrinsic name | F-Eval-Ident; F-Eval-CallLocal step 4 |
 | L5.4 | project-local function admissibility | plain params, body is one expression or `const`s then a final `return`; no generator, async, rest param, early return, `let`/`var` | S-FnBody; F-Eval-CallLocal step 1 |
 | L5.5 | body scope | folds in the **defining** module's scope, parameters bound on top | F-Eval-CallLocal step 4 |
@@ -170,6 +170,7 @@ module is never imported.
 | L8.15 | composite-call result type (added #14 read) | must be a `CompositeInstance` or `Declarable`, else run | F-Call step 7 (judgments.md) |
 | L8.16 | destructure source (added #14 read) | must be a composite instance or indexable object | F-Declarator (judgments.md) |
 | L8.17 | a re-export is a capture (added #14 read) | `export { a } from "./g"` adds `g` to `liveSources` when the value has identity | F-Declarator (judgments.md) |
+| L8.18 | same-file construction pre-pass (added #68) | every top-level `new`-valued const constructed once, in source order, before any declarator; the exported-declarator loop reuses the instance rather than constructing a second one (`preresolveResourceConsts`, chant#1169) | F-Prebuild; F-Count |
 
 ## L9. Trust and isolation
 

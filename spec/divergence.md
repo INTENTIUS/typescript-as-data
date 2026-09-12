@@ -48,7 +48,7 @@ Shape accepts; the folder may reject, because it resolves.
 | F-Div-Tag | any tagged-template tag; interior opaque | tag is a registered, tag-foldable intrinsic; interior folds | L2.4 |
 | F-Div-Provenance | a registered helper *name* | the name is bound by an import from chant, not shadowed | L2.11 |
 | F-Div-SpreadType | a spread operand of valid shape | operand folds to an object (object spread) or array (array spread) | L3.4, L3.5 |
-| F-Div-SameFileNew | a bare identifier | if bound to a same-file `new`, only `externals` may answer; else rejected to avoid a duplicate construction | L3.8 |
+| F-Div-SameFileNew | a bare identifier | if bound to a same-file `new`, only `externals` may answer, and F-Prebuild is what puts the instance there; a folder that cannot construct rejects rather than build a duplicate | L3.8 |
 | F-Div-Nullish | `a.b`, `a[k]` | the object does not fold to `null`/`undefined`; `?.` short-circuits instead (chant-v0.63.0) | L3.10, L3.21 |
 | F-Div-NsNew | `new ⟨Expr⟩(…)` with any callee | the callee is a plain identifier | L3.15 |
 | F-Div-Method | `x.m(…)` | the receiver folds to a real value that is not an envelope and whose `m` is a function | L3.18, L3.19 |

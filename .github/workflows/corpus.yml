@@ -1,0 +1,126 @@
+name: corpus
+
+# Distinct title so it isn't confused with the ci workflow on the same commit.
+run-name: corpus — ${{ github.head_ref || github.ref_name }}
+
+# The corpus cross-check (#25) runs chant's whole example corpus through both
+# implementations. The check itself takes under a second, but it can only run
+# against a chant checkout that has its dependencies installed and its lexicon
+# codegen artifacts generated, and generating those means downloading a dozen
+# upstream schemas. That setup is slow and depends on upstream availability, so
+# it lives in its own workflow rather than in ci.yml.
+#
+# There are no pull_request or push triggers for the same reason: an upstream
+# schema host being down would fail the main gate on a change that has nothing
+# to do with it. The weekly run is enough to catch drift between the two
+# implementations, and workflow_dispatch covers the case where somebody wants
+# an answer now.
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays, early UTC.
+    - cron: '17 6 * * 1'
+
+concurrency:
+  group: corpus-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # chant is public, and the corpus is read at the version this repository
+  # pins in its devDependencies (0.70.1). Bump both together.
+  CHANT_REF: chant-v0.70.1
+  CHANT_DIR: .chant-corpus
+
+jobs:
+  corpus:
+    runs-on: ubuntu-latest
+    # chant's own check job allows 20 minutes for roughly this setup. This job
+    # does the same lexicon generation plus two npm installs, and a cold
+    # ~/.chant cache means every schema is fetched rather than read.
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check out chant for the corpus
+        uses: actions/checkout@v6
+        with:
+          repository: INTENTIUS/chant
+          ref: ${{ env.CHANT_REF }}
+          path: ${{ env.CHANT_DIR }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      # Everything from here to the corpus step is chant's own check job setup,
+      # copied from .github/workflows/chant.yml at the pinned ref. The cache key
+      # and the lexicon list are kept the same so this job hits the same schema
+      # snapshots chant's own CI does.
+      - name: Cache lexicon schemas
+        uses: actions/cache@v5
+        with:
+          path: ~/.chant
+          key: lexicon-schemas-${{ hashFiles('.chant-corpus/lexicons/*/src/**/fetch.ts', '.chant-corpus/lexicons/*/src/**/versions.ts') }}
+          restore-keys: |
+            lexicon-schemas-
+
+      - name: Install chant's dependencies
+        working-directory: ${{ env.CHANT_DIR }}
+        run: npm install
+
+      # The corpus only reads eleven of these, and the reference host loads a
+      # twelfth (fountain, for examples/fountain-steward). The rest are left in
+      # so this list stays a copy of chant's rather than a subset somebody has
+      # to re-derive every time chant adds a lexicon.
+      - name: Generate lexicon artifacts
+        working-directory: ${{ env.CHANT_DIR }}
+        run: |
+          npm run --prefix lexicons/aws prepack
+          npm run --prefix lexicons/azure prepack
+          npm run --prefix lexicons/gitlab prepack
+          npm run --prefix lexicons/github prepack
+          npm run --prefix lexicons/forgejo prepack
+          npm run --prefix lexicons/k8s prepack
+          npm run --prefix lexicons/gcp prepack
+          npm run --prefix lexicons/helm prepack
+          npm run --prefix lexicons/docker prepack
+          npm run --prefix lexicons/fly prepack
+          npm run --prefix lexicons/fountain prepack
+          npm run --prefix lexicons/k3d prepack
+          npm run --prefix lexicons/k3s prepack
+          npm run --prefix lexicons/render prepack
+          npm run --prefix lexicons/terraform prepack
+          # cedar generates from the project's own .cedarschema, falling
+          # back to the schema bundled at src/spec/default-schema.cedarschema
+          # so a clean checkout still produces a surface to gate (#1650).
+          npm run --prefix lexicons/cedar prepack
+          npm run --prefix lexicons/cpln prepack
+
+      # The suite skips itself when it cannot find a corpus to read, and a
+      # skipped suite passes. Fail here instead, so a checkout that landed in
+      # the wrong place cannot report as a clean cross-check.
+      - name: Check the corpus is readable
+        run: test -f "${{ env.CHANT_DIR }}/examples/differential-corpus.ts"
+
+      - name: Corpus cross-check
+        env:
+          TSAD_CHANT_REPO: ${{ github.workspace }}/${{ env.CHANT_DIR }}
+          TSAD_CORPUS_REPORT: '1'
+        run: npx vitest run packages/conformance/src/corpus.test.ts
+
+      # Uploaded on failure too: a run with disagreements in it is the run whose
+      # report somebody wants to read.
+      - name: Upload the corpus report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: corpus-report
+          path: packages/conformance/corpus-report.md
+          if-no-files-found: warn

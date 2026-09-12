@@ -60,8 +60,8 @@ numeric literal to `Number(text)`; `true`, `false`, `null` to themselves.
 
 **F-Eval-Ident.** For identifier `n`, in order (R6.6):
 1. `n ∈ consts` with initializer `new …`: if `n ∈ externals`, `⟦n⟧ =
-   externals[n]` (the one instance J2 pre-built, R4.6); else **reject** -
-   re-folding would construct a duplicate (F-Div-SameFileNew).
+   externals[n]` (the one instance F-Prebuild put there, R4.6); else
+   **reject** - re-folding would construct a duplicate (F-Div-SameFileNew).
 2. `n ∈ consts` otherwise: `⟦n⟧ = ⟦consts[n]⟧`.
 3. `n ∈ externals`: if it is a `FoldableFunction`, **reject** (F-Val-Callable);
    if it is a function and `ρ` registers `n` as eager, **reject** ("call it
@@ -255,20 +255,36 @@ referenced does not by itself force `run`.
 
 ### Producing the namespace
 
+**F-Prebuild.** Every top-level `const n = new T(…)` of `f` is constructed
+once by revival (F-Val-Fate) before any declarator of `f` is evaluated. This
+holds whether or not `n` is exported. Construction runs in source order and
+`externals[n]` is the instance. A later construction therefore sees an
+earlier one, which is what running the module top to bottom does. A
+construction that **fails** is skipped: `n` stays absent from `externals`, so
+F-Eval-Ident step 1 rejects a reference to it and the file falls back to
+`run`. If `n` is exported, F-Declarator reproduces the failure with its own
+located reason. Under `ι = isolated` each construction is subject to
+F-IsolatedRefusal like any other.
+
 **F-Declarator.** Each admitted declarator produces one or more entries of
 `X`. Any failure in any declarator is a failure of the file (F-Total).
 
 - *resource* `export const x = new T(…)`: `foldResource` (J1) yields a
   `{__resource}` envelope, which is **revived** into a real instance by the
-  class `T` resolves to through `f`'s own imports (R1.2, R7.1). Under
-  `isolated`, a `T` from a project file is F-IsolatedRefusal.
+  class `T` resolves to through `f`'s own imports (R1.2, R7.1). F-Prebuild has
+  already built this initializer, and the instance it built is the one bound
+  here; a second construction would put two entities where running puts one
+  (F-Count). Under `isolated`, a `T` from a project file is
+  F-IsolatedRefusal.
 - *single* `export const x = e`: if `e` is a call, F-Call; if a member or
   element access on a call's result, F-Call then index (base must be an
   indexable object); otherwise J1 on `e`, revived.
 - *destructure* `export const { a, b: c } = e`: `e` must resolve to a
   composite instance or an indexable object; each element indexes it.
 - *named-export* `export { a, b as c }`: each local name resolves through
-  `locals` then `externals`.
+  `locals` then `externals`, by F-Eval-Ident and not by re-folding the
+  initializer, so a name bound to a same-file `new` reads F-Prebuild's
+  instance rather than building another.
 - *re-export* `export { a } from "./g"`: `X_g[a]`, with `g ∈ L(f)` if it has
   identity, a re-export is a capture.
 - *function* `export function φ`: `X[φ]` is a `FoldableFunction` marker
@@ -295,7 +311,8 @@ referenced does not by itself force `run`.
 
 **F-Count.** Within `f`, a composite call reached by several member accesses
 or destructured names is resolved once (`ResolveCtx.memo`); a same-file
-`new` bound to a `const` is constructed once, in source order (R4.6).
+`new` bound to a `const` is constructed once, in source order, by F-Prebuild
+(R4.6).
 
 **F-IsolatedRefusal.** Under `ι = isolated`, any step above that would
 resolve *and invoke or import* a binding not on the trust allowlist (R2.1) -
@@ -694,6 +711,18 @@ turns exhaustion into a fallback. No requirement in the first revision
 mentioned them. The spec must either fix the bounds or say they are
 implementation-defined and that exceeding one is a fallback, never wrong
 output.
+
+**F-Prebuild** *(added by #68, from the corpus cross-check of #25)*
+
+F-Eval-Ident step 1 always read its answer out of `externals` and called it
+"the one instance J2 pre-built", and no rule of J2 built it. The rules that
+produce the namespace were F-Bind through F-Declarator, and every arm among
+them that wrote `externals` wrote an import. A reader with L5.2 in hand
+concluded step 1 always rejects, and the reference implementation, written
+from the text, did exactly that; chant, written first, had the pre-pass all
+along (`preresolveResourceConsts`, chant#1169). The rule was lost in the
+abstraction from code to specification, and 22 corpus files disagreed
+because of one missing sentence.
 
 **F-Count** *(was R4.6. Evaluation count is observable semantics)*
 

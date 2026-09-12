@@ -24,6 +24,22 @@ Not rules of the mechanism; rules of this document set. No fixture cites them. C
 - **Rejections are located**- node and rule, wording unconstrained. Message stability is not normative (R9.4).
 - **The subset is versioned**(#18).
 
+**A disagreement between two implementations is triaged here first** (#25),
+and reclassified as an implementation bug only once this specification is
+shown to be unambiguous on the point. The order is the rule because the
+incentives run against it: amending an implementation takes an afternoon and
+amending a specification takes a decision, so the cheap label is the one most
+likely to be wrong. A disagreement that survives triage is recorded with the
+issue that will settle it, and the record may only shrink. This has been the
+working practice since the first cross-check and was written down nowhere.
+
+**A difference a missing capability explains is not a disagreement.** Where one
+implementation has no answer to give, for want of a host or of a form it does
+not implement, the difference is counted under a named limit and reported
+apart from the agreement figure. Folding it into drift overstates what the comparison
+established, in the direction that flatters this document. The corpus
+cross-check names three such limits and counts each of them.
+
 ## Ownership, this repository is normative; chant implements it
 
 Decided 2026-09-10 (#33). The subset is defined here. chant's
