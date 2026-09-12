@@ -6,8 +6,8 @@ consumers:
   - id: forgejo-warden
     name: forgejo-warden
     kind: org governance
-    status: pr-open
-    status_label: "Reads `governance.ts` through the published reference; the first consumer that is neither this repository nor chant. Its `.ts` policy is forgejo-warden#33, merged the day the packages are on npm."
+    status: merged
+    status_label: "Reads `governance.ts` through the published reference; the first consumer that is neither this repository nor chant. Its `.ts` loader is on main (forgejo-warden#33), and the tutorial's six steps run against it weekly."
     repo: https://github.com/INTENTIUS/forgejo-warden
   - id: chant
     name: chant

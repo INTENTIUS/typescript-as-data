@@ -240,7 +240,7 @@ th { background: var(--surface-2); font-weight: 600; }
 
 /* typescript-as-data additions: consumer status dots and captioned fences. */
 .status-dot.status-reference { background: var(--pass); }
-.status-dot.status-pr-open { background: var(--warn-line); }
+.status-dot.status-merged { background: var(--warn-line); }
 figure.code { margin: 1rem 0; }
 figure.code figcaption { font-size: 0.85rem; color: var(--muted); padding: 0.25rem 0.75rem; border: 1px solid var(--line); border-bottom: 0; border-radius: 8px 8px 0 0; background: var(--surface); }
 figure.code figcaption + .highlight pre, figure.code figcaption + pre { margin-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
