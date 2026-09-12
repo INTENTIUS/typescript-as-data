@@ -25,7 +25,7 @@ The conformance suite, `@intentius/tsad-conformance`: the fixtures at the spec v
 
 ## Evaluators in other languages
 
-The reference is TypeScript. A Rust evaluator on oxc is [issue #86](https://github.com/INTENTIUS/typescript-as-data/issues/86), after the profile and the coercion fixtures exist. As WASM it would embed without a subprocess in Go and Python, in the browser and in an editor. It is not "rust-as-data"; the language a user writes is TypeScript whatever evaluates it.
+The reference is TypeScript. `tsad-eval`, in [`evaluators/rust`](https://github.com/INTENTIUS/typescript-as-data/tree/main/evaluators/rust), is the `data-host` profile written from the text in Rust on oxc with no JavaScript runtime: it passes every fixture tagged for the profile, agrees with the reference on each, and is a column in the corpus cross-check. As WASM it would embed without a subprocess in Go and Python, in the browser and in an editor. It is not "rust-as-data"; the language a user writes is TypeScript whatever evaluates it.
 
 ## Who has done it
 

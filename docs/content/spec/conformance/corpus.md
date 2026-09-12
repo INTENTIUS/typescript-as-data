@@ -118,6 +118,10 @@ than holding one. A namespace holding something with no structural encoding at
 all (a function or a symbol) is reported as `not-data`, and only the verdict is
 compared there.
 
+## The data-host column
+
+The corpus runs a third time when `evaluators/rust` is built. The evaluator with no JavaScript runtime and the reference are both judged in `data-host` on the same host description, which is the intrinsic registry and the trust set with no code behind them. At <code>{{< figure "corpus.revision" >}}</code> the two agree on all {{< figure "corpus.dataHost.files" >}} files and {{< figure "corpus.dataHost.bothFold" >}} fold on both sides to the same namespace, envelopes included. The column measures the profile against itself in two languages; the comparable set above measures the reference against chant, which runs.
+
 ## What the test asserts
 
 `corpus.test.ts` has four assertions, and two of them guard against the check

@@ -19,6 +19,7 @@ The repository is three things and a site.
 | `packages/reference` | The reference implementation (`@intentius/tsad-reference`) |
 | `packages/conformance` | The adapter interface, fixture format, runner, and the chant adapter |
 | `docs/` | The published site (Hugo, on choudoufu's layout); the normative pages are generated from `spec/` |
+| `evaluators/rust/` | `tsad-eval`, the `data-host` profile in Rust on oxc, with no JavaScript runtime (#86) |
 
 ## Relationship to chant
 

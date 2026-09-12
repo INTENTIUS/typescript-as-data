@@ -23,6 +23,18 @@ None.
 
 None.
 
+## The data-host column
+
+- evaluator: `tsad-eval/0.1.0`, declaring spec `1.5`, no JavaScript runtime
+
+| Files | Agreed | Both fold |
+|---|---|---|
+| 441 | 441 | 142 |
+
+The reference and the evaluator are both judged in `data-host`, on the same host description and no code. A file that folds on both sides has the same namespace on both, envelopes included.
+
+No disagreements.
+
 ## Per entry
 
 | Entry | Files | Comparable | Agreed | No host | No composite form |

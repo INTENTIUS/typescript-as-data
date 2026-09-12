@@ -1,0 +1,17 @@
+[package]
+name = "tsad-eval"
+version = "0.1.0"
+edition = "2021"
+description = "An evaluator for the typescript-as-data data-host profile, written from the specification, with no JavaScript runtime"
+license = "MIT"
+
+[dependencies]
+oxc_allocator = "0.149"
+oxc_ast = "0.149"
+oxc_parser = "0.149"
+oxc_span = "0.149"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order", "arbitrary_precision"] }
+
+[profile.release]
+opt-level = 2

@@ -453,6 +453,12 @@ export function foldProject(files: ReadonlyMap<string, string>, host: Host = EMP
     imports.set(path, set);
   }
 
+  // F-Profile-DataHost: J3 is absent. Nothing runs, so nothing taints, and
+  // every file's verdict is its own.
+  if (host.profile === "data-host") {
+    return { verdicts: new Map(tentative), tentative, taintReason: new Map(), taintSource: new Map() };
+  }
+
   // F-Succ. Both directions from one tainted file.
   const succ = new Map<string, Set<string>>();
   const add = (from: string, to: string) => {
