@@ -109,7 +109,7 @@ Per-production conditions and divergences:
 | S-Unwrap | L2.1 | recurse into the operand |; |
 | S-Literal | L2.2 | admitted | numeric → `Number(text)` |
 | S-Undefined |; | an identifier, shape-valid as S-Ident | folds to `undefined` |
-| S-Ident | L2.3 | always shape-valid | must resolve in `consts` then `externals` (R6.6); a bare `process` is a pointed rejection (R8); a name bound to a same-file `new` resolves only via `externals` (R4.6) |
+| S-Ident | L2.3 | always shape-valid | must resolve in `consts` then `externals` (R6.6); a bare `process` is a pointed rejection (R8); a name bound to a same-file `new` resolves only via `externals`, where F-Prebuild placed the single instance (R4.6) |
 | S-Template | L2.5 | every span ∈ ⟨Expr⟩ | spans coerce by `ToString` (R10.4) |
 | S-Tagged | L2.4 | interior **opaque**; not recursed | tag must be a registered, tag-foldable intrinsic; interior folds with unresolved dotted chains kept symbolic |
 | S-Prop | L2.6 | key must be ⟨LiteralKey⟩ (EVL001); value ∈ ⟨Expr⟩ |; |

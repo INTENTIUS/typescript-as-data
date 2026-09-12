@@ -32,6 +32,34 @@ has no class to become and revival rejects, which is correct rather than
 silent: a build that folds a resource and cannot revive it has not folded the
 file. Conformance fixtures name the host they need.
 
+## The composite factory form, measured
+
+The corpus cross-check (#25) puts a number on the gap above: 272 of chant's
+409 corpus files reach a composite factory call, directly or through a file
+that does, and none of them can be compared until this package has the form.
+The count is in `packages/conformance/corpus-report.md`.
+
+## Capture reaches inside an entity
+
+**F-Capture** is decided over the produced namespace, and the walk that decides
+it descends through an entity's own data properties, enumerable or not, and
+through a `WeakRef` to what it holds. chant's entity classes keep their props
+on a non-enumerable property and an attribute reference keeps its entity
+behind a `WeakRef`, so a walk over `Object.values` records no capture for the
+two ordinary cases: a shared object passed to a constructor, and an output
+built from another file's attribute. Neither was visible until the corpus ran
+against a real host (#25), because with `EMPTY_HOST` an entity never becomes
+an instance. Accessors are skipped, not invoked; one of chant's throws when
+read too early.
+
+## Same-file constructions are pre-built
+
+**F-Prebuild** (#68) is implemented: every top-level `const n = new T(…)` is
+constructed once, in source order, before any declarator is evaluated, and a
+reference to it reads that instance. This package originally rejected such a
+reference, which was the reading F-Eval-Ident step 1 licensed before the rule
+existed; the corpus found twelve chant examples that fold the shape.
+
 ## No filesystem, no module resolution algorithm
 
 `foldProject` takes a map of path to source. Specifier resolution is the three

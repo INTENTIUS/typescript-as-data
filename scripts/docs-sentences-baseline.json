@@ -34,7 +34,7 @@
  "spec/judgments.md": {
   "discourse/punchy-fragments": 45,
   "claude/colon-reveal": 21,
-  "repetition/near-duplicate": 20,
+  "repetition/near-duplicate": 19,
   "anaphora/repeated-opening": 11,
   "tricolon/comma-series": 12,
   "tricolon/density": 1

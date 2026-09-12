@@ -52,11 +52,28 @@ The chant side's `false` is also an unsampled invariant: the run fails unless ev
 
 | Pin | Fixtures | Rules with a fixture | Shape and fold agreement |
 |---|---|---|---|
-| chant 0.70.1 | 42, of which 13 are whole-build | 58 of 126 | all, on the 38 the pin can answer |
+| chant 0.70.1 | 44, of which 14 are whole-build | 61 of 127 | all, on the 39 the pin can answer |
 
 One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
 
 **What this agreement is worth.** Until #50 the reference implementation's evaluation layer was a *port* of chant's, so agreement on expression-level fixtures was guaranteed by construction rather than observed. It is now written from `grammar.md` §2 and `judgments.md` J1 without consulting chant's source, and the two implementations agree on every fixture, so the comparison is between two codebases rather than one code base with itself.
+
+## The corpus cross-check
+
+`packages/conformance/src/corpus.ts` runs chant's example corpus through both implementations and compares verdicts file by file, and export namespaces where both folded (#25). The entries are the ones chant's own `examples/differential-corpus.ts` enumerates, imported rather than re-listed. The reference is given chant's host, assembled from chant's own registries: the lexicon packages' real exports, the authoring-helper allowlist and each entry's intrinsic registry. `npm run corpus` regenerates `packages/conformance/corpus-report.md`, which carries every number below.
+
+| Corpus | Files | Comparable | Agreed | Both fold, namespaces identical |
+|---|---|---|---|---|
+| chant-v0.70.1 at `730e7f7e`, 108 entries | 409 | 65 | 65 | 50 |
+
+A file is comparable when nothing disarmed either implementation before the comparison started. Four things do, and each is counted apart from the agreement figure. 272 files reach a composite factory call, a form the reference does not implement. 52 read a host data export as a value, which chant's whole-build entry cannot resolve because it takes no lexicon list, so F-Host-Trust arm 1 is off on its side exactly as L9.4 requires. 19 sit in entries that declare build parameters, which the same entry point cannot be given. 1 imports a package the host cannot load. The first is a limit of the reference; the middle two are limits of chant's entry point rather than of chant.
+
+**What this establishes.** On 65 files nobody wrote for the purpose, the two implementations agree on every verdict, and on the 50 that fold on both sides the export namespaces are structurally identical, entity class and properties included. It is the first agreement between the two that was observed rather than designed.
+
+**Its limit.** 65 of 409 is the comparable set, not the corpus, and every limit is an over-approximation, so a file under one may also be hiding a disagreement. The composite limit alone removes two thirds of the corpus, and the most common form in real projects is therefore the one the cross-check cannot yet speak to.
+
+**Found on the way.** The first run, with no host, compared 7 files and none of them folded on either side, which is agreement by vacuity. With a host it turned up a reference bug, a specification defect and a harness artifact. The bug was F-Capture's walk stopping at an entity's boundary, invisible without a host because an unrevived entity is a plain object; fixed, the reference reproduces `fold-adversarial`'s backward capture edge against a real host for the first time. The defect is #68: F-Eval-Ident step 1 read an instance "J2 pre-built" that no rule of J2 built, so the reference refused 22 files chant folds, and F-Prebuild now states the rule. The artifact was 21 files on which the harness had asked the two implementations different questions, now counted under the lexicon-list limit.
+
 
 Two limits on that. The rewrite's author had read chant's implementation closely while writing the specification from it, so this establishes that the specification is complete enough to implement from, not that a reader who had never seen chant would arrive at the same place. And the agreement covers the expression and single-file layers. It does not cover J3, for the reason the next section gives.
 

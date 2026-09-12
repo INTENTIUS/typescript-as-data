@@ -1,0 +1,8 @@
+{
+  "rules": ["F-Div-SameFileNew", "F-Eval-Ident"],
+  "export": "wrapper",
+  "shape": "accept",
+  "fold": "run",
+  "rejectAt": { "line": 5, "column": 33 },
+  "note": "The same shape F-Prebuild folds in a build, judged by an expression folder with no module graph. Nothing can construct, so `externals` has no instance for `base`, step 1 rejects at the reference rather than building a duplicate, and the shape classifier accepts what the folder refused (F-Direction)."
+}

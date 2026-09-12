@@ -33,6 +33,7 @@ npm install
 npm run typecheck
 npm test
 npm run lint:prose
+TSAD_CHANT_REPO=../chant npm run corpus   # the corpus cross-check (#25); needs a chant checkout with its lexicons generated
 
 npm run docs        # docs dev server
 npm run docs:build  # static build, as CI runs it

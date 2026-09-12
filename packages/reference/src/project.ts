@@ -139,16 +139,54 @@ function indexOwned(value: unknown, file: string, session: Session, seen = new S
   for (const inner of Object.values(value)) indexOwned(inner, file, session, seen);
 }
 
-/** F-Capture, decided over the produced namespace: which other files' objects are in `X(f)`. */
+/**
+ * F-Capture, decided over the produced namespace: which other files' objects
+ * are in `X(f)`.
+ *
+ * The walk descends through an entity's own properties as well as through
+ * plain structure, which is where `indexOwned` above stops. F-Capture asks
+ * whether some value in `X(f)` came from `X(g)`, and an object handed to a
+ * constructor is still in `X(f)` after the constructor kept it. Stopping at
+ * the entity lost the edge entirely for the ordinary case, a shared plain
+ * object passed as a resource's `labels`, and the loss was invisible until
+ * the corpus ran against a real host (#25): with no host the entity never
+ * becomes an instance, so the walk stayed inside plain objects and found the
+ * object anyway.
+ */
 function capturesIn(value: unknown, self: string, session: Session, out: Set<string>, seen = new Set<unknown>()): void {
   if (value === null || typeof value !== "object") return;
   if (seen.has(value)) return;
   seen.add(value);
   const from = session.owner.get(value);
   if (from !== undefined && from !== self) out.add(from);
-  const proto = Object.getPrototypeOf(value);
-  if (proto !== Object.prototype && proto !== Array.prototype && proto !== null) return;
-  for (const inner of Object.values(value)) capturesIn(inner, self, session, out, seen);
+  for (const inner of ownData(value)) capturesIn(inner, self, session, out, seen);
+}
+
+/**
+ * An object's own data properties, enumerable or not, accessors skipped.
+ *
+ * A host's entity class is free to keep what it was handed wherever it likes,
+ * and chant's keeps it on a non-enumerable `props`. `Object.values` cannot see
+ * that, so a capture walk built on it reports no capture for the ordinary case
+ * of a shared object passed to a constructor. Accessors are skipped rather
+ * than invoked: reading one can throw (chant's `AttrRef.toJSON` does, for a
+ * reference whose logical name is not yet assigned), and an accessor computes
+ * a value rather than holding one.
+ */
+function ownData(value: object): unknown[] {
+  // An object held weakly is still held: an attribute reference keeps its
+  // entity behind a `WeakRef`, and the file holding the reference holds the
+  // entity for F-Capture's purposes, the same as if it held it directly.
+  if (value instanceof WeakRef) {
+    const target = value.deref();
+    return target === undefined ? [] : [target];
+  }
+  const out: unknown[] = [];
+  for (const key of Reflect.ownKeys(value)) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (descriptor && "value" in descriptor) out.push(descriptor.value);
+  }
+  return out;
 }
 
 /** Every value binding a non-type-only import clause introduces. */
@@ -249,9 +287,33 @@ function foldFile(path: string, session: Session): Verdict {
     const { line, character } = sf.getLineAndCharacterOfPosition(node.getStart());
     return revive(v, externals, { line: line + 1, column: character + 1, what });
   };
+
+  // F-Prebuild: every same-file `const n = new T(…)`, exported or not, built
+  // once in source order before any declarator reads it, and bound in
+  // `externals` where F-Eval-Ident step 1 looks. A construction that fails is
+  // skipped rather than failing the file here: the name stays unbound, a
+  // reference to it rejects under step 1, and an exported one reproduces the
+  // failure below with its own located reason. `collectConsts` yields source
+  // order, so a later construction sees an earlier one (#68).
+  const prebuilt = new Map<ts.Expression, unknown>();
+  for (const [name, init] of consts) {
+    if (!ts.isNewExpression(init)) continue;
+    try {
+      const instance = live(foldExpr(init, scope, evalHost), init, name);
+      prebuilt.set(init, instance);
+      externals.set(name, instance);
+    } catch (e) {
+      if (!(e instanceof FoldRejection)) throw e;
+    }
+  }
+
   for (const d of scan.declarators) {
     try {
-      if (d.kind === "resource" || d.kind === "single") {
+      if (d.kind === "resource") {
+        // F-Count: the instance F-Prebuild built for this initializer is the
+        // one exported; a second construction would be a second entity.
+        exports.set(d.name, prebuilt.has(d.expr) ? prebuilt.get(d.expr) : live(foldExpr(d.expr, scope, evalHost), d.expr, d.name));
+      } else if (d.kind === "single") {
         exports.set(d.name, live(foldExpr(d.expr, scope, evalHost), d.expr, d.name));
       } else if (d.kind === "destructure") {
         const base = live(foldExpr(d.expr, scope, evalHost), d.expr, "a destructured declaration");
@@ -262,7 +324,18 @@ function foldFile(path: string, session: Session): Verdict {
       } else if (d.kind === "named-export") {
         for (const el of d.elements) {
           const init = consts.get(el.local);
-          const v = init ? live(foldExpr(init, scope, evalHost), init, el.as) : externals.get(el.local);
+          // Through F-Eval-Ident, never by re-folding the initializer: a name
+          // bound to a same-file `new` reads F-Prebuild's instance, and a
+          // failed one reproduces step 1's rejection rather than building a
+          // second entity here.
+          const v =
+            init && ts.isNewExpression(init)
+              ? prebuilt.has(init)
+                ? prebuilt.get(init)
+                : live(foldExpr(init, scope, evalHost), init, el.as)
+              : init
+                ? live(foldExpr(init, scope, evalHost), init, el.as)
+                : externals.get(el.local);
           if (v === undefined && !consts.has(el.local) && !externals.has(el.local)) {
             return { kind: "run", rule: "F-Reference", reason: `unresolved identifier: ${el.local}` };
           }

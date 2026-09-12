@@ -2,9 +2,8 @@
 
 Deliberate, and this list may only shrink (#8). Each entry names the rule and why it is still uncovered. Remove an entry when its fixture lands; the gate fails if an entry is stale.
 
-58 of 126 rules have fixtures. Most of the rules below are uncovered because the corpus is still growing (#24); where a rule needs something the reference implementation does not have, the entry says so.
+61 of 127 rules have fixtures. Most of the rules below are uncovered because the corpus is still growing (#24); where a rule needs something the reference implementation does not have, the entry says so.
 
-- `F-Count` — no fixture yet; corpus is #24's
 - `F-Depth` — no fixture yet; corpus is #24's
 - `F-Direction` — no fixture yet; corpus is #24's
 - `F-Div` — no fixture yet; corpus is #24's
@@ -13,7 +12,6 @@ Deliberate, and this list may only shrink (#8). Each entry names the rule and wh
 - `F-Div-Method` — no fixture yet; corpus is #24's
 - `F-Div-NsNew` — no fixture yet; corpus is #24's
 - `F-Div-Provenance` — no fixture yet; corpus is #24's
-- `F-Div-SameFileNew` — no fixture yet; corpus is #24's
 - `F-Div-Step` — no fixture yet; corpus is #24's
 - `F-Div-Tag` — no fixture yet; corpus is #24's
 - `F-Eval-CallEager` — no fixture yet; corpus is #24's
