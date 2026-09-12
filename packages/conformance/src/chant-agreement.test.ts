@@ -26,14 +26,24 @@ const foldsAtDepth = new Set([
   "F-Eval-CallIntrinsic/inside-function-body",
   "F-Eval-CallHelper/inside-function-body",
   "F-Div-Provenance/helper-name-from-project-import",
-  // #110's own corpus limit: a host factory called outside declarator
-  // position. chant has no step-7 refusal at all — `applyResolvedValue` sets
-  // the export unconditionally and its `isDeclarable || isCompositeInstance`
-  // test only tallies entities — so what a host call may return, and where it
-  // may be called, is an open J1 question rather than a chant defect.
-  "F-Call/a-host-factory-is-invoked",
 ]);
-const fixtures = all.filter((f) => !foldsAtDepth.has(f.id));
+
+/**
+ * Held out because the specification has not settled the question, not because
+ * chant is wrong. Kept apart from {@link foldsAtDepth} because the two empty on
+ * different events — a chant fix retires that one, a J1 ruling retires this one
+ * — and a single list would let either reason quietly cover for the other.
+ *
+ * tsad#110 — a host factory called outside declarator position. chant has no
+ * step-7 refusal at all: `applyResolvedValue` sets the export unconditionally
+ * and its `isDeclarable || isCompositeInstance` test only tallies entities. So
+ * what a host call may return, and where it may be called, is an open J1
+ * question rather than a chant defect.
+ */
+const openSpecQuestion = new Set(["F-Call/a-host-factory-is-invoked"]);
+
+const heldOut = new Set([...foldsAtDepth, ...openSpecQuestion]);
+const fixtures = all.filter((f) => !heldOut.has(f.id));
 
 describe("chant cross-check (#11)", () => {
   test("chant passes every fixture through its public fold API", async () => {
@@ -44,21 +54,20 @@ describe("chant cross-check (#11)", () => {
     const dis = await compareAdapters(referenceAdapter, chantAdapter, fixtures);
     expect(dis, dis.join("\n")).toEqual([]);
   });
-  test("the whole-build fixtures reach chant, or say why not (#62)", async () => {
-    // Two reasons a project fixture can be skipped, and both must be visible.
-    // An older pin has no whole-build entry at all (chant#2408); a fixture
-    // naming a host asks for entity classes from a package chant cannot
-    // resolve. Anything else has to be answered.
+  test("every whole-build fixture reaches chant (#62)", async () => {
+    // This used to allow a skip when the fixture named a host, because a host's
+    // entity classes came from a package chant's allowlist could not name
+    // (chant#2408, chant#2438), and later because chant could not answer in
+    // `isolated` at all (chant#2442). Both are fixed and the allowance is gone:
+    // every project fixture is answered, so a skip is a failure rather than an
+    // excuse. Three fixtures moved from skipped to answered when chant-v0.72.1
+    // shipped, and the count is asserted so a silent return to "unavailable"
+    // fails here instead of reading as agreement.
     const projects = projectFixtures(fixtures);
     expect(projects.length).toBeGreaterThan(0);
     const reports = await Promise.all(projects.map((f) => runProjectFixture(chantAdapter, f)));
     const skipped = reports.filter((r) => r.skipped).map((r) => r.fixture);
-    const hosted = new Set(projects.filter((f) => f.host).map((f) => f.id));
-    const unexpected = skipped.filter((id) => !hosted.has(id));
-    expect(unexpected, `skipped without a host to explain it:\n${unexpected.join("\n")}`).toEqual([]);
-    // The pin carries the entry, so "unavailable" everywhere would mean the
-    // comparison silently stopped happening. Asserted, not assumed.
-    expect(skipped.length, "every hostless whole-build fixture must reach chant").toBeLessThan(projects.length);
+    expect(skipped, `chant answered none of these:\n${skipped.join("\n")}`).toEqual([]);
   });
 
   test("chant and the reference agree on every whole-build fixture chant can answer (#62)", async () => {
@@ -66,24 +75,30 @@ describe("chant cross-check (#11)", () => {
     expect(dis, dis.join("\n")).toEqual([]);
   });
 
-  test("every held-out fixture exists and still disagrees, so the list cannot outlive its bugs", async () => {
-    // A hold-out that quietly outlived its bug would be worse than the bug.
-    // Both halves are asserted: every held-out fixture exists, and every one
-    // still disagrees, so the list empties itself the moment chant#2441 lands.
-    const held = projectFixtures(all).filter((f) => foldsAtDepth.has(f.id));
-    expect(held.map((f) => f.id).sort()).toEqual([...foldsAtDepth].sort());
+  test("every held-out fixture exists and still disagrees, so neither list outlives its reason", async () => {
+    // A hold-out that quietly outlived its cause would be worse than the cause.
+    // Run per list rather than over the union, so each empties itself on its
+    // own event: a chant fix retires foldsAtDepth, a J1 ruling retires
+    // openSpecQuestion, and neither can go on excusing the other's fixtures.
+    for (const [reason, names] of [
+      ["chant#2441", foldsAtDepth],
+      ["tsad#110", openSpecQuestion],
+    ] as const) {
+      const held = projectFixtures(all).filter((f) => names.has(f.id));
+      expect(held.map((f) => f.id).sort(), `${reason}: a held-out fixture no longer exists`).toEqual([...names].sort());
 
-    // A skip is not agreement. `compareAdapters` reports nothing when one side
-    // answers "unavailable", so without this a chant that had stopped
-    // answering hosted fixtures at all would read as "these now agree, drop
-    // the hold-out" — which is exactly the false signal this guard exists to
-    // prevent, one level up.
-    const reports = await Promise.all(held.map((f) => runProjectFixture(chantAdapter, f)));
-    const skipped = reports.filter((r) => r.skipped).map((r) => r.fixture);
-    expect(skipped, `chant answered none of these, so agreement cannot be read from them:\n${skipped.join("\n")}`).toEqual([]);
+      // A skip is not agreement. `compareAdapters` reports nothing when one
+      // side answers "unavailable", so without this a chant that had stopped
+      // answering hosted fixtures at all would read as "these now agree, drop
+      // the hold-out" — exactly the false signal this guard exists to prevent,
+      // one level up.
+      const reports = await Promise.all(held.map((f) => runProjectFixture(chantAdapter, f)));
+      const skipped = reports.filter((r) => r.skipped).map((r) => r.fixture);
+      expect(skipped, `${reason}: chant answered none of these, so agreement cannot be read from them:\n${skipped.join("\n")}`).toEqual([]);
 
-    const dis = await compareAdapters(referenceAdapter, chantAdapter, held);
-    expect(dis.length, "a held-out fixture now agrees — drop it from the hold-out").toBeGreaterThan(0);
+      const dis = await compareAdapters(referenceAdapter, chantAdapter, held);
+      expect(dis.length, `${reason} looks settled — drop its hold-out`).toBeGreaterThan(0);
+    }
   });
   test("chant's shape classifier is available (chant-v0.64.0+, chant#2362) and agrees on every fixture", async () => {
     // The pinned chant carries the export, so "unavailable" would mean the adapter
