@@ -28,13 +28,13 @@ which ignores what the fixture expects and asks whether the two implementations
 answer the same. A fixture could be wrong about both of them and this test
 would still have something to say.
 
-**The whole-build fixtures arrive, or say why not.** There are two legitimate
-reasons a project fixture can be skipped, and the test requires both to be
-visible. An older pin has no whole-build entry at all, which is chant#2408. A
-fixture naming a host asks for entity classes from a package the pin cannot
-resolve. Anything else has to be answered. The test also asserts that not every
-project fixture was skipped, because "unavailable" everywhere would mean the
-comparison had silently stopped happening.
+**Nothing whole-build is skipped.** Since `chant-v0.72.0` the adapter
+hands chant the fixture's host as a package outside the lexicon convention
+(chant#2438). One naming a host therefore reaches chant like any other.
+The test asserts that no project fixture was skipped. The three fixtures chant
+holds out under chant#2441 are held out by name, so a new fixture citing the
+same rule is compared rather than excused. The four round-trip fixtures skip,
+chant having no generator yet.
 
 **On whole-build fixtures the two still agree.** `compareAdapters` again,
 restricted to project fixtures. On those it compares the final verdict, the
@@ -63,12 +63,10 @@ requires, in the specification first: the spec recorded the recommendation,
 
 On the whole-build side, `paper/measurements.md` notes that until
 `chant-v0.70.1` there was no entry that took a set of files, so none of the J3
-fixtures were answerable there. chant#2408 added one. The fixtures that need no
-host now run against both implementations, and they agree on every file's final
-verdict and its tentative verdict; for every taint casualty they agree on the
-file the edge came from and on which rule it was. Fixtures that name a host
-still reach one implementation, their entity classes coming from a package the
-pin cannot resolve, and a skip with no host to explain it fails the suite.
+fixtures were answerable there. chant#2408 added one, and chant#2438 let the
+fixtures that name a host follow. The two agree on every file's final verdict
+and its tentative verdict; for every taint casualty they agree on the file the
+edge came from and on which rule it was.
 
 Two agreements there are worth naming, and `paper/measurements.md` names them.
 The pinned implementation classifies the capturing sibling as reached by a

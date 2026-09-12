@@ -52,7 +52,7 @@ The chant side's `false` is also an unsampled invariant: the run fails unless ev
 
 | Pin | Fixtures | Rules with a fixture | Shape and fold agreement |
 |---|---|---|---|
-| chant `0.72.0` | 122, of which 60 are whole-build | 134 of 139 | all, on the 88 the pin's adapter answers; the 34 that name a host wait on the adapter change in flight (chant#2438) |
+| chant `0.72.1` | 123, of which 61 are whole-build | 134 of 139 | all, on the 116 the pin answers; three are held out under chant#2441 and the four round-trip fixtures skip, chant having no generator |
 
 The 5 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a reason each. All are properties no adapter can observe from verdicts: the execution counters and provenance, the host's own module tree, and what a host may vary or must not execute. One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
 
@@ -102,7 +102,7 @@ Two limits on that. The rewrite's author had read chant's implementation closely
 
 The control is the one with teeth. An implementation that falls back on every file in a build with any fallback satisfies the other three and fails this, so the suite asserts it against a stub that does exactly that.
 
-Until `chant-v0.70.1` chant had no entry that took a set of files, so none of these were answerable there: a taint edge does not exist inside a single file. chant#2408 added one, and the nine fixtures that need no host now run against both implementations. They agree on every file's final verdict and its tentative verdict, and for every taint casualty they agree on the file the edge came from and on which rule it was. The four that name a host still reach one implementation, their entity classes coming from a package chant cannot resolve, and a skip with no host to explain it fails the suite.
+Until `chant-v0.70.1` chant had no entry that took a set of files, so none of these were answerable there: a taint edge does not exist inside a single file. chant#2408 added one, and the nine fixtures that need no host now run against both implementations. They agree on every file's final verdict and its tentative verdict, and for every taint casualty they agree on the file the edge came from and on which rule it was. Since `chant-v0.72.0` the fixtures that name a host reach chant too (chant#2438), and a skip fails the suite.
 
 Two agreements are worth naming. chant classifies the capturing sibling as reached by a capture rather than an import, the distinction chant#2406 was filed for. And a file whose only tie to another is a call returning computed plain data folds in both, which is `F-Identity`'s entity test holding in an implementation that has never read it.
 
@@ -142,7 +142,7 @@ The corpus is chant's own examples, and chant's documentation says the number is
 ## Limits
 
 - Twelve mixed entries and one adversarial build are a small sample, all from one project.
-- Fixture coverage is 128 of 138 rules. The 10 without one are listed with a reason, and the list may only shrink.
-- J3's whole-build fixtures reach both implementations where no host is involved, and one where a host is. Comparing verdicts alone would not be enough, since a seed and a taint casualty are both `run`; the tentative verdict and the taint edge are compared too.
+- Fixture coverage is 134 of 139 rules. The 5 without one are listed with a reason, and the list may only shrink.
+- J3's whole-build fixtures reach both implementations, hosted or not, except three held out under chant#2441. Comparing verdicts alone would not be enough, since a seed and a taint casualty are both `run`; the tentative verdict and the taint edge are compared too.
 - Revival is implemented for all six envelopes since #109; `{__compositeStep}` resolves the composite through F-Call. Isolation is honoured at F-Call step 5; step 6 in open mode, invoking a project module, is what the reference cannot answer (`packages/reference/CAVEATS.md`).
 - The independent rewrite found two specification gaps. Two is a small sample, and it is the sample a single author working alone can produce.
