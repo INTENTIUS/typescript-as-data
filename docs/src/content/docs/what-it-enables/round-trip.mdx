@@ -1,0 +1,21 @@
+---
+title: Round-trip generation
+description: Live state or an existing artifact becomes source that folds back to exactly what it came from.
+diataxis: explanation
+sidebar:
+  order: 3
+---
+
+Folding goes one way: source to data. A generator goes the other: data to source. Put them together and an existing artifact, a CloudFormation template, a live Kubernetes namespace, an org's current settings, becomes TypeScript that folds back to exactly the data it came from. That is the property: `fold(generate(v)) = v`.
+
+## Why the language matters here
+
+A YAML-to-YAML round trip is the identity and proves nothing. The reason to go through TypeScript is that the generator can decide what each value is. This string is a literal. This one is a reference to that other resource's attribute, so write `bucket.Arn`. This one is a build parameter. This repetition across forty resources is one `const`, spread where it is used. Each of those decisions needs a source form the subset can express and the fold can reverse. YAML cannot express the first three at all. TypeScript's object literals, constants, spreads and member access express all of them, and fold back to the exact artifact.
+
+## Who has it today
+
+chant has three generators through one pipeline: `chant import` from a template file, `--from <env>` live import through each lexicon's `exportResources()`, and carve-out from Terraform. The Kubernetes lexicon carries a round-trip suite. forgejo-warden's reconcile direction is the same idea for an org: live reality read back and diffed against declared source.
+
+## Where the rule lives
+
+The completeness half, every value in the domain has a source form that folds to it, is `F-Val-Source`, and the fidelity half, a generator's output folds to its input, is a conformance obligation on generators. Both are [issue #80](https://github.com/INTENTIUS/typescript-as-data/issues/80), stated here as a forward reference. `F-Eval-Member` step 1, which turns `bucket.Arn` back into an attribute reference, and `F-Prebuild`, which makes a same-file reference read the one instance, are the pieces already in the text.

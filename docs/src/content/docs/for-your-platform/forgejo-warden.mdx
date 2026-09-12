@@ -1,0 +1,25 @@
+---
+title: forgejo-warden
+description: Org governance for Forgejo, declared as data. The first consumer that is neither this repository nor chant.
+diataxis: how-to
+sidebar:
+  order: 2
+---
+
+[forgejo-warden](https://github.com/INTENTIUS/forgejo-warden) keeps a Forgejo org and its repos in a declared state: diff against live, guardrails, dry-run by default, deletes only where the policy says `owned`. Its policy is one file, and the `.ts` form of that file is [in flight](https://github.com/INTENTIUS/forgejo-warden/issues/32).
+
+## Author
+
+A `governance.ts` typed by the package's own `GovernanceConfig`, `satisfies` on the export. The schema is 195 lines of hand-written interfaces covering eight cycles: org settings, membership, teams, repo settings, branch protection, repo baseline, secrets and variables, webhooks. Everything the YAML parser could not do, flow style, multi-line scalars, anchors, is ordinary TypeScript: a template literal, a `const`, a spread.
+
+## Check
+
+Two phases, both already in the tool. The loader validates the declared policy and reports the exact field path on a bad shape; that is a pre-synthesis rule over the folded values. The guardrails (`removalDeltaCap`, `adminFloor`) run over the computed plan before any apply; that is a post-synthesis rule over the artifact. Selective-by-omission, an absent field is never touched, is why [absent versus `undefined`](https://github.com/INTENTIUS/typescript-as-data/issues/82) has to be pinned in the specification.
+
+## Generate
+
+Warden reads live reality and diffs it against the declared source; the plan it prints is the generator's direction, live to source, one step at a time. It also emits its own CI pipeline for Forgejo Actions from TypeScript, through chant's github lexicon.
+
+## Proof
+
+The `.ts` and `.yml` forms of the same policy load to the same object, asserted in warden's tests. The evaluator is the published reference, not chant, so the consumer needs the evaluator and nothing else. The whole loop runs against the e2e sandbox, which is [the tutorial](/typescript-as-data/try-it/).

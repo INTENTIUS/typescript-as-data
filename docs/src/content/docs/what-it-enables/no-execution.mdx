@@ -1,0 +1,27 @@
+---
+title: Pure synthesis, no execution
+description: The file becomes the artifact without being run, so the output is a function of the source and nothing else.
+diataxis: explanation
+sidebar:
+  order: 1
+---
+
+import figures from '../../../data/figures.json';
+
+A TypeScript file whose values are fixed by its source, literals, constants, and references to other declarations, can be reduced to data by reading it. Nothing executes: no constructor runs, no environment variable is read, no network call happens. The specification calls this folding, and the rule that states the property is `F-NoOwnExecution`.
+
+## What that buys
+
+The artifact is a function of the source. Same file, same output, on any machine, at any time, and in any language the evaluator happens to be written in. A reviewer reading the diff sees exactly what will ship. A tool that cannot run JavaScript at all, a Go binary, a WASM module, a CI job with no runtime, gets the same value the author sees in the editor.
+
+The user never has to think about folding. They meet it as a lint: the editor says, at the keystroke, whether the file is data, and points at the line that makes it not data. That lint is the shape classifier, the `S-*` rules of the grammar, and it needs no evaluator to run.
+
+## Who has it today
+
+chant folds every file it can and measures that it executed nothing: its `test/leftness` profile reports project code executed `false` and 0 MB of definition-library code on the path, against about 1.7 MB for `cdk synth` on the same estate. Source outside the subset falls back to running in a sandbox, per file, and the two paths are required to agree byte for byte over chant's whole example corpus.
+
+The reference implementation folds with no runtime at all; at spec {figures.specVersion} it agrees with chant {figures.chantPin} on every one of {figures.corpus.comparable} comparable corpus files, and on the {figures.corpus.bothFold} that fold on both sides the export namespaces are identical.
+
+## Where the rule lives
+
+`F-NoOwnExecution` in `judgments.md` J4, and the grammar's `S-*` productions for the lint. [The specification](/typescript-as-data/spec/) is the full text; [the corpus cross-check](/typescript-as-data/conformance/corpus/) is the measurement.
