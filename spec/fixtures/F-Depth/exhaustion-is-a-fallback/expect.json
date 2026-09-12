@@ -1,0 +1,19 @@
+{
+  "rules": [
+    "F-Depth",
+    "F-Eval-CallLocal"
+  ],
+  "project": true,
+  "verdicts": {
+    "rec.ts": "run",
+    "deep.ts": "run"
+  },
+  "tentative": {
+    "rec.ts": "fold",
+    "deep.ts": "run"
+  },
+  "taintedBy": {
+    "rec.ts": "deep.ts"
+  },
+  "note": "A recursion deep enough to exceed any bound an implementation would choose. The value of the bound is the implementation's (#71): the reference stops at 32, chant's expression path at 32 and its cross-file path at the engine's stack, and every one of them reports a fallback rather than a failure or a wrong answer. rec.ts folds alone and the forward edge takes it along."
+}

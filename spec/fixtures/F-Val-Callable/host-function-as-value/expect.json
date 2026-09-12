@@ -1,0 +1,16 @@
+{
+  "rules": [
+    "F-Val-Callable",
+    "F-Eval-Ident",
+    "F-Import"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "app.ts": "run"
+  },
+  "rejectRule": {
+    "app.ts": "F-Eval-Ident"
+  },
+  "note": "A host function bound by an import and used as a value (#69). The binding exists, so a call would fold (it is a registered helper); the value use is refused, because a callable is reached only by the form that invokes it and could never reach a serializer. chant refuses the same file by never binding an unregistered callable; the verdicts agree."
+}
