@@ -24,10 +24,11 @@
   "files": [
     "src/",
     "dist/",
-    "fixtures/"
+    "fixtures/",
+    "spec/"
   ],
   "scripts": {
-    "build": "rm -rf dist fixtures && tsc -p tsconfig.build.json && cp -R ../../spec/fixtures fixtures",
+    "build": "rm -rf dist fixtures spec && tsc -p tsconfig.build.json && cp -R ../../spec/fixtures fixtures && mkdir spec && cp ../../spec/VERSION ../../spec/grammar.md ../../spec/judgments.md ../../spec/values.md ../../spec/divergence.md ../../spec/hosts.md spec/",
     "prepack": "npm run build"
   },
   "dependencies": {}

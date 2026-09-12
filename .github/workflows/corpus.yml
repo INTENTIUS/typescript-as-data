@@ -113,7 +113,7 @@ jobs:
         env:
           TSAD_CHANT_REPO: ${{ github.workspace }}/${{ env.CHANT_DIR }}
           TSAD_CORPUS_REPORT: '1'
-        run: npx vitest run packages/conformance/src/corpus.test.ts
+        run: npx vitest run packages/conformance/src/corpus.test.ts packages/conformance/src/rules.test.ts
 
       # Uploaded on failure too: a run with disagreements in it is the run whose
       # report somebody wants to read.
