@@ -87,7 +87,7 @@ export function decodeValue(v: unknown): unknown {
 export async function runProjectFixture(adapter: ConformanceAdapter, f: ProjectFixture): Promise<FixtureReport> {
   const base = { fixture: f.id, adapter: adapter.name };
   if (!adapter.foldProject) return { ...base, pass: true, skipped: "no project entry", failures: [] };
-  const r = await adapter.foldProject(f.files, f.host ? requireHost(f.host) : undefined);
+  const r = await adapter.foldProject(f.files, f.host ? requireHost(f.host) : undefined, f.mode);
   if (r === "unavailable") return { ...base, pass: true, skipped: "project entry unavailable", failures: [] };
   const failures: string[] = [];
   for (const [path, want] of Object.entries(f.verdicts)) {
@@ -173,7 +173,7 @@ export async function compareAdapters(a: ConformanceAdapter, b: ConformanceAdapt
   for (const f of projectFixtures(fixtures)) {
     if (!a.foldProject || !b.foldProject) continue;
     const host = f.host ? requireHost(f.host) : undefined;
-    const [ra, rb] = await Promise.all([a.foldProject(f.files, host), b.foldProject(f.files, host)]);
+    const [ra, rb] = await Promise.all([a.foldProject(f.files, host, f.mode), b.foldProject(f.files, host, f.mode)]);
     if (ra === "unavailable" || rb === "unavailable") continue;
     for (const path of new Set([...Object.keys(ra.verdicts), ...Object.keys(rb.verdicts)])) {
       const va = ra.verdicts[path]?.kind ?? "absent", vb = rb.verdicts[path]?.kind ?? "absent";

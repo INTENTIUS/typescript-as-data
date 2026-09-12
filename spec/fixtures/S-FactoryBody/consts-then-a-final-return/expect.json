@@ -1,7 +1,8 @@
 {
   "rules": [
     "S-FactoryBody",
-    "F-Call"
+    "F-Call",
+    "F-IsolatedRefusal"
   ],
   "project": true,
   "host": "shapes",
@@ -15,8 +16,8 @@
   "rejectRule": {
     "good-shapes.ts": "F-Eval-Function",
     "bad-shapes.ts": "F-Eval-Function",
-    "no-return.ts": "F-Call",
-    "empty.ts": "F-Call"
+    "no-return.ts": "F-IsolatedRefusal",
+    "empty.ts": "F-IsolatedRefusal"
   },
   "exports": {
     "good.ts": {
@@ -32,5 +33,6 @@
       }
     }
   },
-  "note": "A factory body is consts, plain or destructured, then a final return, and the return is required: a body without one and an empty body are not interpretable, unlike a project-local function's block (S-FnBody), which yields undefined. Both registration modules run on their own (F-Eval-Function); the good caller folds by interpretation and the bad callers run at F-Call."
+  "note": "A factory body is consts, plain or destructured, then a final return, and the return is required: a body without one and an empty body are not interpretable, unlike a project-local function's block (S-FnBody), which yields undefined. Both registration modules run on their own (F-Eval-Function); the good caller folds by interpretation and under ι = isolated the bad callers are F-IsolatedRefusal: step 4 finds the factory not interpretable and step 5 refuses to invoke a project module.",
+  "mode": "isolated"
 }

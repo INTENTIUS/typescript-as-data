@@ -12,8 +12,9 @@ registry, helper allowlist, owned-specifier prefixes and values. It declares
 the specification version it implements (`specVersion` on its adapter), and
 the suite holds that to `spec/VERSION`.
 
-Not implemented, with the reason for each: `CAVEATS.md`. Isolation mode is
-the one that costs fixtures.
+Not implemented, with the reason for each: `CAVEATS.md`. F-Call step 6,
+invoking a project module in open mode, is the one thing a fixture cannot ask
+of it.
 
 ## As a package
 

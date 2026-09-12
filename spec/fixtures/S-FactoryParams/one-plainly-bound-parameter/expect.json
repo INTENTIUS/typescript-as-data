@@ -1,7 +1,8 @@
 {
   "rules": [
     "S-FactoryParams",
-    "F-Call"
+    "F-Call",
+    "F-IsolatedRefusal"
   ],
   "project": true,
   "host": "shapes",
@@ -15,8 +16,8 @@
   "rejectRule": {
     "good-shapes.ts": "F-Eval-Function",
     "bad-shapes.ts": "F-Eval-Function",
-    "rest.ts": "F-Call",
-    "two.ts": "F-Call"
+    "rest.ts": "F-IsolatedRefusal",
+    "two.ts": "F-IsolatedRefusal"
   },
   "exports": {
     "named.ts": {
@@ -32,5 +33,6 @@
       }
     }
   },
-  "note": "At most one parameter, bound plainly: an identifier or an object pattern with plain elements. A rest parameter and a second parameter each make the factory not interpretable, so their callers run at F-Call; the registration modules run on their own (F-Eval-Function) and the good caller folds."
+  "note": "At most one parameter, bound plainly: an identifier or an object pattern with plain elements. A rest parameter and a second parameter each make the factory not interpretable, so under ι = isolated their callers are F-IsolatedRefusal, step 5 refusing what step 4 could not interpret; the registration modules run on their own (F-Eval-Function) and the good caller folds.",
+  "mode": "isolated"
 }

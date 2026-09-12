@@ -45,6 +45,9 @@ export interface Finding {
   at?: { line: number; column: number };
 }
 
+/** J2's ι (F-IsolatedRefusal): under `isolated`, no project code is invoked or imported on the fold path. */
+export type IsolationMode = "open" | "isolated";
+
 export interface ConformanceAdapter {
   readonly name: string;
   /**
@@ -69,6 +72,7 @@ export interface ConformanceAdapter {
   foldProject?(
     files: Map<string, string>,
     host?: ConformanceHost,
+    mode?: IsolationMode,
   ): ProjectResult | "unavailable" | Promise<ProjectResult | "unavailable">;
   /**
    * The findings of the host's rules of one phase over the build (#101).

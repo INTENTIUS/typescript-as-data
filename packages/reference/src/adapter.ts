@@ -12,11 +12,12 @@ import { generate, NoSourceForm } from "./generate.js";
  * the helpers, the classes and the live values, items 1, 2, 4 and 6, are
  * absent.
  */
-function hostOf(h: ConformanceHost | undefined, profile: Profile): Host {
-  if (!h) return { ...EMPTY_HOST, profile };
+function hostOf(h: ConformanceHost | undefined, profile: Profile, isolation: "open" | "isolated" = "open"): Host {
+  if (!h) return { ...EMPTY_HOST, profile, isolation };
   const data = profile === "data-host";
   return {
     profile,
+    isolation,
     intrinsics: h.intrinsics.map((i) => ({ name: i.name, isTag: i.isTag, foldsAsCall: i.foldsAsCall, foldsEagerly: i.foldsEagerly, outputKey: i.outputKey })),
     helpers: data ? [] : h.helpers,
     ownedSpecifierPrefixes: h.ownedSpecifierPrefixes,
@@ -40,8 +41,8 @@ function adapterFor(profile: Profile): ConformanceAdapter {
     return { accepted: false, rule: v.rule, line: line + 1, column: character + 1, message: v.message };
   },
   foldExport(source, exportName) { return foldExport(source, exportName, { ...EMPTY_HOST, profile }); },
-  foldProject(files, host) {
-    const r = foldProject(files, hostOf(host, profile));
+  foldProject(files, host, mode) {
+    const r = foldProject(files, hostOf(host, profile, mode));
     const out: ProjectResult = { verdicts: {}, tentative: {}, taintedBy: {} };
     for (const [path, v] of r.verdicts) {
       out.verdicts[path] = v.kind === "fold" ? { kind: "fold", exports: Object.fromEntries(v.exports) } : { kind: "run", rule: v.rule, reason: v.reason };
