@@ -1,7 +1,7 @@
-import type { ConformanceAdapter } from "./adapter";
-import type { ExpressionFixture, Fixture, ProjectFixture } from "./fixture";
-import { expressionFixtures, projectFixtures } from "./fixture";
-import { requireHost } from "./host";
+import type { ConformanceAdapter } from "./adapter.js";
+import type { ExpressionFixture, Fixture, ProjectFixture } from "./fixture.js";
+import { expressionFixtures, projectFixtures } from "./fixture.js";
+import { requireHost } from "./host.js";
 
 export interface FixtureReport { fixture: string; adapter: string; pass: boolean; skipped?: string; failures: string[] }
 

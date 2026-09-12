@@ -3,7 +3,7 @@
  * foreign implementation (chant, or one in another language behind a shim)
  * can satisfy it without exposing internals: source in, verdict out.
  */
-import type { ConformanceHost } from "./host";
+import type { ConformanceHost } from "./host.js";
 
 export type ShapeResult =
   | { accepted: true }

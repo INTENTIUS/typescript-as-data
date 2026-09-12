@@ -7,3 +7,5 @@ docs/.astro/
 docs/dist/
 # generated from spec/*.md by docs/scripts/sync-spec.mjs
 docs/src/content/docs/spec/
+# copied from spec/fixtures at build time
+packages/conformance/fixtures/

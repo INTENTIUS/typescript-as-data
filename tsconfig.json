@@ -16,7 +16,15 @@
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "noEmit": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@intentius/tsad-conformance": [
+        "packages/conformance/src/index.ts"
+      ],
+      "@intentius/tsad-reference": [
+        "packages/reference/src/index.ts"
+      ]
+    }
   },
   "include": [
     "packages/**/*",
@@ -27,6 +35,7 @@
     "**/dist/**",
     "docs/**",
     "node_modules",
-    "spec/fixtures/**"
+    "spec/fixtures/**",
+    "packages/*/fixtures/**"
   ]
 }

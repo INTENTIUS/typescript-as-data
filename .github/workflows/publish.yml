@@ -1,0 +1,74 @@
+name: publish
+
+run-name: publish — ${{ github.ref_name }}
+
+# Publishes @intentius/tsad-conformance and @intentius/tsad-reference to npm
+# when a release tag is pushed. The tag is cut by hand after
+# scripts/release-preflight.sh has confirmed the commit is on main, pushed,
+# and green; this workflow runs the suite again on the tagged commit and packs,
+# installs and exercises both packages from a clean directory before it
+# publishes either, so a tag on a commit that would not install cannot ship.
+#
+# Provenance comes from npm's trusted publishing (id-token). Until the two
+# packages have a trusted-publisher record on npm, NPM_TOKEN is the fallback,
+# the same shape chant's publish workflow uses.
+on:
+  push:
+    tags: ['tsad-v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm install
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run lint:prose
+      - name: Package version carries the spec version
+        run: |
+          version=$(node -p 'require("./packages/conformance/package.json").version')
+          spec=$(tr -d '[:space:]' < spec/VERSION)
+          case "$version" in
+            "$spec".*) echo "packages at $version carry spec $spec" ;;
+            *) echo "package version $version does not carry spec version $spec" >&2; exit 1 ;;
+          esac
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "${GITHUB_REF_NAME}" != "tsad-v$version" ]; then
+            echo "tag ${GITHUB_REF_NAME} does not match package version $version" >&2; exit 1
+          fi
+      - name: Pack, install into a fresh directory, and run the suite there
+        run: npm run smoke:published
+
+  publish:
+    needs: [test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install
+      # conformance first: reference depends on it.
+      - name: Publish @intentius/tsad-conformance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --workspace packages/conformance --provenance --access public
+      - name: Publish @intentius/tsad-reference
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --workspace packages/reference --provenance --access public

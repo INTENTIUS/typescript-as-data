@@ -1,7 +1,7 @@
 import type { ConformanceAdapter, ConformanceHost, ProjectResult } from "@intentius/tsad-conformance";
-import { EMPTY_HOST, type Host } from "./host";
-import { shapeOfExport, foldExport } from "./module";
-import { foldProject } from "./project";
+import { EMPTY_HOST, type Host } from "./host.js";
+import { shapeOfExport, foldExport } from "./module.js";
+import { foldProject } from "./project.js";
 
 /** A named conformance host, in this implementation's own terms. */
 function hostOf(h: ConformanceHost | undefined): Host {
