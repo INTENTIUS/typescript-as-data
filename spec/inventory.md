@@ -109,7 +109,7 @@ Shape only. No resolution, no evaluation.
 | L5.5 | body scope | folds in the **defining** module's scope, parameters bound on top | F-Eval-CallLocal step 4 |
 | L5.6 | parameter defaults | folded in the callee's scope when the argument is `undefined` | F-Eval-CallLocal step 4 |
 | L5.7 | block body with no `return` | evaluates to `undefined`, as running would | F-Eval-CallLocal step 5 |
-| L5.8 | recursion bound | `MAX_FUNCTION_CALL_DEPTH = 32` → rejection | F-Eval-CallLocal step 2; F-Depth |
+| L5.8 | recursion bound | `MAX_FUNCTION_CALL_DEPTH = 32` on the expression path; a cross-file recursion ends at the engine's stack, caught as a fallback (#71) | F-Eval-CallLocal step 2; F-Depth |
 | L5.9 | `leakedIdentity` | a call returning a live object the body produced records a taint edge; one merely passed through the arguments does not | F-CallLeak; F-Eval-CallLocal step 6 |
 | L5.10 | error re-anchoring | a failure inside a callee is re-thrown at the call site naming callee, file, position, reason | F-Eval-CallLocal step 7; F-Reason |
 | L5.11 | `params` bare-specifier case | the one recognized bare import: `@intentius/chant/params` resolves against `FoldSession.buildParams` | F-Import (params) |

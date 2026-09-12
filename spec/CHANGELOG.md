@@ -4,6 +4,14 @@ The versioned history of the rule set. The policy is in [`README.md`](./README.m
 
 Each entry lists the rules that changed and how, in the four kinds the policy defines. A change confined to non-normative text is not versioned and is not listed here; the rationale sections and the inventory are the usual cases.
 
+## 1.3, 2026-09-12
+
+Tag `spec-1.3`. One widening and one clarification, the two open questions the corpus and the fixtures left.
+
+`F-Eval-CallLocal` step 2 no longer names a number (#71). `F-Depth` had said the bounds are the implementation's to choose and step 2 had said 32; chant folds a recursion 5000 deep and reports the engine's stack overflow as a fallback, and the reference stops at 32, and both satisfy `F-Depth`. The widening is that a deeper recursion may now fold; `F-Depth` says how the recursion may be counted.
+
+The second change is a clarification of `F-Eval-Ident` step 3 and `F-Import`, with nothing admitted or refused that was not before (#69). "Active" package is F-Host-Interface item 5's trust set and an empty set sends every bare specifier to the unresolved arm, which is what L9.4 already said elsewhere. A callable the host supplied is refused as a value the way a project-local function already was: the previous wording let it pass through, which `F-Val-Callable` and `F-Val-Serializable` never allowed to reach an artifact, so the reading that stands is the one both implementations had.
+
 ## 1.2, 2026-09-12
 
 Tag `spec-1.2`. Two widenings, both found by the first consumer of the published packages (forgejo-warden#33) in the first policy file anybody wrote.

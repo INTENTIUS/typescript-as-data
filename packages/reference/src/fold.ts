@@ -322,9 +322,12 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
     }
     if (scope.externals.has(name)) {
       const value = scope.externals.get(name);
+      // F-Eval-Ident step 3, F-Val-Callable (#69): a callable of any kind is
+      // reached by the form that invokes it, never as a value.
       if (isFoldableFunction(value)) reject("F-Eval-Ident", node, `function "${name}" used as a value is not foldable`);
-      if (typeof value === "function" && host.intrinsics.some((i) => i.name === name && intrinsicCallFoldsEagerly(i))) {
-        reject("F-Eval-Ident", node, `function "${name}" used as a value is not foldable: call it instead`);
+      if (typeof value === "function") {
+        const eager = host.intrinsics.some((i) => i.name === name && intrinsicCallFoldsEagerly(i));
+        reject("F-Eval-Ident", node, `function "${name}" used as a value is not foldable${eager ? ": call it instead" : ""}`);
       }
       return value;
     }
