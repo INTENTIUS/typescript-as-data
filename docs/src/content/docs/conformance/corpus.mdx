@@ -109,10 +109,10 @@ projects is therefore the one the cross-check cannot yet speak to.
 
 Namespace comparison is structural. `corpus.ts` compares entities rather than
 skipping them, which is only sound because both implementations construct them
-from the same host classes: own data properties, enumerable or not, accessors
-skipped, because an accessor can throw and computes a value rather than holding
-one. A namespace holding something with no structural encoding at all, a
-function or a symbol, is reported as `not-data`, and only the verdict is
+from the same host classes. It reads own data properties, enumerable or not,
+and skips accessors, because an accessor can throw and computes a value rather
+than holding one. A namespace holding something with no structural encoding at
+all (a function or a symbol) is reported as `not-data`, and only the verdict is
 compared there.
 
 ## What the test asserts
@@ -139,7 +139,7 @@ no benign explanation unless a chant-side limit accounts for it.
 ## What the first real run found
 
 `paper/measurements.md` records it, and it is the argument for running a corpus
-at all. The first run, with no host, compared 7 files and none of them folded
+at all. The first run, with no host, compared 7 files; none of them folded
 on either side. With a host it turned up a reference bug, a specification
 defect and a harness artifact.
 
@@ -154,9 +154,9 @@ under the lexicon-list limit.
 ## In CI
 
 `.github/workflows/corpus.yml` runs it weekly, on Mondays early UTC, and on
-`workflow_dispatch`. There are no pull-request or push triggers, and the
-workflow explains why: the check itself takes under a second, but it can only
-run against a chant checkout with its lexicon codegen artifacts generated, and
+`workflow_dispatch`. It has no pull-request trigger and no push trigger, and the
+workflow says why. The check itself takes under a second, but it can only run
+against a chant checkout with its lexicon codegen artifacts generated, and
 generating those means downloading a dozen upstream schemas. An upstream schema
 host being down would fail the main gate on a change that has nothing to do
 with it.

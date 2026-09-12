@@ -12,8 +12,8 @@ in both directions, in CI. `spec/fixtures.test.ts` is that gate.
 ## The three assertions
 
 The test collects every `S-` and `F-` identifier defined across `grammar.md`,
-`judgments.md`, `values.md`, `divergence.md` and `hosts.md`, collects every
-identifier cited by a fixture's `rules` array, and reads
+`judgments.md`, `values.md`, `divergence.md` and `hosts.md`. It also collects
+every identifier cited by a fixture's `rules` array, and reads
 `spec/fixtures/UNCOVERED.md` as an allowlist. Then it asserts three things.
 
 Every rule a fixture cites is defined. A fixture citing an identifier that no
@@ -52,7 +52,7 @@ other way is not an exemption and the gate will still fail on the rule.
 
 The file's own header states the count. At the time of writing it says 100 of
 127 rules have fixtures, and `paper/measurements.md` reports the same figure
-for the chant 0.70.1 pin.
+for the chant `0.70.1` pin.
 
 `paper/measurements.md` also groups the 27 rules that are still uncovered: five
 wait on a form the reference implementation does not implement, the composite

@@ -18,21 +18,11 @@ hero:
       variant: minimal
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+- Pure synthesis, no execution. The file becomes the artifact without being run. [How](/typescript-as-data/what-it-enables/no-execution/)
+- Semantic linting. The same check at the keystroke and in CI, over real values, across resources. [How](/typescript-as-data/what-it-enables/semantic-linting/)
+- Round-trip generation. Live state or an existing artifact becomes source that folds back to what it came from. [How](/typescript-as-data/what-it-enables/round-trip/)
 
-<CardGrid>
-  <Card title="Pure synthesis, no execution" icon="approve-check">
-    The file becomes the artifact without being run. The output is a function of the source and nothing else. [How](/typescript-as-data/what-it-enables/no-execution/)
-  </Card>
-  <Card title="Semantic linting" icon="magnifier">
-    The same check at the keystroke and in CI, over real values, across resources. [How](/typescript-as-data/what-it-enables/semantic-linting/)
-  </Card>
-  <Card title="Round-trip generation" icon="random">
-    Live state or an existing artifact becomes source that folds back to exactly what it came from. [How](/typescript-as-data/what-it-enables/round-trip/)
-  </Card>
-</CardGrid>
-
-## The same policy, twice
+## The same policy twice
 
 ```yaml title="governance.yml"
 orgs:
@@ -40,28 +30,26 @@ orgs:
     repos:
       api:
         hasWiki: false
-        deleteBranchOnMerge: true
+        allowSquashMerge: true
         topics: [service, api]
         branchProtection:
-          - pattern: main
-            requirePullRequestReviews: true
-            requiredApprovingReviewCount: 1
+          - ruleName: main
+            requiredApprovals: 1
+            enableStatusCheck: true
+            statusCheckContexts: [ci]
 ```
 
 ```ts title="governance.ts"
 import type { GovernanceConfig } from "@intentius/forgejo-warden";
+import { service } from "./helpers.ts";
 
-const protectedMain = { pattern: "main", requirePullRequestReviews: true, requiredApprovingReviewCount: 1 };
-
-export default {
+export const policy = {
   orgs: {
     "my-org": {
-      repos: {
-        api: { hasWiki: false, deleteBranchOnMerge: true, topics: ["service", "api"], branchProtection: [protectedMain] },
-      },
+      repos: { api: service("api"), web: service("web") },
     },
   },
 } satisfies GovernanceConfig;
 ```
 
-The second one has completion, a type error on a misspelt key, and a `const` it can reuse across forty repositories. The tool that reads it gets the same object either way, and it never runs the file to get it.
+The second one has completion and a type error on a misspelt key. It reuses one helper across repositories. The tool reads the same object from either file and never runs the second one to get it.

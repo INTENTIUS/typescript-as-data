@@ -6,7 +6,7 @@ sidebar:
   order: 1
 ---
 
-import consumers from '../../../data/consumers.json';
+import consumers from "../../../data/consumers.json";
 
 Your tool reads a YAML file. To read a TypeScript file instead, you supply four things, and the last two are optional.
 
@@ -27,7 +27,7 @@ The conformance suite, `@intentius/tsad-conformance`: the fixtures at the spec v
 
 ## Evaluators in other languages
 
-The reference is TypeScript. A Rust evaluator on oxc, distributed as WASM so that Go, Python, the browser and an editor can embed it without a subprocess, is [issue #86](https://github.com/INTENTIUS/typescript-as-data/issues/86), after the profile and the coercion fixtures exist. It is not "rust-as-data"; the language a user writes is TypeScript whatever evaluates it.
+The reference is TypeScript. A Rust evaluator on oxc is [issue #86](https://github.com/INTENTIUS/typescript-as-data/issues/86), after the profile and the coercion fixtures exist. As WASM it would embed without a subprocess in Go and Python, in the browser and in an editor. It is not "rust-as-data"; the language a user writes is TypeScript whatever evaluates it.
 
 ## Who has done it
 
@@ -45,4 +45,4 @@ The reference is TypeScript. A Rust evaluator on oxc, distributed as WASM so tha
   </tbody>
 </table>
 
-Each consumer page has the same four sections: how a user authors, how the tool checks, what it generates back, and what proves the agreement.
+Each consumer page has the same four sections: how a user authors and how the tool checks, then what it generates back and what proves the agreement.

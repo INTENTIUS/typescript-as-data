@@ -14,8 +14,8 @@ use.
 
 `spec/README.md` defines the split, and the family is part of the meaning.
 
-An **`S-*` rule is a shape rule**. It is decidable from syntax alone, by a
-classifier with no binding resolver and no registry. Every `S-*` rule lives in
+An **`S-*` rule is a shape rule**, decidable from syntax alone by a classifier
+with no binding resolver and no registry. All of them live in
 `spec/grammar.md`. Productions there are written in the usual notation, for
 example:
 
@@ -25,8 +25,8 @@ S-ExportSingle      ::= export const ⟨Identifier⟩ = ⟨Expr⟩
 S-ExportDestructure ::= export const { ⟨PlainElement⟩+ } = ⟨Expr⟩
 ```
 
-An **`F-*` rule is a fold rule**. It cannot be decided from syntax alone: it
-needs name resolution, a host registry, or the module graph. Its sub-prefix
+An **`F-*` rule is a fold rule**, which syntax alone cannot decide. Deciding
+it needs name resolution, a host registry, or the module graph. Its sub-prefix
 names the file that owns it.
 
 | Prefix | Owner |
@@ -38,21 +38,20 @@ names the file that owns it.
 | `F-Div-`, `F-Exc-`, `F-Direction` | `divergence.md` |
 | `F-Host-` | `hosts.md` |
 
-The two families are allowed to disagree in exactly one direction. An `S-`
-rule may accept what an `F-` rule later rejects, and never the reverse. That
+The two families are allowed to disagree in exactly one direction. The `S-`
+side may accept what the `F-` side later rejects, and never the reverse. That
 claim is `F-Direction` in `spec/divergence.md`, where it is stated as a
 proposition with a proof obligation, and the two tolerated exceptions are
 `F-Exc-Lazy` and `F-Exc-Registry`.
 
 Names are `Prefix-CamelWords` with no digits in the name part, and are meant to
-be specific enough to read alone: `F-Eval-Member`, not `F-Eval-3`. A rule with
-numbered steps is cited as `F-Eval-Member step 4`, and the step number is not
-part of the identifier.
+be specific enough to read alone: `F-Eval-Member`, not `F-Eval-3`. Numbered steps are cited as in
+`F-Eval-Member step 4`, and the step number is not part of the identifier.
 
-An identifier names one rule for the life of the specification. A rule that is
-split keeps its identifier on the part closest to its original meaning and the
-new part gets a new one. A rule that is removed or renamed is struck through in
-place with a note naming its successor. The identifier is never reused.
+An identifier names one rule for the life of the specification. When a rule is
+split, its identifier stays on the part closest to its original meaning and the
+new part gets a new one. One that is removed or renamed is struck through in
+place, with a note naming its successor. The identifier is never reused.
 
 Two tests hold the vocabulary together. `spec/coverage.test.ts` asserts that
 every row of `spec/inventory.md` cites a rule that some spec file actually
@@ -63,16 +62,15 @@ failure rather than a drift.
 
 ## The four judgments
 
-`spec/judgments.md` carries all four. They are layered: J1 evaluates one
-expression, J2 decides one file, J3 decides a whole build, and J4 states the
-properties that are about the mechanism rather than about any one of the
-others.
+`spec/judgments.md` carries all four, layered. J1 evaluates one expression and
+J2 decides one file; J3 decides a whole build; J4 states the properties that
+are about the mechanism rather than about any one of the others.
 
 ### J1, expression evaluation
 
 Written `Γ, H ⊢ e ⇓ v`. The environment `Γ` is `(consts, externals, depth)`,
 where `depth` is the number of project-local function bodies being folded
-around `e` and is 0 at a file's top level. `H` is the host, `(ρ, helpers)`: the
+around `e` and is 0 at a file's top level. `H` is the host `(ρ, helpers)`, which is the
 intrinsic registry and the authoring-helper allowlist, both defined in
 `spec/hosts.md`. The result `v` ranges over the value domain of
 `spec/values.md`. Every rule that fails does so with a located rejection.
@@ -89,7 +87,7 @@ subset of the build's files whose objects `f` captured. Every `run(reason)`
 carries a located reason.
 
 The verdict is evaluated per file, without regard to other files' verdicts
-except through `F-Import`. It is *tentative*: J3 is what makes it final.
+except through `F-Import`. It is *tentative*, and J3 is what makes it final.
 
 ### J3, the identity-taint fixpoint
 
@@ -97,7 +95,7 @@ This is the judgment with no obvious precedent, and `spec/judgments.md` says
 why it has to exist. Per-file partial evaluation is unsound in the presence of
 object identity unless something makes it sound. If file `A` folds and file `B`
 runs, and both refer to an entity that `A` produced, then `B`'s real import of
-`A` constructs a second copy of it, and the build holds two objects for one
+`A` constructs a second copy of it. The build then holds two objects for one
 entity.
 
 Comparable systems avoid the problem by not having it. Compile-time function
@@ -106,8 +104,9 @@ no runtime objects across it, and a whole-program partial evaluator has one
 heap. chant keeps per-file granularity and shared identity at the same time,
 and `spec/judgments.md` calls this judgment the price of that.
 
-A build is `B = (F, →, P)`: the finite set of discovered project files, the
-import and re-export edges between them, and the build-parameter binding.
+A build is `B = (F, →, P)`. That is the finite set of discovered project
+files, the import and re-export edges between them, and the build-parameter
+binding.
 Bare specifiers are not edges, because a package is never a member of `F`.
 J3 takes J2's tentative verdicts as its seed and computes `T(B)`, the least
 set containing that seed and closed under two kinds of edge. `F-Seed` is every
