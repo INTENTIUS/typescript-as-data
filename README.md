@@ -6,7 +6,7 @@ The subset is the part of TypeScript whose value is fixed by its source: literal
 
 ## Status
 
-Every part of the mechanism has a normative draft under `spec/`. One identifier vocabulary covers them (`S-*` for shape rules, `F-*` for fold rules). A decision-point inventory of 110 rows cites those rules and is gated in CI. A reference implementation covers the walking-skeleton subset. chant is cross-checked against it from the published package. Fixture coverage is one rule deep; `spec/fixtures/UNCOVERED.md` lists the rest and may only shrink.
+Every part of the mechanism has a normative draft under `spec/`. One identifier vocabulary covers them (`S-*` for shape rules, `F-*` for fold rules). A decision-point inventory of 112 rows cites those rules and is gated in CI. A reference implementation covers J1 to J3 and revival; `packages/reference/CAVEATS.md` says what it does not. chant is cross-checked against it from the published package, on the fixtures and on chant's whole example corpus. Fixture coverage is 100 of 127 rules; `spec/fixtures/UNCOVERED.md` lists the rest with a reason each and may only shrink.
 
 ## Layout
 

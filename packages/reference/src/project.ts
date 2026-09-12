@@ -7,11 +7,11 @@
  * because both are defined over a finite set of files and the edges between
  * them.
  *
- * What this cannot do is revive (`F-Val-Fate`). Revival needs a host that
- * supplies real constructors, and the reference ships an empty one, so a
- * `{__resource}` envelope stays an envelope in the namespace. That does not
- * change a verdict: the capture test in `F-Import` asks whether a value has
- * identity, and an envelope is an object either way.
+ * Revival (`F-Val-Fate`, #61) runs through the host the caller supplies: a
+ * `{__resource}` envelope becomes a real instance of the class the folding
+ * file imported, and with `EMPTY_HOST` it stays an envelope, which is an
+ * object either way as far as F-Capture's identity test is concerned. What
+ * this file does not do is in `CAVEATS.md`.
  */
 import * as ts from "typescript";
 import { EMPTY_HOST, type Host } from "./host.js";
