@@ -9,3 +9,9 @@ docs/dist/
 docs/src/content/docs/spec/
 # copied from spec/fixtures at build time
 packages/conformance/fixtures/
+packages/conformance/spec/
+# a package build emits to dist/; anything emitted beside the sources is a mistake
+packages/*/src/**/*.js
+packages/*/src/**/*.js.map
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.d.ts.map

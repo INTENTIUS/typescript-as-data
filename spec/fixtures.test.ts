@@ -8,19 +8,13 @@ import { describe, test, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadFixtures } from "@intentius/tsad-conformance";
+import { loadFixtures, loadRules } from "@intentius/tsad-conformance";
 
 const specDir = dirname(fileURLToPath(import.meta.url));
-const RULE_FILES = ["grammar.md", "judgments.md", "values.md", "divergence.md", "hosts.md"];
 
+/** The rule index is the one definition of "defined" (#34); this gate and the citation gate cannot disagree on it. */
 function definedIds(): Set<string> {
-  const ids = new Set<string>();
-  for (const f of RULE_FILES) for (const ln of readFileSync(join(specDir, f), "utf8").split("\n")) {
-    const m = /^#{1,6}\s+([SF]-[A-Za-z0-9-]+)\b/.exec(ln) ?? /^\*\*([SF]-[A-Za-z0-9-]+)[.\s(]/.exec(ln) ??
-              /^\|\s*([SF]-[A-Za-z0-9-]+)\s*\|/.exec(ln) ?? /^\s*([SF]-[A-Za-z0-9-]+)\s*::=/.exec(ln);
-    if (m) ids.add(m[1]);
-  }
-  return ids;
+  return new Set(loadRules(specDir).rules.keys());
 }
 function uncoveredAllowlist(): Map<string, string> {
   const m = new Map<string, string>();

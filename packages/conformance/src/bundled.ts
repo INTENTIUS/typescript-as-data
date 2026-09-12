@@ -8,6 +8,15 @@ import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+/** The bundled rule files and `VERSION`, or the repository's own `spec/` when running from source. */
+export function bundledSpecDir(): string {
+  const here = dirname(fileURLToPath(import.meta.url));
+  for (const candidate of [join(here, "..", "spec"), join(here, "..", "..", "..", "spec")]) {
+    if (existsSync(join(candidate, "VERSION"))) return candidate;
+  }
+  throw new Error("no spec directory: the package was built without one, and this is not the repository");
+}
+
 /** The bundled fixtures directory, or the repository's own when running from source. */
 export function bundledFixturesDir(): string {
   const here = dirname(fileURLToPath(import.meta.url));

@@ -33,6 +33,25 @@ The package's major and minor are the specification version it carries
 fixtures of specification 1.0. An adapter's `specVersion` is compared against
 the fixtures' version by whoever runs the suite, never assumed.
 
+## Gating a document's citations (#34)
+
+An implementation's documentation cites rule identifiers, and a subset change
+here can leave that prose describing the old subset. `loadRules(bundledSpecDir())`
+indexes every `S-*` and `F-*` with its text at the version the package
+carries, and `checkCitations(document, index, declaredVersion)` reports an
+identifier that is not a rule, a quote that is not the rule's text, and a
+declared version that is not the index's. A document quotes a rule with a
+marker line and a blockquote:
+
+```
+{/* rule: F-Depth */}
+> Each terminates a different recursion and each turns exhaustion into a fallback.
+```
+
+A bare mention is held only to existing; a quote is held to being verbatim.
+The repository runs this over chant's own docs in the corpus workflow, and
+chant can run the same call in its CI against the published package.
+
 ## What is not in the package
 
 The chant adapter and the corpus cross-check (`src/adapters/`, `src/corpus.ts`)
