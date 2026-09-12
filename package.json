@@ -21,7 +21,7 @@
     "@types/node": "^24.0.0",
     "typescript": "^5.9.0",
     "vitest": "^4.0.0",
-    "@intentius/chant": "0.70.1",
+    "@intentius/chant": "0.71.0",
     "sentences": "0.1.1"
   }
 }
