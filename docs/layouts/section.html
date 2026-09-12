@@ -1,0 +1,23 @@
+{{ define "main" }}
+<div class="shell">
+  {{ partial "sidebar.html" . }}
+  <article class="doc">
+    {{ if ne .FirstSection . }}<p class="crumb"><a href="{{ .FirstSection.RelPermalink }}">{{ .FirstSection.Title }}</a></p>{{ end }}
+    {{ if not (findRE "(?m)^# " .RawContent) }}<h1>{{ .Title }}</h1>{{ end }}
+    {{ with .Params.lead }}<p class="lead">{{ . | markdownify }}</p>{{ end }}
+    {{ .Content }}
+    {{ if not .Params.hideChildren }}
+    <ul class="child-list">
+      {{ range .Sections.ByWeight }}<li><a href="{{ .RelPermalink }}">{{ .Title }}</a>{{ with .Description }} <span>{{ . }}</span>{{ end }}</li>{{ end }}
+      {{ range .RegularPages.ByWeight }}<li><a href="{{ .RelPermalink }}">{{ .Title }}</a>{{ with .Description }} <span>{{ . }}</span>{{ end }}</li>{{ end }}
+    </ul>
+    {{ end }}
+  </article>
+  {{ if gt (len (findRE "<h[23]" .Content)) 3 }}
+  <aside class="toc" aria-label="On this page">
+    <p class="toc-title">On this page</p>
+    {{ .TableOfContents }}
+  </aside>
+  {{ end }}
+</div>
+{{ end }}

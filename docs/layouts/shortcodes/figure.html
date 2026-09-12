@@ -1,0 +1,21 @@
+{{- /*
+  Prints one field out of data/figures.json, addressed by a dotted path:
+
+    {{< figure "corpus.comparable" >}}
+
+  figures.json is written by scripts/sync-spec.mjs from spec/VERSION, the
+  chant pin, the fixture tree and the corpus report, so a page quotes a
+  figure without typing it. A bad path fails the build: a figure that
+  silently renders as nothing is the defect this shortcode exists to stop.
+*/ -}}
+{{- $path := .Get 0 -}}
+{{- $val := hugo.Data.figures -}}
+{{- if not $val }}{{ errorf "data/figures.json is missing; run scripts/sync-spec.mjs before hugo" }}{{ end -}}
+{{- range split $path "." -}}
+  {{- if and (reflect.IsMap $val) (isset $val .) -}}
+    {{- $val = index $val . -}}
+  {{- else -}}
+    {{- errorf "figure %q: no such path in data/figures.json (%s)" $path $.Position -}}
+  {{- end -}}
+{{- end -}}
+{{- $val -}}

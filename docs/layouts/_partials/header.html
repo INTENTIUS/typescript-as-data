@@ -1,0 +1,35 @@
+{{- $cur := . -}}
+{{- $cons := hugo.Data.consumers.consumers -}}
+{{- $inPlatform := eq $cur.Section "for-your-platform" -}}
+<header class="site-header">
+  <a class="brand" href="{{ site.Home.RelPermalink }}"><span>typescript-as-data</span></a>
+  <nav class="site-nav" aria-label="Primary">
+    {{ range site.Menus.main }}
+    {{ if eq .Weight 30 }}{{ continue }}{{ end }}
+    {{ if lt .Weight 30 }}<a href="{{ .URL }}"{{ if or ($cur.IsMenuCurrent "main" .) ($cur.HasMenuCurrent "main" .) }} aria-current="page"{{ end }}>{{ .Name }}</a>{{ end }}
+    {{ end }}
+    <details class="menu"{{ if $inPlatform }} data-current{{ end }}>
+      <summary{{ if $inPlatform }} aria-current="page"{{ end }}>For your platform</summary>
+      <ul class="menu-list">
+        <li><a href="{{ "for-your-platform/" | relURL }}">Add it to yours</a></li>
+        {{ range $cons }}
+        {{ $page := site.GetPage (printf "/for-your-platform/%s" .id) }}
+        <li{{ if eq $page $cur }} class="current"{{ end }}>
+          {{ with $page }}<a href="{{ .RelPermalink }}">{{ end }}{{ .name }}{{ if $page }}</a>{{ end }}
+          {{ if eq .status "reference" }}<span class="badge badge-proven">reference</span>{{ else if eq .status "pr-open" }}<span class="badge">PR open</span>{{ end }}
+        </li>
+        {{ end }}
+      </ul>
+    </details>
+    {{ range site.Menus.main }}
+    {{ if gt .Weight 30 }}<a href="{{ .URL }}"{{ if or ($cur.IsMenuCurrent "main" .) ($cur.HasMenuCurrent "main" .) }} aria-current="page"{{ end }}>{{ .Name }}</a>{{ end }}
+    {{ end }}
+    <a href="{{ site.Params.repo }}" rel="noopener">GitHub</a>
+    <button class="search-toggle" type="button" aria-label="Search" data-search-open>Search</button>
+  </nav>
+</header>
+<script>
+document.addEventListener('click', function (e) {
+  document.querySelectorAll('details.menu[open]').forEach(function (d) { if (!d.contains(e.target)) d.removeAttribute('open'); });
+});
+</script>

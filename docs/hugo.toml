@@ -1,0 +1,50 @@
+baseURL = "https://intentius.io/typescript-as-data/"
+title = "typescript-as-data"
+enableGitInfo = false
+disableKinds = ["taxonomy", "term"]
+
+[params]
+  repo = "https://github.com/INTENTIUS/typescript-as-data"
+  description = "TypeScript in place of YAML. A file that is data is typed JSON, and it means the same thing whether it is folded or run."
+
+# The header's fixed entries. Consumers are not listed here: the header
+# renders a "For your platform" menu from data/consumers.yaml, so a new
+# consumer is a roster entry, never a menu edit. Every figure a page quotes
+# comes from data/figures.json, written by scripts/sync-spec.mjs.
+[[menus.main]]
+  name = "What it enables"
+  pageRef = "/what-it-enables"
+  weight = 10
+[[menus.main]]
+  name = "Try it"
+  pageRef = "/try-it"
+  weight = 20
+[[menus.main]]
+  name = "Specification"
+  pageRef = "/spec"
+  weight = 40
+
+[markup.goldmark.renderer]
+  unsafe = true
+
+# Highlighting emits classes, styled in site.css for both themes, rather
+# than Chroma's inline dark palette.
+[markup.highlight]
+  noClasses = false
+  lineNumbersInTable = false
+
+[markup.tableOfContents]
+  startLevel = 2
+  endLevel = 3
+
+[outputs]
+  home = ["HTML", "RSS", "searchindex"]
+
+[outputFormats.searchindex]
+  mediaType = "application/json"
+  baseName = "searchindex"
+  isPlainText = true
+  notAlternative = true
+
+[minify]
+  disableJSON = true

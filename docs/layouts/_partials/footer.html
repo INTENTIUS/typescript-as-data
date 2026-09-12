@@ -1,0 +1,4 @@
+{{- $f := hugo.Data.figures -}}
+<footer class="site-footer">
+  <p>The specification, its reference implementation and its conformance suite are at <a href="{{ site.Params.repo }}">INTENTIUS/typescript-as-data</a>, MIT. {{ with $f }}Every figure on this site describes spec <code>{{ .specVersion }}</code> and chant <code>{{ .chantPin }}</code>.{{ end }} Search with <kbd>/</kbd>.</p>
+</footer>

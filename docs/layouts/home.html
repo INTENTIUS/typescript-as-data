@@ -1,0 +1,58 @@
+{{ define "main" }}
+{{- $f := hugo.Data.figures -}}
+{{- $cons := hugo.Data.consumers.consumers -}}
+<section class="hero">
+  <h1>typescript-as-data</h1>
+  <p class="tagline">TypeScript in place of YAML.</p>
+  <p class="hero-lead">{{ site.Params.description }} Typed, checked at the keystroke, and turned into the artifact without running.</p>
+  <p class="hero-actions"><a class="button" href="{{ "try-it/" | relURL }}">Try it in ten minutes</a> <a class="button secondary" href="{{ "for-your-platform/" | relURL }}">Add it to your platform</a> <a class="button secondary" href="{{ "spec/" | relURL }}">The specification</a></p>
+</section>
+
+{{- /* The three beats are the three pages of what-it-enables/, read from
+       their front matter, so the landing page cannot say something a page
+       does not. */ -}}
+<section class="beats">
+  {{ range (site.GetPage "/what-it-enables").RegularPages.ByWeight }}
+  <div class="beat">
+    <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+    <p>{{ .Description }}</p>
+  </div>
+  {{ end }}
+</section>
+
+<section class="platforms">
+  {{ .Content }}
+</section>
+
+<section class="platforms">
+  <h2>Pick your platform</h2>
+  <div class="picker" data-picker>
+    <ul class="picker-list">
+      {{ range $cons }}
+      {{ $page := site.GetPage (printf "/for-your-platform/%s" .id) }}
+      <li class="picker-row status-{{ .status }}" data-name="{{ .name | lower }}">
+        {{ with $page }}<a href="{{ .RelPermalink }}">{{ end }}<span class="picker-name">{{ .name }}</span>{{ if $page }}</a>{{ end }}
+        {{ if eq .status "reference" }}<span class="badge badge-proven">reference platform</span>{{ else if eq .status "pr-open" }}<span class="badge">PR open</span>{{ end }}
+        <span class="picker-status">{{ .status_label | markdownify }}</span>
+      </li>
+      {{ end }}
+      <li class="picker-row">
+        <a href="{{ "for-your-platform/" | relURL }}"><span class="picker-name">Yours</span></a>
+        <span class="picker-status">Types for your schema, the evaluator as a package, and the conformance suite to judge it.</span>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section class="proof-strip">
+  <h2>What stands behind it</h2>
+  <ul class="stats">
+    {{ with $f }}
+    <li><a href="{{ "spec/conformance/corpus/" | relURL }}"><strong>{{ .corpus.agreed }} of {{ .corpus.comparable }}</strong> comparable files of chant's corpus agree between the reference and chant, and {{ .corpus.bothFold }} fold to identical namespaces on both</a></li>
+    <li><a href="{{ "spec/conformance/coverage/" | relURL }}"><strong>{{ .rulesWithFixture }} of {{ .rulesTotal }}</strong> rules have a conformance fixture; the rest are listed with a reason each</a></li>
+    <li><a href="{{ "spec/evidence/" | relURL }}"><strong>{{ .fixtures }}</strong> fixtures, {{ .wholeBuildFixtures }} of them whole-build, at spec <code>{{ .specVersion }}</code> against chant <code>{{ .chantPin }}</code></a></li>
+    {{ end }}
+  </ul>
+  <p class="run-it">Every figure on this site is read from an artifact in the repository at build time. <a href="{{ "spec/evidence/" | relURL }}">The evidence page</a> names each artifact and what it does not establish.</p>
+</section>
+{{ end }}

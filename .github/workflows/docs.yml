@@ -24,12 +24,14 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
-          cache: 'npm'
-      - run: npm install --prefix docs
-      - run: npm run --prefix docs build
+      - uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: '0.162.1'
+          extended: true
+      - run: npm run docs:build
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/dist
+          path: docs/public
 
   deploy:
     needs: build
