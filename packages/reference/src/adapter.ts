@@ -3,6 +3,7 @@ import { EMPTY_HOST, type Host, type Profile } from "./host.js";
 import { shapeOfExport, foldExport } from "./module.js";
 import { foldProject } from "./project.js";
 import { canRun, runRules } from "./rules.js";
+import { generate, NoSourceForm } from "./generate.js";
 
 /**
  * A named conformance host, in this implementation's own terms. In
@@ -30,7 +31,7 @@ function adapterFor(profile: Profile): ConformanceAdapter {
   name: profile === "full" ? "reference" : `reference/${profile}`,
   // Bumped by hand when the rule set this package implements moves; the
   // conformance suite fails when it and spec/VERSION disagree (#18).
-  specVersion: "1.4",
+  specVersion: "1.5",
   shape(source, exportName) {
     const v = shapeOfExport(source, exportName, { ...EMPTY_HOST, profile });
     if (v === "no-such-export") return { accepted: false, line: 1, column: 1, message: `no export named ${exportName}` };
@@ -53,6 +54,10 @@ function adapterFor(profile: Profile): ConformanceAdapter {
     const h = hostOf(host, profile);
     if (!canRun(h)) return "unavailable";
     return runRules(foldProject(files, h), h, phase);
+  },
+  generate(namespace, host) {
+    try { return generate(namespace, hostOf(host, profile)); }
+    catch (e) { if (e instanceof NoSourceForm) return "unavailable"; throw e; }
   },
   };
 }

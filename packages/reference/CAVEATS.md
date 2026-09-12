@@ -71,6 +71,10 @@ chant as F-Import's text says; it now does both (#96). A project-local
 function is excluded at the import, since it is a callable rather than a
 value and F-CallLeak decides its edge at the call.
 
+## The smallest generator
+
+`generate.ts` (#80) writes one module for a namespace of values, one form per case of `F-Val-Source` and nothing factored: no shared `const`, no parameter, every value inline. It is what makes the round trip executable, not a generator anyone would ship. A value with no form here, a helper call or a composite step in `data-host`, a symbol outside an interior, a live instance, is reported as such and the fixture is skipped rather than approximated.
+
 ## Two rules, and no provenance
 
 `rules.md` (spec `1.4`) specifies the contract a semantic rule runs under. This package carries the two rules the `shapes` host names, `SHAPES001` over the folded namespace and `SHAPES002` over its JSON serialization (`rules.ts`, #101), and nothing else: a host that names a rule this file does not carry gets `"unavailable"`. A file that runs has no folded namespace here, so no rule sees it; chant answers that case by executing the file. There is no value provenance, so a finding names an export and never a source line, which `F-Rule-Finding` allows.

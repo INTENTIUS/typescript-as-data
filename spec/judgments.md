@@ -63,6 +63,7 @@ another language embeds, or a JavaScript tool that folds and never runs. It is
 | `F-Val-Fate` | altered: revival is serialization. An envelope is the output; `{__resource}`, `{__intrinsic}` and `{__attrRef}` reach the artifact as data for the host's serializer to map. No constructor and no function is invoked |
 | `F-Eval-CallHelper`, `F-Eval-CallEager`, `F-Host-Admission`, `F-Host-NoSubstitution` | absent: there is nothing to invoke. A registered helper or eager name is an ordinary unresolved identifier |
 | `F-Eval-Tagged`, `F-Eval-CallIntrinsic` | apply; the envelope stays an envelope |
+| `F-Val-Source` | applies, and the round trip is `fold(generate(v)) = v` literally: no fate runs, so the fold of a form is the envelope itself. The helper and composite-step cases are absent with their rules |
 | `F-Call`, `F-Host-Composite` | interpretation only (step 4). A factory that is not interpretable is an error, never invoked |
 | `S-LocalFunction`, `S-CallLocal` | apply in full: a same-file or project-imported function is called by interpretation, which needs no runtime |
 | `S-ExportDefault` | applies: a default export is the declarator named `default`. In `full` it is permitted, not required, and chant does not yet admit it |

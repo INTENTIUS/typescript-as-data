@@ -1,0 +1,35 @@
+{
+  "rules": [
+    "F-Val-Source",
+    "F-Val-Fate"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "app.ts": "fold"
+  },
+  "exports": {
+    "app.ts": {
+      "logs": {
+        "entityType": "Bucket",
+        "lexicon": "shapes",
+        "props": {
+          "name": "logs"
+        },
+        "attributes": {}
+      },
+      "arn": {
+        "__attrRef": {
+          "entity": "logs",
+          "attribute": "arn"
+        }
+      },
+      "tagged": "arn:logs",
+      "called": {
+        "Ref": "logs"
+      },
+      "helped": "LOGS"
+    }
+  },
+  "note": "The same forms in full, where the fold of a form is the value after F-Val-Fate: the resource is a live instance, the intrinsics and the helper are invoked, and only the attribute reference at the top is still the envelope. Inside the tag's interpolation an attribute reference would be rejected (F-Val-Position), so the span holds a literal. This is why the round trip is stated per profile."
+}

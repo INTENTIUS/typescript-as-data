@@ -132,6 +132,32 @@ arguments (`foldIntrinsicValue`). Anywhere else an unresolved chain is a
 located rejection (F-Reference, J2). A `__symbol` therefore never appears at
 the top of a folded tree.
 
+## F-Val-Source (every value has a source form)
+
+For every value `v` of F-Val-Domain there is source in the subset
+(grammar.md) whose fold, in the profile named, is `v`. The table names one
+such form per case, which is the form a generator should prefer and not the
+only one the subset admits; the rule was added in `1.5` (#80).
+
+| Case | A source form that folds to it | In |
+|---|---|---|
+| scalar | the literal: `"s"`, `1.5`, `true`, `null`, `undefined` (F-Eval-Literal, F-Eval-Undefined) | both |
+| array, object | the literal, with each member's source form as its element or value; a key that is not an identifier is a string key (S-Prop) | both |
+| attribute reference `{__attrRef: {entity, attribute}}` | `entity.attribute`, where `entity` is a same-file `const` bound to a `new` (F-Eval-Member step 1, F-Prebuild) | both |
+| intrinsic, tag form `{__intrinsic, strings, values}` | the tagged template `name\`s₀${v₀}s₁…\`` for a registered tag (F-Eval-Tagged) | both |
+| intrinsic, call form `{__intrinsic, args}` | `name(args…)` for an intrinsic registered with `foldsAsCall` (F-Eval-CallIntrinsic) | both |
+| helper call `{__helper, args}` | `name(args…)` for a registered helper (F-Eval-CallHelper). J1 yields the envelope and revival invokes the helper, so the envelope is never the output | `full` |
+| resource `{__resource, props, attributes?, args?}` | `new C(props)`, `new C(props, attributes)`, or `new C(…args)` when `args` is present (F-Eval-New, F-Val-Arity) | both |
+| composite step `{__compositeStep, args}` | the interpretable factory form (F-Host-Composite) | `full` |
+| symbol `{__symbol}` | the unresolved chain, written inside an intrinsic's interior (F-Eval-Interior, F-Val-Symbol-Scope) | both |
+
+Nothing else is a value, so nothing else needs a form, and the fold of a
+form in `full` is the value after F-Val-Fate, so a resource's form folds to a
+live instance there and to the envelope in `data-host`; the round trip
+(README.md, "the generator obligation") is stated per profile for that
+reason. A live instance has no source form of its own: its form is the
+envelope's.
+
 ---
 
 ## Rationale
@@ -144,8 +170,9 @@ The spec must define what a fold produces. Every other requirement quantifies
 over it, and it is currently defined only by a TypeScript union
 (`FoldedValue`, `fold.ts:116`; L4.1).
 
-Nine cases. Six are ordinary JSON, string, number, boolean, null, undefined,
-arrays and plain objects. The rest carry envelopes:
+There are nine cases, and six of them are ordinary JSON, the scalars with
+`undefined` beside them, plus arrays and plain objects. The rest carry
+envelopes:
 
 | Case | Envelope key | Denotes | Fate (R1.2) |
 |---|---|---|---|
@@ -156,6 +183,24 @@ arrays and plain objects. The rest carry envelopes:
 | `FoldedResource` | `__resource` | a construction, top-level or nested as a value | revived |
 | `FoldedCompositeStepCall` | `__compositeStep` | `<Identifier>(...).step`, member fixed | revived |
 | `SymbolicValue` | `__symbol` | source text preserved inside an intrinsic interior | revived |
+
+**F-Val-Source.** The round trip, `fold(generate(v)) = v`, is what makes
+the choice of language a matter of correctness. A generator decides what
+each value is: this string is a literal and that one is a reference to
+another resource's attribute, while a repetition across forty resources is
+one `const`. Each decision needs a form the subset can express and the fold
+reverses, and the rule is the completeness half of that property, written
+as a table rather than a sentence so that a generator author can read off a
+form per case. The two open questions on #80 are settled here as follows.
+The table names one form per case and requires only that one exists, so
+generators stay comparable without being constrained to agree; and the
+property is stated per profile, because in `full` the fold of a resource's
+form is a live instance and not the envelope. chant's three generators, `chant import` from a template,
+`--from` live import and carve-out from Terraform, emit through one
+pipeline (`L12.1`) whose forms are the table's; its Kubernetes round-trip
+suite compares resource count and kinds after re-serialization and not
+bytes (`L12.4`), so the byte-level measurement the paper wants is still to be
+taken.
 
 **F-Val-Envelope** *(was R1.1. Symbolic is not unevaluated)*
 

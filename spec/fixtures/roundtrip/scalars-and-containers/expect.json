@@ -1,0 +1,8 @@
+{
+  "rules": [
+    "F-Val-Source"
+  ],
+  "roundtrip": true,
+  "host": "shapes",
+  "note": "Every scalar, arrays and objects of them, a key that is not an identifier. The generator writes literals; the fold reads them back."
+}

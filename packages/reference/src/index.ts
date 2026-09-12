@@ -7,3 +7,4 @@ export * from "./module.js";
 export * from "./project.js";
 export { referenceAdapter, referenceDataHostAdapter } from "./adapter.js";
 export { runRules, RULES, namespaceOf, artifactOf, type Finding } from "./rules.js";
+export { generate, NoSourceForm } from "./generate.js";
