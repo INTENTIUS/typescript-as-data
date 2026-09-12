@@ -1,0 +1,17 @@
+# The tools that read .ts in place of .yml through this specification, and
+# the one place each one's status is written down. The header's "For your
+# platform" menu and the landing page's picker render from this roster, so
+# a new consumer is a row here plus a page under content/for-your-platform/.
+consumers:
+  - id: forgejo-warden
+    name: forgejo-warden
+    kind: org governance
+    status: pr-open
+    status_label: "Reads `governance.ts` through the published reference; the first consumer that is neither this repository nor chant. Its `.ts` policy is forgejo-warden#33, merged the day the packages are on npm."
+    repo: https://github.com/INTENTIUS/forgejo-warden
+  - id: chant
+    name: chant
+    kind: infrastructure toolchain
+    status: reference
+    status_label: "The implementation the specification was extracted from; seventeen lexicons, round-trip generators, semantic lint."
+    repo: https://github.com/INTENTIUS/chant

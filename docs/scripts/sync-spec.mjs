@@ -1,5 +1,5 @@
-// Generate docs/src/content/docs/spec/*.md from ../spec/*.md, and
-// docs/src/data/figures.json from the artifacts every figure on the site
+// Generate docs/content/spec/normative/*.md from ../spec/*.md, and
+// docs/data/figures.json from the artifacts every figure on the site
 // comes from (spec/VERSION, the chant pin, the corpus report, the fixture
 // tree). A page reads a figure from that file; it never types one, so a bump
 // is one edit and no page quietly names the previous number (#85).
@@ -13,8 +13,9 @@ import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const specDir = join(here, "..", "..", "spec");
-const outDir = join(here, "..", "src", "content", "docs", "spec");
-const dataDir = join(here, "..", "src", "data");
+const outDir = join(here, "..", "content", "spec", "normative");
+const dataDir = join(here, "..", "data");
+const SITE = "/typescript-as-data/spec/normative";
 
 rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
@@ -39,8 +40,11 @@ for (const file of readdirSync(specDir).filter((f) => f.endsWith(".md"))) {
   let title = name;
   const body = [];
   let seenH1 = false;
-  for (const ln of lines) {
-    if (!seenH1 && /^#\s+/.test(ln)) { title = ln.replace(/^#\s+/, "").trim(); seenH1 = true; continue; }
+  for (const raw of lines) {
+    if (!seenH1 && /^#\s+/.test(raw)) { title = raw.replace(/^#\s+/, "").trim(); seenH1 = true; continue; }
+    // A link to a sibling file (`./grammar.md`) becomes the page it renders as.
+    const ln = raw.replace(/\]\(\.\/([A-Za-z-]+)\.md(#[^)]*)?\)/g, (_, n, h) => `](${SITE}/${n === "README" ? "" : n.toLowerCase() + "/"}${h ?? ""})`)
+      .replace(/\]\(\.\/VERSION\)/g, "](https://github.com/INTENTIUS/typescript-as-data/blob/main/spec/VERSION)");
     const m = ID.exec(ln) || BOLD_ID.exec(ln);
     if (m) body.push(`<a id="${m[2] ?? m[1]}"></a>`);
     body.push(ln);
@@ -49,16 +53,18 @@ for (const file of readdirSync(specDir).filter((f) => f.endsWith(".md"))) {
   const order = ORDER.indexOf(name);
   const fm = [
     "---",
-    `title: ${JSON.stringify(name === "README" ? "Specification" : title)}`,
+    `title: ${JSON.stringify(name === "README" ? "Normative text" : title)}`,
     `description: ${JSON.stringify(desc)}`,
-    `sidebar:\n  order: ${order === -1 ? 99 : order}`,
+    `weight: ${order === -1 ? 99 : order + 1}`,
+    ...(name === "README" ? ["hideChildren: false", 'aliases: ["/spec/"]'] : [`aliases: ["/spec/${name.toLowerCase()}/"]`]),
     "---",
     "",
-    `<!-- GENERATED from spec/${file} by docs/scripts/sync-spec.mjs — edit the source, not this file. -->`,
+    `<!-- GENERATED from spec/${file} by docs/scripts/sync-spec.mjs. Edit the source, not this file. -->`,
     "",
   ].join("\n");
-  writeFileSync(join(outDir, `${name === "README" ? "index" : name}.md`), fm + body.join("\n"));
-  console.log(`spec/${file} -> spec/${name === "README" ? "index" : name}.md`);
+  const out = name === "README" ? "_index.md" : `${name.toLowerCase()}.md`;
+  writeFileSync(join(outDir, out), fm + body.join("\n"));
+  console.log(`spec/${file} -> content/spec/normative/${out}`);
 }
 
 // ── figures.json ────────────────────────────────────────────────────────────

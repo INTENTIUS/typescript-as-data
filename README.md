@@ -18,7 +18,7 @@ The repository is three things and a site.
 | `spec/fixtures/` | Conformance fixtures, one directory per rule |
 | `packages/reference` | The reference implementation (`@intentius/tsad-reference`) |
 | `packages/conformance` | The adapter interface, fixture format, runner, and the chant adapter |
-| `docs/` | The published site (Astro + Starlight), generated from `spec/` |
+| `docs/` | The published site (Hugo, on choudoufu's layout); the normative pages are generated from `spec/` |
 
 ## Relationship to chant
 
@@ -35,8 +35,8 @@ npm test
 npm run lint:prose
 TSAD_CHANT_REPO=../chant npm run corpus   # the corpus cross-check (#25); needs a chant checkout with its lexicons generated
 
-npm run docs        # docs dev server
-npm run docs:build  # static build, as CI runs it
+npm run docs        # docs dev server (needs hugo)
+npm run docs:build  # static build to docs/public, as CI runs it
 ```
 
 ## License

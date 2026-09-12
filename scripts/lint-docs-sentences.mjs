@@ -41,9 +41,10 @@ import { buildDocAnalysis } from "sentences/lint/build-doc";
 import { extractProse } from "sentences/lint/markdown-prose";
 
 const here = dirname(fileURLToPath(import.meta.url));
-// The docs site's authored pages are prose too (#85); the spec/ directory
+// The docs site's authored pages are prose too (#85); content/spec/normative
 // under it is generated from spec/*.md and is linted at its source.
-const ROOTS = [join(here, "..", "spec"), join(here, "..", "paper"), join(here, "..", "README.md"), join(here, "..", "docs", "src", "content", "docs")];
+const ROOTS = [join(here, "..", "spec"), join(here, "..", "paper"), join(here, "..", "README.md"), join(here, "..", "docs", "content")];
+const GENERATED = join("docs", "content", "spec", "normative");
 const BASELINE = join(here, "docs-sentences-baseline.json");
 const GATED_SEVERITIES = new Set(["medium", "high"]);
 
@@ -54,6 +55,7 @@ function docFiles(dir) {
   const out = [];
   for (const entry of readdirSync(dir)) {
     const p = join(dir, entry);
+    if (p.includes(GENERATED)) continue;
     if (statSync(p).isDirectory()) out.push(...docFiles(p));
     else if (/\.(md|mdx)$/.test(entry)) out.push(p);
   }
@@ -61,10 +63,10 @@ function docFiles(dir) {
 }
 
 /** The frontmatter block replaced by spaces, so every offset after it is unchanged. */
-// An MDX expression such as `{figures.corpus.files}` is a value, not prose; the
-// dots inside it would end sentences. It is read as the number it renders.
+// A shortcode such as `{{< figure "corpus.files" >}}` is a value, not prose;
+// the dots inside it would end sentences. It is read as the number it renders.
 function blankExpressions(text) {
-  return text.replace(/\{[^{}\n]*\}/g, "0");
+  return text.replace(/\{\{[<%][^\n]*?[>%]\}\}/g, "0");
 }
 function blankFrontmatter(text) {
   const m = /^---\r?\n[\s\S]*?\r?\n---[ \t]*(\r?\n|$)/.exec(text);

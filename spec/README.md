@@ -1,6 +1,6 @@
 # spec/
 
-The normative specification. Empty until the epics below land.
+The normative specification, at the version `VERSION` names. Nine files, one rule set.
 
 The normative files, in reading order: [`grammar.md`](./grammar.md) (`S-*`),
 [`judgments.md`](./judgments.md) (`F-*`: J1 evaluation, J2 verdict, J3 taint,

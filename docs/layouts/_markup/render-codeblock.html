@@ -1,0 +1,6 @@
+{{- /* A fence may carry a file name: ```ts {title="governance.ts"}. It is
+       shown as a caption above the block, the way an editor tab would. */ -}}
+{{- $r := transform.HighlightCodeBlock . -}}
+{{- with .Attributes.title }}<figure class="code"><figcaption><code>{{ . }}</code></figcaption>{{ end -}}
+{{ $r.Wrapped }}
+{{- with .Attributes.title }}</figure>{{ end -}}

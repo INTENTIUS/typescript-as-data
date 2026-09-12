@@ -7,8 +7,8 @@
     "packages/*"
   ],
   "scripts": {
-    "docs": "npm --prefix docs run dev",
-    "docs:build": "npm --prefix docs run build",
+    "docs": "node docs/scripts/sync-spec.mjs && hugo server -s docs --bind 127.0.0.1 --port 8000 --openBrowser",
+    "docs:build": "node docs/scripts/sync-spec.mjs && rm -rf docs/public && hugo -s docs --minify",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
     "corpus": "TSAD_CORPUS_REPORT=1 vitest run packages/conformance/src/corpus.test.ts packages/conformance/src/rules.test.ts",
