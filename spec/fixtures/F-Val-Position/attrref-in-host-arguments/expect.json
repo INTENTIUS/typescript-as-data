@@ -1,0 +1,8 @@
+{
+  "rules": ["F-Val-Position", "F-Val-Fate"],
+  "project": true,
+  "host": "shapes",
+  "verdicts": { "rejected.ts": "run" },
+  "tentative": { "rejected.ts": "run" },
+  "note": "The other arm. An attribute reference passes through revival everywhere except inside a host call's arguments, where it is rejected: the receiver would see a look-alike plain object instead of a live instance and produce wrong output rather than absent output. Wrong output is the one failure a fallback cannot repair, so this is a rejection and not a pass-through."
+}
