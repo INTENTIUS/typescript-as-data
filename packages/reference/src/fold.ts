@@ -85,9 +85,20 @@ export function carriesLiveObject(v: unknown, seen = new Set<unknown>()): boolea
   if (v === null || typeof v !== "object") return typeof v === "function";
   if (seen.has(v)) return false;
   seen.add(v);
-  const proto = Object.getPrototypeOf(v);
-  if (proto !== Object.prototype && proto !== Array.prototype && proto !== null) return true;
+  if (isLiveObject(v)) return true;
   return Object.values(v).some((inner) => carriesLiveObject(inner, seen));
+}
+
+/**
+ * The non-recursive half of F-Val-Live: this value *is* a live object, rather
+ * than a plain structure that may hold one. Revival passes these through
+ * unchanged (L6.1); rebuilding one would destroy the identity J3 preserves.
+ */
+export function isLiveObject(v: unknown): boolean {
+  if (typeof v === "function") return true;
+  if (v === null || typeof v !== "object") return false;
+  const proto = Object.getPrototypeOf(v);
+  return proto !== Object.prototype && proto !== Array.prototype && proto !== null;
 }
 
 /** F-Val-Envelope: a non-array object carrying one of the six keys. */

@@ -16,9 +16,18 @@ export function intrinsicTagFolds(def: { isTag?: boolean }): boolean { return de
 export function intrinsicCallFolds(def: { isTag?: boolean; foldsAsCall?: boolean }): boolean { return def.isTag !== true && def.foldsAsCall === true; }
 export function intrinsicCallFoldsEagerly(def: { isTag?: boolean; foldsEagerly?: boolean }): boolean { return def.isTag !== true && def.foldsEagerly === true; }
 
+/**
+ * What a host-owned specifier really exports: specifier, then export name, to
+ * the live value. F-Host-Interface item 1's entity constructors live here, as
+ * do the intrinsic and helper functions items 3 and 4 name, because revival
+ * has to *call* them (F-Val-Fate) and a description cannot be called.
+ */
+export type HostValues = ReadonlyMap<string, ReadonlyMap<string, unknown>>;
+
 export interface Host {
   readonly intrinsics: readonly IntrinsicDef[];
   readonly helpers: readonly { name: string; module: string; note: string }[];
   readonly ownedSpecifierPrefixes: readonly string[];
+  readonly values: HostValues;
 }
-export const EMPTY_HOST: Host = { intrinsics: [], helpers: [], ownedSpecifierPrefixes: [] };
+export const EMPTY_HOST: Host = { intrinsics: [], helpers: [], ownedSpecifierPrefixes: [], values: new Map() };

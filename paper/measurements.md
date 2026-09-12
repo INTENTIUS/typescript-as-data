@@ -52,7 +52,7 @@ The chant side's `false` is also an unsampled invariant: the run fails unless ev
 
 | Pin | Fixtures | Rules with a fixture | Shape and fold agreement |
 |---|---|---|---|
-| chant 0.69.1 | 37, of which 8 are whole-build | 51 of 125 | all, on the 29 the pin can answer |
+| chant 0.69.1 | 41, of which 12 are whole-build | 57 of 126 | all, on the 29 the pin can answer |
 
 One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
 
@@ -60,7 +60,7 @@ One disagreement existed between the reference and chant, on an envelope inside 
 
 Two limits on that. The rewrite's author had read chant's implementation closely while writing the specification from it, so this establishes that the specification is complete enough to implement from, not that a reader who had never seen chant would arrive at the same place. And the agreement covers the expression and single-file layers. It does not cover J3, for the reason the next section gives.
 
-**What the whole-build fixtures establish, and against how many implementations.** The reference now implements J2's per-file verdict and J3's fixpoint from `judgments.md` (#21, #22). Eight whole-build fixtures assert the verdicts of an entire build rather than the value of one expression. Four of them fire an edge on purpose:
+**What the whole-build fixtures establish, and against how many implementations.** The reference now implements J2's per-file verdict and J3's fixpoint from `judgments.md` (#21, #22), and revival from `values.md` (#61), so a folded declarator yields a real instance of the class the host supplies rather than an envelope. Twelve whole-build fixtures assert the verdicts of an entire build rather than the value of one expression. Four of them fire a taint edge on purpose:
 
 | Fixture | What it fires |
 |---|---|
@@ -109,7 +109,7 @@ The corpus is chant's own examples, and chant's documentation says the number is
 ## Limits
 
 - Twelve mixed entries and one adversarial build are a small sample, all from one project.
-- Fixture coverage is 51 of 125 rules. The 74 without one are listed with a reason, and the list may only shrink.
+- Fixture coverage is 57 of 126 rules. The 69 without one are listed with a reason, and the list may only shrink.
 - Only the differential puts J3 in front of both implementations at once; the fixtures for it reach one (chant#2408).
-- The reference has no host that supplies constructors, so it cannot revive a resource envelope into an instance. `F-CallLeak` therefore has no fixture, and the J3 fixtures reach captures through imports only (`packages/reference/CAVEATS.md`).
+- Revival is implemented for five of the six envelopes; `{__compositeStep}` needs a composite factory form the reference does not have (`packages/reference/CAVEATS.md`).
 - The independent rewrite found two specification gaps. Two is a small sample, and it is the sample a single author working alone can produce.

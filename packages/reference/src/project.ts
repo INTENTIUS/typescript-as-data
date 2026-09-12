@@ -16,15 +16,13 @@
 import * as ts from "typescript";
 import { EMPTY_HOST, type Host } from "./host";
 import { foldExpr, collectConsts, FoldRejection, FoldableFunction, type Scope } from "./fold";
-import { registerHelpers, registerHostSpecifiers } from "./foldable-helpers";
+import { registerHelpers, registerHostSpecifiers, isHostOwnedSpecifier } from "./foldable-helpers";
+import { revive } from "./revive";
 import type { FnDecl } from "./fnbody";
 
 export type Verdict =
   | { kind: "fold"; exports: Map<string, unknown>; captures: Set<string> }
   | { kind: "run"; rule: string; reason: string };
-
-/** F-Identity's reference test, which F-Import uses: `typeof` object or function, not recursive. */
-const hasIdentity = (v: unknown): boolean => v !== null && (typeof v === "object" || typeof v === "function");
 
 const parse = (path: string, source: string) => ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
 const isProjectSpecifier = (s: string) => s.startsWith(".") || s.startsWith("/");
@@ -114,6 +112,43 @@ interface Session {
   readonly stack: string[];
   /** Local functions this build created, so F-CallLeak's flag is observable. */
   readonly locals: Map<string, FoldableFunction[]>;
+  /**
+   * Every non-primitive in some folded `X(g)`, to the `g` that produced it.
+   * F-Capture is stated over `X(f)`, not over what `f` imported, so the edge
+   * can only be decided once the namespace exists. F-Memo is what makes the
+   * index meaningful: one object per entity, so the first owner is the owner.
+   */
+  readonly owner: Map<object, string>;
+}
+
+/**
+ * Index every non-primitive `f` produced, so a later file's capture of one is
+ * attributable. "Non-primitive" is F-Identity's reference test, the broad one
+ * F-Import uses: a plain object counts, and the walk does not ask whether
+ * anything inside it is live.
+ */
+function indexOwned(value: unknown, file: string, session: Session, seen = new Set<unknown>()): void {
+  if (value === null || typeof value !== "object") return;
+  if (seen.has(value)) return;
+  seen.add(value);
+  if (!session.owner.has(value)) session.owner.set(value, file);
+  // Recurse through plain structure only: an entity's interior belongs to the
+  // entity, and reaching into it would attribute its fields to the wrong file.
+  const proto = Object.getPrototypeOf(value);
+  if (proto !== Object.prototype && proto !== Array.prototype && proto !== null) return;
+  for (const inner of Object.values(value)) indexOwned(inner, file, session, seen);
+}
+
+/** F-Capture, decided over the produced namespace: which other files' objects are in `X(f)`. */
+function capturesIn(value: unknown, self: string, session: Session, out: Set<string>, seen = new Set<unknown>()): void {
+  if (value === null || typeof value !== "object") return;
+  if (seen.has(value)) return;
+  seen.add(value);
+  const from = session.owner.get(value);
+  if (from !== undefined && from !== self) out.add(from);
+  const proto = Object.getPrototypeOf(value);
+  if (proto !== Object.prototype && proto !== Array.prototype && proto !== null) return;
+  for (const inner of Object.values(value)) capturesIn(inner, self, session, out, seen);
 }
 
 /** Every value binding a non-type-only import clause introduces. */
@@ -166,8 +201,20 @@ function foldFile(path: string, session: Session): Verdict {
     const spec = st.moduleSpecifier.text;
     const clause = st.importClause;
     if (!clause || clause.isTypeOnly) continue;
-    // A bare specifier is never resolved here: a package is not a member of F.
-    if (!isProjectSpecifier(spec)) continue;
+    if (!isProjectSpecifier(spec)) {
+      // F-Import, bare specifier: a package is never a member of F. A host-owned
+      // one still binds its REAL exports (F-Host-Trust arm 1), which is what lets
+      // revival construct anything at all (F-Val-Fate).
+      const supplied = session.host.values.get(spec);
+      if (supplied && isHostOwnedSpecifier(spec) && clause.namedBindings && ts.isNamedImports(clause.namedBindings)) {
+        for (const el of clause.namedBindings.elements) {
+          if (el.isTypeOnly) continue;
+          const imported = (el.propertyName ?? el.name).text;
+          if (supplied.has(imported)) externals.set(el.name.text, supplied.get(imported));
+        }
+      }
+      continue;
+    }
     const target = resolveKey(path, spec, session.files);
     if (!target) continue;
     const tv = verdictOf(target, session);
@@ -180,7 +227,6 @@ function foldFile(path: string, session: Session): Verdict {
       // F-Namespace: a synthetic plain object of the target's entries.
       const ns = Object.fromEntries(tv.exports);
       externals.set(clause.namedBindings.name.text, ns);
-      if ([...tv.exports.values()].some(hasIdentity)) captures.add(target);
       continue;
     }
     if (clause.namedBindings && ts.isNamedImports(clause.namedBindings)) {
@@ -190,7 +236,6 @@ function foldFile(path: string, session: Session): Verdict {
         if (!tv.exports.has(imported)) continue;
         const value = tv.exports.get(imported);
         externals.set(el.name.text, value);
-        if (hasIdentity(value)) captures.add(target); // F-Capture
       }
     }
   }
@@ -199,19 +244,25 @@ function foldFile(path: string, session: Session): Verdict {
   const scope: Scope = { consts, externals, depth: 0, captures };
   const evalHost = { intrinsics: session.host.intrinsics };
   const exports = new Map<string, unknown>();
+  /** F-Val-Fate: what the declarator produced, revived through this file's own imports. */
+  const live = (v: unknown, node: ts.Node, what: string) => {
+    const { line, character } = sf.getLineAndCharacterOfPosition(node.getStart());
+    return revive(v, externals, { line: line + 1, column: character + 1, what });
+  };
   for (const d of scan.declarators) {
     try {
       if (d.kind === "resource" || d.kind === "single") {
-        exports.set(d.name, foldExpr(d.expr, scope, evalHost));
+        exports.set(d.name, live(foldExpr(d.expr, scope, evalHost), d.expr, d.name));
       } else if (d.kind === "destructure") {
-        const base = foldExpr(d.expr, scope, evalHost);
+        const base = live(foldExpr(d.expr, scope, evalHost), d.expr, "a destructured declaration");
         if (base === null || typeof base !== "object") {
           return { kind: "run", rule: "F-Declarator", reason: "destructured source is not an object" };
         }
         for (const el of d.elements) exports.set(el.as, (base as Record<string, unknown>)[el.key]);
       } else if (d.kind === "named-export") {
         for (const el of d.elements) {
-          const v = consts.has(el.local) ? foldExpr(consts.get(el.local)!, scope, evalHost) : externals.get(el.local);
+          const init = consts.get(el.local);
+          const v = init ? live(foldExpr(init, scope, evalHost), init, el.as) : externals.get(el.local);
           if (v === undefined && !consts.has(el.local) && !externals.has(el.local)) {
             return { kind: "run", rule: "F-Reference", reason: `unresolved identifier: ${el.local}` };
           }
@@ -222,11 +273,8 @@ function foldFile(path: string, session: Session): Verdict {
         if (!target) return { kind: "run", rule: "F-Import", reason: `cannot resolve re-export from ${d.specifier}` };
         const tv = verdictOf(target, session);
         if (tv.kind !== "fold") return { kind: "run", rule: "F-Import", reason: `re-export source ${target} falls back to run` };
-        for (const el of d.elements) {
-          const v = tv.exports.get(el.imported);
-          exports.set(el.as, v);
-          if (hasIdentity(v)) captures.add(target); // a re-export is a capture
-        }
+        // A re-export is a capture, and the owner index below records it as one.
+        for (const el of d.elements) exports.set(el.as, tv.exports.get(el.imported));
       } else if (d.kind === "function") {
         const marker = new FoldableFunction(d.name, d.fn, path, consts, externals);
         mine.push(marker);
@@ -249,6 +297,9 @@ function foldFile(path: string, session: Session): Verdict {
       throw e;
     }
   }
+  // F-Capture over X(f). F-CallLeak has already put its own edges in `captures`.
+  for (const v of exports.values()) capturesIn(v, path, session, captures);
+  for (const v of exports.values()) indexOwned(v, path, session);
   return { kind: "fold", exports, captures };
 }
 
@@ -267,7 +318,7 @@ export interface ProjectResult {
 export function foldProject(files: ReadonlyMap<string, string>, host: Host = EMPTY_HOST): ProjectResult {
   registerHelpers(host.helpers);
   registerHostSpecifiers(host.ownedSpecifierPrefixes);
-  const session: Session = { files, host, memo: new Map(), stack: [], locals: new Map() };
+  const session: Session = { files, host, memo: new Map(), stack: [], locals: new Map(), owner: new Map() };
 
   const tentative = new Map<string, Verdict>();
   for (const path of files.keys()) tentative.set(path, verdictOf(path, session));

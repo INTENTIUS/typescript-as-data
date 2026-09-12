@@ -1,0 +1,15 @@
+{
+  "rules": ["F-Val-Fate", "F-Val-Position"],
+  "project": true,
+  "host": "shapes",
+  "verdicts": { "entities.ts": "fold" },
+  "exports": {
+    "entities.ts": {
+      "bucket": { "entityType": "Bucket", "lexicon": "shapes", "props": { "name": "logs" }, "attributes": {} },
+      "tagged": "bucket-1",
+      "shouted": "DONE",
+      "reference": { "who": { "__attrRef": { "entity": "bucket", "attribute": "name" } } }
+    }
+  },
+  "note": "Four of the six envelopes and the one that survives. The resource is constructed by the class the file imports, the intrinsic tag and the helper are invoked, and the attribute reference passes through unrevived because nothing in the build has named the instance yet."
+}

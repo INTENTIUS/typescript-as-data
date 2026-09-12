@@ -22,6 +22,7 @@
  *                    "tentative": { "config.ts": "fold" },                        // optional, J2 before J3 disposed
  *                    "taintedBy": { "config.ts": "app.ts" },                      // optional, the file whose taint reached it
  *                    "exports":   { "config.ts": { "port": 8080 } },              // optional, for files that finally fold
+ *                    "host":      "shapes",                                       // optional, a named host from host.ts; required if the sources import one
  *                    "note": "why this fixture exists" }
  * `tentative` and `taintedBy` are what separate "folds because nothing
  * reached it" from "would have folded, and an edge killed it" — without them
@@ -46,6 +47,8 @@ export interface ProjectFixture {
   tentative?: Record<string, "fold" | "run">;
   taintedBy?: Record<string, string>;
   exports?: Record<string, Record<string, unknown>>;
+  /** A named host from host.ts. Required for any fixture whose sources import one. */
+  host?: string;
   note?: string;
 }
 export type Fixture = ExpressionFixture | ProjectFixture;
@@ -77,7 +80,7 @@ export function loadFixtures(root: string): Fixture[] {
       const id = `${rule}/${name}`;
       if (e.project) {
         out.push({ kind: "project", id, dir: d, rules: e.rules, files: readProject(join(d, "project")),
-          verdicts: e.verdicts, tentative: e.tentative, taintedBy: e.taintedBy, exports: e.exports, note: e.note });
+          verdicts: e.verdicts, tentative: e.tentative, taintedBy: e.taintedBy, exports: e.exports, host: e.host, note: e.note });
       } else {
         out.push({ kind: "expression", id, dir: d, input: readFileSync(join(d, "input.ts"), "utf8"),
           rules: e.rules, exportName: e.export, shape: e.shape, fold: e.fold, value: e.value, rejectAt: e.rejectAt, note: e.note });

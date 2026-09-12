@@ -2,9 +2,8 @@
 
 Deliberate, and this list may only shrink (#8). Each entry names the rule and why it is still uncovered. Remove an entry when its fixture lands; the gate fails if an entry is stale.
 
-51 of 125 rules have fixtures. Most of the rules below are uncovered because the corpus is still growing (#24); where a rule needs something the reference implementation does not have, the entry says so.
+57 of 126 rules have fixtures. Most of the rules below are uncovered because the corpus is still growing (#24); where a rule needs something the reference implementation does not have, the entry says so.
 
-- `F-CallLeak` — needs a host that supplies a real constructor, so a called body can produce a live object; the reference ships an empty host (packages/reference/CAVEATS.md)
 - `F-Count` — no fixture yet; corpus is #24's
 - `F-Depth` — no fixture yet; corpus is #24's
 - `F-Direction` — no fixture yet; corpus is #24's
@@ -45,12 +44,8 @@ Deliberate, and this list may only shrink (#8). Each entry names the rule and wh
 - `F-Obs-Messages` — no fixture yet; corpus is #24's
 - `F-Obs-Provenance` — no fixture yet; corpus is #24's
 - `F-Obs-Report` — no fixture yet; corpus is #24's
-- `F-Val-Arity` — no fixture yet; corpus is #24's
 - `F-Val-Domain` — no fixture yet; corpus is #24's
 - `F-Val-Envelope` — no fixture yet; corpus is #24's
-- `F-Val-Fate` — no fixture yet; corpus is #24's
-- `F-Val-Live` — no fixture yet; corpus is #24's
-- `F-Val-Position` — no fixture yet; corpus is #24's
 - `F-Val-Serializable` — no fixture yet; corpus is #24's
 - `F-Val-Symbol-Scope` — no fixture yet; corpus is #24's
 - `F-Val-Undefined` — no fixture yet; corpus is #24's
