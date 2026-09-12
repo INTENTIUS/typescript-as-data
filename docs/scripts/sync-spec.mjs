@@ -20,7 +20,12 @@ const ID = /^(#{1,6})\s+((?:[SF]-[A-Za-z0-9-]+|L\d+\.\d+))\b(.*)$/;
 // Rules written as bold-leading paragraphs ("**F-Eval-Ident.**", "**S-Module.**")
 // get an anchor too, so a citation resolves whether the rule is a heading or not.
 const BOLD_ID = /^\*\*((?:[SF]-[A-Za-z0-9-]+))[.\s]/;
-const ORDER = ["README", "grammar", "judgments", "values", "divergence", "hosts", "inventory", "prior-art"];
+// Sidebar order. The set of files is whatever spec/ holds; this list only says
+// where a known one sorts, and anything unlisted falls to the end. CHANGELOG is
+// listed ahead of its arrival (#18): spec/CHANGELOG.md does not exist yet, and
+// naming it here is inert until it does, because the loop below iterates the
+// directory rather than this list.
+const ORDER = ["README", "grammar", "judgments", "values", "divergence", "hosts", "inventory", "CHANGELOG", "prior-art"];
 
 for (const file of readdirSync(specDir).filter((f) => f.endsWith(".md"))) {
   const name = basename(file, ".md");

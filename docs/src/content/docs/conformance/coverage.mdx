@@ -1,0 +1,76 @@
+---
+title: Coverage and the uncovered list
+description: The two-directional coverage gate, and what spec/fixtures/UNCOVERED.md is for.
+sidebar:
+  order: 3
+---
+
+One of the process rules in `spec/README.md` is that every identifier is
+exercised by at least one fixture, and every fixture cites a real identifier,
+in both directions, in CI. `spec/fixtures.test.ts` is that gate.
+
+## The three assertions
+
+The test collects every `S-` and `F-` identifier defined across `grammar.md`,
+`judgments.md`, `values.md`, `divergence.md` and `hosts.md`, collects every
+identifier cited by a fixture's `rules` array, and reads
+`spec/fixtures/UNCOVERED.md` as an allowlist. Then it asserts three things.
+
+Every rule a fixture cites is defined. A fixture citing an identifier that no
+spec file introduces is a citation of nothing.
+
+Every defined rule is exercised by a fixture, or is listed in `UNCOVERED.md`
+with a reason. A rule nothing exercises is a rule nobody has tested.
+
+The uncovered list contains only rules that are still uncovered. An entry that
+now has a fixture, or that names a rule that no longer exists, fails the gate.
+That is what makes the list shrink-only: you cannot leave a stale exemption
+behind.
+
+The identifier collection is keyed on the identifiers themselves and never on
+document structure. `spec/coverage.test.ts` carries the reason in a comment,
+and it is the lesson of chant#2306, where a gate keyed on headings could not
+see a wrong claim that lived in a bullet list.
+
+## The other gate
+
+`spec/coverage.test.ts` is the ledger side of the same idea. Every row of
+`spec/inventory.md` must cite at least one `S-` or `F-` rule that is defined in
+a spec file, or be marked `GAP` with an explicit out-of-scope reason. It also
+asserts that row identifiers are unique and that no row still cites the retired
+`R*` vocabulary.
+
+Between the two, an identifier that nothing exercises and a citation of nothing
+are both CI failures rather than drift.
+
+## UNCOVERED.md
+
+`spec/fixtures/UNCOVERED.md` is a list, one bullet per rule. Each bullet is the
+rule identifier in backticks, an em dash, and a reason. `fixtures.test.ts`
+parses exactly that shape with a regular expression, so an entry written any
+other way is not an exemption and the gate will still fail on the rule.
+
+The file's own header states the count. At the time of writing it says 100 of
+127 rules have fixtures, and `paper/measurements.md` reports the same figure
+for the chant 0.70.1 pin.
+
+`paper/measurements.md` also groups the 27 rules that are still uncovered: five
+wait on a form the reference implementation does not implement, the composite
+factory and isolation mode; one waits on a specification decision, issue #71,
+the call-depth bound; and the rest wait on the corpus growing, issue #24.
+
+A few entries are worth reading as a group, because they say something about
+where the limits of a conformance suite are rather than where the gaps in the
+work are.
+
+`F-NoOwnExecution` is measured by chant's `test/leftness` profile, because an
+adapter reports verdicts and cannot observe execution. `F-Obs-Counters` is
+uncovered because the conformance adapter exposes no counters.
+`F-Obs-Provenance` is an optional capability, reported rather than asserted.
+`F-Host-Generality` says what a host may vary and what it may not, and no
+verdict exercises it. `F-NotProject` is about a file inside the host's own
+module tree, and the reference's project is a map with no outside.
+
+Those five are not fixtures somebody forgot to write. They are rules whose
+subject the adapter interface cannot see, and the list says so instead of
+implying a to-do.
