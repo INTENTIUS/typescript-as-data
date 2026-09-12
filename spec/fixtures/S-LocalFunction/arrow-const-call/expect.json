@@ -1,0 +1,21 @@
+{
+  "rules": [
+    "S-LocalFunction",
+    "F-Bind",
+    "F-Eval-CallLocal",
+    "S-FnBody"
+  ],
+  "project": true,
+  "verdicts": {
+    "label.ts": "fold"
+  },
+  "exports": {
+    "label.ts": {
+      "y": {
+        "label": "k",
+        "upper": true
+      }
+    }
+  },
+  "note": "A const bound to an arrow is a project-local function, and its concise body is S-FnBody's first alternative. This is the helper the first consumer wrote and had refused; chant's build folds it (chant#2435 is the classifier)."
+}

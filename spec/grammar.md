@@ -31,6 +31,13 @@ non-exported statements; L1.1.)
 (R6.6, L5.1). A destructured or uninitialized top-level `const` is not a
 binding: the name is invisible.
 
+**S-LocalFunction.** A top-level `function ⟨Identifier⟩ ( ⟨Params⟩ ) ⟨Block⟩`,
+exported or not, and a top-level `const ⟨Identifier⟩ = ⟨Arrow⟩` or
+`= function …`, bind the name to a project-local function (F-Bind). The body
+is judged by S-FnBody at the call, never here; the name used as a value is
+F-Eval-Ident's rejection. Added in `1.2` (#95), after chant was found to
+fold both forms while the text said so for neither.
+
 A module is **admitted** when every exported statement matches one of
 S-ExportResource … S-ExportTypeOnly. One S-Disqualify match rejects the whole
 module (R4.1, L1.2–L1.5).
@@ -42,6 +49,7 @@ S-ExportDestructure ::= export const { ⟨PlainElement⟩+ } = ⟨Expr⟩
 S-ExportNamed       ::= export { ( ⟨Identifier⟩ ( as ⟨Identifier⟩ )? )+ }
 S-ReExport          ::= export { ( ⟨Identifier⟩ ( as ⟨Identifier⟩ )? )+ } from ⟨StringLiteral⟩
 S-ExportFunction    ::= export function ⟨Identifier⟩ ( ⟨Params⟩ ) ⟨Block⟩
+S-ExportDefault     ::= export default ⟨Expr⟩                                -- data-host; see below
 S-ExportTypeOnly    ::= export type { … }  |  a type-only element of S-ExportNamed / S-ReExport
 
 ⟨PlainElement⟩      ::= ⟨Identifier⟩ | ⟨PropertyName⟩ : ⟨Identifier⟩     -- no rest, no default, no nesting
@@ -52,8 +60,13 @@ disqualifier; the bodied declaration that follows is the export. S-ReExport:
 named elements only. S-ExportNamed: a local name must be an identifier, the
 TS 4.5 string module-export-name form disqualifies.
 
+S-ExportDefault is the declarator named `default`, admitted in the
+`data-host` profile since `1.2` (#94); in `full` it stays a disqualifier
+until chant admits it, which the profile table records as permitted and not
+required. `export default function` and `export =` disqualify in both.
+
 ```
-S-Disqualify ::= export default …
+S-Disqualify ::= export default …                              -- full only; data-host admits S-ExportDefault
                | export default function …
                | export * from …
                | export class …
@@ -125,6 +138,7 @@ Per-production conditions and divergences:
 | S-CallHelper | L2.11 | name ∈ `FOLDABLE_AUTHORING_HELPERS`; args ∈ ⟨Expr⟩ | name must be bound by an import from chant (R3.3); not shadowed by a local `const`; refused inside a folded function body |
 | S-CallIntrinsic | L2.12 | with a registry: name registered with `foldsAsCall`; **without a registry: S-Reject** | name must resolve through the file's imports; refused inside a folded function body |
 | S-CallEager | L2.13 | with a registry: name registered with `foldsEagerly`; without: S-Reject | callee must resolve to a function; evaluated at fold time (R7.3) |
+| S-CallLocal | L2.17, L5.4 | callee is an identifier this file binds by S-LocalFunction or by an import from a project specifier (`./`, `../`); args ∈ ⟨Expr⟩ | the body must satisfy S-FnBody at the call (F-Eval-CallLocal); a cross-file callee needs the module graph, so an expression-level folder refuses it |
 | S-CallMethod | L2.14 | receiver ∈ ⟨Expr⟩, `.` or `?.`; args ∈ ⟨Expr⟩; method name unconstrained | receiver must fold to a real value, not a symbolic envelope; the named property must be a function (R3.3). Receiver `null`/`undefined`: `.` refuses, `?.` short-circuits (L3.22) |
 | S-CompositeStep | L2.15 | any call, any arguments, member exactly `step` | callee must be an *unclaimed* bare identifier (L3.20); refused inside a folded function body |
 | S-Reject | L2.16 | EVL001 |; |
@@ -216,7 +230,7 @@ exceptions exhaustively, and say which *kind* each is:
 |---|---|---|
 | registered authoring helper | closed allowlist, name **and** import provenance | L2.11 |
 | lexicon intrinsic, call form opted in | closed allowlist, per intrinsic | L2.12 |
-| project-local function with a foldable body | open, local | L5.4 |
+| project-local function with a foldable body | open, local; the callee's binding is visible in the file, which is S-CallLocal since `1.2` | L2.17, L5.4 |
 | eagerly-evaluated lexicon function | closed allowlist, evaluates at fold time | L2.13, R7.3 |
 | method call on a real receiver | receiver-type condition, method never checked by name | L2.14, L3.18, L3.19 |
 | `<Identifier>(...).step` | one idiom, member fixed, callee must be unclaimed | L2.15, L3.20 |

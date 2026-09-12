@@ -1,0 +1,10 @@
+{
+  "rules": [
+    "S-CallLocal",
+    "S-Call"
+  ],
+  "export": "x",
+  "shape": "accept",
+  "fold": "run",
+  "note": "The callee is bound by an import from a project specifier, which the classifier can see in the file, so the call is shape-valid (spec 1.2). An expression fixture has no module graph, so the folder cannot resolve twice and refuses; the whole-build form is F-Eval-CallLocal/local-function-folds. chant's classifier rejects this today (chant#2435), and the agreement test holds the shape half out until it does not."
+}

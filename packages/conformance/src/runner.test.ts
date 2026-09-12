@@ -2,15 +2,15 @@ import { describe, test, expect } from "vitest";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadFixtures, runFixtures, projectFixtures } from "./index";
-import { referenceAdapter } from "@intentius/tsad-reference";
+import { referenceAdapter, referenceDataHostAdapter } from "@intentius/tsad-reference";
 
 const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "spec", "fixtures");
 
 describe("conformance runner (#7) over the reference implementation (#10)", () => {
   const fixtures = loadFixtures(fixturesDir);
   test("fixtures load", async () => { expect(fixtures.length).toBeGreaterThan(0); for (const f of fixtures) expect(f.rules.length).toBeGreaterThan(0); });
-  test("the reference implementation passes every fixture", async () => {
-    const reports = await runFixtures(referenceAdapter, fixtures);
+  test("the reference implementation passes every fixture of the full profile", async () => {
+    const reports = await runFixtures(referenceAdapter, fixtures.filter((f) => f.profiles.includes("full")));
     const failed = reports.filter((r) => !r.pass).map((r) => `${r.fixture}: ${r.failures.join("; ")}`);
     expect(failed, failed.join("\n")).toEqual([]);
   });
@@ -18,7 +18,7 @@ describe("conformance runner (#7) over the reference implementation (#10)", () =
     const tagged = fixtures.filter((f) => f.profiles.includes("data-host"));
     expect(tagged.length).toBeGreaterThan(40);
     expect(tagged.every((f) => f.kind === "expression" || !f.host)).toBe(true);
-    const failed = (await runFixtures(referenceAdapter, tagged)).filter((r) => !r.pass).map((r) => `${r.fixture}: ${r.failures.join("; ")}`);
+    const failed = (await runFixtures(referenceDataHostAdapter, tagged)).filter((r) => !r.pass).map((r) => `${r.fixture}: ${r.failures.join("; ")}`);
     expect(failed, failed.join("\n")).toEqual([]);
   });
   test("the project fixtures are actually exercised, not all skipped (#24)", async () => {
