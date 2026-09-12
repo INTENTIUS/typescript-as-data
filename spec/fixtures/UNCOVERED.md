@@ -2,71 +2,32 @@
 
 Deliberate, and this list may only shrink (#8). Each entry names the rule and why it is still uncovered. Remove an entry when its fixture lands; the gate fails if an entry is stale.
 
-61 of 127 rules have fixtures. Most of the rules below are uncovered because the corpus is still growing (#24); where a rule needs something the reference implementation does not have, the entry says so.
+100 of 127 rules have fixtures. Most of the rules below are uncovered because the corpus is still growing (#24); where a rule needs something the reference implementation does not have, the entry says so.
 
-- `F-Depth` — no fixture yet; corpus is #24's
-- `F-Direction` — no fixture yet; corpus is #24's
-- `F-Div` — no fixture yet; corpus is #24's
-- `F-Div-Depth` — no fixture yet; corpus is #24's
-- `F-Div-Eager` — no fixture yet; corpus is #24's
-- `F-Div-Method` — no fixture yet; corpus is #24's
-- `F-Div-NsNew` — no fixture yet; corpus is #24's
-- `F-Div-Provenance` — no fixture yet; corpus is #24's
-- `F-Div-Step` — no fixture yet; corpus is #24's
-- `F-Div-Tag` — no fixture yet; corpus is #24's
-- `F-Eval-CallEager` — no fixture yet; corpus is #24's
-- `F-Eval-CallHelper` — no fixture yet; corpus is #24's
-- `F-Eval-CallIntrinsic` — no fixture yet; corpus is #24's
-- `F-Eval-CallLocal` — no fixture yet; corpus is #24's
-- `F-Eval-CallMethod` — no fixture yet; corpus is #24's
-- `F-Eval-Interior` — no fixture yet; corpus is #24's
-- `F-Eval-New` — no fixture yet; corpus is #24's
-- `F-Eval-Tagged` — no fixture yet; corpus is #24's
-- `F-Eval-Undefined` — no fixture yet; corpus is #24's
-- `F-Exc` — no fixture yet; corpus is #24's
-- `F-Exc-Registry` — no fixture yet; corpus is #24's
-- `F-Host-Admission` — no fixture yet; corpus is #24's
-- `F-Host-Closed-vs-Open` — no fixture yet; corpus is #24's
-- `F-Host-Composite` — no fixture yet; corpus is #24's
-- `F-Host-DataExports` — no fixture yet; corpus is #24's
-- `F-Host-Generality` — no fixture yet; corpus is #24's
-- `F-Host-Interface` — no fixture yet; corpus is #24's
-- `F-Host-NoSubstitution` — no fixture yet; corpus is #24's
-- `F-Host-Registry` — no fixture yet; corpus is #24's
-- `F-Host-Trust` — no fixture yet; corpus is #24's
-- `F-IsolatedRefusal` — no fixture yet; corpus is #24's
-- `F-NoOwnExecution` — no fixture yet; corpus is #24's
-- `F-NotProject` — no fixture yet; corpus is #24's
-- `F-Obs-Counters` — no fixture yet; corpus is #24's
-- `F-Obs-Messages` — no fixture yet; corpus is #24's
-- `F-Obs-Provenance` — no fixture yet; corpus is #24's
-- `F-Obs-Report` — no fixture yet; corpus is #24's
+- `F-Depth` — F-Eval-CallLocal fixes the bound at 32 and F-Depth's rationale says the bounds are undecided; chant folds 5000 deep (#71). A fixture waits on the decision.
+- `F-Div-Step` — needs `{__compositeStep}`, which has no fate in the reference implementation (no composite factory form)
+- `F-Eval-Interior` — an unresolved chain inside an intrinsic call folds to a symbol only with a registry in scope, and an expression fixture names no host
+- `F-Host-Composite` — needs the composite registration form `Composite(fn, "N")`, which the reference implementation does not have
+- `F-Host-Generality` — says what a host may vary and what it may not; no verdict exercises it
+- `F-IsolatedRefusal` — needs isolation mode, which the reference implementation does not have
+- `F-NoOwnExecution` — measured by chant's `test/leftness` profile; an adapter reports verdicts and cannot observe execution
+- `F-NotProject` — a file inside the host's own module tree; the reference's project is a map with no outside
+- `F-Obs-Counters` — the conformance adapter exposes no counters
+- `F-Obs-Provenance` — an optional capability, reported rather than asserted
 - `F-Val-Domain` — no fixture yet; corpus is #24's
 - `F-Val-Envelope` — no fixture yet; corpus is #24's
 - `F-Val-Serializable` — no fixture yet; corpus is #24's
 - `F-Val-Symbol-Scope` — no fixture yet; corpus is #24's
-- `F-Val-Undefined` — no fixture yet; corpus is #24's
-- `S-Call` — no fixture yet; corpus is #24's
-- `S-CallEager` — no fixture yet; corpus is #24's
-- `S-CallHelper` — no fixture yet; corpus is #24's
-- `S-CallIntrinsic` — no fixture yet; corpus is #24's
-- `S-CallMethod` — no fixture yet; corpus is #24's
 - `S-Disqualify` — no fixture yet; corpus is #24's
 - `S-ExportDestructure` — no fixture yet; corpus is #24's
-- `S-ExportFunction` — no fixture yet; corpus is #24's
 - `S-ExportNamed` — no fixture yet; corpus is #24's
 - `S-ExportResource` — no fixture yet; corpus is #24's
 - `S-ExportSingle` — no fixture yet; corpus is #24's
 - `S-ExportTypeOnly` — no fixture yet; corpus is #24's
-- `S-FactoryBody` — no fixture yet; corpus is #24's
-- `S-FactoryParams` — no fixture yet; corpus is #24's
-- `S-FnBody` — no fixture yet; corpus is #24's
-- `S-FnParams` — no fixture yet; corpus is #24's
+- `S-FactoryBody` — needs the composite factory form, which the reference implementation does not have
+- `S-FactoryParams` — needs the composite factory form, which the reference implementation does not have
 - `S-Module` — no fixture yet; corpus is #24's
-- `S-New` — no fixture yet; corpus is #24's
 - `S-Prop` — no fixture yet; corpus is #24's
 - `S-ReExport` — no fixture yet; corpus is #24's
 - `S-Shorthand` — no fixture yet; corpus is #24's
-- `S-Tagged` — no fixture yet; corpus is #24's
 - `S-TopConst` — no fixture yet; corpus is #24's
-- `S-Undefined` — no fixture yet; corpus is #24's

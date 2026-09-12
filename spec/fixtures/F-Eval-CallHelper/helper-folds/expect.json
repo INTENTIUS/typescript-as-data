@@ -1,0 +1,8 @@
+{
+  "rules": ["F-Eval-CallHelper", "S-CallHelper"],
+  "project": true,
+  "host": "shapes",
+  "verdicts": { "app.ts": "fold" },
+  "exports": { "app.ts": { "v": "DONE" } },
+  "note": "A registered authoring helper: J1 yields a {__helper} envelope, revival invokes the function the file imported."
+}

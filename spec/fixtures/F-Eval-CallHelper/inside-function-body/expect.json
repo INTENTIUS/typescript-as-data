@@ -1,0 +1,22 @@
+{
+  "rules": [
+    "F-Eval-CallHelper",
+    "F-Div-Depth"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "fn.ts": "run",
+    "app.ts": "run"
+  },
+  "rejectRule": {
+    "app.ts": "F-Eval-CallHelper"
+  },
+  "note": "A helper call inside a folded function body is refused, the same way a `new` and an intrinsic call are. fn.ts would fold on its own; app.ts imports it and runs, so the forward edge (F-Succ) takes it along.",
+  "tentative": {
+    "fn.ts": "fold"
+  },
+  "taintedBy": {
+    "fn.ts": "app.ts"
+  }
+}

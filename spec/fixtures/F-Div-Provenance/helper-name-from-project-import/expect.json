@@ -1,0 +1,20 @@
+{
+  "rules": [
+    "F-Div-Provenance",
+    "F-Host-NoSubstitution",
+    "F-Host-Closed-vs-Open"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "local.ts": "run",
+    "app.ts": "run"
+  },
+  "note": "The name upper is a registered helper, so the classifier accepts the call and J1 yields a {__helper} envelope; but the binding comes from a project file, not the host, and revival will not substitute the host's upper for the one the file imported. The file falls back. A registered name keeps its meaning (F-Eval-CallLocal is checked after the registered shapes), which is why this is not simply a project-local call. local.ts would fold on its own; app.ts imports it and runs, so the forward edge (F-Succ) takes it along.",
+  "tentative": {
+    "local.ts": "fold"
+  },
+  "taintedBy": {
+    "local.ts": "app.ts"
+  }
+}

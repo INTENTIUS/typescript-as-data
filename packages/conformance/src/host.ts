@@ -61,10 +61,23 @@ const join = (strings: readonly string[], ...values: unknown[]): string =>
 /** An authoring helper: pure, deterministic, the same at fold time as at run time. */
 const upper = (s: string): string => s.toUpperCase();
 
+/** An intrinsic in call form (F-Host-Registry `foldsAsCall`): revival invokes it with the folded arguments. */
+const ref = (name: string): { Ref: string } => ({ Ref: name });
+
+/** An eager intrinsic (`foldsEagerly`): evaluated at fold time, and F-Host-Admission's third clause holds because it is a pure function of its arguments. */
+const count = (items: readonly unknown[]): number => items.length;
+
+/** A plain-data export (F-Host-DataExports): folds as a value through a named import. */
+const SIZES = { small: 1, large: 3 } as const;
+
 const SHAPES: ConformanceHost = {
   name: "shapes",
   ownedSpecifierPrefixes: ["@tsad/shapes"],
-  intrinsics: [{ name: "join", isTag: true }],
+  intrinsics: [
+    { name: "join", isTag: true },
+    { name: "ref", isTag: false, foldsAsCall: true },
+    { name: "count", isTag: false, foldsEagerly: true },
+  ],
   helpers: [{ name: "upper", module: "@tsad/shapes", note: "pure string transform, no environment read" }],
   values: new Map([
     [
@@ -74,6 +87,9 @@ const SHAPES: ConformanceHost = {
         ["Pair", Pair],
         ["join", join],
         ["upper", upper],
+        ["ref", ref],
+        ["count", count],
+        ["SIZES", SIZES],
         ["registry", registry],
       ]),
     ],

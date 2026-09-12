@@ -1,0 +1,2 @@
+{ "rules": ["F-Eval-Undefined", "S-Undefined", "F-Val-Undefined"], "export": "u", "shape": "accept", "fold": "fold", "value": "$undefined",
+  "note": "The identifier `undefined` is a value, not an unresolved name." }

@@ -4,7 +4,8 @@
     "F-Capture",
     "F-Identity",
     "F-Memo",
-    "F-Taint"
+    "F-Taint",
+    "F-Obs-Report"
   ],
   "project": true,
   "verdicts": {
@@ -21,5 +22,5 @@
     "shared.ts": "breaker.ts",
     "sibling.ts": "shared.ts"
   },
-  "note": "The backward edge, two hops. breaker.ts is in the seed and taints shared.ts forward; shared.ts then taints sibling.ts backward because sibling.ts captured its registry object. Nothing in sibling.ts predicts its own verdict, which is why a fallback report has to be able to name the capture. The captured value is a plain object, which F-Identity's reference test admits and its entity test would not: the edge exists here because F-Capture over-approximates on purpose. It is also the fixture that holds F-Memo: the edge only exists because the object in sibling.ts's namespace is the very object shared.ts produced, and it caught a revival pass that rebuilt plain structures and handed out copies."
+  "note": "The backward edge, two hops. breaker.ts is in the seed and taints shared.ts forward; shared.ts then taints sibling.ts backward because sibling.ts captured its registry object. Nothing in sibling.ts predicts its own verdict, which is why a fallback report has to be able to name the capture. The captured value is a plain object, which F-Identity's reference test admits and its entity test would not: the edge exists here because F-Capture over-approximates on purpose. It is also the fixture that holds F-Memo: the edge only exists because the object in sibling.ts's namespace is the very object shared.ts produced, and it caught a revival pass that rebuilt plain structures and handed out copies. The reason on the capturer must be able to say it was forced to run because the source runs and it captured the source's objects; nothing in its own source predicts that (F-Obs-Report)."
 }

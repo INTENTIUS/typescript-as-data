@@ -1,0 +1,8 @@
+{
+  "rules": ["F-Host-DataExports", "F-Import"],
+  "project": true,
+  "host": "shapes",
+  "verdicts": { "app.ts": "fold" },
+  "exports": { "app.ts": { "s": 3 } },
+  "note": "A named import from an active package resolves to the package's real export, and a plain-data export folds as a value."
+}

@@ -1,0 +1,22 @@
+{
+  "rules": [
+    "F-Eval-CallEager",
+    "F-Host-NoSubstitution"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "local.ts": "run",
+    "app.ts": "run"
+  },
+  "rejectRule": {
+    "app.ts": "F-Eval-CallEager"
+  },
+  "note": "The registry names count as eager, but the binding the file imported is a project file's number, not the host's function. Revival invokes what the import names and never substitutes the host's own (F-Host-NoSubstitution), so the call rejects: the name alone admits nothing. local.ts would fold on its own; app.ts imports it and runs, so the forward edge (F-Succ) takes it along.",
+  "tentative": {
+    "local.ts": "fold"
+  },
+  "taintedBy": {
+    "local.ts": "app.ts"
+  }
+}
