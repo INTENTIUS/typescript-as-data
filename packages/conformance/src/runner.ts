@@ -1,4 +1,4 @@
-import type { ConformanceAdapter, Finding, RulePhase } from "./adapter.js";
+import type { ConformanceAdapter, Finding, RulePhase, ExecutionCounters } from "./adapter.js";
 import type { ExpressionFixture, Fixture, ProjectFixture, RoundtripFixture } from "./fixture.js";
 import { expressionFixtures, projectFixtures, roundtripFixtures } from "./fixture.js";
 import { requireHost } from "./host.js";
@@ -122,6 +122,18 @@ export async function runProjectFixture(adapter: ConformanceAdapter, f: ProjectF
     const got = await collectFindings(adapter, f);
     if (got === "unavailable") return { ...base, pass: failures.length === 0, skipped: "rules unavailable", failures };
     failures.push(...compareFindings(f.findings, got));
+  }
+  if (f.counters) {
+    // F-Obs-Counters: the shape is normative, so all three must be present as non-negative integers; the fixture then pins the values it names.
+    if (!r.counters) return { ...base, pass: failures.length === 0, skipped: "counters unavailable", failures };
+    for (const k of ["factoryInvocations", "projectFactoryInvocations", "factoryInterpretations"] as const) {
+      const v = r.counters[k];
+      if (!Number.isInteger(v) || v < 0) failures.push(`counters.${k}: ${String(v)} is not a non-negative integer (F-Obs-Counters)`);
+    }
+    for (const [k, want] of Object.entries(f.counters)) {
+      const got = r.counters[k as keyof ExecutionCounters];
+      if (got !== want) failures.push(`counters.${k}: ${got} ≠ expected ${want}`);
+    }
   }
   return { ...base, pass: failures.length === 0, failures };
 }

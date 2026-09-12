@@ -1,0 +1,43 @@
+{
+  "rules": [
+    "F-Obs-Counters",
+    "F-IsolatedRefusal",
+    "F-Call"
+  ],
+  "project": true,
+  "host": "shapes",
+  "mode": "isolated",
+  "verdicts": {
+    "shapes.ts": "run",
+    "app.ts": "fold"
+  },
+  "rejectRule": {
+    "shapes.ts": "F-Eval-Function"
+  },
+  "exports": {
+    "app.ts": {
+      "n": {
+        "bucket": {
+          "entityType": "Bucket",
+          "lexicon": "shapes",
+          "props": {
+            "name": "a"
+          },
+          "attributes": {}
+        }
+      },
+      "p": {
+        "left": "l",
+        "right": "r",
+        "entityType": "Pair",
+        "lexicon": "shapes"
+      }
+    }
+  },
+  "counters": {
+    "factoryInvocations": 1,
+    "projectFactoryInvocations": 0,
+    "factoryInterpretations": 1
+  },
+  "note": "F-Obs-Counters is the observable behind F-NoOwnExecution: three non-negative integers per build. app.ts calls a project composite, which step 5 interprets (one interpretation), and a host factory, which step 6 invokes (one invocation); under isolated no invocation may resolve to project-owned code, so the second counter is zero across the build. Names follow the reference and only the shape is normative."
+}

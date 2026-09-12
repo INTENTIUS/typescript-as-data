@@ -52,9 +52,9 @@ The chant side's `false` is also an unsampled invariant: the run fails unless ev
 
 | Pin | Fixtures | Rules with a fixture | Shape and fold agreement |
 |---|---|---|---|
-| chant `0.72.1` | 123, of which 61 are whole-build | 134 of 139 | all, on the 116 the pin answers; three are held out under chant#2441 and the four round-trip fixtures skip, chant having no generator |
+| chant `0.72.1` | 123, of which 61 are whole-build | 135 of 139 | all, on the 116 the pin answers; three are held out under chant#2441, one under chant#2446, and the four round-trip fixtures skip, chant having no generator |
 
-The 5 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a reason each. All are properties no adapter can observe from verdicts: the execution counters and provenance, the host's own module tree, and what a host may vary or must not execute. One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
+The 4 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a reason each. All are properties no adapter can observe from verdicts: provenance, the host's own module tree, and what a host may vary or must not execute. One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
 
 **Two profiles.** Spec `1.1` names `full` and `data-host` (F-Profile, F-Profile-DataHost); the second is the specification for an evaluator with no JavaScript runtime, and it is what a platform in another language implements. Fixtures carry profile tags, and 76 of the 122 belong to `data-host`, and the reference judged in that profile passes every one of them. That is a JavaScript implementation passing a profile defined by the absence of JavaScript, so it establishes that the profile is consistent. Whether it is implementable without an engine is what `evaluators/rust` establishes (#86): `tsad-eval`, written from the text in Rust on oxc, passes every fixture tagged for the profile and agrees with the reference on each, and over chant's corpus it sits as a third column, both evaluators judged in `data-host` on the same host description: at `chant-v0.71.0` the two agree on all 441 files, and 142 fold on both sides to the same namespace, envelopes included. Writing it found the reference reviving and tainting in a profile that does neither, both fixed in the reference; the corpus report records the column's numbers.
 
@@ -142,7 +142,7 @@ The corpus is chant's own examples, and chant's documentation says the number is
 ## Limits
 
 - Twelve mixed entries and one adversarial build are a small sample, all from one project.
-- Fixture coverage is 134 of 139 rules. The 5 without one are listed with a reason, and the list may only shrink.
+- Fixture coverage is 135 of 139 rules. The 4 without one are listed with a reason, and the list may only shrink.
 - J3's whole-build fixtures reach both implementations, hosted or not, except three held out under chant#2441. Comparing verdicts alone would not be enough, since a seed and a taint casualty are both `run`; the tentative verdict and the taint edge are compared too.
 - Revival is implemented for all six envelopes since #109; `{__compositeStep}` resolves the composite through F-Call. Isolation is honoured at F-Call step 5; step 6 in open mode, invoking a project module, is what the reference cannot answer (`packages/reference/CAVEATS.md`).
 - The independent rewrite found two specification gaps. Two is a small sample, and it is the sample a single author working alone can produce.

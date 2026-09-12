@@ -97,7 +97,9 @@ J3 tainted, the file whose taint reached it. `exports` is optional and gives
 expected export values for files that finally fold. `rejectRule` names the rule
 a `run` verdict must cite, and is checked only when the adapter reports one.
 `host` selects one from `packages/conformance/src/host.ts`, and is required
-for any fixture whose sources import one.
+for any fixture whose sources import one. `counters` pins F-Obs-Counters'
+three integers for the build, and an adapter reporting none is skipped there
+rather than failed.
 
 `fixture.ts` says why `tentative` and `taintedBy` exist. Without them a project
 fixture cannot tell "folds because nothing reached it" from "would have folded,

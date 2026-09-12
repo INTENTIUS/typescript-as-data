@@ -45,6 +45,14 @@ export interface Scope {
   readonly factory?: boolean;
 }
 /** H = (ρ, helpers). The helper allowlist is consulted through foldable-helpers. */
+/**
+ * F-Obs-Counters, per build. `projectFactoryInvocations` is zero by
+ * construction here: a project composite is interpreted from source (F-Call
+ * step 5) and only a host-bound factory is invoked (step 6), so the reference
+ * never executes project-owned code while folding.
+ */
+export interface ExecutionCounters { factoryInvocations: number; projectFactoryInvocations: number; factoryInterpretations: number }
+
 export interface EvalHost {
   readonly intrinsics: readonly IntrinsicDef[];
   /**
@@ -58,7 +66,7 @@ export interface EvalHost {
   /** Names bound by an import from a host package (F-Host-Trust arm 1), which F-Call may invoke. */
   readonly hostBound?: ReadonlySet<string>;
   /** F-Obs-Counters, when the module layer keeps them. */
-  readonly counters?: { factoryInvocations: number; factoryInterpretations: number };
+  readonly counters?: ExecutionCounters;
   /** F-Call by node, from the module layer, for a nested composite in a factory body; resolved once per call site (F-Count). */
   readonly fcall?: (call: ts.CallExpression) => unknown;
   /**

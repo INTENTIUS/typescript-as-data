@@ -49,6 +49,7 @@ function adapterFor(profile: Profile): ConformanceAdapter {
     }
     for (const [path, v] of r.tentative) out.tentative![path] = v.kind;
     for (const [path, from] of r.taintSource) out.taintedBy![path] = from;
+    out.counters = { ...r.counters };
     return out;
   },
   rules(files, host, phase) {
