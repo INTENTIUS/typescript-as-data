@@ -1,0 +1,22 @@
+{
+  "rules": [
+    "F-Eval-CallIntrinsic",
+    "F-Eval-CallLocal"
+  ],
+  "project": true,
+  "host": "shapes",
+  "profiles": [
+    "full",
+    "data-host"
+  ],
+  "verdicts": {
+    "local.ts": "fold",
+    "app.ts": "fold"
+  },
+  "exports": {
+    "app.ts": {
+      "v": "local:a"
+    }
+  },
+  "note": "ref is registered as a call-form intrinsic and the file imports a project function of that name. F-Eval-CallLocal is checked first (1.7, #126), so the call folds through the project function and no intrinsic envelope is formed. Judged in both profiles: the order is the same with a host that is only a description."
+}

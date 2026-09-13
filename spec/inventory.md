@@ -52,7 +52,7 @@ Shape only. No resolution, no evaluation.
 | L2.8 | operators | closed sets `SUPPORTED_BINARY_OPERATORS` (13) and `SUPPORTED_UNARY_OPERATORS` (2) | S-Unary, S-Binary; F-Eval-Unary, F-Eval-Binary |
 | L2.9 | flow insensitivity | every branch of `&&`/`\|\|`/`??`/`?:` must be shape-valid | F-Exc-Lazy (divergence.md) |
 | L2.10 | `new` | every argument classified positionally, no props-position assumption | S-New |
-| L2.11 | call; registered helper | name-only check, provenance deferred | F-Div-Provenance (divergence.md) |
+| L2.11 | call; registered helper | name-only check, provenance deferred; this is the expression classifier, and `foldProject`'s `resolveCallExpression` asks for a project binding first (#126) | F-Div-Provenance (divergence.md); F-Eval-CallLocal |
 | L2.12 | call; intrinsic call form | registry-gated, registry is an optional parameter | F-Exc-(divergence.md) |
 | L2.13 | call; eager intrinsic | registry-gated | S-CallEager; F-Eval-CallEager |
 | L2.14 | call; method (`x.y()`) | admitted unconditionally, receiver and args recursed | S-CallMethod; F-Eval-CallMethod |

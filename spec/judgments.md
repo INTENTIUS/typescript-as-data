@@ -184,17 +184,24 @@ and both object literals, `{…, attributes: ⟦a₂⟧}`; otherwise
 `{__resource: C, props: p, args: [⟦a₁⟧ … ⟦aₙ⟧]}` where `p` is the first
 object-literal argument folded, or `{}`.
 
-**F-Eval-CallHelper.** For `h(args)` with `h ∉ consts` and `h ∈ helpers`: if
-`depth > 0` reject; else `{__helper: h, args: ⟦args⟧}`. Provenance is not
-checked here (F-Div-Provenance); revival checks it.
+**F-Eval-CallHelper.** For `h(args)` with `h ∉ consts`, `h ∈ helpers` and
+`externals[h]` not a `FoldableFunction` (`1.7`, #126): if `depth > 0`
+reject; else `{__helper: h, args: ⟦args⟧}`. A name the project bound is the
+project's and F-Eval-CallLocal's; for any other binding, revival resolves
+the name through the file's own import and refuses what is not the host's
+(F-Host-NoSubstitution, F-Div-Provenance).
 
-**F-Eval-CallIntrinsic.** For `i(args)` with `i ∉ consts` and `ρ` registering
-`i` with `foldsAsCall`: if `depth > 0` reject; else
+**F-Eval-CallIntrinsic.** For `i(args)` with `i ∉ consts`, `ρ` registering
+`i` with `foldsAsCall` and `externals[i]` not a `FoldableFunction` (`1.7`):
+if `depth > 0` reject; else
 `{__intrinsic: i, args}` with each argument by F-Eval-Interior.
 
 **F-Eval-CallLocal.** For `φ(args)` where `externals[φ]` is a
-`FoldableFunction` (checked *after* the two registered shapes, so a
-registered name keeps its meaning):
+`FoldableFunction`, checked *before* the two registered shapes since `1.7`
+(#126): a name the project bound is the project's, whatever the registry
+says. Until `1.6` it was checked after them, so a registered name kept its
+meaning and a file that bound one fell back; chant's whole-build fold had
+never done that, only its expression classifier (`L2.11`):
 1. `φ`'s declaration must satisfy S-FnBody, else reject naming the reason.
 2. If the implementation's call-depth bound is exceeded (F-Depth), reject
    ("call depth exceeded"). The value is the implementation's; exhaustion

@@ -292,8 +292,11 @@ fn unclaimed(callee: &str, s: &Scope, c: &Ctx) -> bool {
     !s.consts.contains_key(callee) && !c.host.call(callee) && !c.host.eager(callee) && !matches!(s.externals.get(callee), Some(V::Func(_)))
 }
 
-/// The call forms, registered shapes first (F-Eval-CallIntrinsic, F-Eval-CallEager), then F-Eval-CallLocal.
+/// The call forms: F-Eval-CallLocal first (spec 1.7, a name the project bound is the project's), then the registered shapes (F-Eval-CallIntrinsic, F-Eval-CallEager).
 fn call(callee: &str, args: &[Element], loc: Loc, s: &Scope, c: &Ctx) -> R<V> {
+    if let Some(V::Func(f)) = s.externals.get(callee) {
+        return call_local(f.clone(), args, loc, s, c);
+    }
     if !s.consts.contains_key(callee) {
         if c.host.call(callee) {
             if s.depth > 0 { return reject("F-Eval-CallIntrinsic", loc, "an intrinsic call inside a folded function body is not foldable"); }
@@ -304,9 +307,6 @@ fn call(callee: &str, args: &[Element], loc: Loc, s: &Scope, c: &Ctx) -> R<V> {
             // F-Profile-DataHost: nothing to invoke, and the name is an ordinary unresolved identifier.
             return reject("F-Reference", loc, format!("unresolved identifier: {} (an eager intrinsic has nothing to invoke in data-host)", callee));
         }
-    }
-    if let Some(V::Func(f)) = s.externals.get(callee) {
-        return call_local(f.clone(), args, loc, s, c);
     }
     reject("F-Eval-Reject", loc, format!("call to \"{}\" is not foldable: unsupported expression", callee))
 }

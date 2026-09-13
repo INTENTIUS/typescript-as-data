@@ -624,7 +624,7 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
   // F-Eval-New
   if (ts.isNewExpression(node)) return foldNew(node, scope, host);
 
-  // F-Eval-Call*: helper, intrinsic, local, eager, method, in that order
+  // F-Eval-Call*: local, helper, intrinsic, eager, method, in that order
   if (ts.isCallExpression(node)) {
     const callee = node.expression;
 
@@ -637,6 +637,10 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
         return fallback(a);
       };
 
+      // F-Eval-CallLocal, before the two registered shapes (spec 1.7, #126): a name the project bound is the project's.
+      const local = scope.externals.get(name);
+      if (isFoldableFunction(local)) return callLocal(local, node, scope, host);
+
       // F-Eval-CallHelper
       if (isFoldableHelperName(name)) {
         if (scope.depth > 0 && !scope.factory) reject("F-Eval-CallHelper", node, "an authoring helper call inside a folded function body is not foldable");
@@ -648,10 +652,6 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
         if (scope.depth > 0 && !scope.factory) reject("F-Eval-CallIntrinsic", node, "an intrinsic call inside a folded function body is not foldable");
         return { __intrinsic: name, args: node.arguments.map((a) => arg(a, (x) => foldInterior(x, scope, host))) };
       }
-
-      // F-Eval-CallLocal, after the two registered shapes
-      const local = scope.externals.get(name);
-      if (isFoldableFunction(local)) return callLocal(local, node, scope, host);
 
       // F-Eval-CallEager
       if (host.intrinsics.some((i) => i.name === name && intrinsicCallFoldsEagerly(i))) {
