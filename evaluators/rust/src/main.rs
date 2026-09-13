@@ -4,6 +4,7 @@
 //! stdout so the conformance suite's adapter can drive it (#86).
 mod ast;
 mod eval;
+mod generate;
 mod js;
 mod methods;
 mod module;
@@ -29,6 +30,9 @@ struct Request {
     export: Option<String>,
     #[serde(default)]
     host: eval::Host,
+    /// `generate`'s input, a namespace as `to_json` writes one.
+    #[serde(default)]
+    namespace: Option<serde_json::Value>,
 }
 
 fn main() {
@@ -43,6 +47,7 @@ fn main() {
         "shape" => shape(&req),
         "foldExport" => fold_export(&req),
         "foldProject" => fold_project(&req),
+        "generate" => generate(&req),
         other => json!({ "error": format!("unknown op {}", other) }),
     };
     println!("{}", out);
@@ -127,4 +132,16 @@ fn fold_project(req: &Request) -> Value {
         });
     }
     json!({ "verdicts": verdicts })
+}
+
+/// F-Val-Source (#80): source whose fold is the namespace, or why there is none.
+fn generate(req: &Request) -> Value {
+    let ns = match req.namespace.as_ref().map(generate::from_json) {
+        Some(value::V::Obj(o)) => o,
+        _ => return json!({ "error": "generate needs a namespace object" }),
+    };
+    match generate::generate(&ns, &req.host) {
+        Ok(source) => json!({ "source": source }),
+        Err(reason) => json!({ "unavailable": reason }),
+    }
 }

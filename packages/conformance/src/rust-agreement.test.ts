@@ -26,8 +26,8 @@ suite("the Rust evaluator (#86) in the data-host profile", () => {
     const reports = await runFixtures(rust, fixtures);
     const failed = reports.filter((r) => !r.pass).map((r) => `${r.fixture}: ${r.failures.join("; ")}`);
     expect(failed, failed.join("\n")).toEqual([]);
-    // A skip is only ever the round-trip family: the evaluator has no generator.
-    const skipped = reports.filter((r) => r.skipped && !r.fixture.startsWith("roundtrip/")).map((r) => r.fixture);
+    // Nothing is skipped: the evaluator generates as well as folds (F-Val-Source), so the round trip runs here too.
+    const skipped = reports.filter((r) => r.skipped).map((r) => r.fixture);
     expect(skipped, `skipped: ${skipped.join(", ")}`).toEqual([]);
   });
   test("agrees with the reference on every fixture, independently of what the fixture expects", async () => {

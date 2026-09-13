@@ -30,6 +30,15 @@ function decode(v: unknown): unknown {
   return v;
 }
 
+/** The inverse of decode, for a value the harness sends in (generate's namespace). */
+function encode(v: unknown): unknown {
+  if (v === undefined) return { $tsad: "undefined" };
+  if (typeof v === "number" && !Number.isFinite(v)) return { $tsad: "number", text: String(v) };
+  if (Array.isArray(v)) return v.map(encode);
+  if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, e]) => [k, encode(e)]));
+  return v;
+}
+
 function hostDescription(h?: ConformanceHost) {
   // F-Profile-DataHost: the host is a description, the registry and the trust set.
   return h ? { intrinsics: h.intrinsics, ownedSpecifierPrefixes: h.ownedSpecifierPrefixes } : {};
@@ -59,6 +68,10 @@ export function rustAdapter(binary: string): ConformanceAdapter {
       const verdicts: Record<string, { kind: "fold"; exports: Record<string, unknown> } | { kind: "run"; rule?: string; reason: string }> = {};
       for (const [path, v] of Object.entries(r.verdicts)) verdicts[path] = v.kind === "fold" ? { kind: "fold", exports: decode(v.exports) as Record<string, unknown> } : v;
       return { verdicts };
+    },
+    generate(namespace, host) {
+      const r = call({ op: "generate", namespace: encode(namespace), host: hostDescription(host) }) as { source?: string; unavailable?: string };
+      return r.source ?? "unavailable";
     },
   };
 }
