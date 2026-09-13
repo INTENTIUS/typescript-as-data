@@ -38,8 +38,7 @@ F-Obs-Counters' `projectFactoryInvocations` is therefore zero in every mode.
 `F-Val-Fate` is implemented. A declarator's value is revived through the
 folding file's own imports, so a `{__resource}` becomes a real instance of the
 class the host supplies, `{__intrinsic}` and `{__helper}` are invoked, and
-`{__symbol}` resolves as a dotted chain. `{__attrRef}` passes through, and is
-rejected inside a host call's arguments per `F-Val-Position`. `{__compositeStep}`
+`{__symbol}` resolves as a dotted chain. `{__compositeStep}`
 resolves through F-Call at the module layer; an expression-level fold has no
 module layer, so there it still rejects.
 
@@ -65,9 +64,7 @@ fixture consequently never depends on a resolution subtlety.
 `CAVEATS.md` opens with the two identity predicates, which were a genuine
 ambiguity and are now resolved in the specification by `F-Identity`. The rule
 names the entity test and the reference test, says the entity test is the
-normative one, and says `F-Import` over-approximates on purpose. The package
-follows it, using the reference test for import and re-export captures and the
-entity test for call leaks. The entry stays in `CAVEATS.md` because the code
+normative one, and says `F-Import` over-approximates on purpose. The entry stays in `CAVEATS.md` because the code
 comments cite `F-Identity` and a reader of an older revision of the
 specification will not find it.
 

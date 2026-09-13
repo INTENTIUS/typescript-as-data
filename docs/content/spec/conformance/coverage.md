@@ -67,5 +67,4 @@ adapter reports verdicts and cannot observe execution. `F-Obs-Provenance` is
 an optional capability, reported rather than asserted. `F-Host-Generality`
 says what a host may vary and what it may not, and no verdict exercises it.
 `F-NotProject` is about a file inside the host's own module tree, and the
-reference's project is a map with no outside. `F-Obs-Counters` left the list
-when the harness gained a `counters` field on its project result (#121).
+reference's project is a map with no outside. 

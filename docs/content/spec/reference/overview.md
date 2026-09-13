@@ -30,9 +30,6 @@ Since then the module and build layers have been written too.
 implementation. A project there is a map of path to source, with no filesystem
 and no real module system, which is enough for both judgments because each is
 defined over a finite set of files and the edges between them.
-The same implementation history is in `paper/measurements.md`: the reference
-implements J2's per-file verdict, J3's fixpoint and revival from the
-specification.
 
 That is what makes the whole-build fixtures possible. A taint edge does not
 exist inside a single file, so J3 could not be tested at all until an
@@ -68,11 +65,10 @@ written from the specification text.
 that is. The author of the rewrite had previously read chant's implementation
 closely, while writing the specification from it. The rewrite was done from
 `grammar.md` and `judgments.md` without consulting the source, but it is not
-the test a reader who had never seen chant would constitute. What it does
-establish is that the specification text is complete enough to implement from.
+the test a reader who had never seen chant would constitute.
 
 It also found places where the text was not complete enough, which is the more
-useful result. `paper/measurements.md` lists three. `spec/grammar.md` used an
+useful result. `spec/grammar.md` used an
 *unclaimed* callee in four normative sentences and defined it in none, so
 `S-Unclaimed` was added (#51). `F-Import` and `F-Val-Live` stated two identity
 predicates and nothing said they answer different questions, so `F-Identity`
@@ -92,8 +88,7 @@ npm test
 `npm run typecheck` is `tsc -p tsconfig.json` over the whole repository.
 `npm test` is `vitest run --passWithNoTests`, which covers more than this
 package. It runs the reference's own tests and the conformance runner against
-the reference, plus the chant cross-check and the two `spec/` gates. Both are
-what CI runs, in `.github/workflows/ci.yml`.
+the reference, plus the chant cross-check and the two `spec/` gates.
 
 To run only the reference's own tests, point vitest at the directory:
 

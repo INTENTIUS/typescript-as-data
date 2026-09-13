@@ -51,14 +51,12 @@ be specific enough to read alone: `F-Eval-Member`, not `F-Eval-3`. Numbered step
 An identifier names one rule for the life of the specification. When a rule is
 split, its identifier stays on the part closest to its original meaning and the
 new part gets a new one. One that is removed or renamed is struck through in
-place, with a note naming its successor. The identifier is never reused.
+place, with a note naming its successor.
 
 Two tests hold the vocabulary together. `spec/coverage.test.ts` asserts that
 every row of `spec/inventory.md` cites a rule that some spec file actually
 defines. `spec/fixtures.test.ts` asserts the reverse, that every defined rule is
-exercised by a fixture or listed in `spec/fixtures/UNCOVERED.md`. Together they
-make an identifier that nothing exercises, and a citation of nothing, a CI
-failure rather than a drift.
+exercised by a fixture or listed in `spec/fixtures/UNCOVERED.md`.
 
 ## The four judgments
 
@@ -73,7 +71,7 @@ where `depth` is the number of project-local function bodies being folded
 around `e` and is 0 at a file's top level. `H` is the host `(ρ, helpers)`, which is the
 intrinsic registry and the authoring-helper allowlist, both defined in
 `spec/hosts.md`. The result `v` ranges over the value domain of
-`spec/values.md`. Every rule that fails does so with a located rejection.
+`spec/values.md`.
 
 The rules here are keyed to the grammar's productions, so `S-Template` in
 `grammar.md` has `F-Eval-Template` in `judgments.md`, and a fixture normally
@@ -87,9 +85,7 @@ source without executing it, and `run` means the build executes the file with
 the JavaScript engine and takes what the exports hold when it finishes. The
 artifact is the same; `run` is the fallback, and its `reason` names the line
 that made the file a program rather than data. The isolation mode is
-`ι ∈ {open, isolated, executing}`; `open` is the strict default. On `fold`
-the namespace `X` holds every export and `L` holds the build's files whose
-objects `f` captured.
+`ι ∈ {open, isolated, executing}`; `open` is the strict default.
 
 The verdict is evaluated per file, without regard to other files' verdicts
 except through `F-Import`. It is *tentative*, and J3 is what makes it final.
@@ -100,8 +96,7 @@ This is the judgment with no obvious precedent, and `spec/judgments.md` says
 why it has to exist. Per-file partial evaluation is unsound in the presence of
 object identity unless something makes it sound. If file `A` folds and file `B`
 runs, and both refer to an entity that `A` produced, then `B`'s real import of
-`A` constructs a second copy of it. The build then holds two objects for one
-entity.
+`A` constructs a second copy of it.
 
 Comparable systems avoid the problem by not having it. Compile-time function
 execution copies values across the boundary, per-page static rendering shares
@@ -112,7 +107,6 @@ and `spec/judgments.md` calls this judgment the price of that.
 A build is `B = (F, →, P)`. That is the finite set of discovered project
 files, the import and re-export edges between them, and the build-parameter
 binding.
-Bare specifiers are not edges, because a package is never a member of `F`.
 J3 takes J2's tentative verdicts as its seed and computes `T(B)`, the least
 set containing that seed and closed under two kinds of edge. `F-Seed` is every
 file whose tentative verdict was `run`, and nothing else ever enters the seed.
@@ -129,8 +123,7 @@ the worklist the wording suggests.
 `F-Identity` is the rule that keeps the two identity predicates in this
 specification apart. The *entity test* recurses through plain objects and
 arrays; the *reference test* is `typeof` object or function, does not recurse,
-and admits a plain `{ a: 1 }` that the entity test rejects. The entity test is
-the normative one for the proposition J3 is about. `F-Import` uses the
+and admits a plain `{ a: 1 }` that the entity test rejects. `F-Import` uses the
 reference test anyway, as a deliberate over-approximation whose cost is
 coverage rather than correctness.
 
@@ -150,6 +143,4 @@ failure and never a silent change of evaluation mode.
 `F-Obs-Counters`, `F-Obs-Report`, `F-Obs-Provenance` and `F-Obs-Messages` are
 the observability rules. A conforming implementation reports, per file, the
 final verdict and, for `run`, a located reason. Message stability is explicitly
-not normative; location and rule identifier are. Path provenance is an optional
-capability that conformance reports rather than asserts, because the run path
-does not uniformly produce it.
+not normative; location and rule identifier are. 

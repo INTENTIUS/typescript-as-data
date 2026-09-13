@@ -17,7 +17,7 @@ A **post-synthesis** rule reads the emitted artifact. Any tool that emits YAML c
 
 A **pre-synthesis** rule reads the declared values of every file in the build before anything is emitted, and that is the phase the fold enables. The values are there without running any project code, so the check is a pure function of the source and can run wherever the fold runs. They are the declared values and not the flattened artifact: a field that refers to another resource's attribute is still a reference at this point, an entity is still one entity wherever it is used, and a rule can say things about that structure which the artifact no longer shows. And the findings are the same whether the build folded the file or ran it, which the contract states as a property.
 
-Beyond the phase, the contract fixes what a check reports. A finding names the rule that fired, the subject it fired on, a path into the value and a severity, and, where the host tracks provenance, the source line it came from. That shape is what makes a finding actionable by a person reading it or by an agent asked to fix it: an assistant handed the finding knows which rule and which value, and can propose the edit. Every host's findings then look the same.
+Beyond the phase, the contract fixes what a check reports. A finding names the rule that fired, the subject it fired on, a path into the value and a severity, and, where the host tracks provenance, the source line it came from. That shape is what makes a finding actionable by a person reading it or by an agent asked to fix it: an assistant handed the finding knows which rule and which value, and can propose the edit.
 
 ## Who has it today
 

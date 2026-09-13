@@ -42,7 +42,7 @@ A decision point is anywhere the mechanism chooses between admitting and
 rejecting, between evaluation modes, or between representations. There is one
 row per decision point, derived from a complete read of chant core's fold path,
 and the last column names the `S-*` or `F-*` rule that governs the row, or
-`GAP` with an out-of-scope reason. `spec/coverage.test.ts` gates it.
+`GAP` with an out-of-scope reason.
 
 [`prior-art.md`](/typescript-as-data/spec/normative/prior-art/) is a finding rather than
 a rule. It asks whether the novelty claim stands, and concludes that it does
@@ -72,8 +72,7 @@ the mechanism. No fixture cites them; CI structure enforces them.
 Every normative rule carries a stable identifier. Each identifier is exercised
 by at least one fixture, and each fixture cites a real identifier, checked in
 both directions in CI. Rejections are located, by node and rule, with the
-wording unconstrained, because message stability is not normative. And the
-subset is versioned.
+wording unconstrained, because message stability is not normative.
 
 `spec/README.md` is published as
 [the specification index](/typescript-as-data/spec/normative/), and it is the shortest

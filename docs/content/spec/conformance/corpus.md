@@ -116,9 +116,7 @@ so a file under one may also be hiding a disagreement.
 
 Namespace comparison is structural. `corpus.ts` compares entities rather than
 skipping them, which is only sound because both implementations construct them
-from the same host classes. It reads own data properties, enumerable or not,
-and skips accessors, because an accessor can throw and computes a value rather
-than holding one. A namespace holding something with no structural encoding at
+from the same host classes. A namespace holding something with no structural encoding at
 all (a function or a symbol) is reported as `not-data`, and only the verdict is
 compared there.
 
@@ -130,14 +128,11 @@ checkouts nobody here maintains, pinned by revision; the weekly job fetches
 them with `scripts/fetch-corpus-external.sh` and runs every directory holding
 a `chant.config.ts` as an entry, with the lexicons, build parameters and
 imported project files a build of that directory would have (#129). Their
-rows sit in their own section of the report and never inside the totals. A
-disagreement found there is triaged to the specification first, like any
-other, and one that survives is recorded in the manifest against its issue and
-asserted to persist, so the excuse cannot outlive its cause.
+rows sit in their own section of the report and never inside the totals.
 
 ## The data-host column
 
-The corpus runs a third time when `evaluators/rust` is built. The evaluator with no JavaScript runtime and the reference are both judged in `data-host` on the same host description, which is the intrinsic registry and the trust set with no code behind them. At <code>{{< figure "corpus.revision" >}}</code> the two agree on all {{< figure "corpus.dataHost.files" >}} files and {{< figure "corpus.dataHost.bothFold" >}} fold on both sides to the same namespace, envelopes included. The column measures the profile against itself in two languages; the comparable set above measures the reference against chant, which runs.
+The corpus runs a third time when `evaluators/rust` is built. The evaluator with no JavaScript runtime and the reference are both judged in `data-host` on the same host description, which is the intrinsic registry and the trust set with no code behind them. At <code>{{< figure "corpus.revision" >}}</code> the two agree on all {{< figure "corpus.dataHost.files" >}} files and {{< figure "corpus.dataHost.bothFold" >}} fold on both sides to the same namespace, envelopes included.
 
 ## What the test asserts
 
@@ -192,16 +187,14 @@ the namespace alone where `F-Import` records it at the import.
 ## In CI
 
 `.github/workflows/corpus.yml` runs it weekly, on Mondays early UTC, and on
-`workflow_dispatch`. It has no pull-request trigger and no push trigger, and the
-workflow says why. The check itself takes under a second, but it can only run
+`workflow_dispatch`. The check itself takes under a second, but it can only run
 against a chant checkout with its lexicon codegen artifacts generated, and
 generating those means downloading a dozen upstream schemas. An upstream schema
 host being down would fail the main gate on a change that has nothing to do
 with it.
 
 The workflow checks out chant at the tag this repository pins and generates
-the lexicon artifacts. It fetches the external checkouts at the revisions the
-manifest pins. Then it asserts that `examples/differential-corpus.ts`
+the lexicon artifacts. Then it asserts that `examples/differential-corpus.ts`
 exists before running the check, because a skipped suite passes and a checkout
 that landed in the wrong place must not report as a clean cross-check. The
 report is uploaded as an artifact on success and on failure both, since a run
