@@ -1,5 +1,5 @@
 ---
-title: "TypeScript as data: a specification for JSON and YAML compilers, with a specified fallback"
+title: "A specification for compiling TypeScript to configuration, with a specified fallback"
 author: "INTENTIUS"
 date: "Draft for comment, September 2026"
 ---
