@@ -12,8 +12,7 @@ The pin is a real dependency. `@intentius/chant` is in this repository's
 `devDependencies` at version <code>{{< figure "chantPin" >}}</code>, and the adapter in
 `packages/conformance/src/adapters/chant.ts` reaches it through its public
 entry only: `fold`, `foldProject`, `collectConsts`, `FoldError`, and, since
-`chant-v0.64.0`, `findSubsetViolation` for the shape half. No source is vendored and no internal
-is reached for. What the suite tests is the version a user would install. With
+`chant-v0.64.0`, `findSubsetViolation` for the shape half. What the suite tests is the version a user would install. With
 an older pin, the adapter would report shape `"unavailable"` rather than
 guessing.
 
@@ -30,8 +29,7 @@ would still have something to say.
 
 **Nothing whole-build is skipped.** Since `chant-v0.72.0` the adapter
 hands chant the fixture's host as a package outside the lexicon convention
-(chant#2438). One naming a host therefore reaches chant like any other.
-The test asserts that no project fixture was skipped. A fixture chant cannot
+(chant#2438). The test asserts that no project fixture was skipped. A fixture chant cannot
 answer yet is held out by name against the issue that says why, so a new
 fixture citing the same rule is compared rather than excused, and a guard
 asserts the reason still stands. The four round-trip fixtures skip,

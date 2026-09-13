@@ -9,8 +9,7 @@ This project is a specification for a statically evaluable subset of
 TypeScript, with a reference implementation and a conformance suite.
 
 The subset is the part of TypeScript whose value is fixed by its source:
-literals, constants, and symbolic references. A tool can reduce it to data
-without running it. Most configuration languages get that property by
+literals, constants, and symbolic references. Most configuration languages get that property by
 inventing a language. This specification carves a fragment out of an existing
 one and defines the edge, where source outside the subset falls back to real
 execution and the two paths must agree.
@@ -43,8 +42,7 @@ what it does cover and
 The conformance suite is `packages/conformance`. That package holds a narrow
 adapter interface and the fixture format, plus the runner and an adapter for
 chant. The fixtures themselves live under `spec/fixtures/`, one directory per
-rule, so they sit next to the text they exercise. See
-[conformance](/typescript-as-data/spec/conformance/overview/).
+rule, so they sit next to the text they exercise.
 
 ## The relationship to chant
 
@@ -65,8 +63,7 @@ a fixture; then chant implements it citing that identifier and releases it.
 There is a provisional path for a change chant needs before the rule can be
 written properly: chant may ship it with the affected rule marked provisional
 in `subset.ts`'s module doc, naming the issue here that will specify it. A
-provisional marker may survive at most one chant release. A provisional change
-is not conformance-tested until the rule exists here.
+provisional marker may survive at most one chant release.
 
 `spec/README.md` states what this costs chant, so that it is accepted rather
 than discovered: the subset can no longer change by editing code and a
@@ -74,7 +71,6 @@ comment.
 
 ## What the name claims, and what it does not
 
-`spec/README.md` carries the correction, and it is worth repeating here.
 "typescript-as-data" names a general idea. What is specified is one statically
 evaluable subset of TypeScript, the one chant's fold mechanism implements,
 together with what happens at its edge. It is not a claim that this is the way
@@ -84,14 +80,12 @@ The specification is fixed to TypeScript in three ways. The syntax is the
 TypeScript AST as the `typescript` compiler package parses it. The module
 system is ES modules. The semantics of every admitted operator are
 ECMAScript's, which a second implementation in another language must reproduce
-rather than inherit from its own host. Two places depart from ECMAScript on
-purpose and are stated as departures.
+rather than inherit from its own host.
 
 What varies is the host. `F-Host-Interface` in `hosts.md` lists the seven
 things a host supplies, with the rule admitting each. They start with the
 classes whose instances are entities and end with the host's rules contract;
-the registry and the trust set sit between. chant's lexicons are one
-instantiation of it. The generality this buys is
+the registry and the trust set sit between. The generality this buys is
 generality over host vocabularies, not over languages. `spec/README.md` is
 explicit that a reader who infers language portability from "parameterized by a
 host" has been misled.

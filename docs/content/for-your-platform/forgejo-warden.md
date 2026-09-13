@@ -5,7 +5,7 @@ weight: 2
 diataxis: how-to
 ---
 
-[forgejo-warden](https://github.com/INTENTIUS/forgejo-warden) keeps a Forgejo org and its repos in a declared state. It diffs against live and applies guardrails. Runs are dry by default, and deletes happen only where the policy says `owned`. Its policy is one file, and the `.ts` form of that file landed in [forgejo-warden#33](https://github.com/INTENTIUS/forgejo-warden/pull/33).
+[forgejo-warden](https://github.com/INTENTIUS/forgejo-warden) keeps a Forgejo org and its repos in a declared state. Runs are dry by default, and deletes happen only where the policy says `owned`. Its policy is one file, and the `.ts` form of that file landed in [forgejo-warden#33](https://github.com/INTENTIUS/forgejo-warden/pull/33).
 
 ## Author
 
@@ -13,7 +13,7 @@ A `governance.ts` is typed by the package's own `GovernanceConfig`, with `satisf
 
 ## Check
 
-Both phases are already in the tool. The loader validates the declared policy and reports the exact field path on a bad shape, which is a pre-synthesis rule over the folded values. The guardrails (`removalDeltaCap`, `adminFloor`) run over the computed plan before any apply, a post-synthesis rule over the artifact. Selective-by-omission, where an absent field is never touched, is why [absent versus `undefined`](https://github.com/INTENTIUS/typescript-as-data/issues/82) has to be pinned in the specification.
+Both phases are already in the tool. The loader validates the declared policy and reports the exact field path on a bad shape, which is a pre-synthesis rule over the folded values. The guardrails (`removalDeltaCap`, `adminFloor`) run over the computed plan before any apply, a post-synthesis rule over the artifact.
 
 ## Generate
 

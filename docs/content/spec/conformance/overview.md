@@ -57,7 +57,6 @@ Five checks, in four places.
 It also asserts that the only project fixture skipped is the one judged under
 `executing`, a mode this package reports unavailable by name. Two stub adapters must
 fail, one returning `run` for every file and one folding everything to `null`.
-The first stub is the control that matters.
 An implementation that falls back on every file in a build is sound and
 useless, and without the stub, `F-Taint`'s "least set" would be untested.
 
@@ -102,8 +101,7 @@ the fixture set neutral between implementations.
 were written to exercise particular rules, so agreement on them is agreement on
 cases somebody chose. It also records that agreement used to be guaranteed
 rather than observed: until issue #50 the reference implementation's evaluation
-layer was a port of chant's. Since the rewrite, the comparison is between two
-codebases rather than one codebase with itself.
+layer was a port of chant's.
 
 The port's own failure mode is recorded in the same file, because it is the one
 this should not paper over. `chant-v0.69.0` extended an envelope check from
