@@ -1,17 +1,19 @@
 ---
 title: "Semantic linting"
-description: "The same check at the keystroke and in CI, over real values, across resources."
+description: "A check over the declared values, across resources, whose findings are data a person or an agent can act on."
 weight: 2
 diataxis: explanation
 ---
 
-A syntax linter sees tokens, so it can tell you a key is misspelt. What it cannot tell you is that `requirePullRequestReviews: true` with `requiredApprovingReviewCount: 0` is a contradiction, because the values are not known to it. A configuration language with constraints in the type can check one field's range, and still cannot check a relationship between two resources.
+The editor catches a misspelt key and a value of the wrong kind as you type. That is TypeScript's type checker, and it is worth having, but it is not linting. A type can say a field is a number in a range. It cannot say that `requirePullRequestReviews: true` with `requiredApprovingReviewCount: 0` is a contradiction, or that an owned org has no branch protection on its default branch, because those are conditions over the values, and over several resources at once.
 
-Folding gives a rule the actual values, of every file in the build, before anything is emitted. So a rule can say "an owned org with no branch protection on its default branch" and be right, and can say it in the editor, because the values are known without running anything. The check at the keystroke is the check in CI, over the same data, because the data is a function of the source.
+Semantic linting is a check over the values a project declares. Folding is what makes it possible before anything is emitted: a rule receives the actual values of every file in the build, without running anything, and the same rule over the same data runs in CI and in a tool that folds as you edit.
+
+A finding is data, not a message. It names the rule that fired, the subject it fired on, a path into the value and the source line it came from, with a severity. That shape is what makes a finding actionable, by a person reading it or by an agent asked to fix it: an assistant handed the finding knows which rule, which value and which line, and can propose the edit. The contract fixes the shape so that every host's findings look the same.
 
 ## Two phases
 
-Pre-synthesis rules run over the folded values, per file or across the build, before serialization. Post-synthesis rules run over the emitted artifact. Both are pure functions of their input, with no execution and no environment, which is what lets them run in an editor. A finding names a rule, a path into the value, and the source line it came from.
+Pre-synthesis rules run over the folded values, per file or across the build, before serialization. Post-synthesis rules run over the emitted artifact. Both are pure functions of their input, with no execution and no environment, which is what lets them run anywhere the fold does.
 
 ## Who has it today
 

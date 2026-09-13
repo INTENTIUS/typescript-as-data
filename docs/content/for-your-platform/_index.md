@@ -6,6 +6,8 @@ diataxis: how-to
 hideChildren: true
 ---
 
+This page is for someone who maintains a tool. If that is not you yet, [start here](/typescript-as-data/start-here/) first.
+
 Your tool reads a YAML file. To read a TypeScript file instead, you supply four things, and the last two are optional.
 
 1. Types for your schema, as a `.d.ts` your users import and `satisfies`. If you have a JSON Schema, this is generated. If you have TypeScript interfaces already, export them.

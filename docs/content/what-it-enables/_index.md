@@ -4,3 +4,5 @@ description: "Three things a platform gets when its files are data: pure synthes
 weight: 10
 ---
 
+Three pages, one property each. Each says what the property is, who has it today and where the rule that states it lives. If a term is new, [the glossary](/typescript-as-data/glossary/) has it.
+

@@ -6,7 +6,11 @@ diataxis: tutorial
 hideChildren: true
 ---
 
-forgejo-warden keeps a Forgejo org in a declared state. Its e2e stack stands up a throwaway Forgejo on Docker Compose and mints a token, so you can declare, plan, apply, drift, and reconcile without touching a real instance. Docker and Node 22 are the prerequisites.
+forgejo-warden keeps a Forgejo org in a declared state. Forgejo is a code-hosting server, like GitHub, that you can run yourself. warden's e2e stack stands up a throwaway one on Docker Compose and mints a token. You can declare a policy and apply it, then drift and reconcile, without touching a real instance.
+
+## Before you start
+
+You need a terminal and Git, plus Node 22 or later and Docker running. [Start here](/typescript-as-data/start-here/#what-you-need-on-your-machine) says what each is and where to get it. Every command below is typed into the terminal, one block at a time, from inside the folder the first step creates. Nothing here touches a real account.
 
 ## Paste this to an agent
 
@@ -25,7 +29,7 @@ another dry-run, and show me the drift. Finish with `npm run e2e:down`.
 
 ## By hand
 
-1. Stand up the sandbox, and give it an org with an empty repo. warden keeps what exists in a declared state; it does not create the org, and a repo comes from a `repoBaselines` entry or, as here, from one API call.
+1. Stand up the sandbox, and give it an org with an empty repo. The first line fetches warden's source and moves into it, the second installs its dependencies and builds it, and the third starts the throwaway server and puts its address and a token into two variables the later commands read. The two `curl` lines ask the server to create an organisation and an empty repository, because warden keeps what exists in a declared state; it does not create the org, and a repo comes from a `repoBaselines` entry or, as here, from one API call.
 
    ```bash
    git clone https://github.com/INTENTIUS/forgejo-warden && cd forgejo-warden
