@@ -15,18 +15,16 @@ const all = loadFixtures(join(dirname(fileURLToPath(import.meta.url)), "..", "..
 // nothing is held out of the shape comparison now, and a future hold-out
 // needs a chant issue as its reason, the way this one had.
 //
-// chant#2441 — chant evaluates a helper or intrinsic call inside a folded
-// function body, which F-Div-Depth (L3.16) says the folder must refuse, and
-// produces the envelope the fixture's own note warns about. Unlike every other
-// F-Div row this is not a fallback, so it is a chant bug rather than a
-// tolerated divergence; these three are held out of the whole-build comparison
-// by name until it is fixed, and by name rather than by rule so a new fixture
-// citing F-Div-Depth is compared rather than silently excused.
-const foldsAtDepth = new Set([
-  "F-Eval-CallIntrinsic/inside-function-body",
-  "F-Eval-CallHelper/inside-function-body",
-  "F-Div-Provenance/helper-name-from-project-import",
-]);
+// chant#2441 — chant cannot take a host's declared helper names
+// (F-Host-Interface item 1): its helper list is closed, so a call to the
+// host's `upper` inside a folded function body is not the refusal F-Div-Depth
+// (L3.16) requires. Held out by name until chant admits host helpers, and by
+// name rather than by rule so a new fixture citing the rule is compared
+// rather than silently excused. The list held three until chant-v0.72.2:
+// the intrinsic case retired when chant#2449 stopped rescuing a refusal at
+// depth by invoking, and the provenance case when spec 1.7 (#126) made a
+// project binding outrank a registered name, which chant already did.
+const hostHelperNames = new Set(["F-Eval-CallHelper/inside-function-body"]);
 
 // chant#2446 — chant has the three counters F-Obs-Counters names, in
 // fold-import.ts's FoldExecutionCounts, and its public entry exports neither
@@ -35,7 +33,7 @@ const foldsAtDepth = new Set([
 // than failed, and held out by name until a release exports them.
 const countersNotPublic = new Set(["F-Obs-Counters/a-build-reports-its-counts"]);
 
-const heldOut = new Set([...foldsAtDepth, ...countersNotPublic]);
+const heldOut = new Set([...hostHelperNames, ...countersNotPublic]);
 const fixtures = all.filter((f) => !heldOut.has(f.id));
 
 describe("chant cross-check (#11)", () => {
@@ -73,7 +71,7 @@ describe("chant cross-check (#11)", () => {
     // Run per list rather than over the union, so each empties itself on its
     // own event, so one reason cannot go on excusing another's fixtures.
     // (tsad#110's list emptied when spec 1.6 gave J1 F-Eval-CallHost.)
-    for (const [reason, names] of [["chant#2441", foldsAtDepth]] as const) {
+    for (const [reason, names] of [["chant#2441", hostHelperNames]] as const) {
       const held = projectFixtures(all).filter((f) => names.has(f.id));
       expect(held.map((f) => f.id).sort(), `${reason}: a held-out fixture no longer exists`).toEqual([...names].sort());
 

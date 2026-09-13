@@ -31,9 +31,9 @@ would still have something to say.
 **Nothing whole-build is skipped.** Since `chant-v0.72.0` the adapter
 hands chant the fixture's host as a package outside the lexicon convention
 (chant#2438). One naming a host therefore reaches chant like any other.
-The test asserts that no project fixture was skipped. The three fixtures chant
-holds out under chant#2441 are held out by name, so a new fixture citing the
-same rule is compared rather than excused. The four round-trip fixtures skip,
+The test asserts that no project fixture was skipped. The fixture chant holds
+out under chant#2441, a host helper called inside a function body, is held out
+by name, so a new fixture citing the same rule is compared rather than excused. The four round-trip fixtures skip,
 chant having no generator yet.
 
 **On whole-build fixtures the two still agree.** `compareAdapters` again,
