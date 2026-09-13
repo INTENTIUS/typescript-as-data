@@ -13,5 +13,5 @@ consumers:
     name: chant
     kind: infrastructure toolchain
     status: reference
-    status_label: "The implementation the specification was extracted from; seventeen lexicons, round-trip generators, semantic lint."
+    status_label: "The implementation the specification was extracted from; seventeen lexicons, round-trip generators, rules over values."
     repo: https://github.com/INTENTIUS/chant
