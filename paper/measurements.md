@@ -52,7 +52,7 @@ The chant side's `false` is also an unsampled invariant: the run fails unless ev
 
 | Pin | Fixtures | Rules with a fixture | Shape and fold agreement |
 |---|---|---|---|
-| chant `0.72.1` | 123, of which 61 are whole-build | 135 of 139 | all, on the 116 the pin answers; three are held out under chant#2441, one under chant#2446, and the four round-trip fixtures skip, chant having no generator |
+| chant `0.72.1` | 125, of which 63 are whole-build | 135 of 139 | all, on the 117 the pin answers; three are held out under chant#2441, one under chant#2446, and the four round-trip fixtures skip, chant having no generator |
 
 The 4 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a reason each. All are properties no adapter can observe from verdicts: provenance, the host's own module tree, and what a host may vary or must not execute. One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
 
@@ -73,6 +73,7 @@ The 4 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a 
 | `chant-v0.71.0` at `4ac9b08a`, 109 entries, with F-Call (#109) | 441 | 372 | 372 | 258 |
 | `chant-v0.72.0` at `8ac99bc6`, 109 entries | 441 | 372 | 372 | 258 |
 | `chant-v0.72.1` at `75c05827`, 109 entries, spec `1.6` | 441 | 440 | 440 | 304 |
+| `chant-v0.72.1` at `75c05827`, 109 entries, spec `1.7` | 441 | 440 | 440 | 304 |
 
 A file is comparable when nothing disarmed either implementation before the comparison started. Four things did so under `chant-v0.70.1`, two under `chant-v0.71.0`, and one remains under spec `1.6`, the single file that imports a package the host cannot load, which is the reference's limit. Each of the others retired for its own reason. Two were limits of chant's entry point rather than of chant, 52 files reading a host data export that `foldProject` could not resolve without a lexicon list and 19 in entries with build parameters it could not be given, until chant#2422 gave it both (#96). Another held 290 files reaching a host factory until the reference implemented F-Call (#109). The final one held 68 files calling a package export outside a declarator; it went when spec `1.6` wrote chant's behaviour into F-Declarator and F-Call (#110).
 

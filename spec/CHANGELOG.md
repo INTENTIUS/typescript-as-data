@@ -4,6 +4,10 @@ The versioned history of the rule set. The policy is in [`README.md`](./README.m
 
 Each entry lists the rules that changed and how, in the four kinds the policy defines. A change confined to non-normative text is not versioned and is not listed here; the rationale sections and the inventory are the usual cases.
 
+## 1.7, 2026-09-13
+
+Tag `spec-1.7`. One widening (#126). F-Eval-CallLocal is checked before the two registered call shapes. A call through a name the project bound is the project function's call whatever the registry says; F-Eval-CallHelper and F-Eval-CallIntrinsic now require the name not to be so bound. Until `1.6` a registered name kept its meaning and a file that bound one fell back. That order was taken from chant's expression classifier (`L2.11`) and its whole-build fold had never used it; the peer's probes with chant's own `output` showed it. F-Host-NoSubstitution's second consequence says so and the divergence row narrows to a binding from anywhere but the project or the host. The F-Div-Provenance fixture's verdicts move from run to fold. One fixture per profile pins a project `ref` over the registry's.
+
 ## 1.6, 2026-09-12
 
 Tag `spec-1.6`. Two widenings from one corpus finding (#110), both written to what chant does and no more. F-Call step 7 no longer requires an entity or a composite instance back from an invoked factory: the result is a value, whatever it is, and chant had never checked (`L8.19`). F-Declarator's single and destructure cases now reach a call through a top-level const alias, so `const w = Stack({…}); export const v = w.pair` resolves the call at the declarator, once per file; a call nested inside an expression stays J1's rejection, which chant also refuses (`L2.18`). F-Host-Closed-vs-Open says so in one sentence. The corpus cross-check found it: chant folded 68 of 441 files by these two routes and the text had neither. No J1 rule is added, so `data-host` is unchanged.

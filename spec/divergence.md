@@ -46,7 +46,7 @@ Shape accepts; the folder may reject, because it resolves.
 |---|---|---|---|
 | F-Div-Ident | any bare identifier is valid | resolves in `consts` then `externals`; `process` is a pointed rejection | L2.3, L3.6, L3.7 |
 | F-Div-Tag | any tagged-template tag; interior opaque | tag is a registered, tag-foldable intrinsic; interior folds | L2.4 |
-| F-Div-Provenance | a registered helper *name* | the name is bound by an import from chant, not shadowed | L2.11 |
+| F-Div-Provenance | a registered helper *name* | the name is unbound or bound by an import from the host; a project binding is F-Eval-CallLocal's instead (`1.7`), any other falls back | L2.11 |
 | F-Div-SpreadType | a spread operand of valid shape | operand folds to an object (object spread) or array (array spread) | L3.4, L3.5 |
 | F-Div-SameFileNew | a bare identifier | if bound to a same-file `new`, only `externals` may answer, and F-Prebuild is what puts the instance there; a folder that cannot construct rejects rather than build a duplicate | L3.8 |
 | F-Div-Nullish | `a.b`, `a[k]` | the object does not fold to `null`/`undefined`; `?.` short-circuits instead (chant-v0.63.0) | L3.10, L3.21 |

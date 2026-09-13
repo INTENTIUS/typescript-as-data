@@ -111,8 +111,10 @@ For every registered name, helper, intrinsic, constructor, composite -
 revival resolves the name **through the folding file's own `import`
 bindings** and invokes what it finds (F-Val-Fate, J2 F-Call). A host never
 substitutes its own implementation for a registered name. Two consequences:
-a same-named helper the file declared or imported from elsewhere is not the
-host's, and the file falls back (F-Div-Provenance); and the registry cannot
+a same-named function the file declared or imported from a project file is
+that function's call (F-Eval-CallLocal, since `1.7`), one imported from
+anywhere else is not the host's and the file falls back (F-Div-Provenance);
+and the registry cannot
 drift from the helpers' real behaviour, because it never reimplements them.
 This is the CTFE principle ([`prior-art.md`](./prior-art.md)) made a rule.
 
