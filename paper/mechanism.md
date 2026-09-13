@@ -6,7 +6,7 @@ Draft for #53. Every claim names the rule that states it; `spec/` is the long fo
 
 A file is admitted in two stages, and the first is easy to miss because it is not about expressions at all.
 
-The **statement gate** (`S-Module`) examines only exported statements, and recognises six shapes.
+The **statement gate** (`S-Module`) examines only exported statements, and recognizes six shapes.
 
 | Shape | Example |
 |---|---|
@@ -21,7 +21,7 @@ Six further shapes disqualify the whole file (`S-Disqualify`). A default export 
 
 The gate's granularity is the design decision rather than the list. It is per module, and the justification is that an unreducible export can reference, or be referenced by, a reducible one in ways only running proves safe. A per-declaration gate would have to decide whether a half-reduced namespace is coherent, and it is not (`F-Total`).
 
-The gate is per module rather than per declaration, and the reason is worth stating: an unfoldable export can reference or be referenced by a foldable one in ways only running proves safe (`F-Total`).
+The gate is per module rather than per declaration, and the reason is this: an unfoldable export can reference or be referenced by a foldable one in ways only running proves safe (`F-Total`).
 
 The **expression classifier** (`grammar.md` §2) then decides the shapes inside an admitted statement. It resolves nothing. That is deliberate, and it is the subject of the direction claim below.
 
@@ -29,7 +29,7 @@ The **expression classifier** (`grammar.md` §2) then decides the shapes inside 
 
 ## What reduction produces
 
-The value domain and the three mechanisms by which reduction reaches a value have their own section. Two facts from it are needed here. Reduction produces envelopes that denote what the source named, of which exactly one kind survives to serialisation (`F-Val-Fate`). And the guarantee is narrow: none of the reduced file's own statements execute, while revival does import and invoke the module the fallback path would have imported (`F-NoOwnExecution`).
+The value domain and the three mechanisms by which reduction reaches a value have their own section. Two facts from it are needed here. Reduction produces envelopes that denote what the source named, of which exactly one kind survives to serialization (`F-Val-Fate`). And the guarantee is narrow: none of the reduced file's own statements execute, while revival does import and invoke the module the fallback path would have imported (`F-NoOwnExecution`).
 
 ## Two sub-grammars, and an asymmetry
 
@@ -55,7 +55,7 @@ The claim is one-directional and stated with its exceptions inside it. **If eval
 
 The direction is chosen rather than observed, and the reason is asymmetric cost. A classifier that accepts too much produces a fallback the author learns about from a per-file decision line. A classifier that rejects too much produces an error on correct source, and a lint that cries wolf gets disabled, taking the real diagnostics with it. The classifier is also the predicate a downstream tool asks *will this reduce* without running a reduction, and such a tool must get an answer safe to act on.
 
-Twelve divergences run the permitted way, and the specification enumerates all twelve rather than describing the shape of the set (`F-Div-*`). The enumeration is the useful part: a claim that two analyses disagree only in one direction is worth little without a list of where, because the list is what a reader checks and what a new rule has to join.
+Twelve divergences run the permitted way, and the specification enumerates all twelve rather than describing the shape of the set (`F-Div-*`). A claim that two analyses disagree only in one direction needs a list of where, because the list is what a reader checks and what a new rule has to join.
 
 | Rule | The classifier sees | The evaluator additionally requires |
 |---|---|---|
@@ -84,7 +84,7 @@ Evaluating a single file yields either a reduction with a complete export namesp
 
 **It is reported.** A fallback is a normal outcome rather than an error, and that is exactly why it must appear: an unreported fallback is indistinguishable from a reduction, and the no-execution guarantee becomes unauditable (`F-Obs-Report`). The reason is located, naming the construct and its position; a failure inside a called function is re-anchored at the call site, with the callee's own position carried in the message (`F-Reason`).
 
-**It is parameterised by isolation.** Under an isolated mode, a reduction that would have to invoke project-owned code falls back instead (`F-IsolatedRefusal`). The verdict is therefore not a pure function of the source, and a specification that omitted the parameter would describe a judgment that behaves differently in any real deployment.
+**It is parameterized by isolation.** Under an isolated mode, a reduction that would have to invoke project-owned code falls back instead (`F-IsolatedRefusal`). The verdict is therefore not a pure function of the source, and a specification that omitted the parameter would describe a judgment that behaves differently in any real deployment.
 
 All of this is still a proposal. What makes a verdict final is the fixpoint.
 
@@ -94,7 +94,7 @@ Per-file partial evaluation is unsound when values have identity, and this is th
 
 Suppose file `A` reduces and file `B` falls back, and both refer to an entity that `A` produced. `B`'s real import of `A` constructs a second copy, and the build now holds two objects for one entity.
 
-That is not an abstract hazard, and the failure it produces is specific. Each entity is assigned a logical name when the build collects it, and attribute references carry a weak reference to the entity they belong to. Only one of two copies is collected. The other's attribute references then reach an entity with no logical name, and serialisation fails outright. Where it does not fail, a reference that should point at the collected entity inlines the uncollected one's value instead, leaving output that is quietly wrong rather than absent. Both were observed before the rule was written.
+That is not an abstract hazard, and the failure it produces is specific. Each entity is assigned a logical name when the build collects it, and attribute references carry a weak reference to the entity they belong to. Only one of two copies is collected. The other's attribute references then reach an entity with no logical name, and serialization fails outright. Where it does not fail, a reference that should point at the collected entity inlines the uncollected one's value instead, leaving output that is quietly wrong rather than absent. Both were observed before the rule was written.
 
 Every comparable system avoids the problem by not having it. Compile-time function execution copies values across its boundary, so nothing at run time shares identity with a compile-time object. Per-page static rendering shares no runtime objects between a prerendered page and a served one. A whole-program partial evaluator has a single heap, and preserving sharing within one heap is the easy case. Only a per-unit decision over a shared object graph has the problem at all, which is why the fixpoint has no precedent we found rather than a better-known equivalent.
 
@@ -109,7 +109,7 @@ Seeded with every file that would not fold alone, closed under both edges, least
 
 The property this buys is stated and argued in `theorem.md`: exactly one object represents each entity, and every reference resolves to it.
 
-Two consequences are worth stating because they look like defects:
+Two consequences look like defects:
 
 **A leaf fix buys nothing while an importer still falls back.** Making a leaf reducible changes no verdict until every file in the closure above it also reduces. This was observed as coverage *falling* after a migration that made a widely imported file reducible, which read as a regression and was the rule working. An implementation that optimised it away would reintroduce the two-objects problem directly.
 
@@ -141,7 +141,7 @@ Tentative verdicts first, each file judged alone (J2). `run-only-importer.ts` fa
 Now the fixpoint (`F-Taint`):
 
 1. Seed: `{ run-only-importer.ts }`, the one file that failed on its own (`F-Seed`).
-2. Forward edge: the seed imports `shared-config.ts`, so that file is tainted (`F-Succ`). Nothing about it resists reduction, and running it anyway is the point. Reduced independently, its objects would be rebuilt by the importer's real import, leaving two objects claiming to be one entity.
+2. Forward edge: the seed imports `shared-config.ts`, so that file is tainted (`F-Succ`). Nothing about it resists reduction, and it runs anyway. Reduced independently, its objects would be rebuilt by the importer's real import, leaving two objects claiming to be one entity.
 3. Backward edge: `capturing-sibling.ts` reduced cleanly and captured `sharedLabels` from a file that now runs, so the object it holds is not the object the build will collect, and the reverse edge taints it (`F-Succ`, via `F-Capture`).
 4. Closure: nothing reaches `independent.ts`. It imports no sibling and captures nothing; its labels are the same *value* as the shared ones and deliberately not the same *object*, because the edge is identity and not equality.
 
@@ -153,11 +153,11 @@ The control file is what makes the example an example. Without it, "taint forced
 
 ## What a host supplies
 
-The subset is parameterised. A host provides six things (`F-Host-Interface`). Two concern entities, being the constructors that build them and how they expose attributes. Three are lists the host installs, an intrinsic registry and an authoring-helper allowlist and a trust set. The sixth is the form a composite registration takes. A registered call is admitted only if it is a pure function of its arguments and invoking it at fold time is indistinguishable from invoking it during a real run (`F-Host-Admission`), and revival always invokes the function the file imported rather than a reimplementation (`F-Host-NoSubstitution`).
+The subset is parameterized. A host provides six things (`F-Host-Interface`). Two concern entities, being the constructors that build them and how they expose attributes. Three are lists the host installs, an intrinsic registry and an authoring-helper allowlist and a trust set. The sixth is the form a composite registration takes. A registered call is admitted only if it is a pure function of its arguments and invoking it at fold time is indistinguishable from invoking it during a real run (`F-Host-Admission`), and revival always invokes the function the file imported rather than a reimplementation (`F-Host-NoSubstitution`).
 
-The interesting rule is an asymmetry between two kinds of callee. Into a **package**, reduction goes only through a closed allowlist, checked by name *and* by the provenance of the binding, so a helper of the author's own that happens to share a registered name is not the host's and the file falls back (`F-Div-Provenance`). Into a **project file**, reduction proceeds whenever the callee's body is itself in the subset, with no allowlist at all.
+One rule is an asymmetry between two kinds of callee. Into a **package**, reduction goes only through a closed allowlist, checked by name *and* by the provenance of the binding, so a helper of the author's own that happens to share a registered name is not the host's and the file falls back (`F-Div-Provenance`). Into a **project file**, reduction proceeds whenever the callee's body is itself in the subset, with no allowlist at all.
 
-That looks backwards until the trust boundary is stated. Package code is already loaded and executed by the build before reduction begins, to obtain the serialisers and lint rules the build cannot run without; admitting a call into it costs no execution the process was not already performing, so it is admitted by declaration and verified by registration. Project code is the untrusted input, and it is admitted only when it can be *evaluated without being executed*, which a syntactic check of the callee's body decides and an allowlist could not.
+That looks backwards until the trust boundary is stated. Package code is already loaded and executed by the build before reduction begins, to obtain the serializers and lint rules the build cannot run without; admitting a call into it costs no execution the process was not already performing, so it is admitted by declaration and verified by registration. Project code is the untrusted input, and it is admitted only when it can be *evaluated without being executed*, which a syntactic check of the callee's body decides and an allowlist could not.
 
 Admission to the allowlist has its own bar. A registered call must be a pure function of its arguments, and calling it during reduction must be indistinguishable from calling it during a real run (`F-Host-Admission`). Revival then uses the function the file imported rather than a reimplementation (`F-Host-NoSubstitution`), which is the principle compile-time function execution states: context decides where a function runs and never what it means.
 

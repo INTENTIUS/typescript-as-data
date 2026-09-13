@@ -5,7 +5,7 @@ weight: 2
 diataxis: explanation
 ---
 
-The editor catches a misspelt key and a value of the wrong kind as you type. That is TypeScript's type checker, worth having and not linting.
+The editor catches a misspelt key and a value of the wrong kind as you type. That is TypeScript's type checker, and it is not linting.
 
 A type can say a field is a number in a range. No type can say that `requirePullRequestReviews: true` with `requiredApprovingReviewCount: 0` is a contradiction, or that an owned org has no branch protection on its default branch. Those are conditions over the values, and over several resources at once.
 
@@ -15,7 +15,7 @@ A rule over values is a check over what a project declares. The specification de
 
 There are two phases, and the fold matters to one of them.
 
-A **post-synthesis** rule reads the emitted artifact. Any tool that emits YAML can run one, from a YAML source or a TypeScript one, and nothing about the fold is needed for it. The contract covers the phase because chant serves both phases from one hook, not because the specification enables it.
+A **post-synthesis** rule reads the emitted artifact. Any tool that emits YAML can run one, from a YAML source or a TypeScript one, and nothing about the fold is needed for it. The contract covers the phase because chant serves both phases from one hook.
 
 A **pre-synthesis** rule reads what every file declares, before anything is emitted. That is the phase the fold enables: the values are there without running project code, so the check is a pure function of the source and runs wherever the fold does.
 

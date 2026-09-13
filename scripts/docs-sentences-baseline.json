@@ -3,11 +3,10 @@
   "anaphora/repeated-opening": 1
  },
  "spec/divergence.md": {
-  "discourse/punchy-fragments": 7,
+  "discourse/punchy-fragments": 4,
   "claude/colon-reveal": 6,
   "tricolon/comma-series": 2,
-  "anaphora/repeated-opening": 1,
-  "repetition/near-duplicate": 1
+  "anaphora/repeated-opening": 1
  },
  "spec/grammar.md": {
   "claude/colon-reveal": 7,
@@ -19,10 +18,10 @@
   "repetition/near-duplicate": 1
  },
  "spec/hosts.md": {
-  "claude/colon-reveal": 7,
+  "claude/colon-reveal": 5,
   "tricolon/comma-series": 2,
+  "anaphora/repeated-opening": 1,
   "claude/contrast-tail": 3,
-  "tricolon/density": 1,
   "discourse/punchy-fragments": 1,
   "repetition/near-duplicate": 1
  },
@@ -32,21 +31,24 @@
   "formatting/em-dash-density": 2
  },
  "spec/judgments.md": {
-  "discourse/punchy-fragments": 25,
-  "claude/colon-reveal": 18,
-  "repetition/near-duplicate": 11,
-  "anaphora/repeated-opening": 10,
+  "discourse/punchy-fragments": 22,
+  "claude/colon-reveal": 16,
+  "repetition/near-duplicate": 12,
+  "anaphora/repeated-opening": 12,
   "tricolon/comma-series": 12,
   "tricolon/density": 1
  },
  "spec/prior-art.md": {
   "anaphora/repeated-opening": 1
  },
+ "spec/rules.md": {
+  "anaphora/repeated-opening": 1
+ },
  "spec/values.md": {
-  "claude/colon-reveal": 5,
+  "claude/colon-reveal": 2,
   "tricolon/comma-series": 3,
-  "discourse/punchy-fragments": 5,
-  "repetition/near-duplicate": 6
+  "discourse/punchy-fragments": 4,
+  "repetition/near-duplicate": 5
  },
  "paper/README.md": {
   "anaphora/repeated-opening": 1
@@ -57,5 +59,14 @@
  "README.md": {
   "anaphora/repeated-opening": 1,
   "discourse/punchy-fragments": 1
+ },
+ "docs/content/spec/conformance/fixtures.md": {
+  "anaphora/repeated-opening": 2
+ },
+ "docs/content/spec/conformance/overview.md": {
+  "anaphora/repeated-opening": 1
+ },
+ "docs/content/spec/introduction/rules-and-judgments.md": {
+  "anaphora/repeated-opening": 1
  }
 }

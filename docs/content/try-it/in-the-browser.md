@@ -15,7 +15,7 @@ Edit the file and fold again. Add something a data file cannot contain, a `let` 
 
 The page sent the evaluator one request and printed the verdict. It was `{ "op": "foldProject", "files": { "policy.ts": … }, "host": {} }`, the same request the conformance suite sends.
 
-A `fold` verdict carries the file's exports as values. A `run` verdict carries the rule that refused the file and the line it points at. In a full build that file would be executed instead; here, with no runtime, it is simply not data.
+A `fold` verdict carries the file's exports as values. A `run` verdict carries the rule that refused the file and the line it points at. In a full build that file would be executed instead. This page has no runtime, so it reports the refusal and stops.
 
 The module is `evaluators/rust` compiled for `wasm32-unknown-unknown`. It has four exports and no imports, so it instantiates against an empty import object. A browser and an editor extension load it the same way. Node or Go call it without a subprocess.
 

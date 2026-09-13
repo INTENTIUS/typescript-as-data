@@ -17,5 +17,5 @@
       }
     }
   },
-  "note": "A const bound to an arrow is a project-local function, and its concise body is S-FnBody's first alternative. This is the helper the first consumer wrote and had refused; chant's build folds it (chant#2435 is the classifier)."
+  "note": "A const bound to an arrow is a project-local function, and its concise body is S-FnBody's first alternative. It is the shape a consumer's helper takes."
 }

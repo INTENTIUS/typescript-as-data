@@ -4,7 +4,7 @@ Draft for #29. Every number cites the artifact it comes from. None is a coverage
 
 ## The differential
 
-`examples/fold-differential.test.ts` builds every corpus entry twice, folded and run, and requires identical errors and byte-identical serialised output (chant#1025).
+`examples/fold-differential.test.ts` builds every corpus entry twice, folded and run, and requires identical errors and byte-identical serialized output (chant#1025).
 
 The error half of that was unsound until chant-v0.69.1, because under the test runner a module that threw during import was cached as evaluated, so the second build of a directory in one process reported no error while every differential builds the same directory two or three times per process; `importModule` now remembers an evaluation failure and replays it, so error parity is compared rather than assumed (chant#2368).
 
@@ -35,7 +35,7 @@ The entry asserts each verdict by name and the differential holds across it. The
 
 ## The execution boundary
 
-`test/leftness/` (chant#1084) expresses one estate in chant and again in CDK. It profiles both synths under `node --cpu-prof` and applies one analyser to both, with timing excluded by design.
+`test/leftness/` (chant#1084) expresses one estate in chant and again in CDK. It profiles both synths under `node --cpu-prof` and applies one analyzer to both, with timing excluded by design.
 
 | Measurement | `chant build --fold` | `cdk synth` |
 |---|---|---|
@@ -60,7 +60,7 @@ The 4 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a 
 
 **Coercion, stated as fixtures.** Thirteen expression fixtures pin the parts of ECMAScript an evaluator in another language has to reproduce bit for bit. Number formatting in template literals is the largest of them (shortest round-trip digits; `1e+21`; `-0` as `0`; a literal beyond 2^53 rounded before it is printed). The others are `+`'s string-or-number dispatch and relational comparison on strings; the logical operators returning an operand; unary coercion and IEEE division; and the one deliberate departure, array spread refusing a string (R10.6). The same family pins that an `undefined`-valued property is present in the folded namespace and travels through a spread, which is what a selective-by-omission consumer reads (#82). Both implementations agree on all thirteen. Their sufficiency is not established by that: the reference is JavaScript and passes them for free, so whether they are enough is known only once an evaluator with no JavaScript engine runs them (#86).
 
-**What this agreement is worth.** Until #50 the reference implementation's evaluation layer was a *port* of chant's, so agreement on expression-level fixtures was guaranteed by construction rather than observed. It is now written from `grammar.md` §2 and `judgments.md` J1 without consulting chant's source, and the two implementations agree on every fixture, so the comparison is between two codebases rather than one code base with itself.
+**What this agreement establishes.** Until #50 the reference implementation's evaluation layer was a *port* of chant's, so agreement on expression-level fixtures was guaranteed by construction rather than observed. It is now written from `grammar.md` §2 and `judgments.md` J1 without consulting chant's source, and the two implementations agree on every fixture, so the comparison is between two codebases rather than one code base with itself.
 
 ## The corpus cross-check
 
@@ -79,7 +79,7 @@ The 4 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a 
 | `chant-v0.72.3` at `9891edd4`, 109 entries, spec `1.8`, chant declaring `1.6` | 441 | 440 | 440 | 304 |
 | `chant-v0.72.5` at `f5c68a5a`, 109 entries, spec `1.8`, chant declaring `1.8` | 441 | 440 | 440 | 304 |
 
-A file is comparable when nothing disarmed either implementation before the comparison started. Four things did so under `chant-v0.70.1`, two under `chant-v0.71.0`, and one remains under spec `1.6`, the single file that imports a package the host cannot load, which is the reference's limit. Each of the others retired for its own reason. Two were limits of chant's entry point rather than of chant, 52 files reading a host data export that `foldProject` could not resolve without a lexicon list and 19 in entries with build parameters it could not be given, until chant#2422 gave it both (#96). Another held 290 files reaching a host factory until the reference implemented F-Call (#109). The final one held 68 files calling a package export outside a declarator; it went when spec `1.6` wrote chant's behaviour into F-Declarator and F-Call (#110).
+A file is comparable when nothing disarmed either implementation before the comparison started. Four things did so under `chant-v0.70.1`, two under `chant-v0.71.0`, and one remains under spec `1.6`, the single file that imports a package the host cannot load, which is the reference's limit. Each of the others retired for its own reason. Two were limits of chant's entry point rather than of chant, 52 files reading a host data export that `foldProject` could not resolve without a lexicon list and 19 in entries with build parameters it could not be given, until chant#2422 gave it both (#96). Another held 290 files reaching a host factory until the reference implemented F-Call (#109). The final one held 68 files calling a package export outside a declarator; it went when spec `1.6` wrote chant's behavior into F-Declarator and F-Call (#110).
 
 **What this establishes.** On 440 files nobody wrote for the purpose, the two implementations agree on every verdict, and on the 304 that fold on both sides the export namespaces are structurally identical, entity class and properties included. It is agreement between the two that was observed rather than designed; each run since the first has widened the set it is observed on without adding a disagreement, and the fourth, at spec `1.6`, covers every file but one.
 
@@ -91,7 +91,7 @@ A file is comparable when nothing disarmed either implementation before the comp
 |---|---|---|---|---|---|---|
 | `jhgaylor/infisical-chant` at `91cdf130` | 6 | 31 | 13 | 13 | 5 | 18 |
 
-The host limit is large there because the project was written against an older chant, so a package export the pinned release no longer has disarms every file that imports it. The first run found one disagreement, the kind the row exists to find: a file whose only declarator calls a project function that reads `process.env`, which chant folded by invoking the function at fold time and the specification says runs (F-Call step 2, then F-Eval-Ident's pointed rejection). Filed as chant#2453, fixed in `chant-v0.72.3`, and spec `1.8` made the old behaviour an opt-in mode; since that release the rows agree on every comparable file.
+The host limit is large there because the project was written against an older chant, so a package export the pinned release no longer has disarms every file that imports it. The first run found one disagreement, the kind the row exists to find: a file whose only declarator calls a project function that reads `process.env`, which chant folded by invoking the function at fold time and the specification says runs (F-Call step 2, then F-Eval-Ident's pointed rejection). Filed as chant#2453, fixed in `chant-v0.72.3`, and spec `1.8` made the old behavior an opt-in mode; since that release the rows agree on every comparable file.
 
 **What the fourth run settled (#110).** The first draft of the rule went too far. It admitted a package call in any position, so the reference folded five shapes chant refuses, and the fixture cross-check caught that before the corpus could. Probed shape by shape on `chant-v0.72.1`, a package call folds when a declarator reaches it through a const alias or as its own call's direct argument, and nowhere else; nested inside an object literal or an array it runs, and so does one inside a `new` or a tag's interpolation. Written down, that is F-Declarator's alias case together with F-Call's argument resolution. No J1 rule was added and `data-host` is untouched; 68 files entered the comparable set and every one agrees.
 
@@ -117,11 +117,11 @@ The control is the one with teeth. An implementation that falls back on every fi
 
 Until `chant-v0.70.1` chant had no entry that took a set of files, so none of these were answerable there: a taint edge does not exist inside a single file. chant#2408 added one, and the nine fixtures that need no host now run against both implementations. They agree on every file's final verdict and its tentative verdict, and for every taint casualty they agree on the file the edge came from and on which rule it was. Since `chant-v0.72.0` the fixtures that name a host reach chant too (chant#2438), and a skip fails the suite.
 
-Two agreements are worth naming. chant classifies the capturing sibling as reached by a capture rather than an import, the distinction chant#2406 was filed for. And a file whose only tie to another is a call returning computed plain data folds in both, which is `F-Identity`'s entity test holding in an implementation that has never read it.
+Two agreements to name. chant classifies the capturing sibling as reached by a capture rather than an import, the distinction chant#2406 was filed for. And a file whose only tie to another is a call returning computed plain data folds in both, which is `F-Identity`'s entity test holding in an implementation that has never read it.
 
 Writing J2 and J3 from the specification found one more gap in it, which that test is the resolution of. `F-Import` and `F-Val-Live` stated two identity predicates and nothing said they answer different questions, so either choice for both uses is wrong, in one direction unsoundly. `F-Identity` makes the recursive test normative and `F-Import`'s broader one an over-approximation whose cost is coverage (#59).
 
-The port's own failure mode is worth recording because it is the one this section should not paper over: chant-v0.69.0 extended an envelope check from three kinds to five while the port still had three, and because no fixture covered the shape, the suite stayed green against a stale port until the drift was found by reading the release diff. Two fixtures now cover it, and the port that made the drift possible is gone.
+The port's own failure mode: chant-v0.69.0 extended an envelope check from three kinds to five while the port still had three, and because no fixture covered the shape, the suite stayed green against a stale port until the drift was found by reading the release diff. Two fixtures now cover it, and the port that made the drift possible is gone.
 
 ## What the specification found
 

@@ -28,7 +28,7 @@ another dry-run, and show me the drift. Finish with `npm run e2e:down`.
 
 ## By hand
 
-1. Stand up the sandbox, and give it an org with an empty repo. The first line fetches warden's source and moves into it, the second installs its dependencies and builds it, and the third starts the throwaway server and puts its address and a token into two variables the later commands read. The two `curl` lines ask the server to create an organisation and an empty repository, because warden keeps what exists in a declared state; it does not create the org, and a repo comes from a `repoBaselines` entry or, as here, from one API call.
+1. Stand up the sandbox, and give it an org with an empty repo. The first line fetches warden's source and moves into it, the second installs its dependencies and builds it, and the third starts the throwaway server and puts its address and a token into two variables the later commands read. The two `curl` lines ask the server to create an organization and an empty repository, because warden keeps what exists in a declared state; it does not create the org, and a repo comes from a `repoBaselines` entry or, as here, from one API call.
 
    ```bash
    git clone https://github.com/INTENTIUS/forgejo-warden && cd forgejo-warden
@@ -83,7 +83,9 @@ another dry-run, and show me the drift. Finish with `npm run e2e:down`.
 
 ## What happened
 
-The policy is data. Nothing in it ran, and nothing needed to; the plan is computed from the declared values and the live org. `--config-mode check` folds the file and also runs it, and refuses if the two disagree, which is the guarantee made visible. Deletes were never proposed, because nothing was marked `owned`. The same file works against Codeberg or any self-hosted Forgejo by changing `--base-url`.
+The policy is data. Nothing in it ran, and nothing needed to. The plan is computed from the declared values and the live org.
+
+`--config-mode check` folds the file, runs it as well, and refuses if the two disagree. Deletes were never proposed, because nothing was marked `owned`. The same file works against Codeberg or any self-hosted Forgejo by changing `--base-url`.
 
 To see the evaluator itself with nothing installed, [fold a file in your browser](/typescript-as-data/try-it/in-the-browser/). To watch one claim hold on the same sandbox and then watch it catch the broken case, run a scenario:
 

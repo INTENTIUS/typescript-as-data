@@ -2,13 +2,14 @@
 
 Normative. The contract a semantic check runs under. It names the input a
 check sees and when it runs, what a check may do and what it reports, and
-who supplies it. The identifiers are `F-Rule-*`. This is neither a
-language for writing checks nor any particular check; those are host
-vocabulary, a lexicon's or a governance tool's. What is specified is the
-guarantee the fold provides and nothing else does. A check sees the values
-of every file in the build before anything is emitted and without running
-any of them, so it runs wherever the fold runs and gives the answer a run
-would have given.
+who supplies it. The identifiers are `F-Rule-*`.
+
+This is neither a language for writing checks nor any particular check; those
+are host vocabulary, a lexicon's or a governance tool's. What is specified is
+the guarantee the fold provides and nothing else does. A check sees the values
+of every file in the build before anything is emitted and without running any
+of them, so it runs wherever the fold runs and gives the answer a run would
+have given.
 
 Derived from chant's post-synthesis engine (`packages/core/src/lint/post-synth.ts`),
 its policy layer (`lint/policy.ts`), and its severity configuration
@@ -18,21 +19,25 @@ it is not a rule over values and is not covered here.
 
 ## F-Rule-Input (what a rule sees)
 
-A check receives one or both of two inputs and nothing else about the
-build. The first is the folded namespace, every file's `X(f)` after J2 and
-J3 have disposed of every verdict, as final values; in chant this is
-`PostSynthContext.entities`, every declared entity by name (L11.1). The
-second is the artifact, the serializer's output as text and the same output
-parsed once per build into documents (rows `L11.2` and `L11.3`). The name of the
-environment or stack being built may be supplied as well, which is what
-lets an organisational policy vary by environment (L11.4).
+A check receives one or both of two inputs, and nothing else about the build:
+
+- The folded namespace, every file's `X(f)` after J2 and J3 have disposed of
+  every verdict, as final values. In chant this is
+  `PostSynthContext.entities`, every declared entity by name (L11.1).
+- The artifact, the serializer's output as text and the same output parsed
+  once per build into documents (rows `L11.2` and `L11.3`).
+
+The name of the environment or stack being built may be supplied as well,
+which is what lets an organizational policy vary by environment (L11.4).
 
 ## F-Rule-Phase (when a rule runs)
 
-Checks run after every verdict is final and before anything is applied. A check over the folded namespace is **pre-synthesis**; a check over the
-artifact is **post-synthesis**. One hook may serve both, as chant's
-does: the phase is named by the input the rule reads, not by a separate
-entry point.
+Checks run after every verdict is final and before anything is applied. A
+check over the folded namespace is **pre-synthesis**, a check over the
+artifact is **post-synthesis**.
+
+One hook may serve both, as chant's does. The phase is named by the input the
+rule reads.
 
 ## F-Rule-Pure (what a rule may do)
 
@@ -45,15 +50,20 @@ where the fallback runs, never in the evaluator's own process (L11.7).
 
 ## F-Rule-Finding (what a rule reports)
 
-A finding carries the rule's identifier, a severity from a closed set
-(`error`, `warning`, `info`), a message, and a **subject**: the name of the
-entity in the namespace or artifact it concerns, or the statement that
-something is missing when there is nothing to attach it to (L11.5). The
-message is not normative (F-Obs-Messages). A source location is part of a
-finding when the implementation has value provenance (F-Obs-Provenance);
-it is not required, because chant's findings name the artifact's entity and
-not a line, and a rule that reaches through the artifact has no line to
-name. A configured severity may override the rule's own (L11.6).
+A finding carries four things:
+
+- the rule's identifier,
+- a severity from the closed set `error`, `warning`, `info`,
+- a message, which is not normative (F-Obs-Messages),
+- a **subject**: the name of the entity in the namespace or artifact it
+  concerns, or the statement that something is missing when there is nothing
+  to attach it to (L11.5).
+
+A source location is part of a finding when the implementation has value
+provenance (F-Obs-Provenance). It is not required, because chant's findings
+name the artifact's entity and not a line, and a rule that reaches through the
+artifact has no line to name. A configured severity may override the rule's
+own (L11.6).
 
 ## F-Rule-Equivalence (the guarantee)
 
@@ -77,12 +87,12 @@ evaluator's own language, since there is no JavaScript to run.
 
 Non-normative, as in the other rule files: the reasoning behind each rule, keyed by the rules it supports.
 
-**F-Rule-Input, F-Rule-Phase.** The fold's user-facing consequence, and the
-one the paper had not stated: a syntax linter sees tokens and a
-configuration language with constraints in the type sees one field; neither
-has the values of every file in the build. chant's post-synthesis checks
-read `ctx.entities` for the values and `ctx.outputs` or `ctx.docs` for the
-artifact, from one hook, which is why the phase is named by the input.
+**F-Rule-Input, F-Rule-Phase.** A syntax linter sees tokens, and a
+configuration language with constraints in the type sees one field. Neither
+has the values of every file in the build, and that is the fold's
+user-facing consequence. chant's post-synthesis checks read `ctx.entities`
+for the values and `ctx.outputs` or `ctx.docs` for the artifact, from one
+hook, which is why the phase is named by the input.
 
 **F-Rule-Finding.** The subject is an artifact-side name on purpose. chant's
 own comment says a finding names an identifier from the synthesized output
@@ -98,9 +108,10 @@ runs it in the child instead, which is the isolation mode's
 boundary drawn once more around rules.
 
 The fixtures for this family carry the finding as data and not the rule,
-since a rule is host code: the `shapes` host names two rules by id and
-phase, a fixture's `findings` says what they report, and an implementation
-that carries no rule of that id says so and is skipped visibly. The runner
-asks for each phase twice and holds the two runs to the same answer, which
-is F-Rule-Pure tested before anything else, and `compareAdapters` holds two
-implementations to the same findings, which is F-Rule-Equivalence.
+since a rule is host code. The `shapes` host names two rules by id and phase,
+a fixture's `findings` says what they report, and an implementation that
+carries no rule of that id says so and is skipped visibly.
+
+The runner asks for each phase twice and holds the two runs to the same
+answer, which is F-Rule-Pure tested before anything else. `compareAdapters`
+holds two implementations to the same findings, which is F-Rule-Equivalence.

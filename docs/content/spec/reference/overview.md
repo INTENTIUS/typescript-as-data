@@ -9,10 +9,10 @@ aliases: ["/reference/overview/"]
 implementation of the specification in `spec/`. It is a workspace package in
 this repository, published to npm at the specification's version.
 
-It is deliberately partial, and the partiality is the point of
-[what it does not do](/typescript-as-data/spec/reference/limits/), which summarises
-`packages/reference/CAVEATS.md`. A reader who assumes the reference is complete
-will misread the conformance numbers.
+It is deliberately partial.
+[What it does not do](/typescript-as-data/spec/reference/limits/) says where,
+summarizing `packages/reference/CAVEATS.md`. The conformance numbers have to
+be read with that partiality in mind.
 
 ## What it covers
 
@@ -54,12 +54,17 @@ The source layout is small enough to read:
 
 The reference was written from `grammar.md` and `judgments.md` without
 consulting chant's source, by an author who had read chant closely while
-writing the specification from it. Writing it found three places where the text
-was not complete enough: `grammar.md` used an *unclaimed* callee in four
-normative sentences and defined it in none; `F-Import` and `F-Val-Live` stated
-two identity predicates and nothing said they answer different questions; and
-`F-Eval-Ident` step 1 read an instance as "J2 pre-built" that no rule of J2
-built. `S-Unclaimed`, `F-Identity` and `F-Prebuild` are the rules that resulted.
+writing the specification from it. Writing it found three places where the
+text was not complete enough:
+
+- `grammar.md` used an *unclaimed* callee in four normative sentences and
+  defined it in none.
+- `F-Import` and `F-Val-Live` stated two identity predicates, and nothing said
+  they answer different questions.
+- `F-Eval-Ident` step 1 read an instance as "J2 pre-built" that no rule of J2
+  built.
+
+`S-Unclaimed`, `F-Identity` and `F-Prebuild` are the rules that resulted.
 
 ## Running it
 

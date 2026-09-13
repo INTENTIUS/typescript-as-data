@@ -152,17 +152,18 @@ that no other S-Call form claims. The callee must not be:
 
 Only the bare-identifier part is decidable from syntax. The four conditions
 are resolution, so S-CompositeStep admits any call at shape level and
-F-Eval-Member step 2 applies the full test. S-CompositeStep, F-Div-Step and
+F-Eval-Member step 2 applies the full test.
+
 **Explicitly outside the subset** (S-Reject at shape level, and rejected by
 the folder): an arrow or function expression as a value (L3.1); class
 expressions; `await`, `yield`; assignment and compound assignment; the comma
 operator; `typeof`, `void`, `delete`, `++`, `--`; `==`, `!=`, `%`, `**`, the
 bitwise operators, `in`, `instanceof`; a computed property name; a
 non-literal element-access key; a call not matching any S-Call form. Optional chaining is
-specified, not merely admitted: since chant-v0.63.0 a `?.` on a nullish object
+specified rather than merely admitted: since chant-v0.63.0 a `?.` on a nullish object
 produces a chain-short-circuit value that propagates through the remaining
-`.`/`[]`/`!`/`?.()` of the same chain and becomes `undefined` at its end -
-ECMAScript's semantics, implemented rather than coincidental.
+`.`/`[]`/`!`/`?.()` of the same chain and becomes `undefined` at its end,
+which is ECMAScript's semantics.
 
 ---
 
@@ -238,11 +239,7 @@ admissibility rules and an implementer will conflate them.
 
 ---
 
-**S-Module** *(Admissibility is decided at two layers, and is scope-dependent)*
-
-The first revision specified only the expression layer.
-
-**S-Module, S-Disqualify** *(The statement gate runs first and disqualifies whole files)*
+**S-Module, S-Disqualify** *(Admissibility is decided at two layers: the statement gate runs first and disqualifies whole files)*
 
 `scanExports` (L1.1–L1.6) recognizes exactly: `export const X = new Type(...)`,
 `export const X = <expr>`, `export const {a, b} = <expr>`, `export {a, b}`,
@@ -270,5 +267,5 @@ A block body with no `return` evaluates to `undefined` (L5.7).
 
 A **composite factory** is admissible under rules 3–5 of the same
 shape, except that its body **must** end in `return` and an empty body is
-rejected (L7.4). The two subsets differ on exactly this point and the spec
-should say why, or fix one.
+rejected (L7.4). The two subsets differ on exactly this point, and the
+difference is open.

@@ -6,13 +6,13 @@ Draft for #52. The claim in a page, narrowed to what the evidence supports.
 
 Infrastructure and build configuration is increasingly written in a general-purpose language, and then must not be run: a build that executes its own configuration is a build whose output cannot be reproduced or audited line by line. The standard answer is to invent a language. Every widely used configuration language defines a total one in which unsupported source is a syntax error; `related-work.md` tabulates six of them.
 
-This paper describes a different answer, specified and implemented: carve a fragment out of TypeScript whose value is fixed by its source, reduce source inside the fragment to data without executing it, and let source outside the fragment fall back to real execution, with the two paths required to agree. This is offline partial evaluation with a binding-time analysis, where the shape classifier is the analysis and the reducer is the specialiser.
+This paper describes a different answer, specified and implemented: carve a fragment out of TypeScript whose value is fixed by its source, reduce source inside the fragment to data without executing it, and let source outside the fragment fall back to real execution, with the two paths required to agree. This is offline partial evaluation with a binding-time analysis, where the shape classifier is the analysis and the reducer is the specializer.
 
 Graceful fallback from static evaluation to execution is not itself new; compile-time function execution has it per call site and per-page static optimisation has it per page. What is new is the combination of per-file granularity with shared object identity across the fold and run boundary, and the bidirectional fixpoint required to keep a shared entity from becoming two objects. We give a specification of that combination, a reference implementation written from it, and a conformance suite that a production system passes alongside the reference.
 
 ## The problem
 
-Configuration as data is auditable: every value traces to a line of source, and the build makes no network call and holds no credential. Configuration as code is expressive: types, imports, refactoring, a language people already know. Existing designs pick one. A configuration language gives up the general-purpose ecosystem; a program that emits configuration gives up the property that made data worth having, because the graph exists only as the output of a run.
+Configuration as data is auditable: every value traces to a line of source, and the build makes no network call and holds no credential. Configuration as code is expressive: types, imports, refactoring, a language people already know. Existing designs pick one. A configuration language gives up the general-purpose ecosystem; a program that emits configuration gives up the property that made data auditable, because the graph exists only as the output of a run.
 
 The fragment approach promises both. Its difficulty is not defining the fragment, which is routine, but defining the edge.
 

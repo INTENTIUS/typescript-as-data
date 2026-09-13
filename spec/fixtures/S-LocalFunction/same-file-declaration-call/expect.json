@@ -15,5 +15,5 @@
       }
     }
   },
-  "note": "A same-file function declaration, not exported, binds a project-local function (spec 1.2, #95). chant's build folded this before the text said so; its classifier and its expression folder still refuse it (chant#2435), which is why this is a whole-build fixture."
+  "note": "A same-file function declaration, not exported, binds a project-local function. Its classifier and its expression folder still refuse it, which is why this is a whole-build fixture."
 }

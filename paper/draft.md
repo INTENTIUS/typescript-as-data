@@ -6,7 +6,7 @@ date: "Draft for comment, September 2026"
 
 ## Abstract
 
-Infrastructure and build configuration is increasingly written in a general-purpose language, and then must not be run, because a build that executes its own configuration has output nobody can reproduce or audit line by line. The usual answer is a configuration language, total by construction, in which unsupported source is a syntax error. This paper specifies and implements a different answer. A fragment of TypeScript is carved out whose value is fixed by its source; source inside the fragment is reduced to data without executing it; source outside it falls back to real execution; and the two paths are required to agree. This is offline partial evaluation with a binding-time analysis, the shape classifier being the analysis and the reducer the specialiser. Fallback from static evaluation to execution is known, per call site in compile-time function execution and per page in static site rendering. What is new is per-file granularity with object identity shared across the boundary, and the bidirectional fixpoint that keeps a shared entity from becoming two objects. We give the specification as a grammar and four judgments with named rules, a reference implementation written from the text, a second evaluator in Rust for the profile that needs no JavaScript runtime, and a conformance suite that a production system passes beside both. Over the 441 files of that system's corpus the reference and the production system agree on every comparable file, and again over a project nobody on the team maintains.
+Infrastructure and build configuration is increasingly written in a general-purpose language, and then must not be run, because a build that executes its own configuration has output nobody can reproduce or audit line by line. The usual answer is a configuration language, total by construction, in which unsupported source is a syntax error. This paper specifies and implements a different answer. A fragment of TypeScript is carved out whose value is fixed by its source; source inside the fragment is reduced to data without executing it; source outside it falls back to real execution; and the two paths are required to agree. This is offline partial evaluation with a binding-time analysis, the shape classifier being the analysis and the reducer the specializer. Fallback from static evaluation to execution is known, per call site in compile-time function execution and per page in static site rendering. What is new is per-file granularity with object identity shared across the boundary, and the bidirectional fixpoint that keeps a shared entity from becoming two objects. We give the specification as a grammar and four judgments with named rules, a reference implementation written from the text, a second evaluator in Rust for the profile that needs no JavaScript runtime, and a conformance suite that a production system passes beside both. Over the 441 files of that system's corpus the reference and the production system agree on every comparable file, and again over a project nobody on the team maintains.
 
 ## 1. Introduction
 
@@ -28,7 +28,7 @@ The corpus is chant's own examples with one small external project beside it. Fi
 
 ### 2.1 Two layers of admissibility
 
-A file is admitted in two stages. The statement gate examines only exported statements and recognises six shapes.
+A file is admitted in two stages. The statement gate examines only exported statements and recognizes six shapes.
 
 | Shape | Example |
 |---|---|
@@ -78,13 +78,13 @@ In every row the classifier decides from syntax while the evaluator consults som
 
 Evaluating a single file yields either a reduction with a complete export namespace, or a fallback with a located reason. The verdict is total per file. Every fallback is reported, since an unreported one is indistinguishable from a reduction and the no-execution guarantee becomes unauditable; the reason names the construct and its position, and a failure inside a called function is re-anchored at the call site.
 
-The verdict is parameterised by an isolation mode with three values. The default, `open`, executes no project code. Under `isolated`, a reduction that would have to invoke project-owned code falls back. Under `executing`, the one opt-in, a project function whose body cannot be reduced is invoked; the fold then carries what a run would have computed in the folding process. Section 6.4 records how this mode came to exist. The verdict is therefore not a pure function of the source.
+The verdict is parameterized by an isolation mode with three values. The default, `open`, executes no project code. Under `isolated`, a reduction that would have to invoke project-owned code falls back. Under `executing`, the one opt-in, a project function whose body cannot be reduced is invoked; the fold then carries what a run would have computed in the folding process. Section 6.4 records how this mode came to exist. The verdict is therefore not a pure function of the source.
 
 All of this is a proposal. The fixpoint makes it final.
 
 ### 2.5 Identity across the boundary
 
-Per-file partial evaluation is unsound when values have identity. Suppose file A reduces and file B falls back, and both refer to an entity that A produced. B's real import of A constructs a second copy, and the build holds two objects for one entity. Each entity is assigned a logical name when the build collects it, and attribute references hold a weak reference to the entity they belong to; only one of two copies is collected, so the other's references reach an entity with no name and serialisation fails, or a reference that should point at the collected entity inlines the uncollected one's value instead. Both were observed before the rule was written.
+Per-file partial evaluation is unsound when values have identity. Suppose file A reduces and file B falls back, and both refer to an entity that A produced. B's real import of A constructs a second copy, and the build holds two objects for one entity. Each entity is assigned a logical name when the build collects it, and attribute references hold a weak reference to the entity they belong to; only one of two copies is collected, so the other's references reach an entity with no name and serialization fails, or a reference that should point at the collected entity inlines the uncollected one's value instead. Both were observed before the rule was written.
 
 The fixpoint closes the tentative verdicts under two edges. The forward edge runs along imports; a running file taints what it imports, because its real import would construct what a folded copy already holds. Along captures runs the backward edge; a file whose objects were captured taints the capturer, because the instance the capturer holds is no longer the one the build collects. Calls carry a third, since a project-local function whose call returns a live object records the same capture. Seeded with every file that would not fold alone, the closure is a least fixpoint over a finite set. Two supporting rules make it sound: each file is evaluated at most once per build, and within a file a call reached through several member accesses is invoked once; without them a capture would record an edge to a copy.
 
@@ -119,13 +119,13 @@ The fixpoint seeds with the one failed file. The forward edge taints `shared-con
 
 A host provides seven things: the classes whose instances are entities and how they expose attributes; an intrinsic registry; an allowlist of authoring helpers; a trust set of packages; a registration form that makes a project-defined factory interpretable; and rules over the folded values, under a contract of their own. A registered call is admitted only if it is a pure function of its arguments and invoking it at fold time is indistinguishable from invoking it during a run, and revival always invokes the function the file imported.
 
-Into a package, reduction goes only through a closed allowlist checked by name and by the provenance of the binding. Into a project file, reduction proceeds whenever the callee's body is itself in the subset, with no allowlist. The asymmetry follows the trust boundary. Package code is already loaded and executed by the build before reduction begins, to obtain the serialisers and lint rules the build cannot run without, so admitting a call into it costs no execution the process was not already performing. Project code is the untrusted input and is admitted only when it can be evaluated without being executed, which a syntactic check of the callee's body decides and an allowlist could not.
+Into a package, reduction goes only through a closed allowlist checked by name and by the provenance of the binding. Into a project file, reduction proceeds whenever the callee's body is itself in the subset, with no allowlist. The asymmetry follows the trust boundary. Package code is already loaded and executed by the build before reduction begins, to obtain the serializers and lint rules the build cannot run without, so admitting a call into it costs no execution the process was not already performing. Project code is the untrusted input and is admitted only when it can be evaluated without being executed, which a syntactic check of the callee's body decides and an allowlist could not.
 
 The generality is over host vocabularies and not over languages. The syntax is TypeScript's and the operator semantics are ECMAScript's, with two departures the specification names.
 
 ### 2.8 Two profiles
 
-Everything above assumes a JavaScript runtime for the files the fold refuses. That assumption is a profile. The specification names it `full` and names a second, `data-host`, for an evaluator with no runtime embedded in a platform written in another language: a refused file is an error; the fixpoint is absent, since nothing runs and nothing can taint; revival is serialisation; helpers and eager intrinsics are absent; a composite is interpreted or refused, never invoked.
+Everything above assumes a JavaScript runtime for the files the fold refuses. That assumption is a profile. The specification names it `full` and names a second, `data-host`, for an evaluator with no runtime embedded in a platform written in another language: a refused file is an error; the fixpoint is absent, since nothing runs and nothing can taint; revival is serialization; helpers and eager intrinsics are absent; a composite is interpreted or refused, never invoked.
 
 The split places the contribution. The identity property and the fixpoint live in `full`, because they exist to keep a folded object and a run object from coexisting. What survives into `data-host` is the expression layer and the per-file verdict, with the value domain and the host interface as a description; that is the portable product. One specification with two profiles is what lets the same rule identifiers govern a JavaScript tool with a fallback and a Rust crate without one.
 
@@ -137,7 +137,7 @@ Reduction yields a value from a closed domain. Six cases are ordinary JSON: scal
 
 | Envelope | Denotes | Fate under revival |
 |---|---|---|
-| `__attrRef` | an attribute of another entity, resolved by the platform at apply | survives to serialisation |
+| `__attrRef` | an attribute of another entity, resolved by the platform at apply | survives to serialization |
 | `__intrinsic` | a registered intrinsic, in tagged-template or call form | revived |
 | `__helper` | a call to a registered authoring helper | revived |
 | `__resource` | a construction, at a file's top level or nested as a value | revived |
@@ -146,19 +146,19 @@ Reduction yields a value from a closed domain. Six cases are ordinary JSON: scal
 
 ![Reduce to envelopes, then revive.](figures/two-phase.svg)
 
-An envelope is a finished value. An attribute reference is the shape the runtime object serialises to, and the value it denotes does not exist at build time on either path. Revival replaces five of the six, resolving each name through the folding file's own imports and invoking the real function or constructor, and only the attribute reference reaches a serialiser; an implementation that emitted a resource envelope has produced wrong output, which a differential across a real corpus caught before the rule was written.
+An envelope is a finished value. An attribute reference is the shape the runtime object serializes to, and the value it denotes does not exist at build time on either path. Revival replaces five of the six, resolving each name through the folding file's own imports and invoking the real function or constructor, and only the attribute reference reaches a serializer; an implementation that emitted a resource envelope has produced wrong output, which a differential across a real corpus caught before the rule was written.
 
-Validity is position-dependent. Inside the arguments of an intrinsic or a helper an attribute reference is refused, because the receiving function inspects what it is given and a look-alike plain object makes it produce wrong output. One position out, in a construction's props, the same value passes, because there the serialiser resolves it by name. So the rule is part of the domain.
+Validity is position-dependent. Inside the arguments of an intrinsic or a helper an attribute reference is refused, because the receiving function inspects what it is given and a look-alike plain object makes it produce wrong output. One position out, in a construction's props, the same value passes, because there the serializer resolves it by name. So the rule is part of the domain.
 
 Liveness is what makes the identity rules statable. A value carries a live object when it or anything reachable through plain objects and arrays has a prototype other than the plain ones, is a function, or carries a host's marker. Live objects reached through cross-file resolution pass through revival untouched, because a generic walk would rebuild them as plain copies and destroy the identity the fixpoint preserves.
 
-Three smaller rules complete the domain. A callable is in the domain and is never a value: `f(x)` reduces where `{ resolver: f }` does not, because nothing can serialise a function. Constructor arity is contractual, so when the argument list is not a props object optionally followed by attributes, the positional list is authoritative. And absence has two forms, `undefined` in a property position being dropped at emission and in an array position becoming `null`, which platforms act on.
+Three smaller rules complete the domain. A callable is in the domain and is never a value: `f(x)` reduces where `{ resolver: f }` does not, because nothing can serialize a function. Constructor arity is contractual, so when the argument list is not a props object optionally followed by attributes, the positional list is authoritative. And absence has two forms, `undefined` in a property position being dropped at emission and in an array position becoming `null`, which platforms act on.
 
 ### 3.2 Three evaluation modes
 
 Envelope, then revive. Reduction records what the source named and executes nothing; a second phase resolves each name through the folding file's own import declarations, imports that module, and invokes the real constructor with the reduced arguments. This is what makes the no-execution claim precise: none of the reduced file's own statements run, and what does run during revival is the module the fallback path would have imported, for the same purpose.
 
-Interpret, without importing. A composite factory is evaluated rather than invoked when it is defined in the project's own source, registered in the form the host recognises, and its body stays inside the factory sub-grammar. Its defining module is never imported. Revival imports and calls; interpretation reads and evaluates. That is what lets a file reduce under isolation, and it has no analogue in the envelope path.
+Interpret, without importing. A composite factory is evaluated rather than invoked when it is defined in the project's own source, registered in the form the host recognizes, and its body stays inside the factory sub-grammar. Its defining module is never imported. Revival imports and calls; interpretation reads and evaluates. That is what lets a file reduce under isolation, and it has no analogue in the envelope path.
 
 Evaluate eagerly. A registered function whose result is coerced to a string during reduction is called at reduction time, because an envelope deferred to revival would stringify as a placeholder; a method call on a real receiver is the same mode. Both run code the file imported. The eager mode exists to serve a coercion, and the specification says so.
 
@@ -210,7 +210,7 @@ Every number names the artifact it comes from and the version it was taken at; a
 
 ### 6.1 The differential and the adversarial entry
 
-chant builds every corpus entry twice, folded and run, and requires identical errors and byte-identical serialised output. The error half was unsound until chant `0.69.1`: a module that threw during import was cached as evaluated under the test runner, so the second build of a directory in one process reported no error. Until chant `0.65.0` the differential compared only entries where every file folded, which are the builds in which the fixpoint does nothing. The twelve mixed entries are the only builds in which `T(B)` is non-empty, and all twelve agree on both errors and bytes.
+chant builds every corpus entry twice, folded and run, and requires identical errors and byte-identical serialized output. The error half was unsound until chant `0.69.1`: a module that threw during import was cached as evaluated under the test runner, so the second build of a directory in one process reported no error. Until chant `0.65.0` the differential compared only entries where every file folded, which are the builds in which the fixpoint does nothing. The twelve mixed entries are the only builds in which `T(B)` is non-empty, and all twelve agree on both errors and bytes.
 
 | Run | Entries | Fully folded | Mixed | Drift |
 |---|---|---|---|---|
@@ -220,7 +220,7 @@ One entry is nine files, each named for a resolution-time decision point and cit
 
 ### 6.2 The execution boundary
 
-A profiling harness expresses one estate in chant and again in CDK, profiles both synths under the JavaScript engine's CPU profiler, and applies one analyser to both.
+A profiling harness expresses one estate in chant and again in CDK, profiles both synths under the JavaScript engine's CPU profiler, and applies one analyzer to both.
 
 | Measurement | chant, folding | `cdk synth` |
 |---|---|---|
@@ -257,7 +257,7 @@ The conformance package runs chant's example corpus through both implementations
 | chant 0.72.1, specification 1.6 | 441 | 440 | 440 | 304 |
 | chant 0.72.3, specification 1.8 | 441 | 440 | 440 | 304 |
 
-A file is comparable when nothing disarmed either implementation before the comparison. Four things did at the first pin and one remains, the single file that imports a package the reference's host cannot load. Two were limits of chant's entry point, 52 files reading a host export that needed a lexicon list and 19 in entries with build parameters the entry could not be given, until chant `0.71.0` took both; one held 290 files reaching a host factory until the reference implemented the call rule; the last held 68 files calling a package export outside a declarator, until specification `1.6` wrote chant's behaviour into the declarator and call rules.
+A file is comparable when nothing disarmed either implementation before the comparison. Four things did at the first pin and one remains, the single file that imports a package the reference's host cannot load. Two were limits of chant's entry point, 52 files reading a host export that needed a lexicon list and 19 in entries with build parameters the entry could not be given, until chant `0.71.0` took both; one held 290 files reaching a host factory until the reference implemented the call rule; the last held 68 files calling a package export outside a declarator, until specification `1.6` wrote chant's behavior into the declarator and call rules.
 
 On 440 files nobody wrote for the purpose the two implementations agree on every verdict, and on the 304 that fold on both sides the namespaces are structurally identical, entity class and properties included. A limit is an over-approximation, so the one file outside the set may hide a disagreement. And chant is the implementation the text was extracted from, so this is agreement between chant and a rewrite written from the text rather than between two independent readings.
 
@@ -267,7 +267,7 @@ Every entry above was written by the people who wrote the folder. A public proje
 |---|---|---|---|---|---|
 | an Infisical deployment | 6 | 31 | 13 | 13 | 5 |
 
-The host limit is large there because the project was written against an older chant, so a package export the pinned release no longer has disarms every file that imports it. The first run found one disagreement: a file whose only declarator called a project function that reads the process environment. chant folded it by invoking the function at fold time, and the fold's output carried whatever the folding shell held. The specification routes a declared function to the project-local call rule, whose ambient read is a pointed rejection, so the file runs. chant `0.72.3` does the same, and specification `1.8` made the old behaviour the opt-in mode of section 2.4.
+The host limit is large there because the project was written against an older chant, so a package export the pinned release no longer has disarms every file that imports it. The first run found one disagreement: a file whose only declarator called a project function that reads the process environment. chant folded it by invoking the function at fold time, and the fold's output carried whatever the folding shell held. The specification routes a declared function to the project-local call rule, whose ambient read is a pointed rejection, so the file runs. chant `0.72.3` does the same, and specification `1.8` made the old behavior the opt-in mode of section 2.4.
 
 The runs found things on the way. The first run had no host and compared seven files, none of which folded on either side. With a host it found a reference bug, the capture walk stopping at an entity's boundary; a specification defect, a rule that read an instance as pre-built that no rule built; and 21 files on which the harness had asked the two implementations different questions. The second exposed 79 more files and 10 disagreed, all in the harness or the reference. The third implemented the call rule and exposed 290, among the fallout a liveness test that was prototype-only where the host's marker was the rule. The fourth settled the last 68 with a rule written to what chant does, after a first draft folded five shapes chant refuses and the fixture cross-check caught it before the corpus could.
 
@@ -296,9 +296,9 @@ Twelve mixed entries and one adversarial build are a small sample from one proje
 
 Compile-time function execution. D, Zig, Rust and C++ evaluate a function at compile time when its inputs are static and at run time otherwise. D's specification states the principle this work relies on, that a function's semantics cannot depend on compile-time values, so the calling context alone decides where it runs; the no-substitution rule is that principle as a rule. CTFE decides per call site where this work decides per file, and a CTFE'd value is copied into the compiled program, so nothing at run time shares identity with a compile-time object. D also treats an unevaluable required context as an error where this work requires a fallback.
 
-Separate partial evaluation. Heldal and Hughes treat a program as modules that can be specialised independently, with the program arriving one module at a time or static data split into data modules with one residual module each. Neither is a per-module choice between specialising and not, and the setting is a functional language without object identity. This reading is from the published abstracts; the full text is a citation to confirm.
+Separate partial evaluation. Heldal and Hughes treat a program as modules that can be specialized independently, with the program arriving one module at a time or static data split into data modules with one residual module each. Neither is a per-module choice between specializing and not, and the setting is a functional language without object identity. This reading is from the published abstracts; the full text is a citation to confirm.
 
-Partial evaluation and binding-time analysis. The shape classifier is a binding-time analysis and the fold is the specialiser in the sense of Jones, Gomard and Sestoft. The per-file verdict with taint is closer to an online decision over a coarse unit, and forcing a folded file back to run is a coarse lift. Multi-stage programming makes staging explicit instead of inferring it.
+Partial evaluation and binding-time analysis. The shape classifier is a binding-time analysis and the fold is the specializer in the sense of Jones, Gomard and Sestoft. The per-file verdict with taint is closer to an online decision over a coarse unit, and forcing a folded file back to run is a coarse lift. Multi-stage programming makes staging explicit instead of inferring it.
 
 Partial evaluation of JavaScript. Prepack evaluates a bundle's global code, captures the heap, and emits a residual program that rebuilds it, with abstract values for what it cannot evaluate and always one program. Its residual-heap visitor emits a shared object once, which is identity within one heap, the case a per-file split gives up.
 
@@ -359,4 +359,4 @@ The subset is not the contribution; six languages have carved one more completel
 
 ## Appendix B. Artifacts
 
-The specification is at version `1.8`, tagged `spec-1.8`, in the typescript-as-data repository under the INTENTIUS organisation. The reference implementation and the conformance suite sit beside it with the Rust evaluator, and the two packages are published to npm at `1.8.0`. Every number in section 6 was taken on 13 September 2026 with chant pinned at `0.72.3` and the corpus at that release's revision, from the corpus report committed there; the external checkouts are pinned by revision in the conformance package's manifest. The documentation site renders every figure from those artifacts at build time, and one of its pages folds a file in the reader's browser with the WebAssembly evaluator.
+The specification is at version `1.8`, tagged `spec-1.8`, in the typescript-as-data repository under the INTENTIUS organization. The reference implementation and the conformance suite sit beside it with the Rust evaluator, and the two packages are published to npm at `1.8.0`. Every number in section 6 was taken on 13 September 2026 with chant pinned at `0.72.3` and the corpus at that release's revision, from the corpus report committed there; the external checkouts are pinned by revision in the conformance package's manifest. The documentation site renders every figure from those artifacts at build time, and one of its pages folds a file in the reader's browser with the WebAssembly evaluator.

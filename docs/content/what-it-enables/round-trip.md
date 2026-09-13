@@ -34,6 +34,6 @@ chant has three generators through one pipeline. `chant import` reads a template
 
 ## Where the rule lives
 
-The completeness half is [`F-Val-Source`](/typescript-as-data/spec/normative/values/), since spec `1.5`: one source form per case of the value domain, each folding back by a rule the table cites.
+The completeness half is [`F-Val-Source`](/typescript-as-data/spec/normative/values/): one source form per case of the value domain, each folding back by a rule the table cites.
 
 The fidelity half is an obligation on generators, stated per profile: a generator's output folds to its input. The `roundtrip` fixture kind tests it. The input is a namespace as data; the generator writes the source; the fold of that source must equal the input. 

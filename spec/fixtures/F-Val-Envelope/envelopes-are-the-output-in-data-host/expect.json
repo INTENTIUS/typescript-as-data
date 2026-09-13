@@ -37,5 +37,5 @@
       }
     }
   },
-  "note": "Three envelopes, recognised by key, as the data-host profile emits them: no fate runs, the envelope is the output. Each is a finished value that denotes something not yet constructed, never a thunk. A helper call is not here because the profile has no helpers: there is nothing to invoke."
+  "note": "Three envelopes, recognized by key, as the data-host profile emits them: no fate runs, the envelope is the output. Each is a finished value that denotes something not yet constructed, never a thunk. A helper call is not here because the profile has no helpers: there is nothing to invoke."
 }

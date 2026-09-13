@@ -15,5 +15,5 @@
       "v": "a!"
     }
   },
-  "note": "The name upper is a registered helper, and the binding comes from a project file. Since 1.7 the binding decides (#126): F-Eval-CallLocal is checked before the registered shapes, so the call is the project function's and folds to its value, which is what the file would compute if run, the function that runs being the one imported (F-Host-NoSubstitution). Until 1.6 the classifier's name-only order applied and both files fell back."
+  "note": "The name upper is a registered helper, and the binding comes from a project file. The binding decides: F-Eval-CallLocal is checked before the registered shapes, so the call is the project function's and folds to its value, which is what the file would compute if run, the function that runs being the one imported (F-Host-NoSubstitution). Until 1.6 the classifier's name-only order applied and both files fell back."
 }

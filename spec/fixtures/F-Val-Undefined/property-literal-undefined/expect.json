@@ -12,5 +12,5 @@
     "a": 1,
     "b": "$undefined"
   },
-  "note": "The key is present in the folded namespace with the value undefined; emission drops it (F-Val-Undefined). A consumer whose contract is selective-by-omission has to know which of the two it is reading, and the namespace keeps the distinction that JSON loses (#82)."
+  "note": "The key is present in the folded namespace with the value undefined; emission drops it (F-Val-Undefined). A consumer whose contract is selective-by-omission has to know which of the two it is reading, and the namespace keeps the distinction that JSON loses."
 }

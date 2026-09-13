@@ -15,14 +15,14 @@ Your tool reads a YAML file. To read a TypeScript file instead, you supply four 
 3. A serializer, if your artifact is not the object itself. For a config loader it usually is.
 4. Rules, if you want checks over the declared values or over what you computed from them. You already have them if you validate a config or gate a plan; the fold gives them real values.
 
-That is the whole cost. The evaluator is a package; the types are yours; nothing about your tool's behaviour after the load changes.
+The evaluator is a package, the types are yours, and your tool behaves the same way after the load.
 
 ## The profile you implement
 
 An evaluator with no JavaScript runtime implements the data-host profile:
 
 - expression evaluation
-- a failed fold as an error, not a fallback
+- a failed fold as an error
 - envelopes as the output
 - no helpers, no live constructors
 

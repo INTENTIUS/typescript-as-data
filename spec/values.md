@@ -1,8 +1,7 @@
 # The value domain
 
 Normative draft. What a fold produces. Rules are `F-Val-*`: the value
-domain is a property of folding's output, not of syntax, so it takes the
-`F-*` prefix. Derived from `FoldedValue` and its cases
+domain is a property of folding's output, so it takes the `F-*` prefix. Derived from `FoldedValue` and its cases
 (`fold.ts:116–300`), `FoldableFunction` (`fold.ts:378`), `carriesLiveObject`
 (`fold.ts:411`), `isFoldSymbolicEnvelope`, and `reviveFoldedValue`
 (`fold-import.ts:2643`), at `e4074c17`.
@@ -30,7 +29,7 @@ Nothing else. In particular no function is a `v` (F-Val-Callable), and no
 live instance is a `v`, a live instance is what an envelope becomes
 (F-Val-Live).
 
-## F-Val-Envelope (six envelopes, recognised by key)
+## F-Val-Envelope (six envelopes, recognized by key)
 
 A value is an *envelope* iff it is a non-array object carrying one of the keys
 `__attrRef`, `__intrinsic`, `__helper`, `__resource`, `__compositeStep`,
@@ -62,14 +61,16 @@ five must never reach a serializer. An implementation that emits a
 
 ## F-Val-Position (validity is position-dependent)
 
-Revival carries a flag `requireLiveRefs`. It is **true** inside the
-arguments of an `__intrinsic` or `__helper`, the receiving function inspects
-what it is given (`instanceof`, `WeakRef` derefs), and there a `__attrRef`
-envelope is **rejected**, not passed (L6.8): a look-alike plain object would
-produce wrong output rather than absent output. It is **false** for the
-arguments of a `__compositeStep` and for a top-level resource's props (L6.9):
-a composite stores its props rather than inspecting them, and the serializer
-resolves the envelope by name.
+Revival carries a flag `requireLiveRefs`.
+
+- **True** inside the arguments of an `__intrinsic` or `__helper`. The
+  receiving function inspects what it is given (`instanceof`, `WeakRef`
+  derefs), so a `__attrRef` envelope is **rejected** there rather than passed
+  (L6.8). A look-alike plain object would produce wrong output rather than
+  absent output.
+- **False** for the arguments of a `__compositeStep` and for a top-level
+  resource's props (L6.9). A composite stores its props rather than
+  inspecting them, and the serializer resolves the envelope by name.
 
 So the same `v` is valid in one position and a rejection in another. A
 specification of the domain alone does not capture this; the rule is part of
@@ -78,12 +79,13 @@ the domain.
 ## F-Val-Live (liveness)
 
 A value *carries a live object* iff it, or anything reachable through plain
-objects and arrays, has a prototype other than `Object`, `Array`, or `null`
-- or is a function (`carriesLiveObject`;, L4.5). Live objects reached
-through cross-file resolution, an `AttrRef` instance, a `Declarable`, a
-`CompositeInstance`, an `Intrinsic` instance, **pass through revival
-unchanged** (L6.1): the generic walk would rebuild a plain copy and destroy
-the identity J3 exists to preserve. `isIntrinsic` is keyed on a global
+objects and arrays, has a prototype other than `Object`, `Array`, or `null`,
+or is a function (`carriesLiveObject`, L4.5).
+
+Live objects reached through cross-file resolution, an `AttrRef` instance, a
+`Declarable`, a `CompositeInstance`, an `Intrinsic` instance, **pass through
+revival unchanged** (L6.1). The generic walk would rebuild a plain copy and
+destroy the identity J3 exists to preserve. `isIntrinsic` is keyed on a global
 `Symbol.for`, so this holds across separately loaded copies of the core.
 
 Liveness is the *entity test* of F-Identity (J3), and is what F-CallLeak
@@ -116,12 +118,13 @@ spreading it, and `props` is reported for readers but never re-passed (L4.2).
 
 `undefined` is a scalar of the domain (L4.3). A property whose value is
 `undefined` is **present** in the folded namespace, with that value, and a
-spread copies it like any other own entry; the namespace therefore keeps the
+spread copies it like any other own entry. The namespace therefore keeps the
 distinction between an absent key and an `undefined` one, which a consumer
-whose contract is selective-by-omission depends on. Emission is where
-the key is dropped, and an `undefined` array element becomes `null` there,
-for both JSON and YAML, because YAML is round-tripped through the JSON
-emitter. For a lexicon that serializes YAML itself, the rule is that
+whose contract is selective-by-omission depends on.
+
+Emission is where the key is dropped, and an `undefined` array element becomes
+`null` there, for both JSON and YAML, because YAML is round-tripped through
+the JSON emitter. For a lexicon that serializes YAML itself, the rule is that
 serializer's own.
 
 ## F-Val-Symbol-Scope (where `__symbol` may appear)
@@ -210,8 +213,6 @@ exist at build time in either path.
 
 **F-Val-Fate, F-Val-Position** *(Exactly one envelope survives to serialization, and its validity is position-dependent)*
 
-This corrects the first revision, which had it backwards.
-
 `reviveFoldedValue` (L6.1–L6.9) resolves every envelope *except* `__attrRef`
 through the folding file's own imports and invokes the real function or
 constructor: `__intrinsic` in both forms (L6.3), `__helper` (L6.4),
@@ -225,7 +226,7 @@ look-alike plain object would produce wrong output rather than absent output.
 Composite-step arguments revive with `requireLiveRefs: false` because a
 composite stores its props rather than inspecting them (L6.9).
 
-So the spec must say: the same value is valid in one position and invalid in
+The same value is therefore valid in one position and invalid in
 another, and which positions are which. A domain definition alone does not
 capture this.
 
@@ -240,7 +241,7 @@ referenced without calling it is refused with "call it instead" (L3.17).
 The specification must therefore define a **serializable sub-domain** and say
 which positions require it.
 
-**F-Val-Live** *(Liveness is observable and the spec must say so)*
+**F-Val-Live** *(Liveness is observable)*
 
 `carriesLiveObject` (L4.5) distinguishes folded data from a live instance by
 prototype, anything other than `Object`/`Array`/`null`, and additionally
@@ -267,17 +268,18 @@ folding file's imports and invokes it.
 **F-Val-Undefined** *(`undefined` is absent, not `null`, in a property; and is `null` in an array)*
 
 The domain admits `undefined` (L4.3). The serializer walker passes it through
-unchanged and keeps the key (`serializer-walker.ts:33`, `:117`); the drop
-happens at emission, and, verified, it happens for both formats because
-YAML is produced by round-tripping the sorted JSON (`build.ts:743–746`), so
-`JSON.stringify` has already removed an `undefined`-valued key and turned an
-`undefined` array element into `null` before any YAML exists. That is what
-makes chant's build-parameters documentation true ("dropped from the output
-in both JSON and YAML rather than shipped as `null`"). Both facts must be
-stated because they are the difference between "absent" and "null", which
-platforms treat differently, and for the six YAML-native lexicons above the
-walker's `undefined` reaches *their* emitter directly, so the rule there is
-each serializer's, not `JSON.stringify`'s.
+unchanged and keeps the key (`serializer-walker.ts:33`, `:117`). The drop
+happens at emission, and it happens for both formats, because YAML is produced
+by round-tripping the sorted JSON (`build.ts:743–746`). `JSON.stringify` has
+already removed an `undefined`-valued key and turned an `undefined` array
+element into `null` before any YAML exists. That is what makes chant's
+build-parameters documentation true ("dropped from the output in both JSON and
+YAML rather than shipped as `null`").
+
+The two facts are the difference between "absent" and "null", which platforms
+treat differently. For the six YAML-native
+lexicons above, the walker's `undefined` reaches *their* emitter directly, so
+the rule there is each serializer's and not `JSON.stringify`'s.
 
 **F-Val-Arity** *(Constructor arity)*
 

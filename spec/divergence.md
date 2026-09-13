@@ -72,8 +72,8 @@ flow-insensitive and requires every operand to be shape-valid (L2.9, L3.13).
 `false && sideEffect()` folds to `false` and is a lint error. *Tolerated
 because:* a flow-sensitive classifier is an evaluator, and the cost of the
 false positive is a visible lint error on code whose untaken branch is
-suspect anyway. The implementation's own module doc calls it a wart, and a
-specification should not launder the word.
+suspect anyway. The implementation's own module doc calls it a wart, and this file keeps the
+word.
 
 **F-Exc-Registry.** Call-form registration without a registry. The
 classifier takes `ρ` as an optional parameter. Given one, its answer for a
@@ -107,23 +107,26 @@ The subset has exactly one definition: `findSubsetViolation` (`subset.ts:289`),
 shared by the folder and by the lint rules EVL001/EVL003 so the linted subset
 and the folded subset cannot drift (L2.*).
 
-**F-Div-*** *(The direction is the requirement, not the agreement)*
+**F-Div-*** *(The direction is the requirement)*
 
 The two consumers have different information. A lint pass has no binding
 resolver and no lexicon registry; the folder has both. The shape-only
 classifier may accept what the resolving evaluator rejects, and must never
-reject what it accepts. Enumerated divergences in that direction: identifier
-resolution (L2.3), tag registration (L2.4), helper provenance (L2.11),
-spread-source runtime type (L3.4, L3.5), a bare identifier bound to a
-same-file construction (L3.8), and, since chant-v0.63.0, a member read whose
-object resolves to `null`/`undefined` (L3.10; shape-valid, folder refuses).
+reject what it accepts.
 
-**F-Exc-Lazy, F-Exc-Registry** *(The two exceptions must be stated, not tidied away)*
+Enumerated divergences in that direction:
 
-1. **Short-circuit laziness** (L2.9, L3.13). The folder evaluates `&&`, `||`,
-   `??` and the conditional lazily; the classifier requires every branch to be
-   valid. The implementation's own module doc calls this a wart.
-2. **Intrinsic call-form registration** (L2.12). The classifier takes the
-   registry as an optional parameter, exact with one, conservatively rejecting
-   without. The parameter exists so a downstream tool can ask "will this fold?"
-   without running a fold.
+- identifier resolution (L2.3),
+- tag registration (L2.4),
+- helper provenance (L2.11),
+- spread-source runtime type (L3.4, L3.5),
+- a bare identifier bound to a same-file construction (L3.8),
+- a member read whose object resolves to `null`/`undefined` (L3.10;
+  shape-valid, folder refuses).
+
+**F-Exc-Lazy, F-Exc-Registry** *(Two exceptions run the other way)*
+
+Both are named and bounded in F-Exc above. Each is tolerated for a reason that
+would cost more to remove than the exception costs: a flow-sensitive
+classifier is an evaluator, and the optional registry parameter is what lets a
+downstream tool ask "will this fold?" without running a fold.

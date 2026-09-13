@@ -20,7 +20,7 @@ Terms are in alphabetical order, one line each. The specification has a vocabula
 | Evaluator | A program that folds files. The reference implementation is one in TypeScript; `tsad-eval` is one in Rust. |
 | Fixture | One test case for one rule: a small file or project and the verdict the specification requires for it. |
 | Fold | Reading a file's values off its text without running the file. The verdict `fold` means that succeeded, and the file's exports are known. |
-| forgejo-warden | A tool that keeps a Forgejo code-hosting organisation in a declared state. It is the first consumer of the reference implementation that is neither this repository nor chant. |
+| forgejo-warden | A tool that keeps a Forgejo code-hosting organization in a declared state. It is the first consumer of the reference implementation that is neither this repository nor chant. |
 | Helper | A small function a host supplies for authoring, such as a string transform, that a folded file may call. |
 | Host | The tool reading the policy, as the specification sees it. A host supplies classes and rules, an intrinsic registry and a trust set of packages; the specification says how each is admitted. |
 | Lexicon | chant's word for a package that supplies the types and classes for one target, such as Kubernetes or AWS. |

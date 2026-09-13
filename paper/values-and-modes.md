@@ -8,7 +8,7 @@ Reduction yields a value from a closed domain (`F-Val-Domain`). Six cases are or
 
 | Envelope | Denotes | Fate under revival |
 |---|---|---|
-| `__attrRef` | an attribute of another entity, resolved by the platform at apply | survives to serialisation |
+| `__attrRef` | an attribute of another entity, resolved by the platform at apply | survives to serialization |
 | `__intrinsic` | a registered intrinsic, in tagged-template or call form | revived |
 | `__helper` | a call to a registered authoring helper | revived |
 | `__resource` | a construction, at a file's top level or nested as a value | revived |
@@ -19,15 +19,15 @@ Reduction yields a value from a closed domain (`F-Val-Domain`). Six cases are or
 
 ### An envelope is a finished value
 
-An `__attrRef` is not a thunk. It is the same shape the runtime object serialises to, and the serialiser accepts it without a live instance. Describing envelopes as *unevaluated* invites an implementation that tries to force them, which is exactly wrong: the value they denote does not exist at build time on either path, and will not until the platform resolves it (`F-Val-Envelope`).
+An `__attrRef` is not a thunk. It is the same shape the runtime object serializes to, and the serializer accepts it without a live instance. Describing envelopes as *unevaluated* invites an implementation that tries to force them, which is exactly wrong: the value they denote does not exist at build time on either path, and will not until the platform resolves it (`F-Val-Envelope`).
 
 ### Exactly one survives
 
-Revival replaces five of the six, resolving each name through the folding file's own imports and invoking the real function or constructor (`F-Val-Fate`). Only `__attrRef` reaches a serialiser. An implementation that emitted a `__resource` envelope has produced wrong output rather than a placeholder, and a differential across a real corpus caught precisely that before the rule was written down.
+Revival replaces five of the six, resolving each name through the folding file's own imports and invoking the real function or constructor (`F-Val-Fate`). Only `__attrRef` reaches a serializer. An implementation that emitted a `__resource` envelope has produced wrong output rather than a placeholder, and a differential across a real corpus caught precisely that before the rule was written down.
 
 ### Validity is position-dependent
 
-Inside the arguments of an intrinsic or an authoring helper, an `__attrRef` is refused rather than passed (`F-Val-Position`). The receiving function inspects what it is given, checking types and dereferencing weak references, and a look-alike plain object makes it produce wrong output rather than absent output. One position out, in a construction's props, the same value passes untouched, because there the serialiser resolves it by name.
+Inside the arguments of an intrinsic or an authoring helper, an `__attrRef` is refused rather than passed (`F-Val-Position`). The receiving function inspects what it is given, checking types and dereferencing weak references, and a look-alike plain object makes it produce wrong output rather than absent output. One position out, in a construction's props, the same value passes untouched, because there the serializer resolves it by name.
 
 The same value is therefore valid in one position and a rejection in another. A definition of the domain alone does not capture that, so the rule is part of the domain rather than a note about it.
 
@@ -41,7 +41,7 @@ This predicate is what makes the identity rules statable at all. Without a defin
 
 Three smaller rules complete the domain.
 
-A **callable** is in the domain and is never a value. A project-local function may be called during reduction, but `{ resolver: f }` does not reduce though `f(x)` does, because nothing can serialise a function (`F-Val-Callable`).
+A **callable** is in the domain and is never a value. A project-local function may be called during reduction, but `{ resolver: f }` does not reduce though `f(x)` does, because nothing can serialize a function (`F-Val-Callable`).
 
 **Constructor arity is contractual.** The common shape is a props object, optionally followed by resource-level attributes. When the argument list is neither, the positional argument list is authoritative and the entity is built by spreading it (`F-Val-Arity`). An implementation that assumed the props object comes first would construct a real lexicon's parameter type wrongly.
 
@@ -65,7 +65,7 @@ This two-phase shape is what makes the no-execution claim precise. What is guara
 
 ### Interpret, without importing
 
-A composite factory is *evaluated* rather than invoked when three things hold (`F-Call` step 4, `F-Host-Composite`): it is defined in the project's own source, registered in the form the host recognises, and its body stays inside the narrower factory sub-grammar. Its defining module is never imported at all.
+A composite factory is *evaluated* rather than invoked when three things hold (`F-Call` step 4, `F-Host-Composite`): it is defined in the project's own source, registered in the form the host recognizes, and its body stays inside the narrower factory sub-grammar. Its defining module is never imported at all.
 
 ```
 source        export const web = WebApp({ tier: "prod" })
@@ -85,4 +85,4 @@ eager         call matrix now, because the template coerces its result
               before any revival would run
 ```
 
-Both run code the file imported rather than code it wrote, so both stay inside `F-NoOwnExecution`. Their existence is an admission worth keeping: the eager mode is there to serve a coercion, not because eagerness is independently right, and the specification says so.
+Both run code the file imported rather than code it wrote, so both stay inside `F-NoOwnExecution`. Their existence is an admission the specification keeps: the eager mode is there to serve a coercion, and eagerness is not independently right.

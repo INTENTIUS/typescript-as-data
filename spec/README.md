@@ -10,8 +10,8 @@ J4 properties and observables), [`values.md`](./values.md) (`F-Val-*`),
 (`F-Rule-*`). Each ends with a non-normative
 Rationale section. [`inventory.md`](./inventory.md) is the coverage ledger.
 Every decision point in chant core cites the rule that governs it, and CI
-gates on it. [`prior-art.md`](./prior-art.md) asks whether the novelty claim
-stands and answers it in a narrowed form.
+gates on it. [`prior-art.md`](./prior-art.md) surveys the neighboring systems
+and says where each one is nearest.
 
 ## Process rules for the specification itself
 
@@ -36,7 +36,7 @@ working practice since the first cross-check and was written down nowhere.
 implementation has no answer to give, for want of a host or of a form it does
 not implement, the difference is counted under a named limit and reported
 apart from the agreement figure. Folding it into drift overstates what the comparison
-established, in the direction that flatters this document. The corpus
+established. The corpus
 cross-check names two such limits and counts each of them.
 
 **A generator's output is in the subset and folds to its input**.
@@ -70,7 +70,7 @@ docs-parity gate on chant's side fails on one older than that. A
 provisional change is not conformance-tested until the rule exists here, and
 chant's documentation may not describe it as supported until then.
 
-**What this costs chant**, stated so it is accepted rather than discovered:
+**What this costs chant**, stated up front:
 the subset can no longer change by editing code and a comment. That is the
 price of the paper being able to call this a specification, and of the
 conformance suite testing chant against a document chant cannot invalidate
@@ -111,13 +111,13 @@ adapter carries `specVersion`, and the suite compares the reference
 implementation's declaration against `VERSION` so the two cannot drift
 apart unnoticed. chant declares its version in its own tree (its docs gate is
 where a stale declaration is caught); an implementation that declares none
-is reported as such, not assumed current.
+is reported as undeclared.
 
 **What the paper cites** is one version, by tag, and the artifact is this
 repository at that tag (`paper/README.md`). Numbers in the paper that
 depend on the rule set say which version produced them.
 
-**How a change is proposed.** As an issue here labelled `area:spec` that
+**How a change is proposed.** As an issue here labeled `area:spec` that
 carries the rule text with its identifier and the fixture that would pin it.
 It lands spec-first and then in implementations, as the ownership section
 says. The one exception is chant's provisional path above, which a release
@@ -156,9 +156,9 @@ A host supplies seven things, listed under `F-Host-Interface` in
 - the registration form that makes a project-defined factory interpretable
 - rules over the folded values
 
-chant's lexicons are one instantiation of it. The generality this buys is generality over **host vocabularies**, not
-over languages. A reader who infers language portability from "parameterized
-by a host" has been misled, and the specification should not let them.
+chant's lexicons are one instantiation of it. The generality this buys covers
+**host vocabularies** and stops there. "Parameterized by a host" reaches no
+further.
 
 ### What another language would reuse
 
@@ -178,10 +178,11 @@ TypeScript's node kinds, and ECMAScript coercion.
 The reference implementation covers all three judgments, with revival through
 a host's real constructors, and declares the `full` profile at the version in
 `VERSION`. With an empty host it is also an implementation of `data-host`
-without `new`, and the suite judges it on that profile's fixtures too. What it
-does not cover is `packages/reference/CAVEATS.md`, where the one gap is F-Call
-step 6 in open mode: invoking a project module. A reader should not assume the
-reference is complete.
+without `new`, and the suite judges it on that profile's fixtures too.
+
+What it does not cover is `packages/reference/CAVEATS.md`, where the one gap
+is F-Call step 6 in open mode: invoking a project module. Read the conformance
+numbers with that partiality in mind.
 
 
 ## Identifiers
@@ -205,7 +206,7 @@ Two families of identifier, and the family is part of the meaning:
 | `F-Rule-` | rules.md |
 
 Names are `Prefix-CamelWords`, no digits in the name part, specific enough to
-read alone (`F-Eval-Member`, not `F-Eval-3`). A rule with numbered steps is
+read alone, like `F-Eval-Member`. A rule with numbered steps is
 cited as `F-Eval-Member step 4`; the step number is not part of the
 identifier.
 

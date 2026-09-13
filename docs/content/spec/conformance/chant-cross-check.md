@@ -13,36 +13,28 @@ The pin is a real dependency. `@intentius/chant` is in this repository's
 `packages/conformance/src/adapters/chant.ts` reaches it through its public
 entry only: `fold`, `foldProject`, `collectConsts`, `FoldError`, and, since
 `chant-v0.64.0`, `findSubsetViolation` for the shape half. What the suite tests is the version a user would install. With
-an older pin, the adapter would report shape `"unavailable"` rather than
-guessing.
+an older pin, the adapter would report shape `"unavailable"`.
 
 ## What it asserts
 
-**The pinned implementation passes every fixture through its public fold
-API.** The same `runFixtures` pass the reference goes through, with the chant
-adapter.
+Five things. Three go through `compareAdapters`, which ignores what a fixture
+expects and asks only whether the two implementations answer the same.
 
-**It agrees with the reference on every fixture.** This is `compareAdapters`,
-which ignores what the fixture expects and asks whether the two implementations
-answer the same. A fixture could be wrong about both of them and this test
-would still have something to say.
-
-**Nothing whole-build is skipped.** Since `chant-v0.72.0` the adapter
-hands chant the fixture's host as a package outside the lexicon convention
-(chant#2438). The test asserts that no project fixture was skipped. A fixture chant cannot
-answer yet is held out by name against the issue that says why, so a new
-fixture citing the same rule is compared rather than excused, and a guard
-asserts the reason still stands. The four round-trip fixtures skip,
-chant having no generator yet.
-
-**On whole-build fixtures the two still agree.** `compareAdapters` again,
-restricted to project fixtures. On those it compares the final verdict, the
-tentative verdict and the taint source. A seed and a taint casualty both
-produce `run`, so the verdict alone cannot tell them apart.
-
-**The shape classifier is available and agrees on every fixture.** The pinned
-release carries the export, so `"unavailable"` there would be a regression. It
-is asserted rather than assumed.
+- The pin passes every fixture through its public fold API, the same
+  `runFixtures` pass the reference goes through.
+- It agrees with the reference on every one. A fixture could be wrong about
+  both and this check would still have something to say.
+- Nothing whole-build is skipped. The adapter hands chant the fixture's host as
+  a package outside the lexicon convention, so a fixture naming a host reaches
+  it like any other. A fixture chant cannot answer yet is held out by name
+  against the issue that says why, and a guard asserts the reason still stands.
+  The four round-trip fixtures skip, chant having no generator.
+- On whole-build fixtures the two still agree. A seed and a taint casualty both
+  produce `run`, so the comparison reaches past the final verdict to the
+  verdict before taint and to the taint source.
+- The shape classifier is available and agrees. The pinned release carries the
+  export, so `"unavailable"` would be a regression, and it is asserted rather
+  than assumed.
 
 ## What it establishes
 

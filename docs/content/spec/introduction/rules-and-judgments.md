@@ -45,7 +45,7 @@ proposition with a proof obligation, and the two tolerated exceptions are
 `F-Exc-Lazy` and `F-Exc-Registry`.
 
 Names are `Prefix-CamelWords` with no digits in the name part, and are meant to
-be specific enough to read alone: `F-Eval-Member`, not `F-Eval-3`. Numbered steps are cited as in
+be specific enough to read alone, like `F-Eval-Member`. Numbered steps are cited as in
 `F-Eval-Member step 4`, and the step number is not part of the identifier.
 
 An identifier names one rule for the life of the specification. When a rule is
@@ -80,19 +80,21 @@ cites both.
 ### J2, the per-file verdict
 
 Written `B, ι ⊢ f ⇓ fold(X, L) | run(reason)`. A file is a program that ends
-holding its exported values; `fold` means the values were computed from the
-source without executing it, and `run` means the build executes the file with
-the JavaScript engine and takes what the exports hold when it finishes. The
-artifact is the same; `run` is the fallback, and its `reason` names the line
-that made the file a program rather than data. The isolation mode is
-`ι ∈ {open, isolated, executing}`; `open` is the strict default.
+holding its exported values. `fold` means they were computed from the source
+without executing it; `run` means the build executes the file and takes what
+the exports hold when it finishes.
+
+The artifact is the same either way. `run` is the fallback, and its `reason`
+names the line that made the file a program rather than data. The isolation
+mode `ι` is one of `open`, `isolated` and `executing`, `open` being the strict
+default.
 
 The verdict is evaluated per file, without regard to other files' verdicts
 except through `F-Import`. It is *tentative*, and J3 is what makes it final.
 
 ### J3, the identity-taint fixpoint
 
-This is the judgment with no obvious precedent, and `spec/judgments.md` says
+This is the judgment with no precedent found, and `spec/judgments.md` says
 why it has to exist. Per-file partial evaluation is unsound in the presence of
 object identity unless something makes it sound. If file `A` folds and file `B`
 runs, and both refer to an entity that `A` produced, then `B`'s real import of
@@ -107,18 +109,23 @@ and `spec/judgments.md` calls this judgment the price of that.
 A build is `B = (F, →, P)`. That is the finite set of discovered project
 files, the import and re-export edges between them, and the build-parameter
 binding.
+
 J3 takes J2's tentative verdicts as its seed and computes `T(B)`, the least
-set containing that seed and closed under two kinds of edge. `F-Seed` is every
-file whose tentative verdict was `run`, and nothing else ever enters the seed.
-`F-Succ` propagates taint from a tainted file `f` in two directions at once:
-*forward along imports*, to every `g` that `f` imports, because `f`'s real
-import of `g` would construct a second copy of `g`'s entities; and *backward
-along captures*, to every `c` that captured `f`'s objects, because the instance
-`c` captured while folding is no longer the instance the build collects.
-`F-Verdict` then says a file folds if and only if it is not in `T(B)`, and
-`F-Fix` states `T(B)` as the least fixpoint of a monotone operator on a finite
-lattice, so an implementation is free to compute it by any means rather than by
-the worklist the wording suggests.
+set containing that seed and closed under two kinds of edge. Four rules state
+it:
+
+- `F-Seed`, every file whose tentative verdict was `run`. Nothing else ever
+  enters the seed.
+- `F-Succ`, which propagates taint from a tainted file `f` in two directions
+  at once. *Forward along imports*, to every `g` that `f` imports, because
+  `f`'s real import of `g` would construct a second copy of `g`'s entities.
+  *Backward along captures*, to every `c` that captured `f`'s objects, because
+  the instance `c` captured while folding is no longer the instance the build
+  collects.
+- `F-Verdict`, which says a file folds if and only if it is not in `T(B)`.
+- `F-Fix`, which states `T(B)` as the least fixpoint of a monotone operator on
+  a finite lattice, so an implementation may compute it by any means rather
+  than by the worklist the wording suggests.
 
 `F-Identity` is the rule that keeps the two identity predicates in this
 specification apart. The *entity test* recurses through plain objects and
@@ -137,8 +144,8 @@ bounded and named, and all of it is code the file imported rather than code the
 file wrote.
 
 `F-Depth` requires an implementation to bound three recursions and lets it
-choose the values, which must be stated. Exhaustion must produce `run`, never a
-failure and never a silent change of evaluation mode.
+choose the values, which must be stated. Exhaustion must produce `run`, and a
+failure or a silent change of evaluation mode is a violation.
 
 `F-Obs-Counters`, `F-Obs-Report`, `F-Obs-Provenance` and `F-Obs-Messages` are
 the observability rules. A conforming implementation reports, per file, the
