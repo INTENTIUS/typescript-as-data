@@ -19,7 +19,14 @@ That is the whole cost. The evaluator is a package; the types are yours; nothing
 
 ## The profile you implement
 
-An evaluator with no JavaScript runtime implements the data-host profile: expression evaluation, the per-file verdict with a failed fold as an error rather than a fallback, envelopes as the output, no helpers, no live constructors. An envelope is the placeholder object the fold writes for a resource, an intrinsic call or an attribute reference it cannot construct without code; your serializer maps it. It is `F-Profile-DataHost` in [the judgments](/typescript-as-data/spec/normative/judgments/), a table of subtractions from the full specification, and the reference with an empty host is judged on it.
+An evaluator with no JavaScript runtime implements the data-host profile:
+
+- expression evaluation
+- a failed fold as an error, not a fallback
+- envelopes as the output
+- no helpers, no live constructors
+
+An envelope is the placeholder the fold writes for a resource, an intrinsic call or an attribute reference it cannot construct without code; your serializer maps it. The profile is `F-Profile-DataHost` in [the judgments](/typescript-as-data/spec/normative/judgments/), a table of subtractions from the full specification, and the reference with an empty host is judged on it.
 
 ## Conformance
 

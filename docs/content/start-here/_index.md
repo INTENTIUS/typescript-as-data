@@ -11,7 +11,9 @@ This page assumes nothing. If you already write TypeScript and run a deploy tool
 
 Many tools take a file that describes what you want and then make the world match it. A tool that manages a code-hosting organisation reads a file saying which repositories exist and who may merge to them. The file is called a policy or a configuration, and the tool reads it every time it runs.
 
-Almost all such files are written in YAML. YAML is a plain text format for structured settings. Indentation shows nesting, a colon separates a name from its value, and a dash starts a list item. It is easy to read and it has no way to check itself. A misspelt key is silently ignored. The same block repeated twenty times has to be copied twenty times, and a change to it has to be made twenty times.
+Almost all such files are written in YAML, a plain text format for structured settings: indentation shows nesting, a colon separates a name from its value, a dash starts a list item.
+
+It is easy to read and has no way to check itself. A misspelt key is silently ignored. A block repeated twenty times is copied twenty times, and changed twenty times.
 
 ## What TypeScript is, and why it helps here
 
@@ -23,7 +25,9 @@ Written in TypeScript, the policy above is a value with a declared type. A repea
 
 A TypeScript file is a program. That is the catch. A program can do anything when it runs, so a tool that ran your policy to read it would be running your code, with whatever that code does.
 
-This project is about the other way of reading it. When a file only lists values, a tool can read them off the text without running the file at all, and the specification calls that **folding**. When a file does more than list values, the tool hands it to the JavaScript engine and takes whatever the exports hold when the program finishes; the specification calls that **running**, and it is the fallback. The YAML the tool writes is the same either way. What differs is whether the tool had to execute your file to produce it, and the point of the site is that folding is the normal case, running the exception, and the two always agree when both are possible.
+There is another way to read it. When a file only lists values, a tool can read them off the text without running it, and the specification calls that **folding**. When a file does more, the tool hands it to the JavaScript engine and reads the exports once the program finishes, which the specification calls **running**.
+
+The YAML is the same either way. What differs is whether your file was executed to produce it. Folding is the normal case, running the fallback, and where both are possible they agree.
 
 ## What you need on your machine
 
