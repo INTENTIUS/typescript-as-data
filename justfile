@@ -26,5 +26,11 @@ corpus repo:
     TSAD_CHANT_REPO={{repo}} npm run corpus
 
 # Pack both packages, install them into a fresh directory, run the suite there.
-smoke:
+smoke-published:
     npm run smoke:published
+
+# The smokeable claims (#146): `just smoke` lists them, `just smoke <claim>`
+# runs one against a throwaway Forgejo on Docker Compose, and `BREAK=1 just
+# smoke <claim>` watches it catch the broken case. Needs Docker and Node.
+smoke claim="":
+    bash scripts/smoke.sh {{claim}}

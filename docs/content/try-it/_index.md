@@ -85,7 +85,16 @@ another dry-run, and show me the drift. Finish with `npm run e2e:down`.
 
 The policy is data. Nothing in it ran, and nothing needed to; the plan is computed from the declared values and the live org. `--config-mode check` folds the file and also runs it, and refuses if the two disagree, which is the guarantee made visible. Deletes were never proposed, because nothing was marked `owned`. The same file works against Codeberg or any self-hosted Forgejo by changing `--base-url`.
 
-To see the evaluator itself with nothing installed, [fold a file in your browser](/typescript-as-data/try-it/in-the-browser/).
+To see the evaluator itself with nothing installed, [fold a file in your browser](/typescript-as-data/try-it/in-the-browser/). To watch one claim hold on the same sandbox and then watch it catch the broken case, run a scenario:
+
+```bash
+git clone https://github.com/INTENTIUS/typescript-as-data && cd typescript-as-data
+just smoke                       # lists the four claims
+just smoke no-execution          # one claim, one verdict line per step
+BREAK=1 just smoke no-execution  # the same, with the setup sabotaged
+```
+
+Each claim page names its scenario and the lines it prints.
 
 [A workflow](https://github.com/INTENTIUS/typescript-as-data/blob/main/.github/workflows/demo.yml) runs these six steps every week against the same sandbox, with the policy cut out of this page by `scripts/demo.sh`, so the page cannot rot.
 

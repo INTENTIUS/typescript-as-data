@@ -1,0 +1,14 @@
+{{- /* The smokeable claims (#146) from data/smoke.json, written by scripts/smoke-record.sh in the weekly demo workflow: one row per claim, the plain verdict and whether BREAK=1 was caught, with the run's commit and date. */ -}}
+{{- $s := hugo.Data.smoke -}}
+{{- if not $s }}{{ errorf "data/smoke.json is missing; run scripts/smoke-record.sh or restore the committed file" }}{{ end -}}
+<div class="table-wrap">
+<table>
+<thead><tr><th>Claim</th><th>Command</th><th>Held</th><th>Broken case caught</th></tr></thead>
+<tbody>
+{{- range $s.claims }}
+<tr><td>{{ .title }}</td><td><code>{{ .command }}</code></td><td>{{ .verdict }}</td><td>{{ .break }}</td></tr>
+{{- end }}
+</tbody>
+</table>
+</div>
+<p>Last run at <code>{{ $s.commit }}</code> on {{ $s.date }}, against forgejo-warden <code>{{ $s.warden }}</code>.</p>

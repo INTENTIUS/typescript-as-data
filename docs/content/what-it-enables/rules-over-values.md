@@ -19,6 +19,21 @@ A **pre-synthesis** rule reads the declared values of every file in the build be
 
 Beyond the phase, the contract fixes what a check reports. A finding names the rule that fired, the subject it fired on, a path into the value and a severity, and, where the host tracks provenance, the source line it came from. That shape is what makes a finding actionable by a person reading it or by an agent asked to fix it: an assistant handed the finding knows which rule and which value, and can propose the edit.
 
+## See it hold
+
+forgejo-warden's removal cap is a rule over values with a scenario behind it. Paste this to an agent, or type the two commands yourself.
+
+```text
+Clone https://github.com/INTENTIUS/typescript-as-data. Confirm Docker is
+running (docker info) and Node 22 or later is installed. From the repo root
+run `just smoke rules-over-values` and explain each SMOKE verdict line to me
+as it prints. Then run `BREAK=1 just smoke rules-over-values` and report the
+"caught" line: a plan that would remove three of four owned variables is
+blocked by the removal cap before anything is applied.
+```
+
+The steps, in the order they print. Five owned variables exist on the org and the policy declares four; the plan removes one, which is under the cap, and it applies. Under `BREAK=1` the policy declares one and the plan would remove three of the four left; the guardrail blocks the apply with the fraction it computed, so all four variables are still there.
+
 ## Who has it today
 
 chant's lexicons carry rules over values for each target, running over the folded values. The AWS lexicon knows which resource combinations are incoherent and the Kubernetes lexicon knows a container's hardening rules. forgejo-warden runs both phases without calling them that. Its config loader validates the declared policy with the exact field path on a bad shape, and its guardrails (`removalDeltaCap`, `adminFloor`) run over the computed plan before any apply.

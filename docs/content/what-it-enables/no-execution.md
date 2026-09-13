@@ -13,6 +13,19 @@ The artifact is a function of the source. The same file gives the same output on
 
 The user never has to think about folding, and meets it as a lint. The editor says at the keystroke whether the file is data and points at the line that makes it not data. That lint is the shape classifier, the `S-*` rules of the grammar, and it needs no evaluator to run.
 
+## See it hold
+
+```text
+Clone https://github.com/INTENTIUS/typescript-as-data. Confirm Docker is
+running (docker info) and Node 22 or later is installed. From the repo root
+run `just smoke no-execution` and explain each SMOKE verdict line to me as it
+prints. Then run `BREAK=1 just smoke no-execution` and report the "caught"
+line: the same file is run instead of folded, and the marker it writes
+appears.
+```
+
+The steps, in the order they print: the policy carries a `writeFileSync` at top level; the fold produces the plan for the repo setting it declares; the marker file does not exist, because the fold read the file and ran none of it. Under `BREAK=1` the same file goes through `--config-mode run` and the marker appears, which is what the third step's check would have caught.
+
 ## Who has it today
 
 chant folds every file it can and measures that it executed nothing. Its `test/leftness` profile reports project code executed `false` and 0 MB of definition-library code on the path, against about 1.7 MB for `cdk synth` on the same estate. Source outside the subset takes the run path in a sandbox, one file at a time.
