@@ -41,14 +41,7 @@ Read at a pinned revision by `scripts/fetch-corpus-external.sh` from `corpus-ext
 
 | Checkout | Revision | Entries | Files | Comparable | Agreed | Both fold | No host | No invocation |
 |---|---|---|---|---|---|---|---|---|
-| `jhgaylor/home-cloud` | `7c7868cc` | 16 | 19 | 12 | 12 | 9 | 7 | 0 |
 | `jhgaylor/infisical-chant` | `91cdf130` | 6 | 31 | 13 | 13 | 5 | 18 | 0 |
-
-### `jhgaylor/home-cloud`
-
-A home Kubernetes estate: sixteen apps and a platform aggregate, each with its own chant.config.ts and build parameters, on the k8s lexicon. Written against chant 0.44.
-
-No disagreements inside the comparable set.
 
 ### `jhgaylor/infisical-chant`
 
@@ -169,22 +162,6 @@ No disagreements inside the comparable set.
 | `lexicons/k8s/examples/org-policy` | 1 | 1 | 1 | 0 | 0 |
 | `lexicons/k8s/examples/statefulset` | 1 | 1 | 1 | 0 | 0 |
 | `lexicons/k8s/examples/web-platform` | 6 | 6 | 6 | 0 | 0 |
-| `jhgaylor/home-cloud/apps/bambuddy` | 2 | 2 | 2 | 0 | 0 |
-| `jhgaylor/home-cloud/apps/behold` | 1 | 1 | 1 | 0 | 0 |
-| `jhgaylor/home-cloud/apps/buzz` | 1 | 1 | 1 | 0 | 0 |
-| `jhgaylor/home-cloud/apps/calcom` | 1 | 0 | 0 | 1 | 0 |
-| `jhgaylor/home-cloud/apps/cloudflared` | 1 | 1 | 1 | 0 | 0 |
-| `jhgaylor/home-cloud/apps/engram` | 1 | 1 | 1 | 0 | 0 |
-| `jhgaylor/home-cloud/apps/estate-dispatcher` | 1 | 0 | 0 | 1 | 0 |
-| `jhgaylor/home-cloud/apps/garage` | 1 | 1 | 1 | 0 | 0 |
-| `jhgaylor/home-cloud/apps/hello-chant` | 1 | 1 | 1 | 0 | 0 |
-| `jhgaylor/home-cloud/apps/mealie` | 1 | 0 | 0 | 1 | 0 |
-| `jhgaylor/home-cloud/apps/mem0` | 1 | 0 | 0 | 1 | 0 |
-| `jhgaylor/home-cloud/apps/ntfy` | 1 | 0 | 0 | 1 | 0 |
-| `jhgaylor/home-cloud/apps/openclaw` | 1 | 1 | 1 | 0 | 0 |
-| `jhgaylor/home-cloud/apps/printit` | 1 | 1 | 1 | 0 | 0 |
-| `jhgaylor/home-cloud/apps/radicale` | 1 | 0 | 0 | 1 | 0 |
-| `jhgaylor/home-cloud/chant` | 3 | 2 | 2 | 1 | 0 |
 | `jhgaylor/infisical-chant/.` | 16 | 7 | 7 | 9 | 0 |
 | `jhgaylor/infisical-chant/src/infisical-app` | 3 | 1 | 1 | 2 | 0 |
 | `jhgaylor/infisical-chant/src/infisical-db` | 3 | 1 | 1 | 2 | 0 |

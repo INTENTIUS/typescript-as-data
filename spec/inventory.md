@@ -126,7 +126,7 @@ The second phase. Resolves envelope names through the **folding file's own impor
 
 | # | Decision | Behaviour | Covers |
 |---|---|---|---|
-| L6.1 | live object passthrough | `AttrRef`, `Declarable`, `CompositeInstance`, `Intrinsic` returned unchanged; the generic walk would destroy identity | F-Val-Live |
+| L6.1 | live object passthrough | `AttrRef`, `Declarable`, `CompositeInstance`, `Intrinsic` returned unchanged; the generic walk would destroy identity. The declarable marker is tested by identity: chant carries seven marker symbols, and a test for any own symbol admits an `Intrinsic` or a `StackOutput` as an entity (chant#2444). The reference's broader test is safe only because its host has one marker kind | F-Val-Live |
 | L6.2 | `{__symbol}` | resolved via `SIMPLE_DOTTED_CHAIN` regex, then real property access | F-Val-Fate, F-Val-Symbol-Scope |
 | L6.3 | `{__intrinsic}` | **revived**; real function resolved and invoked, both tag and call form | F-Val-Fate |
 | L6.4 | `{__helper}` | revived | F-Val-Fate |

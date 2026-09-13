@@ -15,7 +15,7 @@ Terms are in alphabetical order, one short entry each. A term in code font is wr
 | chant | The infrastructure toolchain the specification was extracted from. It is an implementation of the specification and declares which version. |
 | Composite | A project-defined factory that a host has registered, so the tool can evaluate its body from source rather than running it. |
 | Conformance | Whether an implementation gives the verdicts the specification requires. The conformance suite is the set of fixtures and the runner that checks an implementation against them. |
-| Corpus | A body of real projects that nobody wrote for testing, run through two implementations to see whether they agree. chant's example projects are one; two projects nobody here maintains are another. |
+| Corpus | A body of real projects that nobody wrote for testing, run through two implementations to see whether they agree. chant's example projects are one; a project nobody here maintains is another. |
 | Data-host profile | The subset of the specification an implementation with no JavaScript runtime implements. It reads files and never runs anything, so an envelope is its output. |
 | Declarator | One exported binding in a file, such as `export const policy = …`. A file's verdict is decided one declarator at a time. |
 | Entity | An object a host's class produces, such as a bucket or a repository. It is opaque to the fold and carries its own identity. |

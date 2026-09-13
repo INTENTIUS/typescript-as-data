@@ -2,16 +2,11 @@
   "$comment": "Codebases nobody here maintains, folded through both implementations as their own rows (#129). Each is read at the pinned revision by scripts/fetch-corpus-external.sh; nothing is vendored. Every directory holding a chant.config.ts is one entry.",
   "checkouts": [
     {
-      "name": "jhgaylor/home-cloud",
-      "repo": "https://github.com/jhgaylor/home-cloud",
-      "rev": "7c7868cceb186bd5ce9514b375cdd32b62064092",
-      "note": "A home Kubernetes estate: sixteen apps and a platform aggregate, each with its own chant.config.ts and build parameters, on the k8s lexicon. Written against chant 0.44."
-    },
-    {
       "name": "jhgaylor/infisical-chant",
       "repo": "https://github.com/jhgaylor/infisical-chant",
       "rev": "91cdf13039d9959a6185e251112273410fb481c8",
       "note": "An Infisical deployment on the k8s lexicon with a project rule under .chant/rules. Written against chant 0.19, before composites. Its params.ts, a declarator calling a project function that reads process.env, is where chant#2453 was found; since chant 0.72.3 both implementations run it."
     }
-  ]
+  ],
+  "_comment": "Codebases nobody here maintains, folded through both implementations as their own rows (#129). Each must be public: the weekly job fetches it unauthenticated at the pinned revision, and nothing is vendored. Every directory holding a chant.config.ts is one entry."
 }

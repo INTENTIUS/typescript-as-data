@@ -124,7 +124,7 @@ compared there.
 
 Every corpus entry above was written by the people who wrote the folder, and
 chant's own docs say so. `packages/conformance/corpus-external.json` names
-checkouts nobody here maintains, pinned by revision; the weekly job fetches
+public checkouts nobody here maintains, pinned by revision; the weekly job fetches
 them with `scripts/fetch-corpus-external.sh` and runs every directory holding
 a `chant.config.ts` as an entry, with the lexicons, build parameters and
 imported project files a build of that directory would have (#129). Their
