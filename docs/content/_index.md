@@ -1,6 +1,6 @@
 ---
 title: "typescript-as-data"
-description: "Configuration as code, read as data."
+description: "Configuration as code, parsed as data."
 ---
 
 ## A policy in YAML and in TypeScript
