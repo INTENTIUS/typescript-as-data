@@ -20,3 +20,6 @@ packages/*/src/**/*.d.ts.map
 docs/data/figures.json
 # Built by scripts/build-wasm.sh for the docs site
 docs/static/tsad-eval/
+# Cloned by scripts/smoke.sh at demo.yml's pin
+.forgejo-warden/
+smoke-*.log
