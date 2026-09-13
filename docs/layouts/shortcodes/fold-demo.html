@@ -1,4 +1,10 @@
 {{- /* The in-browser fold: the Rust evaluator as WebAssembly, fetched once from static/tsad-eval/ (built by scripts/build-wasm.sh), called through its four exports. */ -}}
+<style>
+.fold-demo textarea, .fold-demo pre { width: 100%; box-sizing: border-box; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; border: 1px solid currentColor; border-radius: 4px; padding: 0.6em; }
+.fold-demo pre { min-height: 6em; white-space: pre-wrap; overflow-x: auto; }
+.fold-demo button { font: inherit; padding: 0.3em 1em; }
+.fold-demo .fold-status { margin-left: 0.6em; }
+</style>
 <div class="fold-demo">
 <textarea id="fold-source" rows="14" spellcheck="false">const owner = "platform";
 const base = { hasWiki: false, allowSquashMerge: true };
@@ -14,8 +20,8 @@ export const policy = {
   },
 };
 </textarea>
-<p><button id="fold-run" type="button">Fold</button> <span id="fold-status">Loading the evaluator once.</span></p>
-<pre id="fold-output"></pre>
+<p><button id="fold-run" type="button">Fold</button><span id="fold-status" class="fold-status">Loading the evaluator once.</span></p>
+<pre id="fold-output">The verdict appears here.</pre>
 </div>
 
 <script type="module">
@@ -24,6 +30,7 @@ const output = document.getElementById("fold-output");
 const source = document.getElementById("fold-source");
 const button = document.getElementById("fold-run");
 let call;
+let evaluator = "";
 async function load() {
   const res = await fetch("/typescript-as-data/tsad-eval/tsad-eval.wasm");
   const bytes = new Uint8Array(await res.arrayBuffer());
@@ -41,12 +48,19 @@ async function load() {
     return JSON.parse(text);
   };
   const v = call({ op: "version" });
-  status.textContent = `${v.name}, spec ${v.specVersion}, profile ${v.profile}, ${WebAssembly.Module.imports(new WebAssembly.Module(bytes)).length} imports.`;
+  evaluator = `${v.name} as WebAssembly, spec ${v.specVersion}, ${WebAssembly.Module.imports(new WebAssembly.Module(bytes)).length} imports`;
+  status.textContent = `Loaded ${evaluator}.`;
 }
+let folds = 0;
 function fold() {
-  if (!call) return;
+  if (!call) { status.textContent = "The evaluator has not loaded yet."; return; }
+  const t0 = performance.now();
   const r = call({ op: "foldProject", files: { "policy.ts": source.value }, host: {} });
-  output.textContent = JSON.stringify(r.verdicts["policy.ts"], null, 2);
+  const ms = (performance.now() - t0).toFixed(1);
+  const v = r.verdicts["policy.ts"];
+  folds += 1;
+  output.textContent = JSON.stringify(v, null, 2);
+  status.textContent = `Fold ${folds}: verdict ${v.kind}${v.kind === "run" ? ` (${v.rule})` : `, ${Object.keys(v.exports).length} export${Object.keys(v.exports).length === 1 ? "" : "s"}`} in ${ms} ms, by ${evaluator}.`;
 }
 button.addEventListener("click", fold);
 load().then(fold).catch((e) => { status.textContent = `The evaluator did not load: ${e.message}`; });
