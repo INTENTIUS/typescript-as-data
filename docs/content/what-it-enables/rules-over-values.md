@@ -5,7 +5,9 @@ weight: 2
 diataxis: explanation
 ---
 
-The editor catches a misspelt key and a value of the wrong kind as you type. That is TypeScript's type checker, worth having and not linting. A type can say a field is a number in a range, and no type can say that `requirePullRequestReviews: true` with `requiredApprovingReviewCount: 0` is a contradiction, or that an owned org has no branch protection on its default branch, because those are conditions over the values, and over several resources at once.
+The editor catches a misspelt key and a value of the wrong kind as you type. That is TypeScript's type checker, worth having and not linting.
+
+A type can say a field is a number in a range. No type can say that `requirePullRequestReviews: true` with `requiredApprovingReviewCount: 0` is a contradiction, or that an owned org has no branch protection on its default branch. Those are conditions over the values, and over several resources at once.
 
 A rule over values is a check over what a project declares. The specification defines no such check. It defines the contract a host's checks run under, [`rules.md`](/typescript-as-data/spec/normative/rules/), which says what a check sees and when it runs, and then what a check may do and what a finding is. chant's lexicon rules and forgejo-warden's guardrails are checks; what they have in common is that contract.
 
@@ -15,9 +17,19 @@ There are two phases, and the fold matters to one of them.
 
 A **post-synthesis** rule reads the emitted artifact. Any tool that emits YAML can run one, from a YAML source or a TypeScript one, and nothing about the fold is needed for it. The contract covers the phase because chant serves both phases from one hook, not because the specification enables it.
 
-A **pre-synthesis** rule reads the declared values of every file in the build before anything is emitted, and that is the phase the fold enables. The values are there without running any project code, so the check is a pure function of the source and can run wherever the fold runs. They are the declared values and not the flattened artifact: a field that refers to another resource's attribute is still a reference at this point, an entity is still one entity wherever it is used, and a rule can say things about that structure which the artifact no longer shows. And the findings are the same whether the build folded the file or ran it, which the contract states as a property.
+A **pre-synthesis** rule reads what every file declares, before anything is emitted. That is the phase the fold enables: the values are there without running project code, so the check is a pure function of the source and runs wherever the fold does.
 
-Beyond the phase, the contract fixes what a check reports. A finding names the rule that fired, the subject it fired on, a path into the value and a severity, and, where the host tracks provenance, the source line it came from. That shape is what makes a finding actionable by a person reading it or by an agent asked to fix it: an assistant handed the finding knows which rule and which value, and can propose the edit.
+It also sees structure the artifact loses. A reference is still a reference at that point, and one entity is still one entity wherever it is used. Its findings are the same whether the file folded or ran, which the contract states as a property.
+
+The contract also fixes what a check reports. A finding names:
+
+- the rule that fired
+- the subject it fired on
+- a path into the value
+- a severity
+- the source line, where the host tracks provenance
+
+That shape is what makes a finding actionable, by a person or by an agent asked to fix it: it says which rule and which value, which is enough to propose the edit.
 
 ## See it hold
 

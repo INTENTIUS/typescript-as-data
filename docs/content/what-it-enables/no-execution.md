@@ -5,7 +5,9 @@ weight: 1
 diataxis: explanation
 ---
 
-A TypeScript file whose values are fixed by its source can be reduced to data by reading it. Nothing executes. No constructor is called, no environment variable is read and no network call happens. The specification calls this folding, and `F-NoOwnExecution` states the property. The alternative is the run path: the build executes the file as a program and takes its exports, which gives the same artifact at the cost of everything below.
+A TypeScript file whose values are fixed by its source can be reduced to data by reading it. Nothing executes: no constructor is called, no environment variable is read, no network call happens. The specification calls this folding, and `F-NoOwnExecution` states the property.
+
+The alternative is the run path: the build executes the file as a program and takes its exports. Same artifact, at the cost of everything below.
 
 ## Consequences
 
