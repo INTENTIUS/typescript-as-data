@@ -31,7 +31,7 @@ The YAML is the same either way. What differs is whether your file was executed 
 
 ## What you need on your machine
 
-The tutorial runs everything on your own computer. You need four things, each installed once.
+The tutorial runs everything on your own computer. You need four things.
 
 A terminal is the program where you type commands. Every operating system ships one.
 
