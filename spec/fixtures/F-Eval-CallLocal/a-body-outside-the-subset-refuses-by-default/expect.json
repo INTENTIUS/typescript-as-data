@@ -1,0 +1,22 @@
+{
+  "rules": [
+    "F-Eval-CallLocal",
+    "F-Call",
+    "S-FnBody"
+  ],
+  "project": true,
+  "verdicts": {
+    "lib.ts": "run",
+    "app.ts": "run"
+  },
+  "rejectRule": {
+    "app.ts": "F-Eval-CallLocal"
+  },
+  "tentative": {
+    "lib.ts": "fold"
+  },
+  "taintedBy": {
+    "lib.ts": "app.ts"
+  },
+  "note": "Strict by default: the same two files as F-Call's executing fixture, judged in open mode. F-Call step 2 routes the call to F-Eval-CallLocal, whose step 1 refuses the body, and nothing imports or invokes twice; the file runs with that reason. lib.ts would fold on its own; app.ts imports it and runs, so the forward edge (F-Succ) takes it along."
+}

@@ -56,7 +56,8 @@ export interface Finding {
 }
 
 /** J2's ι (F-IsolatedRefusal): under `isolated`, no project code is invoked or imported on the fold path. */
-export type IsolationMode = "open" | "isolated";
+/** J2's ι: `open` is the strict default, `isolated` refuses project-owned invocation, `executing` (spec 1.8) opts into invoking a declared project function whose body cannot fold. */
+export type IsolationMode = "open" | "isolated" | "executing";
 
 export interface ConformanceAdapter {
   readonly name: string;

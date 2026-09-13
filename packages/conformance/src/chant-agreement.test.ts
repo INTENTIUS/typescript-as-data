@@ -33,7 +33,19 @@ const hostHelperNames = new Set(["F-Eval-CallHelper/inside-function-body"]);
 // than failed, and held out by name until a release exports them.
 const countersNotPublic = new Set(["F-Obs-Counters/a-build-reports-its-counts"]);
 
-const heldOut = new Set([...hostHelperNames, ...countersNotPublic]);
+// chant#2453 and chant#2455 — spec 1.8 makes the default strict and adds
+// `executing` as the opt-in. At the 0.72.2 pin chant still invokes by
+// default (fixed by chant#2454 for 0.72.3), so it fails the strict fixture
+// and passes the executing one by accident; once 0.72.3 is pinned it passes
+// the strict one and has no option for the other. The pair is held out
+// together and retires only when chant passes both, which needs the release
+// and the build option, so neither can be dropped on a half.
+const executingMode = new Set([
+  "F-Eval-CallLocal/a-body-outside-the-subset-refuses-by-default",
+  "F-Call/executing-invokes-what-the-default-refuses",
+]);
+
+const heldOut = new Set([...hostHelperNames, ...countersNotPublic, ...executingMode]);
 const fixtures = all.filter((f) => !heldOut.has(f.id));
 
 describe("chant cross-check (#11)", () => {
@@ -90,12 +102,13 @@ describe("chant cross-check (#11)", () => {
     // The other kind of hold-out: chant does not disagree, it cannot answer.
     // The guard is the skip itself; once a release exports the counters and
     // the adapter reports them, this fails and the hold-out retires.
-    for (const [reason, names] of [["chant#2446", countersNotPublic]] as const) {
+    for (const [reason, names] of [["chant#2446", countersNotPublic], ["chant#2453 and chant#2455", executingMode]] as const) {
       const held = projectFixtures(all).filter((f) => names.has(f.id));
       expect(held.map((f) => f.id).sort(), `${reason}: a held-out fixture no longer exists`).toEqual([...names].sort());
       const reports = await Promise.all(held.map((f) => runProjectFixture(chantAdapter, f)));
-      const notSkipped = reports.filter((r) => r.skipped !== "counters unavailable").map((r) => `${r.fixture}: ${r.skipped ?? (r.pass ? "answered" : r.failures.join("; "))}`);
-      expect(notSkipped, `${reason} looks settled — drop its hold-out`).toEqual([]);
+      // Settled means every fixture in the list answered and passing; a skip or a failure on any is the hold-out's reason still standing.
+      const allSettled = reports.every((r) => !r.skipped && r.pass);
+      expect(allSettled, `${reason} looks settled — drop its hold-out`).toBe(false);
     }
   });
   test("chant's shape classifier is available (chant-v0.64.0+, chant#2362) and agrees on every fixture", async () => {

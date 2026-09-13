@@ -12,7 +12,7 @@ import { generate, NoSourceForm } from "./generate.js";
  * the helpers, the classes and the live values, items 1, 2, 4 and 6, are
  * absent.
  */
-function hostOf(h: ConformanceHost | undefined, profile: Profile, isolation: "open" | "isolated" = "open"): Host {
+function hostOf(h: ConformanceHost | undefined, profile: Profile, isolation: "open" | "isolated" | "executing" = "open"): Host {
   if (!h) return { ...EMPTY_HOST, profile, isolation };
   const data = profile === "data-host";
   return {
@@ -32,7 +32,7 @@ function adapterFor(profile: Profile): ConformanceAdapter {
   name: profile === "full" ? "reference" : `reference/${profile}`,
   // Bumped by hand when the rule set this package implements moves; the
   // conformance suite fails when it and spec/VERSION disagree (#18).
-  specVersion: "1.7",
+  specVersion: "1.8",
   shape(source, exportName) {
     const v = shapeOfExport(source, exportName, { ...EMPTY_HOST, profile });
     if (v === "no-such-export") return { accepted: false, line: 1, column: 1, message: `no export named ${exportName}` };
@@ -42,6 +42,8 @@ function adapterFor(profile: Profile): ConformanceAdapter {
   },
   foldExport(source, exportName) { return foldExport(source, exportName, { ...EMPTY_HOST, profile }); },
   foldProject(files, host, mode) {
+    // `executing` (spec 1.8) invokes a declared project function; this package never imports or runs project code (CAVEATS.md), so the mode is reported as unavailable rather than answered wrongly.
+    if (mode === "executing") return "unavailable";
     const r = foldProject(files, hostOf(host, profile, mode));
     const out: ProjectResult = { verdicts: {}, tentative: {}, taintedBy: {} };
     for (const [path, v] of r.verdicts) {
