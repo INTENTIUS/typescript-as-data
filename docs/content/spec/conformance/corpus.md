@@ -1,6 +1,6 @@
 ---
 title: "The corpus cross-check"
-description: "Running chant's whole example corpus through both implementations, the one named limit, and what the numbers mean."
+description: "Running chant's whole example corpus through both implementations, the two named limits, and what the numbers mean."
 weight: 5
 aliases: ["/conformance/corpus/"]
 ---
@@ -53,18 +53,19 @@ gives the reason, and it is the same reason the port was removed from the
 reference: a transcription would make the cross-check a test of the
 transcription.
 
-## The one limit
+## The two limits
 
 A file is comparable when nothing disarmed either implementation before the
-comparison started. One thing does, and it is counted apart from the
-agreement figure. `corpus.ts` defines it as a closed union of one and records
-which side it disarms, because a limit can only make its own side refuse more.
+comparison started. Two things do, and each is counted apart from the
+agreement figure. `corpus.ts` defines them as a closed union of two and records
+which side each disarms, because a limit can only make its own side refuse more.
 
 | Limit | Disarms | What it is |
 |---|---|---|
 | `host` | the reference | The reference has no bindings for a package it cannot load. |
+| `invocation` | the reference | A declarator calls a project export that is neither a declared function nor an interpretable composite, so F-Call step 6 would import and invoke it in open mode; the reference never invokes project code. |
 
-That limit is the reference's. chant is given each entry's lexicons and build
+Both limits are the reference's. chant is given each entry's lexicons and build
 parameters through `foldProject`'s options, the inputs a real build has, since
 chant#2422 (#96); before that two more limits stood for what its entry point
 could not be told.
@@ -80,7 +81,10 @@ limited set and also have a real disagreement hiding under it. That is the cost
 of the limit, and it is what bounds the whole measurement.
 
 Limits are decided from syntax and the import table, never from a rejection
-message. Message wording is explicitly non-normative under `F-Obs-Messages`, so
+message. The `invocation` limit reads the callee's declaration in the file the
+import names; a declared function is never a limit, since F-Call step 2 folds
+or refuses it by its body, and a refusal there is a verdict the two
+implementations can disagree on. Message wording is explicitly non-normative under `F-Obs-Messages`, so
 a classifier that read it would silently stop classifying the day the wording
 changed.
 
@@ -117,6 +121,19 @@ and skips accessors, because an accessor can throw and computes a value rather
 than holding one. A namespace holding something with no structural encoding at
 all (a function or a symbol) is reported as `not-data`, and only the verdict is
 compared there.
+
+## Codebases nobody here maintains
+
+Every corpus entry above was written by the people who wrote the folder, and
+chant's own docs say so. `packages/conformance/corpus-external.json` names
+checkouts nobody here maintains, pinned by revision; the weekly job fetches
+them with `scripts/fetch-corpus-external.sh` and runs every directory holding
+a `chant.config.ts` as an entry, with the lexicons, build parameters and
+imported project files a build of that directory would have (#129). Their
+rows sit in their own section of the report and never inside the totals. A
+disagreement found there is triaged to the specification first, like any
+other, and one that survives is recorded in the manifest against its issue and
+asserted to persist, so the excuse cannot outlive its cause.
 
 ## The data-host column
 

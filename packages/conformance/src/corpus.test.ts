@@ -14,25 +14,38 @@ import { fileURLToPath } from "node:url";
 import { chantAdapter } from "./adapters/chant";
 import {
   findChantCheckout, discoverCorpus, runCorpusEntry, summarize, renderCorpusReport,
-  type ChantCheckout, type CorpusSummary, type EntryReport,
+  findExternalCheckouts, discoverExternal,
+  type ChantCheckout, type CorpusSummary, type EntryReport, type ExternalRun,
 } from "./corpus";
 
 const checkout = findChantCheckout();
+const externalCheckouts = findExternalCheckouts();
 
 describe.skipIf(!checkout)("the corpus against both implementations (#25)", () => {
   let reports: EntryReport[];
   let summary: CorpusSummary;
+  const external: ExternalRun[] = [];
 
   beforeAll(async () => {
     const entries = await discoverCorpus(checkout as ChantCheckout);
     reports = [];
     for (const entry of entries) reports.push(await runCorpusEntry(checkout as ChantCheckout, entry));
     summary = summarize(reports);
+    // #129: codebases nobody here maintains, each its own row. A checkout the
+    // manifest names and the directory lacks fails here by name rather than
+    // shrinking the section.
+    for (const ext of externalCheckouts ?? []) {
+      expect(ext.headRevision, `${ext.name} is at ${ext.headRevision}, the manifest pins ${ext.rev}; run scripts/fetch-corpus-external.sh`).toBe(ext.rev);
+      const found = await discoverExternal(checkout as ChantCheckout, ext);
+      const runs: EntryReport[] = [];
+      for (const entry of found) runs.push(await runCorpusEntry(checkout as ChantCheckout, entry));
+      external.push({ checkout: ext, summary: summarize(runs), reports: runs });
+    }
     if (process.env.TSAD_CORPUS_REPORT) {
       const out = resolve(dirname(fileURLToPath(import.meta.url)), "..", "corpus-report.md");
-      writeFileSync(out, renderCorpusReport(checkout as ChantCheckout, { name: chantAdapter.name, specVersion: chantAdapter.specVersion }, summary, reports), "utf8");
+      writeFileSync(out, renderCorpusReport(checkout as ChantCheckout, { name: chantAdapter.name, specVersion: chantAdapter.specVersion }, summary, reports, external), "utf8");
     }
-  }, 600_000);
+  }, 900_000);
 
   test("the data-host column is present and agrees (#86, #116)", () => {
     // A missing evaluator must not read as a clean pass: the column is asserted
@@ -66,6 +79,25 @@ describe.skipIf(!checkout)("the corpus against both implementations (#25)", () =
       (d) => `${d.entry}/${d.file}: chant=${d.chant} reference=${d.reference} values=${d.values ?? "-"} ${d.referenceRule ?? ""} ${d.referenceReason ?? d.chantReason ?? ""}`,
     );
     expect(lines, lines.join("\n")).toEqual([]);
+  });
+
+  test("codebases nobody here maintains are read, compared and agree (#129)", () => {
+    // Skipped, reported, when TSAD_CORPUS_EXTERNAL is unset; the weekly job sets it.
+    if (!externalCheckouts) { expect(process.env.TSAD_CORPUS_NO_EXTERNAL, "no external checkouts: set TSAD_CORPUS_EXTERNAL to the directory scripts/fetch-corpus-external.sh filled, or TSAD_CORPUS_NO_EXTERNAL=1 to skip the section").toBeTruthy(); return; }
+    expect(external.map((x) => x.checkout.name)).toEqual(externalCheckouts.map((x) => x.name));
+    for (const x of external) {
+      expect(x.summary.files, `${x.checkout.name}: no files found`).toBeGreaterThan(0);
+      expect(x.summary.comparable, `${x.checkout.name}: nothing comparable, so the row would agree vacuously`).toBeGreaterThan(0);
+      // A disagreement the manifest triaged to an issue is excused by name and must still be there; one it did not is a failure.
+      const known = x.checkout.disagreements ?? {};
+      const seen = new Set(x.summary.disagreements.map((d) => `${d.entry}/${d.file}`));
+      const gone = Object.keys(known).filter((k) => !seen.has(k));
+      expect(gone, `${x.checkout.name}: triaged disagreements no longer disagree, drop them from corpus-external.json:\n${gone.join("\n")}`).toEqual([]);
+      const lines = x.summary.disagreements.filter((d) => !known[`${d.entry}/${d.file}`]).map((d) => `${d.entry}/${d.file}: chant=${d.chant} reference=${d.reference} values=${d.values ?? "-"} ${d.referenceRule ?? ""} ${d.referenceReason ?? d.chantReason ?? ""}`);
+      expect(lines, lines.join("\n")).toEqual([]);
+      const wider = x.summary.referenceMorePermissive.map((d) => `${d.entry}/${d.file}: ${d.chantReason ?? ""}`);
+      expect(wider, wider.join("\n")).toEqual([]);
+    }
   });
 
   test("the reference never folds what chant runs", () => {
