@@ -1,14 +1,14 @@
 ---
 title: "The fixture format"
-description: "The two kinds of conformance fixture, expression and project, with an example of each from spec/fixtures/."
+description: "The three kinds of conformance fixture, expression, project and round-trip, with an example of each from spec/fixtures/."
 weight: 2
 aliases: ["/conformance/fixtures/"]
 ---
 
 A fixture is a directory under `spec/fixtures/<Rule>/<name>/`. The format is
 defined in `packages/conformance/src/fixture.ts`, which is also the loader and
-tells an expression fixture from a project one by what the directory
-contains.
+tells an expression fixture from a project one, and either from a round-trip
+one, by what the directory contains.
 
 Every fixture's `expect.json` carries a `rules` array naming the identifiers
 the fixture exercises. That array is what the
@@ -97,9 +97,15 @@ J3 tainted, the file whose taint reached it. `exports` is optional and gives
 expected export values for files that finally fold. `rejectRule` names the rule
 a `run` verdict must cite, and is checked only when the adapter reports one.
 `host` selects one from `packages/conformance/src/host.ts`, and is required
-for any fixture whose sources import one. `counters` pins F-Obs-Counters'
-three integers for the build, and an adapter reporting none is skipped there
-rather than failed.
+for any fixture whose sources import one. `mode` is J2's isolation mode,
+`open` by default, `isolated` or `executing`; an adapter that cannot honour it
+reports the fixture unavailable. `findings` is what an `F-Rule-*` fixture
+asserts: the named host's rules' findings as data. A finding matches on its
+rule and subject and on its severity. `counters` pins F-Obs-Counters' three
+integers for the build, and an adapter reporting none is skipped there rather
+than failed. `profiles` names the profiles the case is judged in. Without it
+one that needs the runtime is `full` only, which naming a host or
+asserting a taint edge implies; anything else is judged in both.
 
 `fixture.ts` says why `tentative` and `taintedBy` exist. Without them a project
 fixture cannot tell "folds because nothing reached it" from "would have folded,
@@ -107,6 +113,17 @@ and an edge killed it". Both of those produce the verdict `run`, so comparing
 verdicts alone would not distinguish a seed from a taint casualty. The fixture
 above is exactly that case. `config.ts` folds on its own account, which
 `tentative` records, and `taintedBy` records that `app.ts` is what killed it.
+
+## Round-trip fixtures
+
+The third kind has no source at all. The directory holds `value.json`, a
+namespace as data with envelopes written as `F-Val-Domain` writes them, and an
+`expect.json` with `"roundtrip": true`. The implementation's generator writes
+the source, the fold of that source must equal the input, and that is
+`F-Val-Source`'s round trip made executable. It is judged in `data-host`
+unless told otherwise, since in `full` the fold of a resource's form is a
+live instance. An adapter with no generator skips it, and the skip is
+reported.
 
 ## How they are run
 
@@ -120,5 +137,6 @@ expectation at all. It asks two implementations the same questions and reports
 where they differ. On project fixtures it compares the final verdict, the
 tentative verdict and the taint source, for the reason above.
 
-`paper/measurements.md` gives the size of the set at the chant `0.70.1` pin:
-68 fixtures, of which 30 are whole-build.
+The set holds {{< figure "fixtures" >}} fixtures, of which
+{{< figure "wholeBuildFixtures" >}} are whole-build, read from the tree at
+build time.

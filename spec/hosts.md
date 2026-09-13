@@ -17,8 +17,8 @@ implementation does not yet port (#21, #22).
 
 ## F-Host-Interface (what a host supplies)
 
-Six things. The first four are the parameters R7 named; the last two are
-what the trust rules need.
+Seven things. The first four are the parameters R7 named, the next two are
+what the trust rules need, and the last is the rules contract's.
 
 1. **Entity constructors.** Classes whose instances are entities: built by
    `createResource(type, lexicon, attrMap)`, `new (props, attributes?)` -
@@ -150,7 +150,7 @@ arms is F-IsolatedRefusal (J2).
 
 ## F-Host-Generality (what varies and what does not)
 
-What a host may vary: the six items of F-Host-Interface. What it may not:
+What a host may vary: the seven items of F-Host-Interface. What it may not:
 the syntax (grammar.md), the semantics of admitted operators (R10, J1), the
 module system, the value domain's shape (values.md), the judgments (J1–J3),
 and the direction claim (divergence.md). Generality is over **host

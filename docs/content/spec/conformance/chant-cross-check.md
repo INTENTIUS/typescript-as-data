@@ -11,8 +11,8 @@ chant, and then runs both implementations against each other.
 The pin is a real dependency. `@intentius/chant` is in this repository's
 `devDependencies` at version <code>{{< figure "chantPin" >}}</code>, and the adapter in
 `packages/conformance/src/adapters/chant.ts` reaches it through its public
-entry only: `fold`, `collectConsts`, `FoldError`, and, since `chant-v0.64.0`,
-`findSubsetViolation` for the shape half. No source is vendored and no internal
+entry only: `fold`, `foldProject`, `collectConsts`, `FoldError`, and, since
+`chant-v0.64.0`, `findSubsetViolation` for the shape half. No source is vendored and no internal
 is reached for. What the suite tests is the version a user would install. With
 an older pin, the adapter would report shape `"unavailable"` rather than
 guessing.

@@ -141,8 +141,11 @@ The corpus runs a third time when `evaluators/rust` is built. The evaluator with
 
 ## What the test asserts
 
-`corpus.test.ts` has four assertions, and two of them guard against the check
+`corpus.test.ts` has six assertions, and three of them guard against the check
 passing vacuously.
+
+The data-host column is present and agrees, unless a local run opts out of it
+by name; a missing evaluator must not read as a clean pass.
 
 The corpus is the whole one, not a fragment of it: at least 100 entries and at
 least 380 files. A checkout whose dependencies are not installed, or a corpus
@@ -159,6 +162,10 @@ The reference never folds what chant runs, wherever chant was not disarmed.
 This one is asymmetric on purpose. A reference-side limit can only make the
 reference refuse more, so a fold the reference reaches and chant does not has
 no benign explanation unless a chant-side limit accounts for it.
+
+The codebases nobody here maintains are all present at their pinned revision,
+each yields comparable files, and each agrees on every one not recorded in the
+manifest against an issue; a recorded disagreement must still be there.
 
 ## What the first real run found
 
@@ -192,8 +199,9 @@ generating those means downloading a dozen upstream schemas. An upstream schema
 host being down would fail the main gate on a change that has nothing to do
 with it.
 
-The workflow checks out chant at the tag this repository pins, generates the
-lexicon artifacts, and then asserts that `examples/differential-corpus.ts`
+The workflow checks out chant at the tag this repository pins and generates
+the lexicon artifacts. It fetches the external checkouts at the revisions the
+manifest pins. Then it asserts that `examples/differential-corpus.ts`
 exists before running the check, because a skipped suite passes and a checkout
 that landed in the wrong place must not report as a clean cross-check. The
 report is uploaded as an artifact on success and on failure both, since a run

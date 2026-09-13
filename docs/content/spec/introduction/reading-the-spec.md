@@ -29,7 +29,7 @@ one introduced.
    states the direction in which they may disagree, enumerates every known
    divergence, and gives the two tolerated exceptions with a reason each.
 5. Last is [`hosts.md`](/typescript-as-data/spec/normative/hosts/), which owns
-   `F-Host-*`, the host interface. Six things a host supplies, and the rule by
+   `F-Host-*`, the host interface. Seven things a host supplies, and the rule by
    which each is admitted.
 
 Each of those five ends with a non-normative Rationale section, where the
