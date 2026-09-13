@@ -19,7 +19,7 @@ That is the whole cost. The evaluator is a package; the types are yours; nothing
 
 An evaluator with no JavaScript runtime implements the data-host profile: expression evaluation, the per-file verdict with a failed fold as an error rather than a fallback, envelopes as the output, no helpers, no live constructors. It is `F-Profile-DataHost` in [the judgments](/typescript-as-data/spec/normative/judgments/), a table of subtractions from the full specification, and the reference with an empty host is judged on it.
 
-## What judges you
+## Conformance
 
 The conformance suite, `@intentius/tsad-conformance`: the fixtures at the spec version you declare, a runner, and an adapter interface. You supply an adapter; you get a report. [How the fixtures work](/typescript-as-data/spec/conformance/fixtures/) and [the coverage gate](/typescript-as-data/spec/conformance/coverage/) are under the specification door.
 

@@ -3,7 +3,7 @@ title: "typescript-as-data"
 description: "TypeScript in place of YAML. A file that is data is typed JSON, and the build reads it without executing it."
 ---
 
-## The same policy twice
+## A policy in YAML and in TypeScript
 
 ```yaml {title="governance.yml"}
 orgs:

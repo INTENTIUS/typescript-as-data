@@ -78,7 +78,7 @@ another dry-run, and show me the drift. Finish with `npm run e2e:down`.
    npm run e2e:down
    ```
 
-## What you just saw
+## What happened
 
 The policy is data. Nothing in it ran, and nothing needed to; the plan is computed from the declared values and the live org. `--config-mode check` folds the file and also runs it, and refuses if the two disagree, which is the guarantee made visible. `--config-mode run` skips the fold for anyone who only wants typed JSON. Deletes were never proposed, because nothing was marked `owned`. The same file works against Codeberg or any self-hosted Forgejo by changing `--base-url`.
 
