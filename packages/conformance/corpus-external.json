@@ -11,10 +11,7 @@
       "name": "jhgaylor/infisical-chant",
       "repo": "https://github.com/jhgaylor/infisical-chant",
       "rev": "91cdf13039d9959a6185e251112273410fb481c8",
-      "note": "An Infisical deployment on the k8s lexicon with a project rule under .chant/rules. Written against chant 0.19, before composites; its component entry has no fold form today, which the row reports rather than hides.",
-      "disagreements": {
-        "jhgaylor/infisical-chant/src/infisical-namespace/params.ts": "chant#2453: chant invokes a project function whose body reads process.env; F-Call step 2 says the call is F-Eval-CallLocal's and the file runs"
-      }
+      "note": "An Infisical deployment on the k8s lexicon with a project rule under .chant/rules. Written against chant 0.19, before composites. Its params.ts, a declarator calling a project function that reads process.env, is where chant#2453 was found; since chant 0.72.3 both implementations run it."
     }
   ]
 }
