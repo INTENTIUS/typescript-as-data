@@ -23,3 +23,4 @@ docs/static/tsad-eval/
 # Cloned by scripts/smoke.sh at demo.yml's pin
 .forgejo-warden/
 smoke-*.log
+paper/build/
