@@ -55,24 +55,9 @@ is asserted rather than assumed.
 The counts are read from the fixture tree at build time; the agreement figure
 is `paper/measurements.md`'s.
 
-The same file reports one disagreement that existed between the two, on an
-envelope inside a template span. It was triaged the way `spec/README.md`
-requires, in the specification first: the spec recorded the recommendation,
-`chant-v0.68.0` implemented it, and a fixture now pins it.
-
-On the whole-build side, `paper/measurements.md` notes that until
-`chant-v0.70.1` there was no entry that took a set of files, so none of the J3
-fixtures were answerable there. chant#2408 added one, and chant#2438 let the
-fixtures that name a host follow. The two agree on every file's final verdict
-and its tentative verdict; for every taint casualty they agree on the file the
-edge came from and on which rule it was.
-
-Two agreements there are worth naming, and `paper/measurements.md` names them.
-The pinned implementation classifies the capturing sibling as reached by a
-capture rather than an import, which is the distinction chant#2406 was filed
-for. And a file whose only tie to another is a call returning computed plain
-data folds in both, which is `F-Identity`'s entity test holding in an
-implementation that has never read it.
+Every whole-build fixture is answered at the pin, and the two agree on each
+file's final verdict and its verdict before taint; for every taint casualty
+they agree on the file the edge came from and on which rule it was.
 
 ## Running it
 

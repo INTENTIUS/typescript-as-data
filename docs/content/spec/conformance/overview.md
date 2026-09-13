@@ -97,14 +97,6 @@ the fixture set neutral between implementations.
 
 ## What agreement here is worth
 
-`paper/measurements.md` is explicit about the ceiling on this. The fixtures
-were written to exercise particular rules, so agreement on them is agreement on
-cases somebody chose. It also records that agreement used to be guaranteed
-rather than observed: until issue #50 the reference implementation's evaluation
-layer was a port of chant's.
-
-The port's own failure mode is recorded in the same file, because it is the one
-this should not paper over. `chant-v0.69.0` extended an envelope check from
-three kinds to five while the port still had three, and because no fixture
-covered the shape, the suite stayed green against a stale port until the drift
-was found by reading the release diff. Two fixtures now cover it.
+The fixtures were written to exercise particular rules, so agreement on them is
+agreement on cases somebody chose. `paper/measurements.md` states that ceiling
+and the history behind it.
