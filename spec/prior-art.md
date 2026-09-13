@@ -115,12 +115,11 @@ specialized. As posed, neither is a per-module *choice* to specialize or not. Th
 object identity is not a concept, so the identity problem chant's fixpoint
 solves has no obvious way to arise there.
 
-So the working conclusion is: **not a rediscovery.** Heldal & Hughes is the
-citation for "partial evaluation has been made modular before"; chant's
-contribution is orthogonal to it, a per-module fall-back with identity
-preserved across the resulting boundary. Confidence is moderate, resting on
-the abstract and the authors' own précis rather than the body of the paper.
-The full text should still be read before camera-ready.
+Not a rediscovery, then. Heldal & Hughes is the citation for "partial
+evaluation has been made modular before", and chant's contribution is
+orthogonal to it: a per-module fall-back with identity preserved across the
+resulting boundary. Confidence is moderate, resting on the abstract and the
+authors' own précis rather than the body of the paper.
 
 ### Evaluation that escapes into execution (Nix import-from-derivation)
 
@@ -178,6 +177,7 @@ explicit in the language rather than inferred.
 
 ## Open
 
-Heldal & Hughes 2000 has to be read in full, for the camera-ready citation.
-Item 4 does not turn on it. Every route reachable from here is refused or
-restricted, so this needs the author's own library access.
+Heldal & Hughes 2000 has been read only at abstract level, from the published
+abstract and the Chalmers group's own summary. Item 4 does not turn on it, and
+a camera-ready citation should rest on the full text. ACM DL and ScienceDirect
+both paywall it, so the full text needs institutional or purchased access.

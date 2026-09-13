@@ -55,7 +55,7 @@ The claim is one-directional and stated with its exceptions inside it. **If eval
 
 The direction is chosen rather than observed, and the reason is asymmetric cost. A classifier that accepts too much produces a fallback the author learns about from a per-file decision line. A classifier that rejects too much produces an error on correct source, and a lint that cries wolf gets disabled, taking the real diagnostics with it. The classifier is also the predicate a downstream tool asks *will this reduce* without running a reduction, and such a tool must get an answer safe to act on.
 
-Twelve divergences run the permitted way, and the specification enumerates all twelve rather than describing the shape of the set (`F-Div-*`). The enumeration is the useful part: a claim that two analyses disagree only in one direction needs a list of where, because the list is what a reader checks and what a new rule has to join.
+Twelve divergences run the permitted way, and the specification enumerates all twelve rather than describing the shape of the set (`F-Div-*`). A claim that two analyses disagree only in one direction needs a list of where, because the list is what a reader checks and what a new rule has to join.
 
 | Rule | The classifier sees | The evaluator additionally requires |
 |---|---|---|
@@ -141,7 +141,7 @@ Tentative verdicts first, each file judged alone (J2). `run-only-importer.ts` fa
 Now the fixpoint (`F-Taint`):
 
 1. Seed: `{ run-only-importer.ts }`, the one file that failed on its own (`F-Seed`).
-2. Forward edge: the seed imports `shared-config.ts`, so that file is tainted (`F-Succ`). Nothing about it resists reduction, and running it anyway is the point. Reduced independently, its objects would be rebuilt by the importer's real import, leaving two objects claiming to be one entity.
+2. Forward edge: the seed imports `shared-config.ts`, so that file is tainted (`F-Succ`). Nothing about it resists reduction, and it runs anyway. Reduced independently, its objects would be rebuilt by the importer's real import, leaving two objects claiming to be one entity.
 3. Backward edge: `capturing-sibling.ts` reduced cleanly and captured `sharedLabels` from a file that now runs, so the object it holds is not the object the build will collect, and the reverse edge taints it (`F-Succ`, via `F-Capture`).
 4. Closure: nothing reaches `independent.ts`. It imports no sibling and captures nothing; its labels are the same *value* as the shared ones and deliberately not the same *object*, because the edge is identity and not equality.
 
@@ -155,7 +155,7 @@ The control file is what makes the example an example. Without it, "taint forced
 
 The subset is parameterized. A host provides six things (`F-Host-Interface`). Two concern entities, being the constructors that build them and how they expose attributes. Three are lists the host installs, an intrinsic registry and an authoring-helper allowlist and a trust set. The sixth is the form a composite registration takes. A registered call is admitted only if it is a pure function of its arguments and invoking it at fold time is indistinguishable from invoking it during a real run (`F-Host-Admission`), and revival always invokes the function the file imported rather than a reimplementation (`F-Host-NoSubstitution`).
 
-The interesting rule is an asymmetry between two kinds of callee. Into a **package**, reduction goes only through a closed allowlist, checked by name *and* by the provenance of the binding, so a helper of the author's own that happens to share a registered name is not the host's and the file falls back (`F-Div-Provenance`). Into a **project file**, reduction proceeds whenever the callee's body is itself in the subset, with no allowlist at all.
+One rule is an asymmetry between two kinds of callee. Into a **package**, reduction goes only through a closed allowlist, checked by name *and* by the provenance of the binding, so a helper of the author's own that happens to share a registered name is not the host's and the file falls back (`F-Div-Provenance`). Into a **project file**, reduction proceeds whenever the callee's body is itself in the subset, with no allowlist at all.
 
 That looks backwards until the trust boundary is stated. Package code is already loaded and executed by the build before reduction begins, to obtain the serializers and lint rules the build cannot run without; admitting a call into it costs no execution the process was not already performing, so it is admitted by declaration and verified by registration. Project code is the untrusted input, and it is admitted only when it can be *evaluated without being executed*, which a syntactic check of the callee's body decides and an allowlist could not.
 

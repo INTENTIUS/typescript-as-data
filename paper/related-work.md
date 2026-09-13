@@ -14,7 +14,7 @@ Heldal and Hughes treat a program as modules that can be specialized independent
 
 ## Partial evaluation and binding-time analysis
 
-The shape classifier of `grammar.md` is a binding-time analysis and `fold` is the specializer, in the sense of Jones, Gomard and Sestoft. The static and dynamic split is theirs. The per-file verdict with taint (J2, J3) is closer to an online decision over a coarse unit than to an offline BTA, and the paper should say which it is. Forcing a folded file back to run is a coarse form of the lift operation. Multi-stage programming makes staging explicit in the language instead of inferring it (Taha and Sheard, MetaML).
+The shape classifier of `grammar.md` is a binding-time analysis and `fold` is the specializer, in the sense of Jones, Gomard and Sestoft. The static and dynamic split is theirs. The per-file verdict with taint (J2, J3) is closer to an online decision over a coarse unit than to an offline BTA. Forcing a folded file back to run is a coarse form of the lift operation. Multi-stage programming makes staging explicit in the language instead of inferring it (Taha and Sheard, MetaML).
 
 ## Partial evaluation of JavaScript
 
