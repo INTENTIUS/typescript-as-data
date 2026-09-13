@@ -68,6 +68,26 @@ jobs:
           # sees the id-token environment and exchanges it for a short-lived
           # token through the trusted-publisher record.
       - run: npm install
+      # npm's OIDC helper never throws: a refused exchange falls through to a
+      # bare ENEEDAUTH, which cannot tell a missing trusted-publisher record
+      # from one whose workflow filename or environment does not match this
+      # job. Replaying the exchange prints the registry's answer. Prints no
+      # token. Lifted from chant's scripts/publish-packages.sh.
+      - name: Ask the registry about the trusted-publisher records
+        run: |
+          idtok=$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" -H "Accept: application/json" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm:registry.npmjs.org" | jq -r '.value // empty')
+          [ -n "$idtok" ] || { echo "GitHub did not issue an id-token"; exit 0; }
+          for name in @intentius/tsad-conformance @intentius/tsad-reference; do
+            body=$(mktemp)
+            status=$(curl -sS -o "$body" -w '%{http_code}' -X POST -H "Authorization: Bearer $idtok" \
+              "https://registry.npmjs.org/-/npm/v1/oidc/token/exchange/package/${name//\//%2f}")
+            case "$status" in
+              2*) echo "$name: registry accepted the OIDC exchange (HTTP $status)" ;;
+              *) echo "$name: registry refused the OIDC exchange: HTTP $status, $(jq -r '.message // .error // "no message"' "$body")" ;;
+            esac
+            rm -f "$body"
+          done
       # conformance first: reference depends on it.
       - name: Publish @intentius/tsad-conformance
         run: npm publish --workspace packages/conformance --provenance --access public
