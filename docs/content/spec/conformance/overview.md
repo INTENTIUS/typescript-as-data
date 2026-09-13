@@ -20,22 +20,29 @@ verdict out.
 ```ts
 interface ConformanceAdapter {
   readonly name: string;
+  readonly specVersion: string;
   shape(source: string, exportName: string): ShapeResult;
   foldExport(source: string, exportName: string): FoldResult;
   foldProject?(
     files: Map<string, string>,
     host?: ConformanceHost,
+    mode?: IsolationMode,
   ): ProjectResult | "unavailable" | Promise<ProjectResult | "unavailable">;
+  rules?(files: Map<string, string>, host: ConformanceHost, phase: RulePhase): Finding[] | "unavailable";
+  generate?(namespace: Record<string, unknown>, host?: ConformanceHost): string | "unavailable";
 }
 ```
 
 `shape` gives the `S-*` verdict on the initializer of one export, and returns
 `"unavailable"` if the implementation exposes no shape classifier at all.
 `foldExport` gives the `F-*` verdict, either a JSON-comparable value or a
-located rejection. `foldProject` answers J2 and J3 over a whole build and is
-optional, because not every implementation has a whole-build entry point. When
-it cannot answer it returns `"unavailable"`, and the fixture is reported
-skipped rather than silently passing.
+located rejection. `foldProject` answers J2 and J3 over a whole build in the
+mode the fixture asks for, and is optional, because not every implementation
+has a whole-build entry point. `rules` runs the host's semantic rules over a
+build and returns findings as data, and `generate` writes source for a
+namespace, which the round trip needs. Whenever a hook cannot answer it returns
+`"unavailable"`, and the fixture is reported skipped rather than silently
+passing.
 
 `ShapeResult` and `FoldResult` carry a `rule` field alongside the location.
 That is `F-Reason`'s requirement, that the rule identifier and the location are
@@ -43,11 +50,12 @@ normative while the message wording is not.
 
 ## What the suite checks
 
-Four checks, in three places.
+Five checks, in four places.
 
 **The reference passes every fixture**, which
 `packages/conformance/src/runner.test.ts` checks against `referenceAdapter`.
-It also asserts that no project fixture was skipped. Two stub adapters must
+It also asserts that the only project fixture skipped is the one judged under
+`executing`, a mode this package reports unavailable by name. Two stub adapters must
 fail, one returning `run` for every file and one folding everything to `null`.
 The first stub is the control that matters.
 An implementation that falls back on every file in a build is sound and
@@ -63,15 +71,19 @@ is in
 `spec/fixtures.test.ts` with `spec/fixtures/UNCOVERED.md` as the allowlist.
 [Coverage](/typescript-as-data/spec/conformance/coverage/) has the detail.
 
+**The Rust evaluator passes every fixture tagged for the data-host profile
+and agrees with the reference on each**, in
+`packages/conformance/src/rust-agreement.test.ts`, with the binary built in
+its own CI job.
+
 **The two implementations agree on a corpus nobody wrote for the purpose**,
 measured by `packages/conformance/src/corpus.test.ts` over chant's example
-corpus and described in
+corpus and over two codebases nobody here maintains, described in
 [the corpus cross-check](/typescript-as-data/spec/conformance/corpus/).
 
-The first three run in `npm test`, which is what `.github/workflows/ci.yml`
-runs on every pull request. The fourth has its own command and its own weekly
-workflow, because it needs a chant checkout with its lexicon artifacts
-generated.
+The first four run in `npm test` and `.github/workflows/ci.yml` on every pull
+request. The fifth has its own command and its own weekly workflow, because it
+needs a chant checkout with its lexicon artifacts generated.
 
 ## Named hosts
 

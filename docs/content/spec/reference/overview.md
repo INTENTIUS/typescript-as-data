@@ -7,7 +7,7 @@ aliases: ["/reference/overview/"]
 
 `packages/reference` is `@intentius/tsad-reference`, a reference
 implementation of the specification in `spec/`. It is a workspace package in
-this repository and is not published.
+this repository, published to npm at the specification's version.
 
 It is deliberately partial, and the partiality is the point of
 [what it does not do](/typescript-as-data/spec/reference/limits/), which summarises
@@ -20,9 +20,9 @@ The core of it is the expression layer: the `S-*` productions of
 `spec/grammar.md` §2 and the `F-Eval-*` rules of `spec/judgments.md` J1, over
 the value domain of `spec/values.md`. `packages/reference/README.md` lists
 shape classification and expression evaluation, then the value domain's
-envelope shapes. It also lists three of the six items of the host interface,
-`F-Host-Interface` items 3, 4 and 5. Those are the registry, the helper
-allowlist and the owned-specifier prefixes.
+envelope shapes. The host interface, `F-Host-Interface`, is taken whole from
+a `ConformanceHost`, so the reference folds against whatever host a fixture
+names rather than a host of its own.
 
 Since then the module and build layers have been written too.
 `packages/reference/src/project.ts` implements J2 (the per-file verdict) and J3
@@ -49,7 +49,9 @@ The source layout is small enough to read:
 | `foldable-helpers.ts` | the helper allowlist and owned-specifier tests |
 | `module.ts`, `project.ts` | J2 and J3 |
 | `revive.ts` | revival of envelopes, `F-Val-Fate` |
-| `adapter.ts` | the conformance adapter, exported as `referenceAdapter` |
+| `rules.ts` | the rules contract, `F-Rule-*`, with two shape rules |
+| `generate.ts` | the smallest generator, `F-Val-Source` |
+| `adapter.ts` | the conformance adapters, `referenceAdapter` and `referenceDataHostAdapter`, one per profile |
 
 ## Where it came from
 

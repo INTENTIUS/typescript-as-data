@@ -87,11 +87,11 @@ ECMAScript's, which a second implementation in another language must reproduce
 rather than inherit from its own host. Two places depart from ECMAScript on
 purpose and are stated as departures.
 
-What varies is the host. A host supplies four things: the constructors that
-build opaque entities and the calls that fold, each with the rule admitting it;
-the tagged templates that are intrinsics; and the way an entity exposes
-attributes as symbolic references. Those four are the host-hook interface, and
-chant's lexicons are one instantiation of it. The generality this buys is
+What varies is the host. `F-Host-Interface` in `hosts.md` lists the seven
+things a host supplies, with the rule admitting each. They start with the
+classes whose instances are entities and end with the host's rules contract;
+the registry and the trust set sit between. chant's lexicons are one
+instantiation of it. The generality this buys is
 generality over host vocabularies, not over languages. `spec/README.md` is
 explicit that a reader who infers language portability from "parameterized by a
 host" has been misled.
@@ -120,5 +120,5 @@ one implementation has no answer to give, for want of a host or of a form it
 does not implement, the difference is counted under a named limit and reported
 apart from the agreement figure. The
 [corpus cross-check](/typescript-as-data/spec/conformance/corpus/) is where this
-rule is applied; `packages/conformance/src/corpus.ts` currently names four
-such limits and counts each of them separately.
+rule is applied; `packages/conformance/src/corpus.ts` names two such limits,
+`host` and `invocation`, and counts each of them separately.

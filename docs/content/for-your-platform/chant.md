@@ -13,11 +13,11 @@ A resource is a typed object, `new Bucket({ BucketName: ... })`, with the target
 
 ## Check
 
-Evaluability lint (is this file data) runs at the keystroke, then each lexicon's semantic rules over folded values, then post-synth checks over the emitted artifact. The rules are the lexicon's; the contract they run under is what [issue #79](https://github.com/INTENTIUS/typescript-as-data/issues/79) writes down.
+Evaluability lint (is this file data) runs at the keystroke, then each lexicon's semantic rules over folded values, then post-synth checks over the emitted artifact. The rules are the lexicon's; the contract they run under is [`rules.md`](/typescript-as-data/spec/normative/rules/), the `F-Rule-*` family, since spec `1.4`.
 
 ## Generate
 
-Three generators share one pipeline. `chant import` reads an existing template, `--from <env>` imports live through each lexicon's `exportResources()`, and carve-out reads Terraform. Generated source folds back to the artifact it came from; the Kubernetes lexicon carries a round-trip suite, and [issue #80](https://github.com/INTENTIUS/typescript-as-data/issues/80) states the property.
+Three generators share one pipeline. `chant import` reads an existing template, `--from <env>` imports live through each lexicon's `exportResources()`, and carve-out reads Terraform. Generated source folds back to the artifact it came from; the Kubernetes lexicon carries a round-trip suite, and [`F-Val-Source`](/typescript-as-data/spec/normative/values/) states the property since spec `1.5`.
 
 ## Proof
 

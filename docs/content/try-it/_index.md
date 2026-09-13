@@ -84,4 +84,4 @@ The policy is data. Nothing in it ran, and nothing needed to; the plan is comput
 
 [A workflow](https://github.com/INTENTIUS/typescript-as-data/blob/main/.github/workflows/demo.yml) runs these six steps every week against the same sandbox, with the policy cut out of this page by `scripts/demo.sh`, so the page cannot rot.
 
-The second chapter, importing an existing artifact and rebuilding it byte for byte through generated source, is chant's, and lands here with its measurement when [the round-trip property](https://github.com/INTENTIUS/typescript-as-data/issues/80) does.
+The second chapter, importing an existing artifact and rebuilding it byte for byte through generated source, is chant's. The property it rests on is [`F-Val-Source`](/typescript-as-data/spec/normative/values/), in the specification since `1.5`; the chapter lands here with chant's measurement.

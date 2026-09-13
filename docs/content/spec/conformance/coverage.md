@@ -57,23 +57,15 @@ other way is not an exemption and the gate will still fail on the rule.
 The file's own header states the count, {{< figure "rulesWithFixture" >}} of
 {{< figure "rulesTotal" >}} rules with a fixture.
 
-`paper/measurements.md` sorts the rest by what each waits on. Five need a
-form the reference implementation lacks, the composite factory and isolation
-mode, and five are properties no adapter can observe, such as execution
-counters and provenance.
-
-A few entries are worth reading as a group, because they say something about
-where the limits of a conformance suite are rather than where the gaps in the
-work are.
+Every rule left on the list is a property no adapter can observe from
+verdicts, and the list says so instead of implying a to-do. It once held
+rules waiting on a form the reference lacked, the composite factory and the
+isolation mode among them, and each of those left when the form landed.
 
 `F-NoOwnExecution` is measured by chant's `test/leftness` profile, because an
-adapter reports verdicts and cannot observe execution. `F-Obs-Counters` is
-uncovered because the conformance adapter exposes no counters.
-`F-Obs-Provenance` is an optional capability, reported rather than asserted.
-`F-Host-Generality` says what a host may vary and what it may not, and no
-verdict exercises it. `F-NotProject` is about a file inside the host's own
-module tree, and the reference's project is a map with no outside.
-
-Those five are not fixtures somebody forgot to write. They are rules whose
-subject the adapter interface cannot see, and the list says so instead of
-implying a to-do.
+adapter reports verdicts and cannot observe execution. `F-Obs-Provenance` is
+an optional capability, reported rather than asserted. `F-Host-Generality`
+says what a host may vary and what it may not, and no verdict exercises it.
+`F-NotProject` is about a file inside the host's own module tree, and the
+reference's project is a map with no outside. `F-Obs-Counters` left the list
+when the harness gained a `counters` field on its project result (#121).
