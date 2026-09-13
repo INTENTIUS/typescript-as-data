@@ -1,6 +1,6 @@
 ---
 title: "The specification"
-description: "A specification for building JSON and YAML compilers from TypeScript, with the reference implementation, the conformance suite that judges an implementation, and the evidence behind every figure."
+description: "A specification for JSON and YAML compilers, with the reference implementation, the conformance suite that judges an implementation, and the evidence behind every figure."
 weight: 40
 aliases: ["/introduction/"]
 ---
