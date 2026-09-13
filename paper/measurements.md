@@ -4,7 +4,7 @@ Draft for #29. Every number cites the artifact it comes from. None is a coverage
 
 ## The differential
 
-`examples/fold-differential.test.ts` builds every corpus entry twice, folded and run, and requires identical errors and byte-identical serialised output (chant#1025).
+`examples/fold-differential.test.ts` builds every corpus entry twice, folded and run, and requires identical errors and byte-identical serialized output (chant#1025).
 
 The error half of that was unsound until chant-v0.69.1, because under the test runner a module that threw during import was cached as evaluated, so the second build of a directory in one process reported no error while every differential builds the same directory two or three times per process; `importModule` now remembers an evaluation failure and replays it, so error parity is compared rather than assumed (chant#2368).
 
@@ -35,7 +35,7 @@ The entry asserts each verdict by name and the differential holds across it. The
 
 ## The execution boundary
 
-`test/leftness/` (chant#1084) expresses one estate in chant and again in CDK. It profiles both synths under `node --cpu-prof` and applies one analyser to both, with timing excluded by design.
+`test/leftness/` (chant#1084) expresses one estate in chant and again in CDK. It profiles both synths under `node --cpu-prof` and applies one analyzer to both, with timing excluded by design.
 
 | Measurement | `chant build --fold` | `cdk synth` |
 |---|---|---|
@@ -79,7 +79,7 @@ The 4 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a 
 | `chant-v0.72.3` at `9891edd4`, 109 entries, spec `1.8`, chant declaring `1.6` | 441 | 440 | 440 | 304 |
 | `chant-v0.72.5` at `f5c68a5a`, 109 entries, spec `1.8`, chant declaring `1.8` | 441 | 440 | 440 | 304 |
 
-A file is comparable when nothing disarmed either implementation before the comparison started. Four things did so under `chant-v0.70.1`, two under `chant-v0.71.0`, and one remains under spec `1.6`, the single file that imports a package the host cannot load, which is the reference's limit. Each of the others retired for its own reason. Two were limits of chant's entry point rather than of chant, 52 files reading a host data export that `foldProject` could not resolve without a lexicon list and 19 in entries with build parameters it could not be given, until chant#2422 gave it both (#96). Another held 290 files reaching a host factory until the reference implemented F-Call (#109). The final one held 68 files calling a package export outside a declarator; it went when spec `1.6` wrote chant's behaviour into F-Declarator and F-Call (#110).
+A file is comparable when nothing disarmed either implementation before the comparison started. Four things did so under `chant-v0.70.1`, two under `chant-v0.71.0`, and one remains under spec `1.6`, the single file that imports a package the host cannot load, which is the reference's limit. Each of the others retired for its own reason. Two were limits of chant's entry point rather than of chant, 52 files reading a host data export that `foldProject` could not resolve without a lexicon list and 19 in entries with build parameters it could not be given, until chant#2422 gave it both (#96). Another held 290 files reaching a host factory until the reference implemented F-Call (#109). The final one held 68 files calling a package export outside a declarator; it went when spec `1.6` wrote chant's behavior into F-Declarator and F-Call (#110).
 
 **What this establishes.** On 440 files nobody wrote for the purpose, the two implementations agree on every verdict, and on the 304 that fold on both sides the export namespaces are structurally identical, entity class and properties included. It is agreement between the two that was observed rather than designed; each run since the first has widened the set it is observed on without adding a disagreement, and the fourth, at spec `1.6`, covers every file but one.
 
@@ -91,7 +91,7 @@ A file is comparable when nothing disarmed either implementation before the comp
 |---|---|---|---|---|---|---|
 | `jhgaylor/infisical-chant` at `91cdf130` | 6 | 31 | 13 | 13 | 5 | 18 |
 
-The host limit is large there because the project was written against an older chant, so a package export the pinned release no longer has disarms every file that imports it. The first run found one disagreement, the kind the row exists to find: a file whose only declarator calls a project function that reads `process.env`, which chant folded by invoking the function at fold time and the specification says runs (F-Call step 2, then F-Eval-Ident's pointed rejection). Filed as chant#2453, fixed in `chant-v0.72.3`, and spec `1.8` made the old behaviour an opt-in mode; since that release the rows agree on every comparable file.
+The host limit is large there because the project was written against an older chant, so a package export the pinned release no longer has disarms every file that imports it. The first run found one disagreement, the kind the row exists to find: a file whose only declarator calls a project function that reads `process.env`, which chant folded by invoking the function at fold time and the specification says runs (F-Call step 2, then F-Eval-Ident's pointed rejection). Filed as chant#2453, fixed in `chant-v0.72.3`, and spec `1.8` made the old behavior an opt-in mode; since that release the rows agree on every comparable file.
 
 **What the fourth run settled (#110).** The first draft of the rule went too far. It admitted a package call in any position, so the reference folded five shapes chant refuses, and the fixture cross-check caught that before the corpus could. Probed shape by shape on `chant-v0.72.1`, a package call folds when a declarator reaches it through a const alias or as its own call's direct argument, and nowhere else; nested inside an object literal or an array it runs, and so does one inside a `new` or a tag's interpolation. Written down, that is F-Declarator's alias case together with F-Call's argument resolution. No J1 rule was added and `data-host` is untouched; 68 files entered the comparable set and every one agrees.
 

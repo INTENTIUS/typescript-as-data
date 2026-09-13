@@ -25,7 +25,7 @@ It cites rules only.
 
 The gate that runs before any expression is classified. Disqualifies whole files.
 
-| # | Decision | Behaviour | Covers |
+| # | Decision | Behavior | Covers |
 |---|---|---|---|
 | L1.1 | admissible export shapes | `export const X = new Type(...)`, `export const X = <expr>`, `export const {a,b} = <expr>`, `export {a,b}`, `export {a,b} from "./m"`, `export function f(){}` | S-Module, S-ExportResource … S-ExportTypeOnly (grammar.md) |
 | L1.2 | `export default` | disqualifies the file in `full`; the declarator named `default` in `data-host` | S-Disqualify; S-ExportDefault (grammar.md) |
@@ -39,7 +39,7 @@ The gate that runs before any expression is classified. Disqualifies whole files
 
 Shape only. No resolution, no evaluation.
 
-| # | Decision | Behaviour | Covers |
+| # | Decision | Behavior | Covers |
 |---|---|---|---|
 | L2.1 | unwrapping | parenthesized / `as` / `satisfies` / `!` recurse into the inner expression | S-Unwrap |
 | L2.2 | literals | string, no-substitution template, numeric, `true`, `false`, `null` admitted | S-Literal |
@@ -62,7 +62,7 @@ Shape only. No resolution, no evaluation.
 
 ## L3. Expression reduction (`fold`)
 
-| # | Decision | Behaviour | Covers |
+| # | Decision | Behavior | Covers |
 |---|---|---|---|
 | L3.1 | arrow / function expression as a value | rejected; nothing can serialize a function | F-Eval-Function; F-Val-Callable |
 | L3.2 | template expression | concatenation, spans coerced by `String()`; since chant-v0.68.0 an attribute reference, intrinsic or helper envelope in a span is a located rejection (chant#2349) | F-Eval-Template |
@@ -90,7 +90,7 @@ Shape only. No resolution, no evaluation.
 
 ## L4. Value domain
 
-| # | Decision | Behaviour | Covers |
+| # | Decision | Behavior | Covers |
 |---|---|---|---|
 | L4.1 | `FoldedValue` union | 9 cases | F-Val-Domain |
 | L4.2 | `FoldedResource.args` | positional; authoritative when the shape is not `(props)`/`(props, attributes)`; `props` is a view | F-Val-Arity |
@@ -100,7 +100,7 @@ Shape only. No resolution, no evaluation.
 
 ## L5. Scope, resolution, and project-local calls
 
-| # | Decision | Behaviour | Covers |
+| # | Decision | Behavior | Covers |
 |---|---|---|---|
 | L5.1 | `collectConsts` | top-level `const` with an identifier name and an initializer, single file | F-Bind |
 | L5.2 | `externals` | pre-resolved imported bindings, and the instances F-Prebuild constructed for this file's `new`-valued consts; consulted only when `consts` misses | F-Eval-Ident; F-Prebuild |
@@ -123,7 +123,7 @@ Shape only. No resolution, no evaluation.
 
 The second phase. Resolves envelope names through the **folding file's own imports**.
 
-| # | Decision | Behaviour | Covers |
+| # | Decision | Behavior | Covers |
 |---|---|---|---|
 | L6.1 | live object passthrough | `AttrRef`, `Declarable`, `CompositeInstance`, `Intrinsic` returned unchanged; the generic walk would destroy identity. The declarable marker is tested by identity: chant carries seven marker symbols, and a test for any own symbol admits an `Intrinsic` or a `StackOutput` as an entity (chant#2444). The reference's broader test is safe only because its host has one marker kind | F-Val-Live |
 | L6.2 | `{__symbol}` | resolved via `SIMPLE_DOTTED_CHAIN` regex, then real property access | F-Val-Fate, F-Val-Symbol-Scope |
@@ -140,7 +140,7 @@ The second phase. Resolves envelope names through the **folding file's own impor
 Neither folding nor revival: the factory body is evaluated and the defining
 module is never imported.
 
-| # | Decision | Behaviour | Covers |
+| # | Decision | Behavior | Covers |
 |---|---|---|---|
 | L7.1 | rule 1; project files only | text check on the specifier; a lexicon-published composite is deliberately never interpreted | F-Call step 4; F-Host-Composite |
 | L7.2 | rule 2; `export const N = Composite(<fn>, "N")` | and `Composite` must be chant's own **in the defining module** | F-Host-Composite |
@@ -153,7 +153,7 @@ module is never imported.
 
 ## L8. File decision, session, and taint
 
-| # | Decision | Behaviour | Covers |
+| # | Decision | Behavior | Covers |
 |---|---|---|---|
 | L8.1 | `FoldFileResult` | ok with entities/exportedValues/liveSources, or a reason | F-Total, F-Reason |
 | L8.2 | all-or-nothing per file | one unrecognized export disqualifies everything | F-Total |
@@ -177,7 +177,7 @@ module is never imported.
 
 ## L9. Trust and isolation
 
-| # | Decision | Behaviour | Covers |
+| # | Decision | Behavior | Covers |
 |---|---|---|---|
 | L9.1 | trust arm 1 | an active lexicon package of this build, matched by **text** against a closed set built from names the build resolved | F-Host-Trust arm 1 |
 | L9.2 | trust arm 1, subpath | package root extracted from text and matched against the same set | F-Host-Trust arm 1 (subpath) |
@@ -188,7 +188,7 @@ module is never imported.
 
 ## L10. Observables and side outputs
 
-| # | Decision | Behaviour | Covers |
+| # | Decision | Behavior | Covers |
 |---|---|---|---|
 | L10.1 | `FoldExecutionCounts` | `factoryInvocations`, `projectFactoryInvocations`, `factoryInterpretations`; process-wide, monotonic, resettable | F-Obs-Counters |
 | L10.2 | provenance | `setPathProvenance` records which composite parameter produced which emitted field, first (innermost) writer wins | F-Obs-Provenance |

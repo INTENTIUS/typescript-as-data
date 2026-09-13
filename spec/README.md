@@ -117,7 +117,7 @@ is reported as undeclared.
 repository at that tag (`paper/README.md`). Numbers in the paper that
 depend on the rule set say which version produced them.
 
-**How a change is proposed.** As an issue here labelled `area:spec` that
+**How a change is proposed.** As an issue here labeled `area:spec` that
 carries the rule text with its identifier and the fixture that would pin it.
 It lands spec-first and then in implementations, as the ownership section
 says. The one exception is chant's provisional path above, which a release

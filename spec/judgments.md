@@ -3,7 +3,7 @@
 Normative draft. Three judgments: expression evaluation, the per-file
 fold-or-run verdict, and the identity-taint fixpoint. This file
 currently carries the third in full; the first two are stubs pointing at the
-requirements they will formalise. Identifiers are `F-*`: every rule
+requirements they will formalize. Identifiers are `F-*`: every rule
 here needs resolution, a registry, or the module graph, and is not decidable
 from syntax.
 

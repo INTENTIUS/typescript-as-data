@@ -24,7 +24,7 @@ A specification that presented these as designed would be easier to read and les
 
 ## What would falsify the claim
 
-The identity theorem is the paper's centre, so it is worth saying what would break it rather than restating that it holds. Three things would.
+The identity theorem is the paper's center, so it is worth saying what would break it rather than restating that it holds. Three things would.
 
 **A single fold/run disagreement on a mixed build.** The differential requires identical errors and byte-identical output for every corpus entry, including the twelve with at least one file that falls back. One disagreement there is either a bug in the fixpoint or a gap in the argument, and the entry would name itself.
 

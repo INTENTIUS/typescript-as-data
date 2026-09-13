@@ -15,7 +15,7 @@
 // they are structure, not tells. Those files are baselined and may only
 // shrink, same ratchet as chant. on the `sentences` trope ruleset — the
 // AI-writing tells (em-dash density, colon reveals, tricolons, anaphora,
-// bold-first bullets, …) that tropes.fyi catalogues and the package detects
+// bold-first bullets, …) that tropes.fyi catalogs and the package detects
 // per sentence with real parse trees, not regexes.
 //
 // Same posture as scripts/typecheck.ts: a RATCHET, not a purity gate. The

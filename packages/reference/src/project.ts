@@ -39,7 +39,7 @@ const isProjectSpecifier = (s: string) => s.startsWith(".") || s.startsWith("/")
 
 /**
  * Resolve a relative specifier against the project's own key set: the
- * specifier joined to the importer's directory and normalised, then the three
+ * specifier joined to the importer's directory and normalized, then the three
  * obvious candidates. `..` segments are resolved; the corpus found a version
  * of this that left `../../config` unjoined, which dropped the import edge and
  * with it the forward taint, so a file chant ran folded here (#96).

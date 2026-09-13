@@ -9,7 +9,7 @@ This page assumes nothing. If you already write TypeScript and run a deploy tool
 
 ## The problem this site is about
 
-Many tools take a file that describes what you want and then make the world match it. A tool that manages a code-hosting organisation reads a file saying which repositories exist and who may merge to them. The file is called a policy or a configuration, and the tool reads it every time it runs.
+Many tools take a file that describes what you want and then make the world match it. A tool that manages a code-hosting organization reads a file saying which repositories exist and who may merge to them. The file is called a policy or a configuration, and the tool reads it every time it runs.
 
 Almost all such files are written in YAML, a plain text format for structured settings: indentation shows nesting, a colon separates a name from its value, a dash starts a list item.
 

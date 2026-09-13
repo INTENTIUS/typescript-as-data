@@ -70,7 +70,7 @@ export function isUnclaimedCallee(call: ts.CallExpression, intrinsics?: readonly
  * or undefined when the whole shape is admissible.
  *
  * `intrinsics` is the registry ρ. Absent, S-CallIntrinsic and S-CallEager are
- * unrecognisable and their shapes fall to S-Reject, which is F-Exc-Registry:
+ * unrecognizable and their shapes fall to S-Reject, which is F-Exc-Registry:
  * the one place this classifier is stricter than the folder.
  */
 export function findShapeViolation(node: ts.Node, intrinsics?: readonly IntrinsicDef[], localCallees?: ReadonlySet<string>): ShapeViolation | undefined {
@@ -210,7 +210,7 @@ export function findShapeViolation(node: ts.Node, intrinsics?: readonly Intrinsi
       if (localCallees?.has(name)) return args();
       const def = intrinsics?.find((i) => i.name === name);
       // S-CallIntrinsic / S-CallEager, registry-gated. Without ρ neither is
-      // recognisable and the call falls to S-Reject (F-Exc-Registry).
+      // recognizable and the call falls to S-Reject (F-Exc-Registry).
       if (def && (intrinsicCallFolds(def) || intrinsicCallFoldsEagerly(def))) return args();
     }
 

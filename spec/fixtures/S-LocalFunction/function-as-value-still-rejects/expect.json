@@ -7,5 +7,5 @@
   "export": "f",
   "shape": "accept",
   "fold": "run",
-  "note": "Binding the arrow as a function changes nothing about its use as a value: F-Eval-Ident step 3 rejects a FoldableFunction in value position, so nothing unserialisable reaches the namespace."
+  "note": "Binding the arrow as a function changes nothing about its use as a value: F-Eval-Ident step 3 rejects a FoldableFunction in value position, so nothing unserializable reaches the namespace."
 }

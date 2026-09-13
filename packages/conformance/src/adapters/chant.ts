@@ -107,13 +107,13 @@ function acceptsHostPackages(): Promise<boolean> {
  *
  * chant#2442, fixed in chant-v0.72.1. Before it, `findCompositeDefinition`
  * required `Composite` to be chant's own, so a host's registration form was
- * never recognised; and recognising it was not enough on its own, because
+ * never recognized; and recognizing it was not enough on its own, because
  * chant wrapped the host's members in its own `Composite`, whose member
  * validation asks for chant's `Declarable` and refused an entity carrying a
  * different marker.
  *
  * Both halves are exercised here: the fixture folds only if the form is
- * recognised AND the host's own entity survives, and it runs under `sandbox`
+ * recognized AND the host's own entity survives, and it runs under `sandbox`
  * so a chant that fell through to invocation reports `run` rather than
  * folding by the wrong route.
  */
@@ -210,7 +210,7 @@ const resetCountersFn = (chant as unknown as { resetFoldExecutionCounts?: () => 
  * comparison and nothing else; the reference is untouched.
  */
 let foldQueue: Promise<unknown> = Promise.resolve();
-function serialised<T>(work: () => Promise<T>): Promise<T> {
+function serialized<T>(work: () => Promise<T>): Promise<T> {
   const next = foldQueue.then(work, work);
   // Keep the chain alive whatever `work` did, or one rejection stalls every
   // fold after it.
@@ -313,7 +313,7 @@ async function foldOnDisk(
     // chant#2446 — zero before, snapshot after. The counters are process-wide
     // and monotonic, so a snapshot without the reset would report this
     // process's whole history as one build.
-    const { verdicts, counters } = await serialised(async () => {
+    const { verdicts, counters } = await serialized(async () => {
       resetCountersFn?.();
       const v = await projectFn!(paths, host ? hostIntrinsics(host) : [], {
         lexiconPackages,
@@ -475,12 +475,12 @@ export const chantAdapter: ConformanceAdapter = {
     // used to trade one disagreement for another, because chant took the
     // interpretable factories down with the rest: the four negatives agreed
     // and `good.ts` and `named.ts` broke, reference `fold` against chant `run`.
-    // That was chant#2442 — a host's `Composite` was not recognised as the
+    // That was chant#2442 — a host's `Composite` was not recognized as the
     // registration form, so nothing was interpreted and everything fell to the
     // invocation arm the sandbox refuses.
     //
     // A chant without that fix would report exactly those wrong verdicts, so
-    // the probe is a behaviour test rather than a version comparison, the same
+    // the probe is a behavior test rather than a version comparison, the same
     // posture as `acceptsHostPackages` above.
     if (mode === "isolated" && !(await interpretsHostComposites())) return "unavailable";
     return foldOnDisk(files, host, mode);

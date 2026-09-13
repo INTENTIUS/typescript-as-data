@@ -123,7 +123,7 @@ Two consequences:
 - A same-named function the file declared or imported from a project file is
   that function's call (F-Eval-CallLocal). One imported from anywhere else is
   not the host's, and the file falls back (F-Div-Provenance).
-- The registry cannot drift from the helpers' real behaviour, because it never
+- The registry cannot drift from the helpers' real behavior, because it never
   reimplements them.
 
 This is the CTFE principle ([`prior-art.md`](./prior-art.md)) made a rule.

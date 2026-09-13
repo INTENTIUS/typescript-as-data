@@ -28,7 +28,7 @@ A check receives one or both of two inputs, and nothing else about the build:
   once per build into documents (rows `L11.2` and `L11.3`).
 
 The name of the environment or stack being built may be supplied as well,
-which is what lets an organisational policy vary by environment (L11.4).
+which is what lets an organizational policy vary by environment (L11.4).
 
 ## F-Rule-Phase (when a rule runs)
 

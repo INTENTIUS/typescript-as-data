@@ -18,12 +18,12 @@ gracefully from static evaluation to execution, and one of them, compile-time
 function execution, makes exactly chant's argument that the same function runs
 in either context so the result cannot differ.
 
-What none of the neighbours has is the combination of per-file granularity
+What none of the neighbors has is the combination of per-file granularity
 with shared object identity across the boundary, which is what forces the
 bidirectional taint fixpoint. That fixpoint is the part with no visible
-precedent, and it should be the paper's centre rather than "the fallback".
+precedent, and it should be the paper's center rather than "the fallback".
 
-## Nearest neighbours, by the dimension they are nearest on
+## Nearest neighbors, by the dimension they are nearest on
 
 ### Same function, static or dynamic, same result, the CTFE family
 
@@ -105,7 +105,7 @@ that work had been "temporarily set down". The related academic line is SPEjs
 evaluators processed a complete program to produce a complete residual program;
 they treat a program as a collection of modules processed independently.
 
-This is the closest theoretical neighbour to per-file folding and the paper
+This is the closest theoretical neighbor to per-file folding and the paper
 must engage it directly.
 
 **Read at abstract level.** ACM DL and ScienceDirect both refuse
@@ -115,12 +115,12 @@ PostScript copy marked "provided only to the TFR reviewers"; it was not
 fetched. What is established from the published
 abstract and from the Chalmers group's own summary of the work
 (`cse.chalmers.se/~rjmh/TFR/results.html`): they pose **two** problems -
-the program to be specialised arrives one module at a time (PLDI '97), or the
+the program to be specialized arrives one module at a time (PLDI '97), or the
 *static data* is divided into "data modules" and the residual program is built
 in stages, one residual module per data module (PEPM '97, extended in TCS
-2000). Both are about the modular *structure* of specialisation: how the
+2000). Both are about the modular *structure* of specialization: how the
 input's modules map onto the residual's modules while the whole program is
-specialised. As posed, neither is a per-module *choice* to specialise or not. The setting is a functional language where
+specialized. As posed, neither is a per-module *choice* to specialize or not. The setting is a functional language where
 object identity is not a concept, so the identity problem chant's fixpoint
 solves has no obvious way to arise there.
 
@@ -155,7 +155,7 @@ fallback executes *the source file itself*. IFD is the better precedent for
 Nickel's row corrects the plan's earlier framing, which listed it as total.
 
 None has a fallback to executing out-of-subset source; all reject it. The
-plan's comparison was right about these and wrong to generalise from them to
+plan's comparison was right about these and wrong to generalize from them to
 "every comparable system".
 
 ### Theory to cite
@@ -171,7 +171,7 @@ the specializer. Two refinements the sweep suggests:
    fine-grained version of what forcing a folded file back to run does
    coarsely.
 
-Multi-stage programming (Taha & Sheard) is the neighbour where staging is
+Multi-stage programming (Taha & Sheard) is the neighbor where staging is
 explicit in the language rather than inferred.
 
 ## What survives, precisely
@@ -188,7 +188,7 @@ explicit in the language rather than inferred.
    entity is never two objects when one side folds and the other runs.** No
    precedent found. This is the contribution, and it exists *because* chant
    chose per-file granularity while keeping shared identity, the one
-   combination none of the neighbours has.
+   combination none of the neighbors has.
 
 ## Open
 

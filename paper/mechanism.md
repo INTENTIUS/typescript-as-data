@@ -6,7 +6,7 @@ Draft for #53. Every claim names the rule that states it; `spec/` is the long fo
 
 A file is admitted in two stages, and the first is easy to miss because it is not about expressions at all.
 
-The **statement gate** (`S-Module`) examines only exported statements, and recognises six shapes.
+The **statement gate** (`S-Module`) examines only exported statements, and recognizes six shapes.
 
 | Shape | Example |
 |---|---|
@@ -29,7 +29,7 @@ The **expression classifier** (`grammar.md` §2) then decides the shapes inside 
 
 ## What reduction produces
 
-The value domain and the three mechanisms by which reduction reaches a value have their own section. Two facts from it are needed here. Reduction produces envelopes that denote what the source named, of which exactly one kind survives to serialisation (`F-Val-Fate`). And the guarantee is narrow: none of the reduced file's own statements execute, while revival does import and invoke the module the fallback path would have imported (`F-NoOwnExecution`).
+The value domain and the three mechanisms by which reduction reaches a value have their own section. Two facts from it are needed here. Reduction produces envelopes that denote what the source named, of which exactly one kind survives to serialization (`F-Val-Fate`). And the guarantee is narrow: none of the reduced file's own statements execute, while revival does import and invoke the module the fallback path would have imported (`F-NoOwnExecution`).
 
 ## Two sub-grammars, and an asymmetry
 
@@ -84,7 +84,7 @@ Evaluating a single file yields either a reduction with a complete export namesp
 
 **It is reported.** A fallback is a normal outcome rather than an error, and that is exactly why it must appear: an unreported fallback is indistinguishable from a reduction, and the no-execution guarantee becomes unauditable (`F-Obs-Report`). The reason is located, naming the construct and its position; a failure inside a called function is re-anchored at the call site, with the callee's own position carried in the message (`F-Reason`).
 
-**It is parameterised by isolation.** Under an isolated mode, a reduction that would have to invoke project-owned code falls back instead (`F-IsolatedRefusal`). The verdict is therefore not a pure function of the source, and a specification that omitted the parameter would describe a judgment that behaves differently in any real deployment.
+**It is parameterized by isolation.** Under an isolated mode, a reduction that would have to invoke project-owned code falls back instead (`F-IsolatedRefusal`). The verdict is therefore not a pure function of the source, and a specification that omitted the parameter would describe a judgment that behaves differently in any real deployment.
 
 All of this is still a proposal. What makes a verdict final is the fixpoint.
 
@@ -94,7 +94,7 @@ Per-file partial evaluation is unsound when values have identity, and this is th
 
 Suppose file `A` reduces and file `B` falls back, and both refer to an entity that `A` produced. `B`'s real import of `A` constructs a second copy, and the build now holds two objects for one entity.
 
-That is not an abstract hazard, and the failure it produces is specific. Each entity is assigned a logical name when the build collects it, and attribute references carry a weak reference to the entity they belong to. Only one of two copies is collected. The other's attribute references then reach an entity with no logical name, and serialisation fails outright. Where it does not fail, a reference that should point at the collected entity inlines the uncollected one's value instead, leaving output that is quietly wrong rather than absent. Both were observed before the rule was written.
+That is not an abstract hazard, and the failure it produces is specific. Each entity is assigned a logical name when the build collects it, and attribute references carry a weak reference to the entity they belong to. Only one of two copies is collected. The other's attribute references then reach an entity with no logical name, and serialization fails outright. Where it does not fail, a reference that should point at the collected entity inlines the uncollected one's value instead, leaving output that is quietly wrong rather than absent. Both were observed before the rule was written.
 
 Every comparable system avoids the problem by not having it. Compile-time function execution copies values across its boundary, so nothing at run time shares identity with a compile-time object. Per-page static rendering shares no runtime objects between a prerendered page and a served one. A whole-program partial evaluator has a single heap, and preserving sharing within one heap is the easy case. Only a per-unit decision over a shared object graph has the problem at all, which is why the fixpoint has no precedent we found rather than a better-known equivalent.
 
@@ -153,11 +153,11 @@ The control file is what makes the example an example. Without it, "taint forced
 
 ## What a host supplies
 
-The subset is parameterised. A host provides six things (`F-Host-Interface`). Two concern entities, being the constructors that build them and how they expose attributes. Three are lists the host installs, an intrinsic registry and an authoring-helper allowlist and a trust set. The sixth is the form a composite registration takes. A registered call is admitted only if it is a pure function of its arguments and invoking it at fold time is indistinguishable from invoking it during a real run (`F-Host-Admission`), and revival always invokes the function the file imported rather than a reimplementation (`F-Host-NoSubstitution`).
+The subset is parameterized. A host provides six things (`F-Host-Interface`). Two concern entities, being the constructors that build them and how they expose attributes. Three are lists the host installs, an intrinsic registry and an authoring-helper allowlist and a trust set. The sixth is the form a composite registration takes. A registered call is admitted only if it is a pure function of its arguments and invoking it at fold time is indistinguishable from invoking it during a real run (`F-Host-Admission`), and revival always invokes the function the file imported rather than a reimplementation (`F-Host-NoSubstitution`).
 
 The interesting rule is an asymmetry between two kinds of callee. Into a **package**, reduction goes only through a closed allowlist, checked by name *and* by the provenance of the binding, so a helper of the author's own that happens to share a registered name is not the host's and the file falls back (`F-Div-Provenance`). Into a **project file**, reduction proceeds whenever the callee's body is itself in the subset, with no allowlist at all.
 
-That looks backwards until the trust boundary is stated. Package code is already loaded and executed by the build before reduction begins, to obtain the serialisers and lint rules the build cannot run without; admitting a call into it costs no execution the process was not already performing, so it is admitted by declaration and verified by registration. Project code is the untrusted input, and it is admitted only when it can be *evaluated without being executed*, which a syntactic check of the callee's body decides and an allowlist could not.
+That looks backwards until the trust boundary is stated. Package code is already loaded and executed by the build before reduction begins, to obtain the serializers and lint rules the build cannot run without; admitting a call into it costs no execution the process was not already performing, so it is admitted by declaration and verified by registration. Project code is the untrusted input, and it is admitted only when it can be *evaluated without being executed*, which a syntactic check of the callee's body decides and an allowlist could not.
 
 Admission to the allowlist has its own bar. A registered call must be a pure function of its arguments, and calling it during reduction must be indistinguishable from calling it during a real run (`F-Host-Admission`). Revival then uses the function the file imported rather than a reimplementation (`F-Host-NoSubstitution`), which is the principle compile-time function execution states: context decides where a function runs and never what it means.
 

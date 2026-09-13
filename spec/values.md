@@ -29,7 +29,7 @@ Nothing else. In particular no function is a `v` (F-Val-Callable), and no
 live instance is a `v`, a live instance is what an envelope becomes
 (F-Val-Live).
 
-## F-Val-Envelope (six envelopes, recognised by key)
+## F-Val-Envelope (six envelopes, recognized by key)
 
 A value is an *envelope* iff it is a non-array object carrying one of the keys
 `__attrRef`, `__intrinsic`, `__helper`, `__resource`, `__compositeStep`,
