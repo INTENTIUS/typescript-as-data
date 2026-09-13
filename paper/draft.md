@@ -1,5 +1,5 @@
 ---
-title: "Configuration as code, parsed as data: a statically evaluable subset of TypeScript with a specified fallback"
+title: "TypeScript as data: a specification for building JSON and YAML compilers, with a specified fallback"
 author: "INTENTIUS"
 date: "Extended draft for comment, September 2026"
 ---

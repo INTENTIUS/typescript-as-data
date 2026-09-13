@@ -1,6 +1,6 @@
 ---
 title: "typescript-as-data"
-description: "Configuration as code, parsed as data."
+description: "A specification for building JSON and YAML compilers from TypeScript."
 ---
 
 ## A policy in YAML and in TypeScript
