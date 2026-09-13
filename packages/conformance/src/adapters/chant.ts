@@ -10,7 +10,7 @@ import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
 import * as ts from "typescript";
 import * as chant from "@intentius/chant";
-import type { ConformanceAdapter, Finding, IsolationMode, ProjectResult, ProjectVerdict, RulePhase, Severity } from "../adapter.js";
+import type { ConformanceAdapter, ExecutionCounters, Finding, IsolationMode, ProjectResult, ProjectVerdict, RulePhase, Severity } from "../adapter.js";
 import type { ConformanceHost } from "../host.js";
 
 function exportInitializer(sf: ts.SourceFile, name: string): ts.Expression | undefined {
@@ -175,10 +175,51 @@ const projectFn = (
     foldProject?: (
       files: readonly string[],
       intrinsics?: readonly unknown[],
-      options?: { lexiconPackages?: readonly string[]; sandbox?: boolean },
+      options?: { lexiconPackages?: readonly string[]; sandbox?: boolean; executing?: boolean },
     ) => Promise<Map<string, ChantVerdict>>;
   }
 ).foldProject;
+
+/**
+ * F-Obs-Counters, as chant publishes them (chant#2446).
+ *
+ * Process-wide and monotonic, so a per-build figure means zeroing first — which
+ * is why both functions are needed and why neither is useful alone. Absent on a
+ * chant older than 0.72.2, where they existed on the module but not on the
+ * public entry, and `counters` is then simply omitted from the result: the
+ * contract says an implementation whose public entry exposes none omits it.
+ */
+const countersFn = (chant as unknown as { foldExecutionCounts?: () => ExecutionCounters }).foldExecutionCounts;
+const resetCountersFn = (chant as unknown as { resetFoldExecutionCounts?: () => void }).resetFoldExecutionCounts;
+
+/**
+ * Serialises the reset-fold-snapshot sequence, because chant's counters are
+ * PROCESS-WIDE and the harness folds concurrently.
+ *
+ * `runFixtures` maps every project fixture through `Promise.all`, and
+ * `compareAdapters` folds the reference and this adapter in parallel on top of
+ * that. Against a process-wide counter those reset and snapshot calls
+ * interleave, and each build reads some other build's total — observed as
+ * `factoryInvocations: 0` on a fixture that passes in isolation, which is the
+ * worst shape of wrong: plausible, and silently so.
+ *
+ * A mutex is the honest fix at this layer. The counters are monotonic module
+ * state by design in chant (chant#2446's doc says so outright, which is why the
+ * reset exists at all), so the only way to attribute them to one build is to
+ * let one build at a time run. It costs concurrency on chant's side of the
+ * comparison and nothing else; the reference is untouched.
+ */
+let foldQueue: Promise<unknown> = Promise.resolve();
+function serialised<T>(work: () => Promise<T>): Promise<T> {
+  const next = foldQueue.then(work, work);
+  // Keep the chain alive whatever `work` did, or one rejection stalls every
+  // fold after it.
+  foldQueue = next.then(
+    () => undefined,
+    () => undefined,
+  );
+  return next;
+}
 
 /**
  * The key a generated host package reads its values back out of (#2438).
@@ -255,15 +296,40 @@ async function foldOnDisk(
       paths.push(abs);
     }
     const lexiconPackages = host ? installHost(root, host) : [];
-    const verdicts = await projectFn!(paths, host ? hostIntrinsics(host) : [], {
-      lexiconPackages,
-      // tsad#113 — `isolated` means "do not invoke". chant's `--sandbox`
-      // (chant#1093) is the setting that refuses to import project code, which
-      // is F-Call step 5 firing so step 6 never runs. It leaves interpretation
-      // alone, so the interpretable factories still fold.
-      ...(mode === "isolated" ? { sandbox: true } : {}),
+    // Exactly one of chant's two flags, or neither. They are mutually exclusive
+    // in chant (0.72.3 throws if both are passed), which matches ι being one
+    // value rather than a pair of independent switches.
+    //
+    // `isolated` -> `sandbox` (chant#1093): refuses to import project code at
+    //   all, which is F-Call step 5 firing so step 6 never runs. Interpretation
+    //   is untouched, so the interpretable factories still fold.
+    // `executing` -> `executing` (chant#2455, spec 1.8): a declared project
+    //   function whose body did not fold is invoked, so the fold carries what a
+    //   run would compute in this process.
+    // `open` -> neither, and that is the strict default since chant#2453.
+    const isolation =
+      mode === "isolated" ? { sandbox: true } : mode === "executing" ? { executing: true } : {};
+
+    // chant#2446 — zero before, snapshot after. The counters are process-wide
+    // and monotonic, so a snapshot without the reset would report this
+    // process's whole history as one build.
+    const { verdicts, counters } = await serialised(async () => {
+      resetCountersFn?.();
+      const v = await projectFn!(paths, host ? hostIntrinsics(host) : [], {
+        lexiconPackages,
+        ...isolation,
+      });
+      return { verdicts: v, counters: countersFn?.() };
     });
-    const out: ProjectResult = { verdicts: {}, tentative: {}, taintedBy: {} };
+    // `counters` is omitted rather than zeroed when chant does not publish
+    // them, because the contract distinguishes "no invocations" from "cannot
+    // say" and a zeroed triple would assert the first.
+    const out: ProjectResult = {
+      verdicts: {},
+      tentative: {},
+      taintedBy: {},
+      ...(counters ? { counters } : {}),
+    };
     const relOf = (abs: string) => abs.slice(root.length + 1).split(/[\\/]/).join("/");
     for (const [abs, v] of verdicts) {
       const key = relOf(abs);
