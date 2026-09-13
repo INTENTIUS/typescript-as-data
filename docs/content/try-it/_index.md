@@ -3,7 +3,6 @@ title: "Try it in ten minutes"
 description: "The whole loop on a laptop, with a throwaway Forgejo, no account, and nothing at risk."
 weight: 20
 diataxis: tutorial
-hideChildren: true
 ---
 
 forgejo-warden keeps a Forgejo org in a declared state. Forgejo is a code-hosting server, like GitHub, that you can run yourself. warden's e2e stack stands up a throwaway one on Docker Compose and mints a token. You can declare a policy and apply it, then drift and reconcile, without touching a real instance.
@@ -85,6 +84,8 @@ another dry-run, and show me the drift. Finish with `npm run e2e:down`.
 ## What happened
 
 The policy is data. Nothing in it ran, and nothing needed to; the plan is computed from the declared values and the live org. `--config-mode check` folds the file and also runs it, and refuses if the two disagree, which is the guarantee made visible. `--config-mode run` skips the fold for anyone who only wants typed JSON. Deletes were never proposed, because nothing was marked `owned`. The same file works against Codeberg or any self-hosted Forgejo by changing `--base-url`.
+
+To see the evaluator itself with nothing installed, [fold a file in your browser](/typescript-as-data/try-it/in-the-browser/).
 
 [A workflow](https://github.com/INTENTIUS/typescript-as-data/blob/main/.github/workflows/demo.yml) runs these six steps every week against the same sandbox, with the policy cut out of this page by `scripts/demo.sh`, so the page cannot rot.
 

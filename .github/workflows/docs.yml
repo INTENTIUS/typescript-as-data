@@ -28,6 +28,19 @@ jobs:
         with:
           hugo-version: '0.162.1'
           extended: true
+      # The try-it page folds a file in the browser with the Rust evaluator
+      # compiled to WebAssembly; the docs build compiles it (scripts/build-wasm.sh).
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.98.1
+          targets: wasm32-unknown-unknown
+      - uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            evaluators/rust/target
+          key: rust-${{ runner.os }}-${{ hashFiles('evaluators/rust/Cargo.lock') }}
       - run: npm run docs:build
       - uses: actions/upload-pages-artifact@v3
         with:

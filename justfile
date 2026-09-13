@@ -15,6 +15,7 @@ site:
 # The docs site with live reload at http://localhost:8000/typescript-as-data/.
 # `just site-serve 8001` picks another port when a second checkout is serving.
 site-serve port="8000":
+    bash scripts/build-wasm.sh
     node docs/scripts/sync-spec.mjs
     cd docs && hugo server --bind 127.0.0.1 --port {{port}} --openBrowser
 
