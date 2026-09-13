@@ -52,28 +52,14 @@ The source layout is small enough to read:
 
 ## Where it came from
 
-The provenance matters for reading any agreement figure, and
-`packages/reference/README.md` states it plainly.
-
-From issue #19 until issue #50 these files were a *port* of chant's, kept
-current by a sync script and a list of recorded cuts. That guaranteed agreement
-and made agreement uninformative, since the cross-check was comparing the same
-code with itself. Issue #50 replaced the ported evaluation layer with one
-written from the specification text.
-
-`packages/reference/README.md` then records one honest limit on how independent
-that is. The author of the rewrite had previously read chant's implementation
-closely, while writing the specification from it. The rewrite was done from
-`grammar.md` and `judgments.md` without consulting the source, but it is not
-the test a reader who had never seen chant would constitute.
-
-It also found places where the text was not complete enough, which is the more
-useful result. `spec/grammar.md` used an
-*unclaimed* callee in four normative sentences and defined it in none, so
-`S-Unclaimed` was added (#51). `F-Import` and `F-Val-Live` stated two identity
-predicates and nothing said they answer different questions, so `F-Identity`
-was added (#59). And `F-Eval-Ident` step 1 read an instance as "J2 pre-built"
-that no rule of J2 built, so `F-Prebuild` now states the rule (#68).
+The reference was written from `grammar.md` and `judgments.md` without
+consulting chant's source, by an author who had read chant closely while
+writing the specification from it. Writing it found three places where the text
+was not complete enough: `grammar.md` used an *unclaimed* callee in four
+normative sentences and defined it in none; `F-Import` and `F-Val-Live` stated
+two identity predicates and nothing said they answer different questions; and
+`F-Eval-Ident` step 1 read an instance as "J2 pre-built" that no rule of J2
+built. `S-Unclaimed`, `F-Identity` and `F-Prebuild` are the rules that resulted.
 
 ## Running it
 

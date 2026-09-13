@@ -162,28 +162,6 @@ The codebases nobody here maintains are all present at their pinned revision,
 each yields comparable files, and each agrees on every one not recorded in the
 manifest against an issue; a recorded disagreement must still be there.
 
-## What the first real run found
-
-`paper/measurements.md` records it, and it is the argument for running a corpus
-at all. The first run, with no host, compared 7 files; none of them folded
-on either side. With a host it turned up a reference bug, a specification
-defect and a harness artifact.
-
-The bug was `F-Capture`'s walk stopping at an entity's boundary, invisible
-without a host because an unrevived entity is a plain object. The defect is
-issue #68: `F-Eval-Ident` step 1 read an instance as "J2 pre-built" that no
-rule of J2 built, so the reference refused 22 files chant folds, and
-`F-Prebuild` now states the rule. The artifact was 21 files on which the
-harness had asked the two implementations different questions, counted under
-a lexicon-list limit until chant#2422 retired it.
-
-The second run had that limit and the build-parameters one gone; it exposed 79
-more files and 10 of them disagreed. All ten were the harness or the
-reference: build parameters bound to the module's live export, a `../`
-specifier never joined to the importer's directory, and a capture decided over
-the namespace alone where `F-Import` records it at the import.
-`paper/measurements.md` lists them, and every one agrees now.
-
 ## In CI
 
 `.github/workflows/corpus.yml` runs it weekly, on Mondays early UTC, and on
