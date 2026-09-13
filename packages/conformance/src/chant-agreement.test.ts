@@ -59,28 +59,29 @@ describe("chant cross-check (#11)", () => {
     expect(dis, dis.join("\n")).toEqual([]);
   });
 
-  test("every held-out fixture exists and still disagrees, so neither list outlives its reason", async () => {
-    // A hold-out that quietly outlived its cause would be worse than the cause.
-    // Run per list rather than over the union, so each empties itself on its
-    // own event, so one reason cannot go on excusing another's fixtures.
-    // (tsad#110's list emptied when spec 1.6 gave J1 F-Eval-CallHost.)
-    for (const [reason, names] of [] as unknown as (readonly [string, Set<string>])[]) {
-      const held = projectFixtures(all).filter((f) => names.has(f.id));
-      expect(held.map((f) => f.id).sort(), `${reason}: a held-out fixture no longer exists`).toEqual([...names].sort());
-
-      // A skip is not agreement. `compareAdapters` reports nothing when one
-      // side answers "unavailable", so without this a chant that had stopped
-      // answering hosted fixtures at all would read as "these now agree, drop
-      // the hold-out" — exactly the false signal this guard exists to prevent,
-      // one level up.
-      const reports = await Promise.all(held.map((f) => runProjectFixture(chantAdapter, f)));
-      const skipped = reports.filter((r) => r.skipped).map((r) => r.fixture);
-      expect(skipped, `${reason}: chant answered none of these, so agreement cannot be read from them:\n${skipped.join("\n")}`).toEqual([]);
-
-      const dis = await compareAdapters(referenceAdapter, chantAdapter, held);
-      expect(dis.length, `${reason} looks settled — drop its hold-out`).toBeGreaterThan(0);
-    }
+  test("nothing is held out, and a future hold-out has to bring its guard", () => {
+    // This replaces a loop over an empty list. Every hold-out retired — chant#2435
+    // and chant#2441 to chant fixes, tsad#110 to spec 1.6 giving J1
+    // `F-Eval-CallHost`, chant#2446, chant#2453 and chant#2455 to the 0.72.3 pin
+    // and the adapter half — and what was left iterated `[]` behind a cast, so a
+    // test named for checking hold-outs asserted nothing at all. Vacuously green
+    // is the one thing a guard must never be.
+    //
+    // So the file states the live fact instead: chant answers every fixture. When
+    // a hold-out is next needed it must carry its own guard, and the shape that
+    // worked is in this file's history — assert the named fixtures still exist,
+    // assert chant ANSWERS them (a skip is not agreement, because
+    // `compareAdapters` reports nothing when one side is "unavailable"), and
+    // assert they still disagree, so the list empties itself the moment its
+    // reason is retired rather than outliving it.
+    expect(
+      fixtures.length,
+      "a fixture is being filtered out of the comparison. Add its hold-out list back " +
+        "with a guard that fails when its reason is settled, keyed on the issue that " +
+        "explains it.",
+    ).toBe(all.length);
   });
+
   test("chant's shape classifier is available (chant-v0.64.0+, chant#2362) and agrees on every fixture", async () => {
     // The pinned chant carries the export, so "unavailable" would mean the adapter
     // silently stopped comparing the shape half — a real regression, asserted.
