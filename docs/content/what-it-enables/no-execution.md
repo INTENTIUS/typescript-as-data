@@ -7,7 +7,7 @@ diataxis: explanation
 
 A TypeScript file whose values are fixed by its source can be reduced to data by reading it. Those values are literals, constants and references to other declarations. Nothing executes. No constructor is called, no environment variable is read and no network call happens. The specification calls this folding, and `F-NoOwnExecution` states the property. The alternative is the run path: the build executes the file as a program and takes its exports, which gives the same artifact at the cost of everything below.
 
-## What that buys
+## Consequences
 
 The artifact is a function of the source. The same file gives the same output on any machine at any time, in whatever language the evaluator happens to be written in. A reviewer reading the diff sees exactly what will ship. A tool that cannot run JavaScript at all gets the same value the author sees in the editor, whether it is a Go binary, a WASM module or a CI job with no runtime.
 
