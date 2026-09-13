@@ -45,7 +45,7 @@ What each hook answers:
 - `generate`, source for a namespace, which the round trip needs.
 
 A hook that cannot answer returns `"unavailable"`, and the fixture is reported
-skipped rather than silently passing. A shape classifier the implementation
+reported skipped rather than counted as a pass. A shape classifier the implementation
 does not expose at all is the common case.
 
 `ShapeResult` and `FoldResult` carry a `rule` field alongside the location.
@@ -80,8 +80,7 @@ Five checks, in four places.
 
 Two stub adapters must also fail: one returns `run` for every file, one folds
 everything to `null`. An implementation that falls back on every file in a
-build is sound and useless, and without the stub, `F-Taint`'s "least set"
-would be untested.
+build is sound, so without the stub `F-Taint`'s "least set" would be untested.
 
 The first four run in `npm test` and `.github/workflows/ci.yml` on every pull
 request. The fifth has its own command and its own weekly workflow, because it

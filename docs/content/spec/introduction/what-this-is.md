@@ -20,7 +20,7 @@ are observationally equivalent. A source file may be reduced from its AST to
 the entities it declares, or imported and executed, and the build cannot tell
 which happened from the output.
 
-The binding is part of the statement rather than a footnote. `params.<name>`
+The binding is part of the statement. `params.<name>`
 folds to a literal supplied at build invocation, so output is a function of
 source and of binding.
 
@@ -31,7 +31,7 @@ an identifier from one vocabulary, `S-*` for shape rules and `F-*` for fold
 rules, and `spec/inventory.md` is a ledger of decision points that cites those
 rules.
 
-Two CI gates keep the two sides honest:
+Two CI gates check both sides:
 
 - `spec/coverage.test.ts`, that every inventory row cites a rule that is
   actually defined.
@@ -98,14 +98,13 @@ classes whose instances are entities and end with the host's rules contract;
 the registry and the trust set sit between.
 
 The generality this buys covers host vocabularies. It does not cover
-languages. `spec/README.md` is explicit that a reader who infers language
-portability from "parameterized by a host" has been misled.
+languages. `spec/README.md` is explicit that "parameterized by a host" reaches
+host vocabularies and stops there.
 
 Another language would reuse the value-domain shape and the per-file decision
 and identity-taint fixpoint; the two-layer admissibility structure; the three
-evaluation modes and the conformance obligations. It would have to reproduce
-the AST classification, which is TypeScript's node kinds, and ECMAScript
-coercion, rather than reuse them.
+evaluation modes and the conformance obligations. It would have to reproduce the
+AST classification, TypeScript's node kinds, and ECMAScript coercion.
 
 ## How disagreements are settled
 

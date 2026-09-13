@@ -13,8 +13,7 @@ The pin is a real dependency. `@intentius/chant` is in this repository's
 `packages/conformance/src/adapters/chant.ts` reaches it through its public
 entry only: `fold`, `foldProject`, `collectConsts`, `FoldError`, and, since
 `chant-v0.64.0`, `findSubsetViolation` for the shape half. What the suite tests is the version a user would install. With
-an older pin, the adapter would report shape `"unavailable"` rather than
-guessing.
+an older pin, the adapter would report shape `"unavailable"`.
 
 ## What it asserts
 

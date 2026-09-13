@@ -107,7 +107,7 @@ The subset has exactly one definition: `findSubsetViolation` (`subset.ts:289`),
 shared by the folder and by the lint rules EVL001/EVL003 so the linted subset
 and the folded subset cannot drift (L2.*).
 
-**F-Div-*** *(The direction is the requirement, not the agreement)*
+**F-Div-*** *(The direction is the requirement)*
 
 The two consumers have different information. A lint pass has no binding
 resolver and no lexicon registry; the folder has both. The shape-only
@@ -124,7 +124,7 @@ Enumerated divergences in that direction:
 - a member read whose object resolves to `null`/`undefined` (L3.10;
   shape-valid, folder refuses).
 
-**F-Exc-Lazy, F-Exc-Registry** *(The two exceptions must be stated, not tidied away)*
+**F-Exc-Lazy, F-Exc-Registry** *(The two exceptions must be stated)*
 
 1. **Short-circuit laziness** (L2.9, L3.13). The folder evaluates `&&`, `||`,
    `??` and the conditional lazily; the classifier requires every branch to be

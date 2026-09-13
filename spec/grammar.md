@@ -160,10 +160,10 @@ expressions; `await`, `yield`; assignment and compound assignment; the comma
 operator; `typeof`, `void`, `delete`, `++`, `--`; `==`, `!=`, `%`, `**`, the
 bitwise operators, `in`, `instanceof`; a computed property name; a
 non-literal element-access key; a call not matching any S-Call form. Optional chaining is
-specified, not merely admitted: since chant-v0.63.0 a `?.` on a nullish object
+specified rather than merely admitted: since chant-v0.63.0 a `?.` on a nullish object
 produces a chain-short-circuit value that propagates through the remaining
-`.`/`[]`/`!`/`?.()` of the same chain and becomes `undefined` at its end -
-ECMAScript's semantics, implemented rather than coincidental.
+`.`/`[]`/`!`/`?.()` of the same chain and becomes `undefined` at its end,
+which is ECMAScript's semantics.
 
 ---
 

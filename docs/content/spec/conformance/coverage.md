@@ -58,7 +58,7 @@ The file's own header states the count, {{< figure "rulesWithFixture" >}} of
 {{< figure "rulesTotal" >}} rules with a fixture.
 
 Every rule left on the list is a property no adapter can observe from
-verdicts, and the list says so instead of implying a to-do. It once held
+verdicts, and the list gives that reason for each. It once held
 rules waiting on a form the reference lacked, the composite factory and the
 isolation mode among them, and each of those left when the form landed.
 

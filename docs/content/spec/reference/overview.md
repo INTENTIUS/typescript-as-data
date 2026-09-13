@@ -11,8 +11,8 @@ this repository, published to npm at the specification's version.
 
 It is deliberately partial.
 [What it does not do](/typescript-as-data/spec/reference/limits/) says where,
-summarising `packages/reference/CAVEATS.md`. A reader who assumes the
-reference is complete will misread the conformance numbers.
+summarising `packages/reference/CAVEATS.md`. The conformance numbers have to
+be read with that partiality in mind.
 
 ## What it covers
 

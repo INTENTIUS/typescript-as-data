@@ -63,7 +63,7 @@ IntrinsicDef = { name, isTag: boolean, foldsAsCall?: boolean, foldsEagerly?: boo
 - A registration is **validated against the export it names**, tagged
   template signature versus plain call, and presence in the package's own
   exports (`chant dev check-lexicon`). A host must provide the equivalent
-  check or its registry is a claim, not a fact.
+  check, or its registry is a claim.
 
 ## F-Host-Admission (when a call may be registered)
 

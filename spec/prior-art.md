@@ -63,7 +63,8 @@ decision is per unit, the fallback is execution, and a hybrid application
 mixes both.
 
 There, the decision is by a *syntactic marker the author
-writes*, not by an analysis of whether the unit is statically evaluable; and
+writes*, and an analysis of whether the unit is statically evaluable plays no
+part; and
 statically-rendered and server-rendered pages share no runtime object identity
 across the boundary, so there is nothing to taint. The equivalence obligation
 is also never stated as a discharged property.
@@ -107,7 +108,7 @@ they treat a program as a collection of modules processed independently.
 This is the closest theoretical neighbour to per-file folding and the paper
 must engage it directly.
 
-**Read at abstract level, not full text.** ACM DL and ScienceDirect both refuse
+**Read at abstract level.** ACM DL and ScienceDirect both refuse
 the fetcher (403), including ScienceDirect's bronze-open-access PDF that
 Unpaywall reports for the TCS version. Hughes' Chalmers page links a
 PostScript copy marked "provided only to the TFR reviewers"; it was not

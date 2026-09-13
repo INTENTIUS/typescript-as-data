@@ -45,7 +45,7 @@ proposition with a proof obligation, and the two tolerated exceptions are
 `F-Exc-Lazy` and `F-Exc-Registry`.
 
 Names are `Prefix-CamelWords` with no digits in the name part, and are meant to
-be specific enough to read alone: `F-Eval-Member`, not `F-Eval-3`. Numbered steps are cited as in
+be specific enough to read alone, like `F-Eval-Member`. Numbered steps are cited as in
 `F-Eval-Member step 4`, and the step number is not part of the identifier.
 
 An identifier names one rule for the life of the specification. When a rule is
@@ -94,7 +94,7 @@ except through `F-Import`. It is *tentative*, and J3 is what makes it final.
 
 ### J3, the identity-taint fixpoint
 
-This is the judgment with no obvious precedent, and `spec/judgments.md` says
+This is the judgment with no precedent found, and `spec/judgments.md` says
 why it has to exist. Per-file partial evaluation is unsound in the presence of
 object identity unless something makes it sound. If file `A` folds and file `B`
 runs, and both refer to an entity that `A` produced, then `B`'s real import of
@@ -144,8 +144,8 @@ bounded and named, and all of it is code the file imported rather than code the
 file wrote.
 
 `F-Depth` requires an implementation to bound three recursions and lets it
-choose the values, which must be stated. Exhaustion must produce `run`, never a
-failure and never a silent change of evaluation mode.
+choose the values, which must be stated. Exhaustion must produce `run`, and a
+failure or a silent change of evaluation mode is a violation.
 
 `F-Obs-Counters`, `F-Obs-Report`, `F-Obs-Provenance` and `F-Obs-Messages` are
 the observability rules. A conforming implementation reports, per file, the

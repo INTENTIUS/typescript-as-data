@@ -13,7 +13,7 @@ Many tools take a file that describes what you want and then make the world matc
 
 Almost all such files are written in YAML, a plain text format for structured settings: indentation shows nesting, a colon separates a name from its value, a dash starts a list item.
 
-It is easy to read and has no way to check itself. A misspelt key is silently ignored. A block repeated twenty times is copied twenty times, and changed twenty times.
+It is easy to read and has no way to check itself. A misspelt key is ignored without an error. A block repeated twenty times is copied twenty times, and changed twenty times.
 
 ## What TypeScript is, and why it helps here
 

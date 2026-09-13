@@ -11,8 +11,8 @@ both folded. It is issue #25.
 
 The module's own doc says why it exists. The fixtures in `spec/fixtures/` were
 written to exercise particular rules, so agreement on them is agreement on
-cases somebody chose. chant's example corpus was not written for this purpose
-at all, which is the only reason running it is worth anything.
+cases somebody chose. chant's example corpus was written for chant, so
+agreement on it is agreement on cases the mechanism had no hand in choosing.
 
 ## Running it
 
@@ -34,15 +34,14 @@ paper cites is taken at the pinned tag.
 `npm run corpus` sets `TSAD_CORPUS_REPORT=1` and runs
 `packages/conformance/src/corpus.test.ts`, which regenerates
 `packages/conformance/corpus-report.md`. That file is the committed evidence
-artifact, and its numbers are produced by the run rather than typed in.
+artifact, and its numbers come from the run.
 
-Without `TSAD_CHANT_REPO`, the suite skips itself, and the skip is reported
-rather than silent.
+Without `TSAD_CHANT_REPO`, the suite skips itself, and the skip is reported.
 
 ## Where the corpus comes from
 
 The entries are the ones chant's own `examples/differential-corpus.ts`
-enumerates, imported rather than re-listed. It is the same list, lexicon
+enumerates, imported directly. It is the same list, lexicon
 selection and intrinsic wiring that chant's own differentials use, so a corpus
 entry added or a network fixture excluded on chant's side is picked up here
 with no edit to this repository.
@@ -80,8 +79,8 @@ That spread over-approximates, and the module says so: a file may be in a
 limited set and also have a real disagreement hiding under it. That is the cost
 of the limit, and it is what bounds the whole measurement.
 
-Limits are decided from syntax and the import table, never from a rejection
-message. Message wording is explicitly non-normative under `F-Obs-Messages`, so
+Limits are decided from syntax and the import table. Message wording is
+explicitly non-normative under `F-Obs-Messages`, so
 a classifier that read it would silently stop classifying the day the wording
 changed.
 
@@ -108,9 +107,10 @@ that fold on both sides the export namespaces are structurally identical,
 entity class and properties included. This agreement was observed rather than
 designed, the first between the two.
 
-It also states the limit, and the limit is the more useful half.
-{{< figure "corpus.comparable" >}} of {{< figure "corpus.files" >}} is the comparable set, not the corpus, and every limit is an over-approximation,
-so a file under one may also be hiding a disagreement.
+It also states the limit.
+The comparable set is {{< figure "corpus.comparable" >}} of
+{{< figure "corpus.files" >}}. Every limit is an over-approximation, so a file
+under one may also be hiding a disagreement.
 
 Namespace comparison is structural. `corpus.ts` compares entities rather than
 skipping them, which is only sound because both implementations construct them
@@ -152,7 +152,7 @@ passing vacuously.
    it by name. A missing evaluator must not read as a clean pass.
 2. The corpus is the whole one: at least 100 entries and at least 380 files. A
    checkout whose dependencies are not installed, or a corpus discovery that
-   quietly returned less, would otherwise read as a clean run.
+   returned less, would otherwise read as a clean run.
 3. Every file is either comparable or limited by a named limit, and at least
    50 are comparable. `corpus.ts` records what that floor is for: the hostless
    first draft of this check compared 7 files, none of which folded on either
@@ -182,5 +182,5 @@ the lexicon artifacts. Then it asserts that `examples/differential-corpus.ts`
 exists before running the check, because a skipped suite passes and a checkout
 that landed in the wrong place must not report as a clean cross-check.
 
-The report is uploaded as an artifact on success and on failure both, since a
-run with disagreements in it is the run whose report somebody wants to read.
+The report is uploaded as an artifact on success and on failure both, so a
+run with disagreements in it leaves its report behind.

@@ -29,4 +29,4 @@ chant {{< figure "chantPin" >}} passes every fixture it can answer and agrees wi
 | Comparable, all agreed | {{< figure "corpus.comparable" >}} |
 | Both fold, namespaces identical | {{< figure "corpus.bothFold" >}} |
 
-The limits that make the other files incomparable are counted rather than hidden, in [the corpus cross-check](/typescript-as-data/spec/conformance/corpus/).
+[The corpus cross-check](/typescript-as-data/spec/conformance/corpus/) counts the limits that make the other files incomparable.

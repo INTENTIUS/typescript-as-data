@@ -1,8 +1,7 @@
 # The value domain
 
 Normative draft. What a fold produces. Rules are `F-Val-*`: the value
-domain is a property of folding's output, not of syntax, so it takes the
-`F-*` prefix. Derived from `FoldedValue` and its cases
+domain is a property of folding's output, so it takes the `F-*` prefix. Derived from `FoldedValue` and its cases
 (`fold.ts:116–300`), `FoldableFunction` (`fold.ts:378`), `carriesLiveObject`
 (`fold.ts:411`), `isFoldSymbolicEnvelope`, and `reviveFoldedValue`
 (`fold-import.ts:2643`), at `e4074c17`.

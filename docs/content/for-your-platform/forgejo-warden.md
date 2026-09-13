@@ -23,4 +23,4 @@ Warden reads live reality and diffs it against the declared source; the plan it 
 
 ## Proof
 
-The `.ts` and `.yml` forms of the same policy load to the same object, asserted in warden's tests, and `--config-mode check` asserts it for any policy by folding and running it. The evaluator is the published reference rather than chant, so the consumer needs nothing else. The whole loop runs against the e2e sandbox, which is [the tutorial](/typescript-as-data/try-it/).
+The `.ts` and `.yml` forms of the same policy load to the same object, asserted in warden's tests, and `--config-mode check` asserts it for any policy by folding and running it. The evaluator is the published reference, so the consumer needs no chant install. The whole loop runs against the e2e sandbox, which is [the tutorial](/typescript-as-data/try-it/).

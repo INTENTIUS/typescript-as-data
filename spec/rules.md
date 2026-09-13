@@ -37,7 +37,7 @@ check over the folded namespace is **pre-synthesis**, a check over the
 artifact is **post-synthesis**.
 
 One hook may serve both, as chant's does. The phase is named by the input the
-rule reads, not by a separate entry point.
+rule reads.
 
 ## F-Rule-Pure (what a rule may do)
 

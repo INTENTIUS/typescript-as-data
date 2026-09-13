@@ -240,5 +240,5 @@ the coverage gate cites them.
 
 ## What this inventory does not cover
 
-`fold-import.ts` was read for decision points, not line by line end to end. The
+`fold-import.ts` was read for decision points. The
 No known unread region remains at the decision-point level.

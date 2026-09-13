@@ -25,7 +25,7 @@ must produce identical errors and byte-identical serialized output. It builds
 every non-empty entry both ways, mixed entries included, which is where the
 requirements below actually fire. See J3's validation status.
 
-The binding is part of the statement, not a footnote. `params.<name>` folds to
+The binding is part of the statement. `params.<name>` folds to
 a literal supplied at build invocation (F-Import, J2), so output is a function of source
 *and* binding; "same source, same output" is true only with the binding held
 fixed.
@@ -591,7 +591,7 @@ run-fallback file into **one** module graph rather than one per file:
 two bundles would be two module instances of a shared import, and the
 proposition would fail on the run side.
 
-### Consequences worth stating
+### Consequences
 
 **Leaf fixes buy nothing while an importer still runs.** Because taint flows
 forward into imports, a perfectly foldable leaf imported by a running file
@@ -792,9 +792,9 @@ reference or be referenced by a foldable one in ways only running proves safe.
 
 Seed with every file that would not fold on its own; walk the union of forward
 and reverse edges to closure. Monotone over a finite file set, so it
-terminates. State it as a least fixpoint, not as the worklist.
+terminates. State it as a least fixpoint.
 
-**F-Cycle** *(Cycles are a located error, not divergence)*
+**F-Cycle** *(Cycles are a located error)*
 
 `FoldSession.stack` (L8.9) detects a genuine reference cycle and reports the
 path.
@@ -878,7 +878,7 @@ const of the same name.
 (`const { a } = …`) does not bind `a` for the folder, and a non-exported
 `const` is collected exactly like an exported one. The spec must say this
 because the first is a surprise, the declaration is valid TypeScript and the
-name is simply invisible.
+name is invisible.
 
 **Lookup order is `consts`, then `externals`** (L5.2, `fold.ts` identifier
 branch). A name in the file's own `consts` is never looked up in `externals`,
@@ -898,7 +898,7 @@ unspecified.
 
 ---
 
-**F-Call** *(There are three evaluation modes, not two)*
+**F-Call** *(There are three evaluation modes)*
 
 The first revision described fold-to-envelope and revival. There is a third,
 and it is the one that makes folding under isolation possible.
@@ -971,7 +971,7 @@ reports whether it does; the equivalence claim is over serialized output only.
 The first-writer-wins rule is stated for implementations that do expose it, so
 two of them agree on which writer.
 
-**F-Obs-Counters** *(The no-execution observable is normative in shape, not in name)*
+**F-Obs-Counters** *(The no-execution observable is normative in shape)*
 
 No-execution is checkable only through the counters (`L10.1`). The rule
 therefore fixes their shape and leaves their names to the implementation.
@@ -993,8 +993,8 @@ its file, the position inside it, and the reason, preserving the rule
 identifier (L5.10, `callFoldableFunction`). The reported location is the call;
 the callee position travels in the message. The spec must say which is
 primary, because R-spec.3's "located" is otherwise ambiguous for exactly this
-case. Whether the report is summarized or verbose by
-default is presentation, not conformance.
+case. Whether the report is summarized or verbose by default is a
+presentation choice.
 
 **F-Obs-Messages** *(Message stability is not normative; location and rule are)*
 
@@ -1008,7 +1008,7 @@ identifier, and `FoldError` carries exactly those (L10.4).
 ---
 
 **J1** *(Semantics a second implementation cannot guess)* defines the domain and defines membership. Neither says what an operator
-*means*. "As ECMAScript" is the obvious discharge and it is available for most
+*means*. "As ECMAScript" is the usual discharge and it is available for most
 of this section, but not all of it, and the places where the implementation
 departs from ECMAScript are exactly the ones a second implementation would get
 wrong by assuming it.
