@@ -39,7 +39,7 @@ Terms are in alphabetical order, one short entry each. A term in code font is wr
 | Revival | Turning an envelope back into a real object once the host's code is available, at the end of a fold in the full profile. |
 | Rule identifiers | Every rule in the specification has a name. `S-` rules are decided from syntax alone; `F-` rules need name resolution, a host or the module graph. |
 | Run | The fallback when a file cannot be folded. The JavaScript engine executes the file and the tool takes whatever the exports hold at the end; the verdict's reason names the line that made the file a program. |
-| Semantic linting | A check over the values a project declares, across files and resources, as opposed to a type check on one value. chant's lexicon rules and forgejo-warden's guardrails are examples; the specification defines only the contract they run under. |
+| Rule over values | A check over what a project declares, across files and resources, as opposed to a type check on one value; tools call it semantic linting. chant's lexicon rules and forgejo-warden's guardrails are examples; the specification defines only the contract they run under. |
 | Pre-synthesis, post-synthesis | The two phases a rule may run in: over the declared values before anything is emitted, or over the emitted artifact. The fold is what makes the first phase possible without running the files. |
 | Serializer | The part of a host that turns folded values, envelopes included, into the artifact. |
 | Specification version | A number such as `1.8` naming the rule set at a point in time, tagged in the repository. It moves when a rule changes, never when a release ships. |
