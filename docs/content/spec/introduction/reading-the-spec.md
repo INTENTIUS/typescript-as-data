@@ -51,19 +51,6 @@ fallback from static evaluation to execution is well established; what has no
 visible precedent is the combination of per-file granularity with shared object
 identity across the boundary, which is what forces J3.
 
-## A note on a file you will see cited
-
-`spec/requirements.md` no longer exists. It was the provisional "why" layer,
-written as numbered `R*` clauses, and it was retired by issue #46. Its content
-became the Rationale sections of the rule files, its objective became
-`judgments.md`'s preamble, and its four requirements-on-the-specification
-became the process rules in `spec/README.md`.
-
-`R*` citations still appear inside the rule text, as pointers to which clause a
-rule formalises. They are not identifiers you can look up in a file any more.
-The only normative identifiers are `S-*` and `F-*`, and `inventory.md` cites
-those only, which `spec/coverage.test.ts` asserts.
-
 ## The process rules
 
 `spec/README.md` also carries rules about the document set rather than about

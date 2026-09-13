@@ -1,6 +1,6 @@
 # The host interface
 
-Normative draft (#16). What a host supplies to make the subset mean
+Normative draft. What a host supplies to make the subset mean
 something, and the rule by which each supplied thing is admitted. Rules are
 `F-Host-*`. Derived from `IntrinsicDef` and the three fold predicates
 (`lexicon.ts:219–352`), `createResource`/`createProperty` (`runtime.ts:21,
@@ -8,16 +8,16 @@ something, and the rule by which each supplied thing is admitted. Rules are
 (`foldable-helpers.ts`), `isTrustedExecutableBinding`, and
 `findCompositeDefinition`, at `e4074c17`.
 
-The extraction (#19, `packages/reference/CUTS.md`) confirmed this list without
+The extraction confirmed this list without
 amendment. The expression layer needed items 3, 4 and 5 and nothing else;
 items 1, 2 and 6 live in revival and interpretation, which the reference
-implementation does not yet port (#21, #22).
+implementation does not yet port.
 
 ---
 
 ## F-Host-Interface (what a host supplies)
 
-Seven things. The first four are the parameters R7 named, the next two are
+Seven things. The first four are the parameters of the subset, the next two are
 what the trust rules need, and the last is the rules contract's.
 
 1. **Entity constructors.** Classes whose instances are entities: built by
@@ -27,15 +27,15 @@ what the trust rules need, and the last is the rules contract's.
    properties `kind: "property"`. Revival constructs them (F-Val-Fate).
 2. **Attribute exposure.** `attrMap` names the attributes an entity exposes;
    reading one on a live instance yields an `AttrRef` bound to that instance
-   (F-Val-Live), and on a *name* yields the `{__attrRef}` envelope (R10.3).
+   (F-Val-Live), and on a *name* yields the `{__attrRef}` envelope.
 3. **An intrinsic registry** `ρ`: a list of `IntrinsicDef`.
 4. **An authoring-helper allowlist**: names a call may fold through as a
    `{__helper}` envelope.
 5. **A trust set**: the package specifiers this build resolved and loaded
-   (R2.1 arm 1), plus the host's own module tree (arm 2).
+   (arm 1), plus the host's own module tree (arm 2).
 6. **A composite registration form**, `export const N = Composite(fn, "N")`
    with `Composite` imported from the host, that makes a project-defined
-   factory *interpretable* (R7.2).
+   factory *interpretable*.
 7. **Rules**: the host's semantic checks over the folded namespace and the
    artifact, under the contract of `rules.md` (F-Rule-Supply). A project may
    supply more as a policy.
@@ -52,14 +52,14 @@ IntrinsicDef = { name, isTag: boolean, foldsAsCall?: boolean, foldsEagerly?: boo
 ```
 
 - `isTag` is **required**. An omitted value once defaulted silently to "not a
-  tag" and shipped the most-used intrinsic in the ecosystem unfoldable
-  (chant#1039, #1067). A registry entry that does not say is invalid.
+  tag" and shipped the most-used intrinsic in the ecosystem unfoldable. A
+  registry entry that does not say which kind it is is invalid.
 - `isTag`, `foldsAsCall` and `foldsEagerly` are **mutually exclusive**. The
   three fold predicates are: tag folds iff `isTag`; call form folds iff
   `¬isTag ∧ foldsAsCall`; eager folds iff `¬isTag ∧ foldsEagerly`.
 - `foldsAsCall` and `foldsEagerly` are **opt-in, per intrinsic, default
   off**, and never inferred from the name, the tag flag, or the call's shape
-  (R3.3: closed allowlists).
+  (closed allowlists).
 - A registration is **validated against the export it names**, tagged
   template signature versus plain call, and presence in the package's own
   exports (`chant dev check-lexicon`). A host must provide the equivalent
@@ -90,14 +90,14 @@ helpers and `propagate` mutates in place; `createResource()`/
 
 A call into a **package** folds only through a closed allowlist, a
 registered intrinsic or helper, checked by name *and* by the provenance of
-the binding (R3.3, F-Div-Provenance), or at a declarator by invocation
+the binding (F-Div-Provenance), or at a declarator by invocation
 (F-Call), reached directly or through a const alias (F-Declarator), where
-since `1.6` the result is a value whatever it is. A call nested inside an
+the result is a value whatever it is. A call nested inside an
 expression never folds through a package. A call into a **project file**
-folds whenever the callee's body is itself in the subset (R6.5), with no
+folds whenever the callee's body is itself in the subset, with no
 allowlist.
 
-The asymmetry is the trust boundary (R2.1, #36). Package code is already
+The asymmetry is the trust boundary. Package code is already
 loaded and executed by the build before discovery begins; admitting a call
 into it costs no execution the process was not performing, so it is admitted
 by declaration and verified by registration. Project code is the untrusted
@@ -112,7 +112,7 @@ revival resolves the name **through the folding file's own `import`
 bindings** and invokes what it finds (F-Val-Fate, J2 F-Call). A host never
 substitutes its own implementation for a registered name. Two consequences:
 a same-named function the file declared or imported from a project file is
-that function's call (F-Eval-CallLocal, since `1.7`), one imported from
+that function's call (F-Eval-CallLocal), one imported from
 anywhere else is not the host's and the file falls back (F-Div-Provenance);
 and the registry cannot
 drift from the helpers' real behaviour, because it never reimplements them.
@@ -120,7 +120,7 @@ This is the CTFE principle ([`prior-art.md`](./prior-art.md)) made a rule.
 
 ## F-Host-Composite (the registration that admits interpretation)
 
-A project file's composite is interpretable (R7.2 rule 2) iff its defining
+A project file's composite is interpretable (rule 2) iff its defining
 module has `export const N = Composite(fn, "N")` where `Composite` is bound,
 *in that module*, to an import of the host's own, `fn` is an arrow or
 function expression, and the name argument is absent or a string literal. A
@@ -145,27 +145,27 @@ one, matched by text against the closed set the build already resolved. Arm
 2: a specifier that *resolves* to a path inside the host's own module tree -
 text is insufficient because an untrusted repository controls both its
 source and its `node_modules`. Nothing else, and a build with no package
-list keeps only arm 2 (R2.1). Under `ι = isolated`, an import outside both
+list keeps only arm 2. Under `ι = isolated`, an import outside both
 arms is F-IsolatedRefusal (J2).
 
 ## F-Host-Generality (what varies and what does not)
 
 What a host may vary: the seven items of F-Host-Interface. What it may not:
-the syntax (grammar.md), the semantics of admitted operators (R10, J1), the
+the syntax (grammar.md), the semantics of admitted operators (J1), the
 module system, the value domain's shape (values.md), the judgments (J1–J3),
 and the direction claim (divergence.md). Generality is over **host
 vocabularies**, not languages (`README.md`, Scope). A host is one
 instantiation; chant's lexicons are the reference instantiation, and the
-reference implementation (#19, #20) is meant to carry the interface without
+reference implementation is meant to carry the interface without
 any of them.
 
 ---
 
 ## Rationale
 
-Non-normative. The reasoning that motivated each rule, carried over from the retired `requirements.md` (#46). Keyed by the rule(s) each note supports.
+Non-normative. The reasoning that motivated each rule, carried over from the retired `requirements.md`. Keyed by the rule(s) each note supports.
 
-**F-Host-Trust** *(was R2.1. Trust is decided by resolution, never by the text of a specifier)*
+**F-Host-Trust** *(Trust is decided by resolution, never by the text of a specifier)*
 
 Two arms (L9.1–L9.4). Arm 1: an active lexicon package of *this build*,
 matched by text against a closed set built from names the build already

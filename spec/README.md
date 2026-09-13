@@ -9,23 +9,21 @@ J4 properties and observables), [`values.md`](./values.md) (`F-Val-*`),
 [`hosts.md`](./hosts.md) (`F-Host-*`), [`rules.md`](./rules.md)
 (`F-Rule-*`). Each ends with a non-normative
 Rationale section. [`inventory.md`](./inventory.md) is the coverage ledger.
-Every decision point in chant core cites the rule that governs it, and #44
-gates on it. [`prior-art.md`](./prior-art.md) is the #31 finding.
-
-`requirements.md` was the provisional "why" layer and was retired by #46; its
-content is the Rationale sections.
+Every decision point in chant core cites the rule that governs it, and CI
+gates on it. [`prior-art.md`](./prior-art.md) asks whether the novelty claim
+stands and answers it in a narrowed form.
 
 ## Process rules for the specification itself
 
-Not rules of the mechanism; rules of this document set. No fixture cites them. CI structure enforces them (#8, #44).
+Not rules of the mechanism; rules of this document set. No fixture cites them. CI structure enforces them.
 
-- **Every normative rule carries a stable identifier**(#6, #46).
+- **Every normative rule carries a stable identifier**.
 - **Every identifier is exercised by at least one fixture, and every fixture
-   cites a real identifier.**Both directions, in CI (#8, #44).
-- **Rejections are located**- node and rule, wording unconstrained. Message stability is not normative (R9.4).
-- **The subset is versioned**(#18). The policy is the Versioning section below; the current version is `VERSION` and the history is `CHANGELOG.md`.
+   cites a real identifier.**Both directions, in CI.
+- **Rejections are located**- node and rule, wording unconstrained. Message stability is not normative.
+- **The subset is versioned**. The policy is the Versioning section below; the current version is `VERSION` and the history is `CHANGELOG.md`.
 
-**A disagreement between two implementations is triaged here first** (#25),
+**A disagreement between two implementations is triaged here first**,
 and reclassified as an implementation bug only once this specification is
 shown to be unambiguous on the point. The order is the rule because the
 incentives run against it: amending an implementation takes an afternoon and
@@ -41,7 +39,7 @@ apart from the agreement figure. Folding it into drift overstates what the compa
 established, in the direction that flatters this document. The corpus
 cross-check names two such limits and counts each of them.
 
-**A generator's output is in the subset and folds to its input** (#80).
+**A generator's output is in the subset and folds to its input**.
 A generator is any function from the value domain to source: a template
 importer, a live import, a carve-out. Its obligation is the fidelity half of
 the round trip, `fold(generate(v)) = v` in `data-host` and
@@ -55,23 +53,20 @@ the fold of that source is compared with the input.
 
 ## Ownership, this repository is normative; chant implements it
 
-Decided 2026-09-10 (#33). The subset is defined here. chant's
-`packages/core/src/fold/subset.ts`, which currently calls itself "the single
-canonical definition of chant's statically-foldable expression subset", is an
-implementation of this specification, and its module documentation will say
-so and cite the rule identifiers it implements (chant-side issue filed from
-#33).
+The subset is defined here. chant's `packages/core/src/fold/subset.ts` is an
+implementation of this specification and cites the rule identifiers it
+implements.
 
 **A subset change goes spec-first.** The rule is proposed and landed here -
 grammar, judgment, or value-domain text with an identifier and a fixture -
 then implemented in chant citing that identifier, then released. The
-specification version chant declares (#18) moves with it.
+specification version chant declares moves with it.
 
 **The provisional path**, for a change chant needs before the spec can be
 written properly: chant may ship it with the affected rule marked
 *provisional* in `subset.ts`'s module doc, naming the issue here that will
 specify it. A provisional marker may survive at most one chant release; the
-docs-parity gate on chant's side (#34) fails on one older than that. A
+docs-parity gate on chant's side fails on one older than that. A
 provisional change is not conformance-tested until the rule exists here, and
 chant's documentation may not describe it as supported until then.
 
@@ -81,7 +76,7 @@ price of the paper being able to call this a specification, and of the
 conformance suite testing chant against a document chant cannot invalidate
 by itself.
 
-## Versioning (#18)
+## Versioning
 
 **A version names a set of rules.** It is the `S-*` and `F-*` identifiers
 and their normative text at a point in time, recorded in
@@ -114,7 +109,7 @@ only.
 **An implementation declares the version it implements.** The conformance
 adapter carries `specVersion`, and the suite compares the reference
 implementation's declaration against `VERSION` so the two cannot drift
-apart unnoticed. chant declares its version in its own tree (#34's gate is
+apart unnoticed. chant declares its version in its own tree (its docs gate is
 where a stale declaration is caught); an implementation that declares none
 is reported as such, not assumed current.
 
@@ -143,23 +138,25 @@ TypeScript as data.
 
 The syntax is the TypeScript AST as the `typescript`
 compiler package parses it; the module system is ES modules; and the semantics
-of every admitted operator are ECMAScript's, stated per operator in
-`requirements.md` R10 because a second implementation in another language must
-reproduce ECMAScript coercion rather than its host's. Two places depart from
-ECMAScript on purpose (R10.2, R10.6) and are stated as departures.
+of every admitted operator are ECMAScript's, stated per operator, because a
+second implementation in another language must reproduce ECMAScript coercion
+rather than its host's. Two places depart from
+ECMAScript on purpose and are stated as departures.
 
 ### Varies by host
 
-A host supplies four things.
+A host supplies seven things, listed under `F-Host-Interface` in
+[`hosts.md`](./hosts.md).
 
-- the constructors that build opaque entities
-- the calls that fold, and the rule admitting each
-- the tagged templates that are intrinsics
-- how an entity exposes attributes as symbolic references
+- the classes whose instances are entities
+- how an entity exposes its attributes as symbolic references
+- an intrinsic registry
+- an allowlist of authoring helpers
+- a trust set of packages
+- the registration form that makes a project-defined factory interpretable
+- rules over the folded values
 
-Those four are the host-hook interface
-(`requirements.md` R7, issue #16), and chant's lexicons are one instantiation
-of it. The generality this buys is generality over **host vocabularies**, not
+chant's lexicons are one instantiation of it. The generality this buys is generality over **host vocabularies**, not
 over languages. A reader who infers language portability from "parameterized
 by a host" has been misled, and the specification should not let them.
 
@@ -167,31 +164,29 @@ by a host" has been misled, and the specification should not let them.
 
 Reusable as stated:
 
-- the value-domain shape (R1)
-- the per-file decision and identity-taint fixpoint (R4, R5)
-- the two-layer admissibility structure (R6)
-- the three evaluation modes (R7)
+- the value-domain shape
+- the per-file decision and identity-taint fixpoint
+- the two-layer admissibility structure
+- the three evaluation modes
 - the conformance obligations
 
 To be reproduced rather than reused: the AST classification, which is
-TypeScript's node kinds, and ECMAScript coercion (R10).
+TypeScript's node kinds, and ECMAScript coercion.
 
 ### What the reference implementation covers
 
-The reference implementation covers J1, J2, J3 and revival through a host's
-real constructors (#60, #64), and declares the `full` profile at the version
-in `VERSION`. With an empty host it is also an implementation of `data-host`
+The reference implementation covers all three judgments, with revival through
+a host's real constructors, and declares the `full` profile at the version in
+`VERSION`. With an empty host it is also an implementation of `data-host`
 without `new`, and the suite judges it on that profile's fixtures too. What it
-does not cover is `packages/reference/CAVEATS.md`; F-Call step 6 in open
-mode, invoking a project module, is what it cannot answer. A partial reference
-implementation is fine; a reader assuming it is complete is not, which is why
-this paragraph is here.
+does not cover is `packages/reference/CAVEATS.md`, where the one gap is F-Call
+step 6 in open mode: invoking a project module. A reader should not assume the
+reference is complete.
 
 
-## Identifiers (#6)
+## Identifiers
 
-Every normative rule carries an identifier. Two families, and the family is
-part of the meaning:
+Two families of identifier, and the family is part of the meaning:
 
 - **`S-*`**, a *shape* rule: decidable from syntax alone, by a classifier
   with no binding resolver and no registry. Lives in `grammar.md`. An `S-`
@@ -220,16 +215,11 @@ meaning and the new part gets a new one. A rule that is removed or renamed
 is struck through in place with a note naming its successor; the identifier
 is never reused. Inventory row identifiers (`L3.10`) follow the same rule.
 
-**Enforcement.** `spec/coverage.test.ts` (#44) asserts every inventory row
+**Enforcement.** `spec/coverage.test.ts` asserts every inventory row
 cites a defined rule. The reverse, every defined rule has a conformance
-fixture, is #8's gate. Together they make an identifier that nothing
+fixture, is the other. Together they make an identifier that nothing
 exercises, or a citation of nothing, a CI failure rather than a drift.
 
-**Decided 2026-09-10 (#46).** One vocabulary at the end. `S-*`/`F-*` are the
-only normative identifiers. `requirements.md`'s `R*` clauses are the
-provisional "why" layer and are retired in a single migration once the rule
-files exist (#13, #14, #16, #17, #39): each clause's rationale becomes a
-non-normative note under the rule that discharges it, the objective becomes
-`judgments.md`'s preamble, the four requirements-on-the-spec become process
-rules in this README, and `inventory.md` is re-cited to rules only. `R*` is retired and
-`inventory.md` cites `S-*`/`F-*` only.
+One vocabulary. `S-*` and `F-*` are the only normative identifiers, each
+rule's reasoning is a non-normative note under it, and `inventory.md` cites
+rules only.

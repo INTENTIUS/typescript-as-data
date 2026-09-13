@@ -2,7 +2,7 @@
 
 Normative. The contract a semantic check runs under. It names the input a
 check sees and when it runs, what a check may do and what it reports, and
-who supplies it. The identifiers are `F-Rule-*` (#79). This is neither a
+who supplies it. The identifiers are `F-Rule-*`. This is neither a
 language for writing checks nor any particular check; those are host
 vocabulary, a lexicon's or a governance tool's. What is specified is the
 guarantee the fold provides and nothing else does. A check sees the values
@@ -94,11 +94,11 @@ Requiring a source line would require value provenance everywhere, which
 
 **F-Rule-Pure, F-Rule-Supply.** A project policy is project code. chant
 refuses to load one into its own process while the sandbox is armed and
-runs it in the child instead (chant#1131), which is the isolation mode's
+runs it in the child instead, which is the isolation mode's
 boundary drawn once more around rules.
 
 The fixtures for this family carry the finding as data and not the rule,
-since a rule is host code (#101): the `shapes` host names two rules by id and
+since a rule is host code: the `shapes` host names two rules by id and
 phase, a fixture's `findings` says what they report, and an implementation
 that carries no rule of that id says so and is skipped visibly. The runner
 asks for each phase twice and holds the two runs to the same answer, which

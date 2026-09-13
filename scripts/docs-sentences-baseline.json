@@ -11,8 +11,8 @@
  },
  "spec/grammar.md": {
   "claude/colon-reveal": 7,
-  "discourse/punchy-fragments": 13,
-  "tricolon/density": 2,
+  "discourse/punchy-fragments": 8,
+  "tricolon/density": 1,
   "formatting/em-dash-density": 6,
   "anaphora/repeated-opening": 1,
   "tricolon/comma-series": 1,
@@ -20,21 +20,21 @@
  },
  "spec/hosts.md": {
   "claude/colon-reveal": 7,
-  "tricolon/comma-series": 3,
-  "discourse/punchy-fragments": 2,
+  "tricolon/comma-series": 2,
   "claude/contrast-tail": 3,
   "tricolon/density": 1,
+  "discourse/punchy-fragments": 1,
   "repetition/near-duplicate": 1
  },
  "spec/inventory.md": {
-  "discourse/punchy-fragments": 4,
-  "anaphora/repeated-opening": 2,
+  "anaphora/repeated-opening": 1,
+  "discourse/punchy-fragments": 1,
   "formatting/em-dash-density": 2
  },
  "spec/judgments.md": {
-  "discourse/punchy-fragments": 43,
-  "claude/colon-reveal": 21,
-  "repetition/near-duplicate": 12,
+  "discourse/punchy-fragments": 25,
+  "claude/colon-reveal": 18,
+  "repetition/near-duplicate": 11,
   "anaphora/repeated-opening": 10,
   "tricolon/comma-series": 12,
   "tricolon/density": 1
@@ -45,7 +45,7 @@
  "spec/values.md": {
   "claude/colon-reveal": 5,
   "tricolon/comma-series": 3,
-  "discourse/punchy-fragments": 6,
+  "discourse/punchy-fragments": 5,
   "repetition/near-duplicate": 6
  },
  "paper/README.md": {
