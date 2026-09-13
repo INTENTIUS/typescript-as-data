@@ -30,8 +30,9 @@
 //   node scripts/lint-docs-sentences.mjs --verbose     # every finding, file:line
 //   node scripts/lint-docs-sentences.mjs --update-baseline
 //
-// Only `medium` and `high` severities gate; `candidate`/`low` print under
-// --verbose but never fail the build — the low tiers are leads, not verdicts.
+// `medium` and `high` severities gate, and so does any rule in ALWAYS_GATED
+// whatever its severity; `candidate`/`low` otherwise print under --verbose but
+// never fail the build — the low tiers are leads, not verdicts.
 import { readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -47,6 +48,14 @@ const ROOTS = [join(here, "..", "spec"), join(here, "..", "paper"), join(here, "
 const GENERATED = join("docs", "content", "spec", "normative");
 const BASELINE = join(here, "docs-sentences-baseline.json");
 const GATED_SEVERITIES = new Set(["medium", "high"]);
+// Rules that gate whatever severity they carry. `reframe` detects the
+// negate-then-restate shape ("It is not X. It is Y."), the first pattern on
+// the tropes list, and it fires at `low`, so the severity set alone never
+// sees it. Measured at five real findings in seven over 32 files of prose
+// outside this repo; a wrong finding costs one baseline line, which is what
+// a ratchet is for. Adding "low" to the set above is the wrong lever: it
+// would gate every low finding, and low is where the bulk lives.
+const ALWAYS_GATED = new Set(["reframe"]);
 
 const verbose = process.argv.includes("--verbose");
 const updateBaseline = process.argv.includes("--update-baseline");
@@ -99,7 +108,7 @@ for (const file of files) {
   for (const f of findings) {
     total++;
     if (verbose) detail.push(`${rel}:${lineOf(prose, f.span.start)} [${f.severity}] ${f.ruleId} — ${f.message}`);
-    if (!GATED_SEVERITIES.has(f.severity)) continue;
+    if (!GATED_SEVERITIES.has(f.severity) && !ALWAYS_GATED.has(f.ruleId)) continue;
     gated++;
     const perFile = (current[rel] ??= {});
     perFile[f.ruleId] = (perFile[f.ruleId] ?? 0) + 1;
