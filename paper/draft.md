@@ -10,7 +10,7 @@ Infrastructure and build configuration is increasingly written in a general-purp
 
 ## 1. Introduction
 
-Configuration as data is auditable: every value traces to a line of source, the build makes no network call and holds no credential, and the same file gives the same artifact anywhere. Configuration as code is expressive, with types and refactoring in a language people already know. Existing designs pick one. A configuration language gives up the general-purpose ecosystem, and a program that emits configuration gives up auditability, because the graph exists only as the output of a run.
+Configuration as data is auditable: every value traces to a line of source and the same file gives the same artifact anywhere. Configuration as code is expressive, with types and refactoring in a language people already know. Existing designs pick one. A configuration language gives up the general-purpose language's libraries and tools, and a program that emits configuration gives up auditability, because the graph exists only as the output of a run.
 
 A fragment of an existing language promises both. Defining the fragment is routine; defining its edge is the work. A total language never has to say what happens to source it cannot evaluate, because that source does not compile. A system with a fallback must say it, and three obligations follow.
 
@@ -18,7 +18,7 @@ The two paths must agree. Folding a file and running it must be observationally 
 
 The decision must be total per unit. A file folds entirely or runs entirely, since a partly folded namespace is a half-built object graph.
 
-Identity must survive the boundary. If one file folds and another runs, and both refer to an entity the first produced, the build holds two objects for one entity. Compile-time function execution copies values across its boundary, per-page rendering shares no runtime objects, and a whole-program partial evaluator has a single heap; only a per-unit decision over a shared object graph has the problem. The answer is a fixpoint over the module graph closed under two edges, a running file tainting what it imports and a file whose objects were captured tainting the capturer, with a third edge through calls. We found no precedent for it.
+Identity must survive the boundary. If one file folds and another runs, and both refer to an entity the first produced, the build holds two objects for one entity. Compile-time function execution copies values across its boundary and a whole-program partial evaluator has a single heap; only a per-unit decision over a shared object graph has the problem. The answer is a fixpoint over the module graph closed under two edges, a running file tainting what it imports and a file whose objects were captured tainting the capturer, with a third edge through calls. We found no precedent for it.
 
 We provide the specification, versioned and tagged. A reference implementation is written from its text, covering the expression layer through the fixpoint, and a second evaluator in Rust serves the profile without a runtime and compiles to a WebAssembly module with no imports. A conformance suite holds every rule to a fixture and every fixture to a real rule. The measurements come from chant, the production system the subset was extracted from. Rule identifiers such as `F-Total` name rules of the specification; appendix A lists the ones used here, and appendix B the artifacts every number was taken from.
 
@@ -39,7 +39,7 @@ A file is admitted in two stages. The statement gate examines only exported stat
 | a re-export | `export { a } from "./m"` |
 | an exported function | `export function f() {…}` |
 
-In the profile without a runtime, `export default` is a seventh. Six other shapes disqualify the whole file, a star re-export and an exported class among them. Non-exported statements are invisible to the gate and never execute; a bare call at the top of a file is read past, and section 6.4 shows what that means in practice. The gate is per module because an unfoldable export can reference a foldable one, or be referenced by it, in ways that only running proves safe, and a half-reduced namespace is not coherent (`F-Total`).
+In the profile without a runtime, `export default` is a seventh. Six other shapes disqualify the whole file, a star re-export and an exported class among them. Non-exported statements are invisible to the gate and never execute; a bare call at the top of a file is read past, and section 6.4 shows what that means. The gate is per module because an unfoldable export can reference a foldable one, or be referenced by it, in ways that only running proves safe, and a half-reduced namespace is not coherent (`F-Total`).
 
 The expression classifier then decides the shapes inside an admitted statement. It resolves nothing, which is the subject of section 2.3.
 
@@ -133,7 +133,7 @@ The split places the contribution. The identity property and the fixpoint live i
 
 ### 3.1 The value domain
 
-Reduction yields a value from a closed domain. Six cases are ordinary JSON, from scalars through arrays to plain objects. The other six are envelopes, non-array objects carrying one marker key, each denoting something the build has not yet constructed.
+Reduction yields a value from a closed domain. Six cases are ordinary JSON: scalars, arrays and plain objects. The other six are envelopes, non-array objects carrying one marker key, each denoting something the build has not yet constructed.
 
 | Envelope | Denotes | Fate under revival |
 |---|---|---|
@@ -146,7 +146,7 @@ Reduction yields a value from a closed domain. Six cases are ordinary JSON, from
 
 ![Reduce to envelopes, then revive.](figures/two-phase.svg)
 
-An envelope is a finished value. An attribute reference is not a thunk; it is the shape the runtime object serialises to, and the value it denotes does not exist at build time on either path. Revival replaces five of the six, resolving each name through the folding file's own imports and invoking the real function or constructor, and only the attribute reference reaches a serialiser; an implementation that emitted a resource envelope has produced wrong output, which a differential across a real corpus caught before the rule was written.
+An envelope is a finished value. An attribute reference is the shape the runtime object serialises to, and the value it denotes does not exist at build time on either path. Revival replaces five of the six, resolving each name through the folding file's own imports and invoking the real function or constructor, and only the attribute reference reaches a serialiser; an implementation that emitted a resource envelope has produced wrong output, which a differential across a real corpus caught before the rule was written.
 
 Validity is position-dependent. Inside the arguments of an intrinsic or a helper an attribute reference is refused, because the receiving function inspects what it is given and a look-alike plain object makes it produce wrong output. One position out, in a construction's props, the same value passes, because there the serialiser resolves it by name. So the rule is part of the domain.
 
@@ -170,7 +170,7 @@ Synthesis with no execution. A file in the subset becomes its artifact by being 
 
 Rules over values. A type can say a port is out of range. It cannot say that two fields of one resource contradict each other, or that a resource in one file makes a resource in another incoherent, because it lacks the values of every file in the build before anything is emitted. The fold has them. The specification defines no rule, only the contract a rule runs under: what it sees and when it runs, and what a finding carries. Rules over the emitted artifact need no fold; rules over the declared values do, and there references are still references and an entity is one entity wherever it is used, with nothing executed. The contract states as a property that findings are the same whether the build folded the file or ran it, and a finding is data carrying its rule and subject with a path into the value, which is what lets a person or an agent act on it.
 
-Round-trip generation. A generator goes from data to source, and composed with the fold an existing artifact or a live system becomes source that folds back to what it came from. A generator decides what each value is, and each decision needs a source form the subset can express and the fold can reverse: a value that is another resource's attribute is `bucket.Arn`, and a repetition across forty resources is one `const` spread where it is used. YAML cannot express either, and a configuration language can only by leaving the artifact's own shape. The specification states the completeness half as a rule, one source form per case of the domain, and holds a generator to the fidelity half through a fixture kind whose input is a namespace as data.
+Round-trip generation. A generator turns data into source, and composed with the fold it turns an existing artifact or a live system into source that folds back to what it came from. A generator decides what each value is, and each decision needs a source form the subset can express and the fold can reverse: a value that is another resource's attribute is `bucket.Arn`, and a repetition across forty resources is one `const` spread where it is used. YAML cannot express either, and a configuration language can only by leaving the artifact's own shape. The specification states the completeness half as a rule, one source form per case of the domain, and holds a generator to the fidelity half through a fixture kind whose input is a namespace as data.
 
 The first two need only `data-host`. None of the three needs the fallback or the fixpoint; those exist so that source outside the subset can still be built by an implementation that has a runtime, and they are what this paper is about.
 
@@ -237,7 +237,7 @@ The conformance package runs the specification's fixtures against the reference 
 |---|---|---|---|
 | chant 0.72.3 | 127, of which 65 are whole-build | 135 of 139 | all, on every fixture but the four round-trip ones, which skip at chant for want of a generator |
 
-The four rules without a fixture are provenance, the host's own module tree, and what a host may vary or must not execute. One disagreement existed, on an envelope inside a template span; the specification recorded the recommendation, chant `0.68.0` implemented it, and a fixture pins it.
+The four rules without a fixture concern provenance, the host's own module tree, and what a host may vary or must not execute. One disagreement existed, on an envelope inside a template span; the specification recorded a recommendation that chant `0.68.0` implemented, and a fixture pins it.
 
 The reference judged in `data-host` passes every fixture tagged for it, which establishes that the profile is consistent. Whether it is implementable without an engine is what the Rust evaluator establishes. Written from the text on the oxc parser, it passes every fixture tagged for the profile and agrees with the reference on each; compiled to WebAssembly with no imports, the same crate passes the same fixtures and agrees with its own binary answer for answer. Over chant's corpus it is a third column, both evaluators judged in `data-host` on the same host description, agreeing on all 441 files, with 142 folding on both sides to the same namespace. Writing it found the reference reviving and tainting in a profile that does neither, both fixed.
 
@@ -259,7 +259,7 @@ The conformance package runs chant's example corpus through both implementations
 
 A file is comparable when nothing disarmed either implementation before the comparison. Four things did at the first pin and one remains, the single file that imports a package the reference's host cannot load. Two were limits of chant's entry point, 52 files reading a host export that needed a lexicon list and 19 in entries with build parameters the entry could not be given, until chant `0.71.0` took both; one held 290 files reaching a host factory until the reference implemented the call rule; the last held 68 files calling a package export outside a declarator, until specification `1.6` wrote chant's behaviour into the declarator and call rules.
 
-On 440 files nobody wrote for the purpose the two implementations agree on every verdict, and on the 304 that fold on both sides the namespaces are structurally identical, entity class and properties included. A limit is an over-approximation, so the one file outside the set may hide a disagreement. And chant is the implementation the text was extracted from, so this is agreement with a rewrite written from the text, not between two independent readings.
+On 440 files nobody wrote for the purpose the two implementations agree on every verdict, and on the 304 that fold on both sides the namespaces are structurally identical, entity class and properties included. A limit is an over-approximation, so the one file outside the set may hide a disagreement. And chant is the implementation the text was extracted from, so this is agreement between chant and a rewrite written from the text rather than between two independent readings.
 
 Every entry above was written by the people who wrote the folder. Two public projects that depend on chant and are not maintained by us run beside it at a pinned revision, each directory with a configuration file an entry.
 
@@ -303,7 +303,7 @@ Partial evaluation and binding-time analysis. The shape classifier is a binding-
 
 Partial evaluation of JavaScript. Prepack evaluates a bundle's global code, captures the heap, and emits a residual program that rebuilds it, with abstract values for what it cannot evaluate and always one program. Its residual-heap visitor emits a shared object once, which is identity within one heap, the case a per-file split gives up.
 
-Per-unit static or executed. Next.js decides per page whether to prerender or render on request, from a marker the author writes, and Astro's hybrid mode is the same shape; prerendered and served pages share no runtime objects, and no agreement obligation is stated.
+Per-unit static or executed. Next.js decides per page whether to prerender or render on request, from a marker the author writes, and Astro's hybrid mode is the same shape. Prerendered and served pages share no runtime objects, and no agreement obligation is stated.
 
 Evaluation that escapes into execution. Nix's import-from-derivation pauses evaluation to realise a store object in a sandboxed and content-addressed build, then resumes. This is the precedent for the isolated mode.
 
@@ -328,7 +328,7 @@ Claimed as new. Per-file partial evaluation with a fallback is precedented in sh
 
 Costs. Section 2.5 named two. A third is that coverage is not the security-relevant number: a file that folds executes none of its own code either way, so partial coverage does nothing for the files that matter, and isolating the fallback is what bounds the remainder, which is why isolation is a mode of the verdict rather than a deployment detail.
 
-Unresolved. Three places where the implementation settled a question by accident, recorded as such. The classifier is flow-insensitive, and making it flow-sensitive means writing an evaluator inside a lint rule. One member name, `.step`, is admitted after a call because one idiom uses it, and no principled boundary admits it and excludes the next member somebody needs. And one class of registered call is evaluated at fold time because its usual use coerces the result to a string.
+Unresolved. Three places where the implementation settled a question by accident, recorded as such. The classifier is flow-insensitive, and making it flow-sensitive means writing an evaluator inside a lint rule. One member name, `.step`, is admitted after a call because one idiom uses it, and no boundary stated in the rule admits it and excludes the next member somebody needs. And one class of registered call is evaluated at fold time because its usual use coerces the result to a string.
 
 What would falsify the identity property. A fold-run disagreement on a mixed build. An entity reachable by two paths with different verdicts, which memoising per referrer or invoking a composite once per member access would produce and the corpus would not necessarily catch. A sharing relationship the capture set does not record; nothing currently searches for a third route into another file's objects.
 
