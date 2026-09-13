@@ -22,7 +22,17 @@ export interface ProjectResult {
   tentative?: Record<string, "fold" | "run">;
   /** For a file J3 tainted, the file whose taint reached it. */
   taintedBy?: Record<string, string>;
+  /** F-Obs-Counters, per build. Omitted by an implementation whose public entry exposes none. */
+  counters?: ExecutionCounters;
 }
+
+/**
+ * F-Obs-Counters: in-process factory or constructor invocations while folding;
+ * of those, how many resolved to project-owned code; and how many factory
+ * bodies were interpreted instead. Three non-negative integers; the names
+ * follow the reference and only the shape is normative.
+ */
+export interface ExecutionCounters { factoryInvocations: number; projectFactoryInvocations: number; factoryInterpretations: number }
 
 /** F-Rule-Finding's closed severity set. */
 export type Severity = "error" | "warning" | "info";

@@ -16,7 +16,7 @@
 import { posix } from "node:path";
 import * as ts from "typescript";
 import { EMPTY_HOST, type Host } from "./host.js";
-import { foldExpr, collectConsts, collectLocalFunctions, FoldRejection, FoldableFunction, isFoldableFunction, isLiveObject, CompositeFactory, isCompositeFactory, interpret, findFactoryViolation, type Scope, type EvalHost } from "./fold.js";
+import { foldExpr, collectConsts, collectLocalFunctions, FoldRejection, FoldableFunction, isFoldableFunction, isLiveObject, CompositeFactory, isCompositeFactory, interpret, findFactoryViolation, type Scope, type EvalHost, type ExecutionCounters } from "./fold.js";
 import { registerHelpers, registerHostSpecifiers, isHostOwnedSpecifier, isFoldableHelperName } from "./foldable-helpers.js";
 
 /** Marks a declarator initializer that F-Call does not resolve, so J1 does. */
@@ -128,7 +128,7 @@ function scanExports(sf: ts.SourceFile, admitDefault: boolean): Scan {
 
 // ── J2 ──────────────────────────────────────────────────────────────────────
 interface Session {
-  readonly counters: { factoryInvocations: number; factoryInterpretations: number };
+  readonly counters: ExecutionCounters;
   /** F-Host-Composite: each file's registered composites, read from source, so a caller interprets one whether or not the defining module folds (F-Call step 4). */
   readonly composites: Map<string, Map<string, CompositeFactory>>;
   readonly files: ReadonlyMap<string, string>;
@@ -603,14 +603,14 @@ export interface ProjectResult {
   readonly taintReason: Map<string, string>;
   /** The file whose taint reached it, the other end of the F-Succ edge that fired. */
   readonly taintSource: Map<string, string>;
-  /** F-Obs-Counters: host factories invoked and project composites interpreted in this build. */
-  readonly counters: { factoryInvocations: number; factoryInterpretations: number };
+  /** F-Obs-Counters: host factories invoked and project composites interpreted in this build; project-owned invocations are zero by construction. */
+  readonly counters: ExecutionCounters;
 }
 
 export function foldProject(files: ReadonlyMap<string, string>, host: Host = EMPTY_HOST): ProjectResult {
   registerHelpers(host.helpers);
   registerHostSpecifiers(host.ownedSpecifierPrefixes);
-  const session: Session = { files, host, memo: new Map(), stack: [], locals: new Map(), owner: new Map(), counters: { factoryInvocations: 0, factoryInterpretations: 0 }, composites: new Map() };
+  const session: Session = { files, host, memo: new Map(), stack: [], locals: new Map(), owner: new Map(), counters: { factoryInvocations: 0, projectFactoryInvocations: 0, factoryInterpretations: 0 }, composites: new Map() };
 
   const tentative = new Map<string, Verdict>();
   for (const path of files.keys()) tentative.set(path, verdictOf(path, session));

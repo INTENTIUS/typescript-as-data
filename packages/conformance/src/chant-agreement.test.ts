@@ -28,7 +28,14 @@ const foldsAtDepth = new Set([
   "F-Div-Provenance/helper-name-from-project-import",
 ]);
 
-const heldOut = new Set([...foldsAtDepth]);
+// chant#2446 — chant has the three counters F-Obs-Counters names, in
+// fold-import.ts's FoldExecutionCounts, and its public entry exports neither
+// the snapshot nor the reset, so the adapter cannot report them through the
+// pinned package. The fixture is skipped there ("counters unavailable") rather
+// than failed, and held out by name until a release exports them.
+const countersNotPublic = new Set(["F-Obs-Counters/a-build-reports-its-counts"]);
+
+const heldOut = new Set([...foldsAtDepth, ...countersNotPublic]);
 const fixtures = all.filter((f) => !heldOut.has(f.id));
 
 describe("chant cross-check (#11)", () => {
@@ -81,6 +88,16 @@ describe("chant cross-check (#11)", () => {
 
       const dis = await compareAdapters(referenceAdapter, chantAdapter, held);
       expect(dis.length, `${reason} looks settled — drop its hold-out`).toBeGreaterThan(0);
+    }
+    // The other kind of hold-out: chant does not disagree, it cannot answer.
+    // The guard is the skip itself; once a release exports the counters and
+    // the adapter reports them, this fails and the hold-out retires.
+    for (const [reason, names] of [["chant#2446", countersNotPublic]] as const) {
+      const held = projectFixtures(all).filter((f) => names.has(f.id));
+      expect(held.map((f) => f.id).sort(), `${reason}: a held-out fixture no longer exists`).toEqual([...names].sort());
+      const reports = await Promise.all(held.map((f) => runProjectFixture(chantAdapter, f)));
+      const notSkipped = reports.filter((r) => r.skipped !== "counters unavailable").map((r) => `${r.fixture}: ${r.skipped ?? (r.pass ? "answered" : r.failures.join("; "))}`);
+      expect(notSkipped, `${reason} looks settled — drop its hold-out`).toEqual([]);
     }
   });
   test("chant's shape classifier is available (chant-v0.64.0+, chant#2362) and agrees on every fixture", async () => {
