@@ -3,6 +3,8 @@ title: "typescript-as-data"
 description: "TypeScript in place of YAML. A file that is data is typed JSON, and the build reads it without executing it."
 ---
 
+New to TypeScript, to deploy tools, or to both? [Start here](/typescript-as-data/start-here/) assumes nothing, and [the glossary](/typescript-as-data/glossary/) has every term.
+
 ## A policy in YAML and in TypeScript
 
 ```yaml {title="governance.yml"}

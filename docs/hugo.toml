@@ -12,6 +12,10 @@ disableKinds = ["taxonomy", "term"]
 # consumer is a roster entry, never a menu edit. Every figure a page quotes
 # comes from data/figures.json, written by scripts/sync-spec.mjs.
 [[menus.main]]
+  name = "Start here"
+  pageRef = "/start-here"
+  weight = 5
+[[menus.main]]
   name = "What it enables"
   pageRef = "/what-it-enables"
   weight = 10
@@ -23,6 +27,10 @@ disableKinds = ["taxonomy", "term"]
   name = "Specification"
   pageRef = "/spec"
   weight = 40
+[[menus.main]]
+  name = "Glossary"
+  pageRef = "/glossary"
+  weight = 45
 
 [markup.goldmark.renderer]
   unsafe = true
