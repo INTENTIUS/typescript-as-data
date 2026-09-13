@@ -35,9 +35,9 @@ smoke-published:
 smoke claim="":
     bash scripts/smoke.sh {{claim}}
 
-# The paper's assembled draft (paper/draft.md) rendered for readers: HTML
-# always, PDF when a LaTeX engine is installed (`brew install tectonic`).
+# The paper's draft (paper/draft.md) rendered to HTML at paper/build/draft.html.
+# No PDF: a binary in the repository would need LFS, and HTML is enough to read.
 paper:
     mkdir -p paper/build
     pandoc paper/draft.md --standalone --toc --number-sections=false --resource-path=paper -o paper/build/draft.html
-    @command -v tectonic >/dev/null 2>&1 && pandoc paper/draft.md --pdf-engine=tectonic --resource-path=paper -V geometry:margin=1in -o paper/build/draft.pdf && echo "paper/build/draft.pdf" || echo "no tectonic: HTML only at paper/build/draft.html"
+    @echo paper/build/draft.html

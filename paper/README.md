@@ -39,7 +39,7 @@ Each draft feeds one section of the paper.
 
 ## The assembled draft
 
-`draft.md` is the sections below assembled into one document for readers, with the repository references removed and the numbers refreshed to the artifacts appendix B names. `just paper` renders it to HTML, and to PDF when tectonic is installed. It is cut to about the venue's length; the final fit to the 2027 call's limits is the remaining pass.
+`draft.md` is the sections below assembled into one document for readers, with the repository references removed and the numbers refreshed to the artifacts appendix B names. `just paper` renders it to HTML under `paper/build/`, which is not committed; there is no PDF target, since a binary in the repository would need LFS. It is cut to about the venue's length; the final fit to the 2027 call's limits is the remaining pass.
 
 ## Still to write
 
