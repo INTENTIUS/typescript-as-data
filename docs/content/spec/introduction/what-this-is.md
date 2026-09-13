@@ -18,19 +18,25 @@ That equivalence is the objective every judgment serves, and `spec/judgments.md`
 states it: at a fixed build-parameter binding, folding a file and running it
 are observationally equivalent. A source file may be reduced from its AST to
 the entities it declares, or imported and executed, and the build cannot tell
-which happened from the output. The binding is part of the statement rather
-than a footnote because `params.<name>` folds to a literal supplied at build
-invocation, so output is a function of source and of binding.
+which happened from the output.
+
+The binding is part of the statement rather than a footnote. `params.<name>`
+folds to a literal supplied at build invocation, so output is a function of
+source and of binding.
 
 ## The three pieces
 
 The specification lives in `spec/` and is normative. Every rule in it carries
 an identifier from one vocabulary, `S-*` for shape rules and `F-*` for fold
 rules, and `spec/inventory.md` is a ledger of decision points that cites those
-rules. Two CI gates keep the two sides honest: `spec/coverage.test.ts` asserts
-that every inventory row cites a rule that is actually defined, and
-`spec/fixtures.test.ts` asserts that every defined rule is either exercised by
-a fixture or listed in `spec/fixtures/UNCOVERED.md` with a reason.
+rules.
+
+Two CI gates keep the two sides honest:
+
+- `spec/coverage.test.ts`, that every inventory row cites a rule that is
+  actually defined.
+- `spec/fixtures.test.ts`, that every defined rule is either exercised by a
+  fixture or listed in `spec/fixtures/UNCOVERED.md` with a reason.
 
 The reference implementation is `packages/reference`
 (`@intentius/tsad-reference`). Written from the specification text, it does not
@@ -57,11 +63,15 @@ repository is normative and chant implements it. chant's
 definition of chant's statically-foldable expression subset, is an
 implementation of this specification.
 
-A subset change therefore goes spec-first. The rule is proposed and landed
-here with grammar, judgment or value-domain text; it carries an identifier and
-a fixture; then chant implements it citing that identifier and releases it.
+A subset change therefore goes spec-first:
+
+1. The rule is proposed and landed here with its grammar, judgment or
+   value-domain text.
+2. It carries an identifier and a fixture.
+3. chant implements it citing that identifier, and releases it.
+
 There is a provisional path for a change chant needs before the rule can be
-written properly: chant may ship it with the affected rule marked provisional
+written properly. chant may ship it with the affected rule marked provisional
 in `subset.ts`'s module doc, naming the issue here that will specify it. A
 provisional marker may survive at most one chant release.
 
@@ -85,10 +95,11 @@ rather than inherit from its own host.
 What varies is the host. `F-Host-Interface` in `hosts.md` lists the seven
 things a host supplies, with the rule admitting each. They start with the
 classes whose instances are entities and end with the host's rules contract;
-the registry and the trust set sit between. The generality this buys is
-generality over host vocabularies, not over languages. `spec/README.md` is
-explicit that a reader who infers language portability from "parameterized by a
-host" has been misled.
+the registry and the trust set sit between.
+
+The generality this buys covers host vocabularies. It does not cover
+languages. `spec/README.md` is explicit that a reader who infers language
+portability from "parameterized by a host" has been misled.
 
 Another language would reuse the value-domain shape and the per-file decision
 and identity-taint fixpoint; the two-layer admissibility structure; the three
@@ -102,17 +113,20 @@ Two process rules from `spec/README.md` govern what happens when two
 implementations differ.
 
 A disagreement between two implementations is triaged in the specification
-first, and reclassified as an implementation bug only once the specification is
-shown to be unambiguous on the point. The order is the rule because the
-incentives run against it: amending an implementation takes an afternoon and
-amending a specification takes a decision, so the cheap label is the one most
-likely to be wrong. A disagreement that survives triage is recorded with the
-issue that will settle it, and the record may only shrink.
+first. It is reclassified as an implementation bug only once the specification
+is shown to be unambiguous on the point.
+
+The order is the rule because the incentives run against it: amending an
+implementation takes an afternoon and amending a specification takes a
+decision, so the cheap label is the one most likely to be wrong. A disagreement
+that survives triage is recorded with the issue that will settle it, and the
+record may only shrink.
 
 A difference that a missing capability explains is not a disagreement. Where
 one implementation has no answer to give, for want of a host or of a form it
 does not implement, the difference is counted under a named limit and reported
-apart from the agreement figure. The
-[corpus cross-check](/typescript-as-data/spec/conformance/corpus/) is where this
-rule is applied; `packages/conformance/src/corpus.ts` names two such limits,
-`host` and `invocation`, and counts each of them separately.
+apart from the agreement figure.
+
+The [corpus cross-check](/typescript-as-data/spec/conformance/corpus/) is where
+this rule is applied. `packages/conformance/src/corpus.ts` names two such
+limits, `host` and `invocation`, and counts each of them separately.

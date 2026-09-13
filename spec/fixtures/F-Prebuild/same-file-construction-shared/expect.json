@@ -15,5 +15,5 @@
       "base": { "entityType": "Bucket", "lexicon": "shapes", "props": { "name": "base" }, "attributes": {} }
     }
   },
-  "note": "A non-exported same-file construction read as a value from an exported sibling, and re-exported by name. Under F-Eval-Ident step 1 without F-Prebuild every reference rejects; with it the file folds and every reference is the one instance F-Prebuild built. Found by the corpus cross-check (#25, #68): twelve chant examples fold this shape and the reference refused all of them."
+  "note": "A non-exported same-file construction read as a value from an exported sibling, and re-exported by name. Under F-Eval-Ident step 1 without F-Prebuild every reference rejects; with it the file folds and every reference is the one instance F-Prebuild built."
 }

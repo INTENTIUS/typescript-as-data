@@ -18,12 +18,12 @@ observationally equivalent.**
 
 A source file may be reduced from its AST to the entities it declares, or
 imported and executed, and the build cannot tell which happened from the
-output. In chant this is discharged by a differential over the example corpus
-asserting identical errors and byte-identical serialized output,
-with the caveat that the differential currently
-compares only entries where every file folded, so the
-mixed case, which is where the interesting requirements below actually fire,
-has no differential evidence yet.
+output.
+
+In chant a differential over the example corpus discharges it. The two paths
+must produce identical errors and byte-identical serialized output. It builds
+every non-empty entry both ways, mixed entries included, which is where the
+requirements below actually fire. See J3's validation status.
 
 The binding is part of the statement, not a footnote. `params.<name>` folds to
 a literal supplied at build invocation (F-Import, J2), so output is a function of source
@@ -84,11 +84,12 @@ consulted.
 ## J1. Expression evaluation `Γ, H ⊢ e ⇓ v`
 
 `Γ = (consts, externals, depth)`
-`depth` is the number of project-local function bodies being
-folded around `e`, 0 at a file's top level. `H = (ρ, helpers)` is the host
-(hosts.md): the intrinsic registry and the authoring-helper allowlist. `v`
-ranges over the value domain (values.md); `⟦e⟧` abbreviates
-`Γ, H ⊢ e ⇓ v`. Every rule that fails does so with a located rejection.
+`depth` is the number of project-local function bodies being folded around
+`e`, 0 at a file's top level. `H = (ρ, helpers)` is the host (hosts.md): the
+intrinsic registry and the authoring-helper allowlist. `v` ranges over the
+value domain (values.md), and `⟦e⟧` abbreviates `Γ, H ⊢ e ⇓ v`. Every rule
+that fails does so with a located rejection.
+
 Derived from `fold()` (`fold.ts:896–1300`), `foldResource`,
 `foldTaggedTemplate`, `foldIntrinsicValue`, `callFoldableFunction`, at
 `e4074c17` with chant-v0.63.0's `?.` rules. Rules are keyed to the grammar's
@@ -246,16 +247,21 @@ Derived from
 `resolveDeclaratorValue` (`:3522`), `resolveLiveValue` (`:1331`),
 `resolveCallExpression` (`:1416`), at `e4074c17`.
 
-`ι ∈ {open, isolated, executing}` is the isolation mode. `open` is the
-default and is strict: nothing folds by executing project code. `isolated`
-refuses every project-owned invocation (F-IsolatedRefusal). `executing`, the
-one opt-in, lets F-Call invoke a declared project function whose body
-cannot fold; the value is then what a run would compute in the folding
-process, environment included, and the build asked for that. On `fold`, `X` is the
-complete export namespace and `L ⊆ F` the files whose objects `f`
-captured (F-Capture, J3). The verdict is evaluated per file, without regard
-to other files' verdicts except through F-Import; it is *tentative*, and J3
-makes it final. Every `run(reason)` carries a located reason.
+`ι ∈ {open, isolated, executing}` is the isolation mode:
+
+- `open`, the default, and strict. Nothing folds by executing project code.
+- `isolated`, which refuses every project-owned invocation
+  (F-IsolatedRefusal).
+- `executing`, the one opt-in. F-Call may invoke a declared project function
+  whose body cannot fold. The value is then what a run would compute in the
+  folding process, environment included, and the build asked for that.
+
+On `fold`, `X` is the complete export namespace and `L ⊆ F` the files whose
+objects `f` captured (F-Capture, J3). Every `run(reason)` carries a located
+reason.
+
+The verdict is evaluated per file, without regard to other files' verdicts
+except through F-Import. It is *tentative*, and J3 makes it final.
 
 ### Preconditions on the file
 
@@ -433,12 +439,14 @@ unless something makes it sound. If file `A` folds and file `B` runs, and both
 refer to an entity `e` that `A` produced, then `B`'s real import of `A`
 constructs a second `e`, and the build holds two objects for one entity -
 whose `AttrRef`s cannot both receive a logical name and whose `Ref`s silently
-inline instead of referencing. Every comparable system avoids the problem by
-not having it: compile-time function execution copies values across the
-boundary, per-page static rendering shares no runtime objects across it, and a
-whole-program partial evaluator has one heap ([`prior-art.md`](./prior-art.md)).
-chant keeps per-file granularity **and** shared identity, and this judgment is
-the price.
+inline instead of referencing.
+
+Every comparable system avoids the problem by not having it
+([`prior-art.md`](./prior-art.md)). Compile-time function execution copies
+values across the boundary, per-page static rendering shares no runtime
+objects across it, and a whole-program partial evaluator has one heap. chant
+keeps per-file granularity **and** shared identity, and this judgment is the
+price.
 
 ### Setting
 
@@ -600,37 +608,39 @@ captured its objects," not merely quote a construct in `c`.
 
 ### Validation status
 
-Until chant#2345 (landed 2026-09-10 as chant PR #2364) the differential that
-discharges the objective compared fold against run **only for
-builds where `T(B) = ∅`**, every file folded, which are exactly the builds
-in which this judgment does nothing. chant#2345 removes that early return: every non-empty corpus entry is now
-built both ways and held to error parity and byte-identical output, with a
-shrink-only allowlist for known divergences.
+The differential that discharges the objective builds every non-empty corpus
+entry both ways and holds the two to error parity and byte-identical output,
+with a shrink-only allowlist for known divergences. A build where `T(B) = ∅`
+is one in which this judgment does nothing, so the mixed entries are the ones
+that test it.
 
-**First full run, 2026-09-10:** 107 entries, 95 fully folded, 12 with at
-least one run-fallback file, **drift 0**, allowlist empty. Every mixed
-entry, where `T(B) ≠ ∅` and both taint directions can fire, agrees fold-vs-
-run. That was the proposition's first differential evidence; before it the
-claim rested on the argument above and on the crash class it was written to
-prevent.
+Two sources of evidence:
 
-**chant-v0.65.0 (chant#2347, PR #2375) added the adversarial entry**
-`examples/fold-adversarial/`: nine files, each named for one resolution-time
-decision point and carrying this specification's inventory row and rule
-identifier. Four of them exercise this judgment *on purpose*, in one build:
-`taint-run-only-importer.ts` (F-Seed, an early `return` in a project-local
-function puts the importer in the seed), `taint-shared-config.ts` (F-Succ
-forward, the running importer pulls a foldable config back), `taint-
-capturing-sibling.ts` (F-Succ backward, the source of a captured object
-pulls the capturer back), and `taint-independent.ts` (F-Taint/F-Fix, the
-control that no edge reaches, and that must still fold). The entry's own test
-asserts which file folds and which runs, and the differential holds fold-vs-
-run across it. The other five cover F-Div-Nullish, the `?.` short-circuit,
-F-Eval-Ident shadowing, F-Div-SpreadType, and F-Depth.
+- The corpus. 107 entries, 95 fully folded, 12 with at least one run-fallback
+  file. Drift 0, allowlist empty. Every mixed entry, where `T(B) ≠ ∅` and both
+  taint directions can fire, agrees fold-versus-run.
+- `examples/fold-adversarial/`. Nine files named for resolution-time decision
+  points. Each carries this specification's inventory row and rule identifier.
+  The entry's own test asserts which file folds and which runs, and the
+  differential holds fold-versus-run across it.
 
-So the evidence is now: twelve incidental mixed entries plus one designed to
-fire both taint directions, all agreeing. The corpus is still chant's own,
-and the adversarial entry is one build; it is evidence, not proof.
+Four of the nine exercise this judgment on purpose, in one build:
+
+- `taint-run-only-importer.ts`, F-Seed. An early `return` in a project-local
+  function puts the importer in the seed.
+- `taint-shared-config.ts`, F-Succ forward. The running importer pulls a
+  foldable config back.
+- `taint-capturing-sibling.ts`, F-Succ backward. The source of a captured
+  object pulls the capturer back.
+- `taint-independent.ts`, F-Taint/F-Fix. The control that no edge reaches, and
+  that must still fold.
+
+The other five cover the `?.` short-circuit under F-Div-Nullish, plus
+F-Eval-Ident shadowing, F-Div-SpreadType and F-Depth.
+
+Twelve incidental mixed entries and one designed to fire both taint directions
+all agree. The corpus is still chant's own and the adversarial entry is one
+build, so this is evidence rather than proof.
 
 ---
 
@@ -803,11 +813,12 @@ output.
 F-Eval-Ident step 1 always read its answer out of `externals` and called it
 "the one instance J2 pre-built", and no rule of J2 built it. The rules that
 produce the namespace were F-Bind through F-Declarator, and every arm among
-them that wrote `externals` wrote an import. A reader with L5.2 in hand
-concluded step 1 always rejects, and the reference implementation, written
-from the text, did exactly that; chant, written first, had the pre-pass all
-along (`preresolveResourceConsts`, chant#1169). The rule was lost in the
-abstraction from code to specification, and 22 corpus files disagreed
+them that wrote `externals` wrote an import.
+
+A reader with L5.2 in hand concluded step 1 always rejects, and the reference
+implementation, written from the text, did exactly that. chant, written first,
+had the pre-pass all along (`preresolveResourceConsts`). The rule was lost in
+the abstraction from code to specification, and 22 corpus files disagreed
 because of one missing sentence.
 
 **F-Count** *(Evaluation count is observable semantics)*
@@ -894,28 +905,35 @@ and it is the one that makes folding under isolation possible.
 
 **F-Call step 4** *(Interpret, never importing the defining module)*
 
-A composite factory is *interpreted* (L7.1–L7.8) when: (1) the calling file
-imports it from a project file, by text, never a package; (2) the defining
-module has `export const N = Composite(<fn>, "N")` with `Composite` bound in
-*that* module to chant's own; (3) `<fn>` takes at most one plainly-bound
-parameter; (4) its body is a concise expression or `const`s then a final
-`return`; (5) every expression is in the subset, extended with `new` in value
-position and calls through a bare identifier. A body that references one of
-its module's own module-level resources declines (L7.6), that resource is a
-singleton the run path shares, and interpretation would not, and
-`constResolvesToResource` follows alias chains so it cannot be smuggled in
-(`L7.7`). The defining module is never imported; members are built by the
-lexicon's constructors from the folded props.
+A composite factory is *interpreted* (L7.1–L7.8) when all five hold:
+
+1. The calling file imports it from a project file, by text, never a package.
+2. The defining module has `export const N = Composite(<fn>, "N")`, with
+   `Composite` bound in *that* module to chant's own.
+3. `<fn>` takes at most one plainly-bound parameter.
+4. Its body is a concise expression, or `const`s then a final `return`.
+5. Every expression is in the subset, extended with `new` in value position
+   and calls through a bare identifier.
+
+A body that references one of its module's own module-level resources declines
+(L7.6). That resource is a singleton the run path shares, and interpretation would
+not. `constResolvesToResource` follows alias chains, so it cannot be smuggled
+in (`L7.7`).
+
+The defining module is never imported. Members are built by the lexicon's
+constructors from the folded props.
 
 **F-Eval-CallEager, F-Eval-CallMethod** *(Evaluate eagerly)*
 
 A lexicon function registered with `intrinsicCallFoldsEagerly` (L2.13) is
 called at fold time with folded arguments rather than enveloped, because its
 ordinary use coerces the result to string during folding, before any revival
-would run. A method call on a real receiver (L2.14) is the same mode: the
-receiver is the same object either way, so calling it is what running would
-do. Both are places where fold time and revival time are observably different,
-and the spec must name them as such.
+would run.
+
+A method call on a real receiver (L2.14) is the same mode. The receiver is the
+same object either way, so calling it is what running would do. Both are
+places where fold time and revival time are observably different, and the spec
+must name them as such.
 
 ---
 
@@ -999,29 +1017,32 @@ wrong by assuming it.
 
 The supported binary operators (L2.8, L3.14): `+` `-` `*` `/` `===` `!==` `>`
 `<` `>=` `<=`, and the lazy `&&` `||` `??` (L3.13). Unary `!` and `-`
-(L3.12). Conditional `?:`. For every one of these the implementation applies
-the host JavaScript operator to the folded values, so the semantics, including
-`+`'s string-versus-numeric dispatch, relational comparison on strings, and
-`&&`/`||` returning an operand rather than a boolean, are ECMAScript's. The
-spec should say so per operator and require an implementation in another
-language to reproduce ECMAScript coercion for these operators, not its host's.
+(L3.12). Conditional `?:`.
+
+For every one of these the implementation applies the host JavaScript operator
+to the folded values, so the semantics are ECMAScript's: `+`'s
+string-versus-numeric dispatch, relational comparison on strings, and
+`&&`/`||` returning an operand rather than a boolean. An implementation in
+another language must reproduce ECMAScript coercion for these operators, and
+never its host's.
 
 **F-Eval-Member step 4** *(Member access on `null`/`undefined` refuses; optional chaining short-circuits)*
 
-Resolved by chant-v0.63.0 (INTENTIUS/chant#2328, commit `8ce54e5e`). A plain
-property or element read whose object folds to `null`/`undefined` is
-**refused** with a located rejection naming the member and pointing at `?.`
-(L3.10); the file falls back to run, where the same expression throws a
-`TypeError`. Fold produces no output and run produces an error, equivalence
-in the sense that a fallback is not wrong output. `?.` is implemented
-with ECMAScript short-circuit semantics: a nullish object under `?.` yields a
-chain-short-circuit sentinel that propagates through the remainder of the
-chain, further member and element reads, `!` non-null assertions, and a
-`?.()` method call, and resolves to `undefined` where the chain ends (L3.21,
-L3.22). So "as ECMAScript" *is* now available for member access, and the
-departure the first revision of this clause recorded no longer exists. chant's
-shape classifier still admits both forms, the object's value being a
-resolution, which is the permitted direction; the divergence list carries it.
+A plain property or element read whose object folds to `null`/`undefined` is
+**refused**, with a located rejection naming the member and pointing at `?.`
+(L3.10). The file falls back to run, where the same expression throws a
+`TypeError`. Fold produces no output and run produces an error, which is
+equivalence in the sense that a fallback is not wrong output.
+
+`?.` is implemented with ECMAScript short-circuit semantics. A nullish object
+under `?.` yields a chain-short-circuit sentinel that propagates through the
+remainder of the chain, further member and element reads, `!` non-null
+assertions, and a `?.()` method call, and resolves to `undefined` where the
+chain ends (L3.21, L3.22).
+
+"As ECMAScript" is therefore available for member access. chant's shape
+classifier still admits both forms. The object's value is a resolution, which
+is the permitted direction, and the divergence list carries it.
 
 **F-Eval-Member steps 1, 5** *(Attribute references are produced by two rules and refused by a third)*
 
@@ -1035,12 +1056,13 @@ envelope produced wrong output (L3.11, chant#1535).
 **F-Eval-Template** *(Template spans coerce by ECMAScript `ToString`, and the spec must say what that does to an envelope)*
 
 `String(fold(span))` (L3.2). For scalars that is ECMAScript. For a symbolic
-envelope it is `"[object Object]"`, and, verified, the run path produces the
-same, because `AttrRef` defines no `toString`. So fold and run *agree* and the
-output is silently wrong on both; the implementation guards the
-eager-intrinsic case for exactly this hazard and not the template span.
-The spec should refuse an envelope in a plain template span rather than
-inherit `ToString`; chant's side of it is tracked as a lint gap.
+envelope it is `"[object Object]"`, and the run path produces the same,
+because `AttrRef` defines no `toString`.
+
+So fold and run agree, and the output is silently wrong on both. The
+implementation guards the eager-intrinsic case for exactly this hazard and not
+the template span. The spec should refuse an envelope in a plain template span
+rather than inherit `ToString`; chant's side of it is tracked as a lint gap.
 
 **F-Eval-Object, F-Eval-Array** *(Key and element ordering are ECMAScript's, and byte-identity depends on it)*
 
@@ -1049,17 +1071,20 @@ so spread keys land in the source's insertion order and a later key wins
 (L3.3). Arrays preserve element order; spread splices in place. This is
 ECMAScript object-literal evaluation and "as ECMAScript" is available here.
 
-Whether order is *observable* depends on the emitter, verified in chant: a
-lexicon whose serializer produces JSON is re-stringified through
-`sortedJsonReplacer` (`packages/core/src/utils.ts:30`), which sorts every
-object's keys, and YAML for those lexicons is derived from that sorted JSON
-(`cli/commands/build.ts:743–746`), so folded key order never reaches the
-output. Six lexicons serialize YAML themselves (fountain, docker, gitlab, k8s,
-gcp, github) and their text is emitted as-is, so for them the walker's
-insertion order *is* the output order. The rule must therefore be stated: an
-implementation targeting a host that preserves order would fail byte-identity
-with a different key order, and nothing in the objective says which hosts
-those are.
+Whether order is *observable* depends on the emitter, verified in chant.
+
+- A lexicon whose serializer produces JSON is re-stringified through
+  `sortedJsonReplacer` (`packages/core/src/utils.ts:30`), which sorts every
+  object's keys. YAML for those lexicons is derived from that sorted JSON
+  (`cli/commands/build.ts:743–746`), so folded key order never reaches the
+  output.
+- Six lexicons serialize YAML themselves (fountain, docker, gitlab, k8s, gcp,
+  github) and their text is emitted as-is, so for them the walker's insertion
+  order *is* the output order.
+
+The rule must therefore be stated. An implementation targeting a host that
+preserves order would fail byte-identity with a different key order, and
+nothing in the objective says which hosts those are.
 
 **F-Eval-Object, F-Eval-Array** *(Spread departs from ECMAScript in one direction)*
 

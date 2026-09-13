@@ -112,11 +112,17 @@ and the folded subset cannot drift (L2.*).
 The two consumers have different information. A lint pass has no binding
 resolver and no lexicon registry; the folder has both. The shape-only
 classifier may accept what the resolving evaluator rejects, and must never
-reject what it accepts. Enumerated divergences in that direction: identifier
-resolution (L2.3), tag registration (L2.4), helper provenance (L2.11),
-spread-source runtime type (L3.4, L3.5), a bare identifier bound to a
-same-file construction (L3.8), and, since chant-v0.63.0, a member read whose
-object resolves to `null`/`undefined` (L3.10; shape-valid, folder refuses).
+reject what it accepts.
+
+Enumerated divergences in that direction:
+
+- identifier resolution (L2.3),
+- tag registration (L2.4),
+- helper provenance (L2.11),
+- spread-source runtime type (L3.4, L3.5),
+- a bare identifier bound to a same-file construction (L3.8),
+- a member read whose object resolves to `null`/`undefined` (L3.10;
+  shape-valid, folder refuses).
 
 **F-Exc-Lazy, F-Exc-Registry** *(The two exceptions must be stated, not tidied away)*
 

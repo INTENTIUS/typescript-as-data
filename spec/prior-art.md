@@ -16,11 +16,12 @@ Not normative.
 "Everyone else errors" is false. Two well-established families fall back
 gracefully from static evaluation to execution, and one of them, compile-time
 function execution, makes exactly chant's argument that the same function runs
-in either context so the result cannot differ. What none of the neighbours has
-is the combination of per-file granularity with shared object identity across
-the boundary, which is what forces the bidirectional taint fixpoint. That
-fixpoint is the part with no visible precedent, and it should be the paper's
-centre rather than "the fallback".
+in either context so the result cannot differ.
+
+What none of the neighbours has is the combination of per-file granularity
+with shared object identity across the boundary, which is what forces the
+bidirectional taint fixpoint. That fixpoint is the part with no visible
+precedent, and it should be the paper's centre rather than "the fallback".
 
 ## Nearest neighbours, by the dimension they are nearest on
 
@@ -38,17 +39,20 @@ CTFE decides per *call site*. The specification (dlang/dmd,
 relies on: "All functions that execute in CTFE must also be executable at run
 time. The compile time evaluation of a function does the equivalent of running
 the function at run time. The semantics of a function cannot depend on compile
-time values of the function." A required context that cannot be evaluated is
-illegal, not a fallback; the spec's own example "is illegal, because the
-runtime code for `foo` cannot be generated", and DMD reports "cannot be
-interpreted at compile time". `__ctfe` exists to give "an alternative execution
-path to avoid operations which are forbidden in CTFE". chant decides per
-*file*, and a file that cannot be folded is run. A CTFE'd
-value is *copied* into the compiled program; nothing at run time shares
-identity with a compile-time object. chant's folded entities are the same
-objects the run path would have built, and other files hold references to them.
-That is the whole reason the taint fixpoint exists, and CTFE has no analogue
-because it has no such sharing.
+time values of the function."
+
+A required context that cannot be evaluated is illegal, and there is no
+fallback. The spec's own example "is illegal, because the runtime code for
+`foo` cannot be generated", and DMD reports "cannot be interpreted at compile
+time". `__ctfe` exists to give "an alternative execution path to avoid
+operations which are forbidden in CTFE". chant decides per *file*, and a file
+that cannot be folded is run.
+
+A CTFE'd value is *copied* into the compiled program, so nothing at run time
+shares identity with a compile-time object. chant's folded entities are the
+same objects the run path would have built, and other files hold references to
+them. That is the whole reason the taint fixpoint exists, and CTFE has no
+analogue because it has no such sharing.
 
 ### Per-unit static-versus-execute decision (Next.js, Astro)
 
@@ -157,11 +161,15 @@ plan's comparison was right about these and wrong to generalise from them to
 
 Offline partial evaluation with binding-time analysis (Jones, Gomard &
 Sestoft) remains the right frame: the shape classifier is a BTA, `fold()` is
-the specializer. Two refinements the sweep suggests: (1) chant's per-file
-decision with taint is closer to an *online* decision over a coarse unit than
-to a classical offline BTA, and the paper should say which it is; (2) the
-"lift" operation, a static value flowing into a dynamic context, is the
-fine-grained version of what forcing a folded file back to run does coarsely.
+the specializer. Two refinements the sweep suggests:
+
+1. chant's per-file decision with taint is closer to an *online* decision over
+   a coarse unit than to a classical offline BTA, and the paper should say
+   which it is.
+2. The "lift" operation, a static value flowing into a dynamic context, is the
+   fine-grained version of what forcing a folded file back to run does
+   coarsely.
+
 Multi-stage programming (Taha & Sheard) is the neighbour where staging is
 explicit in the language rather than inferred.
 
@@ -181,13 +189,9 @@ explicit in the language rather than inferred.
    chose per-file granularity while keeping shared identity, the one
    combination none of the neighbours has.
 
-## Must do before submission
+## Open
 
-1. Read Heldal & Hughes 2000 in full, for the camera-ready citation rather
-   than to decide item 4; see the narrowed conclusion above. Every route
-   reachable from here is refused or restricted; this needs the author's own
-   library access.
-2. ~~Prepack heap-serialization identity~~, answered above from
-   `ResidualHeapVisitor`; a citation to the source file, not the marketing page.
-3. ~~D: error versus fallback~~, answered above from the specification's own
-   text (dlang/dmd `spec/function.dd`) and the compiler's diagnostic.
+Heldal & Hughes 2000 has to be read in full, for the camera-ready citation
+rather than to decide item 4; see the narrowed conclusion above. Every route
+reachable from here is refused or restricted, so this needs the author's own
+library access.

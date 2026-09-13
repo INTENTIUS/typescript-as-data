@@ -54,12 +54,17 @@ The source layout is small enough to read:
 
 The reference was written from `grammar.md` and `judgments.md` without
 consulting chant's source, by an author who had read chant closely while
-writing the specification from it. Writing it found three places where the text
-was not complete enough: `grammar.md` used an *unclaimed* callee in four
-normative sentences and defined it in none; `F-Import` and `F-Val-Live` stated
-two identity predicates and nothing said they answer different questions; and
-`F-Eval-Ident` step 1 read an instance as "J2 pre-built" that no rule of J2
-built. `S-Unclaimed`, `F-Identity` and `F-Prebuild` are the rules that resulted.
+writing the specification from it. Writing it found three places where the
+text was not complete enough:
+
+- `grammar.md` used an *unclaimed* callee in four normative sentences and
+  defined it in none.
+- `F-Import` and `F-Val-Live` stated two identity predicates, and nothing said
+  they answer different questions.
+- `F-Eval-Ident` step 1 read an instance as "J2 pre-built" that no rule of J2
+  built.
+
+`S-Unclaimed`, `F-Identity` and `F-Prebuild` are the rules that resulted.
 
 ## Running it
 

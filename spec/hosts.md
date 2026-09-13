@@ -77,25 +77,31 @@ A call-form intrinsic, an eager intrinsic, or an authoring helper qualifies
   real run** of the file.
 
 That third clause is the whole correctness argument for every registered
-call, and it is the same-function principle: revival invokes the function
-the file's `import` names, never a reimplementation (F-Host-NoSubstitution).
-Explicitly excluded by chant, with the reason each fails: `env()` reads
-`process.env`; `Op()` returns an entity, and an entity-returning factory is
-the nested-construction hazard wearing a call; `propagate()`,
-`withDefaults()`, `resource()`, `mergeDefaults()` are composite *definition*
-helpers and `propagate` mutates in place; `createResource()`/
-`createProperty()` build classes at a module's top level, never as a value.
+call, and it is the same-function principle: revival invokes the function the
+file's `import` names, never a reimplementation (F-Host-NoSubstitution).
+
+Explicitly excluded by chant, with the reason each fails:
+
+- `env()`, which reads `process.env`.
+- `Op()`, which returns an entity. An entity-returning factory is the
+  nested-construction hazard wearing a call.
+- `propagate()`, `withDefaults()`, `resource()`, `mergeDefaults()`, which are
+  composite *definition* helpers, and `propagate` mutates in place.
+- `createResource()` and `createProperty()`, which build classes at a module's
+  top level, never as a value.
 
 ## F-Host-Closed-vs-Open (why packages are closed and project files are open)
 
-A call into a **package** folds only through a closed allowlist, a
-registered intrinsic or helper, checked by name *and* by the provenance of
-the binding (F-Div-Provenance), or at a declarator by invocation
-(F-Call), reached directly or through a const alias (F-Declarator), where
-the result is a value whatever it is. A call nested inside an
-expression never folds through a package. A call into a **project file**
-folds whenever the callee's body is itself in the subset, with no
-allowlist.
+A call into a **package** folds only two ways:
+
+- Through a closed allowlist, a registered intrinsic or helper, checked by
+  name *and* by the provenance of the binding (F-Div-Provenance).
+- At a declarator, by invocation (F-Call), reached directly or through a const
+  alias (F-Declarator), where the result is a value whatever it is.
+
+A call nested inside an expression never folds through a package. A call into
+a **project file** folds whenever the callee's body is itself in the subset,
+with no allowlist.
 
 The asymmetry is the trust boundary. Package code is already
 loaded and executed by the build before discovery begins; admitting a call
@@ -110,23 +116,28 @@ an allowlist could not.
 For every registered name, helper, intrinsic, constructor, composite -
 revival resolves the name **through the folding file's own `import`
 bindings** and invokes what it finds (F-Val-Fate, J2 F-Call). A host never
-substitutes its own implementation for a registered name. Two consequences:
-a same-named function the file declared or imported from a project file is
-that function's call (F-Eval-CallLocal), one imported from
-anywhere else is not the host's and the file falls back (F-Div-Provenance);
-and the registry cannot
-drift from the helpers' real behaviour, because it never reimplements them.
+substitutes its own implementation for a registered name.
+
+Two consequences:
+
+- A same-named function the file declared or imported from a project file is
+  that function's call (F-Eval-CallLocal). One imported from anywhere else is
+  not the host's, and the file falls back (F-Div-Provenance).
+- The registry cannot drift from the helpers' real behaviour, because it never
+  reimplements them.
+
 This is the CTFE principle ([`prior-art.md`](./prior-art.md)) made a rule.
 
 ## F-Host-Composite (the registration that admits interpretation)
 
-A project file's composite is interpretable (rule 2) iff its defining
-module has `export const N = Composite(fn, "N")` where `Composite` is bound,
-*in that module*, to an import of the host's own, `fn` is an arrow or
-function expression, and the name argument is absent or a string literal. A
-plain helper that returns a composite is not registered and stays on the
+A project file's composite is interpretable (rule 2) iff its defining module
+has `export const N = Composite(fn, "N")`, where `Composite` is bound, *in
+that module*, to an import of the host's own, `fn` is an arrow or function
+expression, and the name argument is absent or a string literal.
+
+A plain helper that returns a composite is not registered and stays on the
 invoking path. A host that offers interpretation must define an equivalent
-registration form; the shape of `fn` is S-FactoryBody.
+registration form. The shape of `fn` is S-FactoryBody.
 
 ## F-Host-DataExports (a package's plain data folds as values)
 
@@ -140,13 +151,16 @@ import.
 
 ## F-Host-Trust (what may be imported during a fold)
 
-Arm 1: a specifier that is an active package of this build, or a subpath of
-one, matched by text against the closed set the build already resolved. Arm
-2: a specifier that *resolves* to a path inside the host's own module tree -
-text is insufficient because an untrusted repository controls both its
-source and its `node_modules`. Nothing else, and a build with no package
-list keeps only arm 2. Under `ι = isolated`, an import outside both
-arms is F-IsolatedRefusal (J2).
+Two arms, and nothing else:
+
+1. A specifier that is an active package of this build, or a subpath of one,
+   matched by text against the closed set the build already resolved.
+2. A specifier that *resolves* to a path inside the host's own module tree.
+   Text is insufficient here, because an untrusted repository controls both
+   its source and its `node_modules`.
+
+A build with no package list keeps only arm 2. Under `ι = isolated`, an import
+outside both arms is F-IsolatedRefusal (J2).
 
 ## F-Host-Generality (what varies and what does not)
 

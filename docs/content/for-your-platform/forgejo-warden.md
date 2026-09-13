@@ -9,7 +9,7 @@ diataxis: how-to
 
 ## Author
 
-A `governance.ts` is typed by the package's own `GovernanceConfig`, with `satisfies` on its `export default`, and its helper is an arrow in the same file. Both forms fold under `data-host` since spec `1.2` ([#94](https://github.com/INTENTIUS/typescript-as-data/issues/94), [#95](https://github.com/INTENTIUS/typescript-as-data/issues/95)).
+A `governance.ts` is typed by the package's own `GovernanceConfig`, with `satisfies` on its `export default`, and its helper is an arrow in the same file. Both forms fold under `data-host`.
 
 The schema is 195 lines of hand-written interfaces over eight cycles: org settings, membership and teams; repo settings, branch protection and repo baseline; secrets and variables, and webhooks. Everything the YAML parser could not do is ordinary TypeScript. Flow style, multi-line scalars and anchors become a template literal, a `const`, a spread.
 

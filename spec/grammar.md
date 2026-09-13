@@ -152,7 +152,8 @@ that no other S-Call form claims. The callee must not be:
 
 Only the bare-identifier part is decidable from syntax. The four conditions
 are resolution, so S-CompositeStep admits any call at shape level and
-F-Eval-Member step 2 applies the full test. S-CompositeStep, F-Div-Step and
+F-Eval-Member step 2 applies the full test.
+
 **Explicitly outside the subset** (S-Reject at shape level, and rejected by
 the folder): an arrow or function expression as a value (L3.1); class
 expressions; `await`, `yield`; assignment and compound assignment; the comma

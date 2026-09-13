@@ -33,8 +33,8 @@ touching the file is noticed there rather than on a downstream page.
 
 The identifier collection is keyed on the identifiers themselves and never on
 document structure. `spec/coverage.test.ts` carries the reason in a comment,
-and it is the lesson of chant#2306, where a gate keyed on headings could not
-see a wrong claim that lived in a bullet list.
+because a gate keyed on document structure cannot see a wrong claim that
+lives in a bullet list.
 
 ## The other gate
 

@@ -32,16 +32,19 @@ export const x = `Hello ${name}!`;
 
 ```json
 { "rules": ["S-Template", "F-Eval-Template", "F-Eval-Ident"], "export": "x", "shape": "accept", "fold": "fold", "value": "Hello World!",
-  "note": "The claim chant#2306 found stated backwards in the docs: a template interpolating a const folds." }
+  "note": "A template interpolating a const folds." }
 ```
 
-`export` names which export is judged. `shape` is the `S-*` verdict, `"accept"`
-or `"reject"`. `fold` is the `F-*` verdict, `"fold"` or `"run"`. `value` is
-required when `fold` is `"fold"`, and the sentinel `"$undefined"` means the
-folded value is `undefined`, which JSON cannot write. `rejectAt` is optional
-and only meaningful when `fold` is `"run"`: it is the line and column the
-rejection must point at, which is `F-Reason`'s located-rejection requirement
-made testable.
+The fields:
+
+- `export`, which export is judged.
+- `shape`, the `S-*` verdict: `"accept"` or `"reject"`.
+- `fold`, the `F-*` verdict: `"fold"` or `"run"`.
+- `value`, required when `fold` is `"fold"`. The sentinel `"$undefined"` means
+  the folded value is `undefined`, which JSON cannot write.
+- `rejectAt`, optional, and only meaningful when `fold` is `"run"`. It is the
+  line and column the rejection must point at, which is `F-Reason`'s
+  located-rejection requirement made testable.
 
 Both verdicts are checked on every fixture, so a fixture exercises the shape
 classifier and the folder at once. `F-Direction` is the reason that is worth
@@ -86,25 +89,30 @@ export const port = ensure(settings.port);
   "verdicts": { "app.ts": "run", "config.ts": "run" },
   "tentative": { "app.ts": "run", "config.ts": "fold" },
   "taintedBy": { "config.ts": "app.ts" },
-  "note": "The forward edge. config.ts folds on its own, and runs anyway because app.ts, which imports it, runs: app.ts's real import would construct a second settings object. This is chant#1107's observation, that fixing a leaf buys nothing while an importer still runs."
+  "note": "The forward edge. config.ts folds on its own, and runs anyway because app.ts, which imports it, runs: app.ts's real import would construct a second settings object. Fixing a leaf buys nothing while an importer still runs."
 }
 ```
 
-`verdicts` is every file's final verdict, after J3. `tentative` is J2's
-proposal, before J3 disposed of it, and is optional because an implementation
-that cannot separate the two phases reports none. `taintedBy` gives, for a file
-J3 tainted, the file whose taint reached it. `exports` is optional and gives
-expected export values for files that finally fold. `rejectRule` names the rule
-a `run` verdict must cite, and is checked only when the adapter reports one.
-`host` selects one from `packages/conformance/src/host.ts`, and is required
-for any fixture whose sources import one. `mode` is J2's isolation mode,
-`open` by default, `isolated` or `executing`; an adapter that cannot honour it
-reports the fixture unavailable. `findings` is what an `F-Rule-*` fixture
-asserts: the named host's rules' findings as data. `counters` pins F-Obs-Counters' three
-integers for the build, and an adapter reporting none is skipped there rather
-than failed. `profiles` names the profiles the case is judged in. Without it
-one that needs the runtime is `full` only, which naming a host or
-asserting a taint edge implies; anything else is judged in both.
+The fields, in the order a fixture usually carries them:
+
+- `verdicts`, every file's final verdict, after J3.
+- `tentative`, J2's proposal before J3 disposed of it. Optional: an
+  implementation that cannot separate the two phases reports none.
+- `taintedBy`, for a file J3 tainted, the file whose taint reached it.
+- `exports`, expected export values for files that finally fold. Optional.
+- `rejectRule`, the rule a `run` verdict must cite. Checked only when the
+  adapter reports one.
+- `host`, one of the hosts in `packages/conformance/src/host.ts`. Required for
+  any fixture whose sources import one.
+- `mode`, J2's isolation mode: `open` by default, `isolated` or `executing`.
+  An adapter that cannot honour it reports the fixture unavailable.
+- `findings`, what an `F-Rule-*` fixture asserts: the named host's rules'
+  findings as data.
+- `counters`, F-Obs-Counters' three integers for the build. An adapter
+  reporting none is skipped rather than failed.
+- `profiles`, the profiles the case is judged in. A case that needs the
+  runtime is `full` only, which naming a host or asserting a taint edge
+  implies. Anything else is judged in both.
 
 `fixture.ts` says why `tentative` and `taintedBy` exist. Without them a project
 fixture cannot tell "folds because nothing reached it" from "would have folded,
@@ -116,11 +124,12 @@ verdicts alone would not distinguish a seed from a taint casualty. `config.ts` f
 
 The third kind has no source at all. The directory holds `value.json`, a
 namespace as data with envelopes written as `F-Val-Domain` writes them, and an
-`expect.json` with `"roundtrip": true`. The implementation's generator writes
-the source, the fold of that source must equal the input, and that is
-`F-Val-Source`'s round trip made executable. It is judged in `data-host`
-unless told otherwise, since in `full` the fold of a resource's form is a
-live instance.
+`expect.json` with `"roundtrip": true`.
+
+The implementation's generator writes the source, and the fold of that source
+must equal the input: `F-Val-Source`'s round trip, made executable. It is
+judged in `data-host` unless told otherwise, since in `full` the fold of a
+resource's form is a live instance.
 
 ## How they are run
 

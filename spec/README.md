@@ -178,10 +178,11 @@ TypeScript's node kinds, and ECMAScript coercion.
 The reference implementation covers all three judgments, with revival through
 a host's real constructors, and declares the `full` profile at the version in
 `VERSION`. With an empty host it is also an implementation of `data-host`
-without `new`, and the suite judges it on that profile's fixtures too. What it
-does not cover is `packages/reference/CAVEATS.md`, where the one gap is F-Call
-step 6 in open mode: invoking a project module. A reader should not assume the
-reference is complete.
+without `new`, and the suite judges it on that profile's fixtures too.
+
+What it does not cover is `packages/reference/CAVEATS.md`, where the one gap
+is F-Call step 6 in open mode: invoking a project module. A reader should not
+assume the reference is complete.
 
 
 ## Identifiers

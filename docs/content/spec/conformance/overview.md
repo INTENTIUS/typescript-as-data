@@ -14,8 +14,8 @@ text they exercise.
 
 An implementation under test provides a `ConformanceAdapter`. The interface is
 deliberately narrow, so a foreign implementation, chant or one in another
-language behind a shim, can satisfy it without exposing internals. Source in,
-verdict out.
+language behind a shim, can satisfy it without exposing internals. It takes
+source and returns a verdict.
 
 ```ts
 interface ConformanceAdapter {
@@ -33,16 +33,20 @@ interface ConformanceAdapter {
 }
 ```
 
-`shape` gives the `S-*` verdict on the initializer of one export, and returns
-`"unavailable"` if the implementation exposes no shape classifier at all.
-`foldExport` gives the `F-*` verdict, either a JSON-comparable value or a
-located rejection. `foldProject` answers J2 and J3 over a whole build in the
-mode the fixture asks for, and is optional, because not every implementation
-has a whole-build entry point. `rules` runs the host's semantic rules over a
-build and returns findings as data, and `generate` writes source for a
-namespace, which the round trip needs. Whenever a hook cannot answer it returns
-`"unavailable"`, and the fixture is reported skipped rather than silently
-passing.
+What each hook answers:
+
+- `shape`, the `S-*` verdict on the initializer of one export.
+- `foldExport`, the `F-*` verdict: a JSON-comparable value, or a located
+  rejection.
+- `foldProject`, J2 and J3 over a whole build, in the mode the fixture asks
+  for. Optional, because not every implementation has a whole-build entry
+  point.
+- `rules`, the host's semantic rules over a build, as findings.
+- `generate`, source for a namespace, which the round trip needs.
+
+A hook that cannot answer returns `"unavailable"`, and the fixture is reported
+skipped rather than silently passing. A shape classifier the implementation
+does not expose at all is the common case.
 
 `ShapeResult` and `FoldResult` carry a `rule` field alongside the location.
 That is `F-Reason`'s requirement, that the rule identifier and the location are
@@ -52,33 +56,32 @@ normative while the message wording is not.
 
 Five checks, in four places.
 
-**The reference passes every fixture**, which
-`packages/conformance/src/runner.test.ts` checks against `referenceAdapter`.
-It also asserts that the only project fixture skipped is the one judged under
-`executing`, a mode this package reports unavailable by name. Two stub adapters must
-fail, one returning `run` for every file and one folding everything to `null`.
-An implementation that falls back on every file in a build is sound and
-useless, and without the stub, `F-Taint`'s "least set" would be untested.
+1. The reference passes every fixture, which
+   `packages/conformance/src/runner.test.ts` checks against
+   `referenceAdapter`. It also asserts that the only project fixture skipped
+   is the one judged under `executing`, a mode this package reports
+   unavailable by name.
+2. chant passes every fixture, and agrees with the reference on every one,
+   through chant's public API in
+   `packages/conformance/src/chant-agreement.test.ts`, pinned to a release.
+   More is in
+   [the chant cross-check](/typescript-as-data/spec/conformance/chant-cross-check/).
+3. Every rule is covered or deliberately listed as uncovered, gated by
+   `spec/fixtures.test.ts` with `spec/fixtures/UNCOVERED.md` as the allowlist.
+   [Coverage](/typescript-as-data/spec/conformance/coverage/) has the detail.
+4. The Rust evaluator passes every fixture tagged for the data-host profile
+   and agrees with the reference on each, in
+   `packages/conformance/src/rust-agreement.test.ts`, with the binary built in
+   its own CI job.
+5. The two implementations agree on a corpus nobody wrote for the purpose,
+   measured by `packages/conformance/src/corpus.test.ts` over chant's example
+   corpus and over a codebase nobody here maintains, described in
+   [the corpus cross-check](/typescript-as-data/spec/conformance/corpus/).
 
-**chant passes every fixture, and agrees with the reference on every one**,
-through chant's public API in
-`packages/conformance/src/chant-agreement.test.ts`, pinned to a release. More
-is in
-[the chant cross-check](/typescript-as-data/spec/conformance/chant-cross-check/).
-
-**Every rule is covered or deliberately listed as uncovered**, gated by
-`spec/fixtures.test.ts` with `spec/fixtures/UNCOVERED.md` as the allowlist.
-[Coverage](/typescript-as-data/spec/conformance/coverage/) has the detail.
-
-**The Rust evaluator passes every fixture tagged for the data-host profile
-and agrees with the reference on each**, in
-`packages/conformance/src/rust-agreement.test.ts`, with the binary built in
-its own CI job.
-
-**The two implementations agree on a corpus nobody wrote for the purpose**,
-measured by `packages/conformance/src/corpus.test.ts` over chant's example
-corpus and over a codebase nobody here maintains, described in
-[the corpus cross-check](/typescript-as-data/spec/conformance/corpus/).
+Two stub adapters must also fail: one returns `run` for every file, one folds
+everything to `null`. An implementation that falls back on every file in a
+build is sound and useless, and without the stub, `F-Taint`'s "least set"
+would be untested.
 
 The first four run in `npm test` and `.github/workflows/ci.yml` on every pull
 request. The fifth has its own command and its own weekly workflow, because it
