@@ -97,7 +97,7 @@ Nothing in that file imports an implementation. An adapter translates a
 `ConformanceHost` into whatever its own host interface is, which is what keeps
 the fixture set neutral between implementations.
 
-## What agreement here is worth
+## What agreement here establishes
 
 The fixtures were written to exercise particular rules, so agreement on them is
 agreement on cases somebody chose. `paper/measurements.md` states that ceiling

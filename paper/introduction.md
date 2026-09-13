@@ -12,7 +12,7 @@ Graceful fallback from static evaluation to execution is not itself new; compile
 
 ## The problem
 
-Configuration as data is auditable: every value traces to a line of source, and the build makes no network call and holds no credential. Configuration as code is expressive: types, imports, refactoring, a language people already know. Existing designs pick one. A configuration language gives up the general-purpose ecosystem; a program that emits configuration gives up the property that made data worth having, because the graph exists only as the output of a run.
+Configuration as data is auditable: every value traces to a line of source, and the build makes no network call and holds no credential. Configuration as code is expressive: types, imports, refactoring, a language people already know. Existing designs pick one. A configuration language gives up the general-purpose ecosystem; a program that emits configuration gives up the property that made data auditable, because the graph exists only as the output of a run.
 
 The fragment approach promises both. Its difficulty is not defining the fragment, which is routine, but defining the edge.
 

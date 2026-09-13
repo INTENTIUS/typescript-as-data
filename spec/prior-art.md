@@ -179,8 +179,8 @@ explicit in the language rather than inferred.
 1. **Per-file partial evaluation with a fallback to executing the unit.**
    Precedented in shape (Next.js) and in principle (CTFE). Not novel alone.
 2. **Same-function agreement via revival through the file's own imports.**
-   Precedented by CTFE's design principle. Not novel alone; worth citing as
-   the same argument.
+   Precedented by CTFE's design principle. Not novel alone. Cite it as the
+   same argument.
 3. **Byte-identical agreement as a discharged obligation over a real corpus.**
    Not found in this sweep as a stated, tested property; not searched for
    specifically. A methodological contribution, not a conceptual one.

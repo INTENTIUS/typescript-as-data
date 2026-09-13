@@ -85,4 +85,4 @@ eager         call matrix now, because the template coerces its result
               before any revival would run
 ```
 
-Both run code the file imported rather than code it wrote, so both stay inside `F-NoOwnExecution`. Their existence is an admission worth keeping: the eager mode is there to serve a coercion, not because eagerness is independently right, and the specification says so.
+Both run code the file imported rather than code it wrote, so both stay inside `F-NoOwnExecution`. Their existence is an admission the specification keeps: the eager mode is there to serve a coercion, and eagerness is not independently right.

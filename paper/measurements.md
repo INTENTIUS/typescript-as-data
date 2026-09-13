@@ -60,7 +60,7 @@ The 4 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a 
 
 **Coercion, stated as fixtures.** Thirteen expression fixtures pin the parts of ECMAScript an evaluator in another language has to reproduce bit for bit. Number formatting in template literals is the largest of them (shortest round-trip digits; `1e+21`; `-0` as `0`; a literal beyond 2^53 rounded before it is printed). The others are `+`'s string-or-number dispatch and relational comparison on strings; the logical operators returning an operand; unary coercion and IEEE division; and the one deliberate departure, array spread refusing a string (R10.6). The same family pins that an `undefined`-valued property is present in the folded namespace and travels through a spread, which is what a selective-by-omission consumer reads (#82). Both implementations agree on all thirteen. Their sufficiency is not established by that: the reference is JavaScript and passes them for free, so whether they are enough is known only once an evaluator with no JavaScript engine runs them (#86).
 
-**What this agreement is worth.** Until #50 the reference implementation's evaluation layer was a *port* of chant's, so agreement on expression-level fixtures was guaranteed by construction rather than observed. It is now written from `grammar.md` §2 and `judgments.md` J1 without consulting chant's source, and the two implementations agree on every fixture, so the comparison is between two codebases rather than one code base with itself.
+**What this agreement establishes.** Until #50 the reference implementation's evaluation layer was a *port* of chant's, so agreement on expression-level fixtures was guaranteed by construction rather than observed. It is now written from `grammar.md` §2 and `judgments.md` J1 without consulting chant's source, and the two implementations agree on every fixture, so the comparison is between two codebases rather than one code base with itself.
 
 ## The corpus cross-check
 
@@ -117,11 +117,11 @@ The control is the one with teeth. An implementation that falls back on every fi
 
 Until `chant-v0.70.1` chant had no entry that took a set of files, so none of these were answerable there: a taint edge does not exist inside a single file. chant#2408 added one, and the nine fixtures that need no host now run against both implementations. They agree on every file's final verdict and its tentative verdict, and for every taint casualty they agree on the file the edge came from and on which rule it was. Since `chant-v0.72.0` the fixtures that name a host reach chant too (chant#2438), and a skip fails the suite.
 
-Two agreements are worth naming. chant classifies the capturing sibling as reached by a capture rather than an import, the distinction chant#2406 was filed for. And a file whose only tie to another is a call returning computed plain data folds in both, which is `F-Identity`'s entity test holding in an implementation that has never read it.
+Two agreements to name. chant classifies the capturing sibling as reached by a capture rather than an import, the distinction chant#2406 was filed for. And a file whose only tie to another is a call returning computed plain data folds in both, which is `F-Identity`'s entity test holding in an implementation that has never read it.
 
 Writing J2 and J3 from the specification found one more gap in it, which that test is the resolution of. `F-Import` and `F-Val-Live` stated two identity predicates and nothing said they answer different questions, so either choice for both uses is wrong, in one direction unsoundly. `F-Identity` makes the recursive test normative and `F-Import`'s broader one an over-approximation whose cost is coverage (#59).
 
-The port's own failure mode is worth recording because it is the one this section should not paper over: chant-v0.69.0 extended an envelope check from three kinds to five while the port still had three, and because no fixture covered the shape, the suite stayed green against a stale port until the drift was found by reading the release diff. Two fixtures now cover it, and the port that made the drift possible is gone.
+The port's own failure mode: chant-v0.69.0 extended an envelope check from three kinds to five while the port still had three, and because no fixture covered the shape, the suite stayed green against a stale port until the drift was found by reading the release diff. Two fixtures now cover it, and the port that made the drift possible is gone.
 
 ## What the specification found
 

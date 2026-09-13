@@ -21,7 +21,7 @@ Six further shapes disqualify the whole file (`S-Disqualify`). A default export 
 
 The gate's granularity is the design decision rather than the list. It is per module, and the justification is that an unreducible export can reference, or be referenced by, a reducible one in ways only running proves safe. A per-declaration gate would have to decide whether a half-reduced namespace is coherent, and it is not (`F-Total`).
 
-The gate is per module rather than per declaration, and the reason is worth stating: an unfoldable export can reference or be referenced by a foldable one in ways only running proves safe (`F-Total`).
+The gate is per module rather than per declaration, and the reason is this: an unfoldable export can reference or be referenced by a foldable one in ways only running proves safe (`F-Total`).
 
 The **expression classifier** (`grammar.md` §2) then decides the shapes inside an admitted statement. It resolves nothing. That is deliberate, and it is the subject of the direction claim below.
 
@@ -55,7 +55,7 @@ The claim is one-directional and stated with its exceptions inside it. **If eval
 
 The direction is chosen rather than observed, and the reason is asymmetric cost. A classifier that accepts too much produces a fallback the author learns about from a per-file decision line. A classifier that rejects too much produces an error on correct source, and a lint that cries wolf gets disabled, taking the real diagnostics with it. The classifier is also the predicate a downstream tool asks *will this reduce* without running a reduction, and such a tool must get an answer safe to act on.
 
-Twelve divergences run the permitted way, and the specification enumerates all twelve rather than describing the shape of the set (`F-Div-*`). The enumeration is the useful part: a claim that two analyses disagree only in one direction is worth little without a list of where, because the list is what a reader checks and what a new rule has to join.
+Twelve divergences run the permitted way, and the specification enumerates all twelve rather than describing the shape of the set (`F-Div-*`). The enumeration is the useful part: a claim that two analyses disagree only in one direction needs a list of where, because the list is what a reader checks and what a new rule has to join.
 
 | Rule | The classifier sees | The evaluator additionally requires |
 |---|---|---|
@@ -109,7 +109,7 @@ Seeded with every file that would not fold alone, closed under both edges, least
 
 The property this buys is stated and argued in `theorem.md`: exactly one object represents each entity, and every reference resolves to it.
 
-Two consequences are worth stating because they look like defects:
+Two consequences look like defects:
 
 **A leaf fix buys nothing while an importer still falls back.** Making a leaf reducible changes no verdict until every file in the closure above it also reduces. This was observed as coverage *falling* after a migration that made a widely imported file reducible, which read as a regression and was the rule working. An implementation that optimised it away would reintroduce the two-objects problem directly.
 

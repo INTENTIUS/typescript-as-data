@@ -5,7 +5,7 @@ weight: 2
 diataxis: explanation
 ---
 
-The editor catches a misspelt key and a value of the wrong kind as you type. That is TypeScript's type checker, worth having and not linting.
+The editor catches a misspelt key and a value of the wrong kind as you type. That is TypeScript's type checker, and it is not linting.
 
 A type can say a field is a number in a range. No type can say that `requirePullRequestReviews: true` with `requiredApprovingReviewCount: 0` is a contradiction, or that an owned org has no branch protection on its default branch. Those are conditions over the values, and over several resources at once.
 

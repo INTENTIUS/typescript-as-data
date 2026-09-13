@@ -47,8 +47,8 @@ The fields:
   located-rejection requirement made testable.
 
 Both verdicts are checked on every fixture, so a fixture exercises the shape
-classifier and the folder at once. `F-Direction` is the reason that is worth
-doing: the classifier may accept what the folder rejects and never the reverse.
+classifier and the folder at once. `F-Direction` is the reason for checking
+both: the classifier may accept what the folder rejects and never the reverse.
 A fixture with `"shape": "accept"` and `"fold": "run"` is therefore a
 legitimate and interesting shape.
 

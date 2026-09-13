@@ -5,7 +5,7 @@ weight: 3
 aliases: ["/introduction/reading-the-spec/"]
 ---
 
-`spec/README.md` gives a reading order, and it is worth following. The files
+`spec/README.md` gives a reading order. The files
 are layered rather than alphabetical, each assuming the vocabulary the previous
 one introduced.
 
