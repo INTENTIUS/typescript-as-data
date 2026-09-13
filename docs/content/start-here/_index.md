@@ -23,7 +23,7 @@ Written in TypeScript, the policy above is a value with a declared type. A repea
 
 A TypeScript file is a program. That is the catch. A program can do anything when it runs, so a tool that ran your policy to read it would be running your code, with whatever that code does.
 
-This project is about the other way of reading it. When a file only lists values, a tool can read the values off the text without running the file at all. The specification here calls that folding. When a file does more than list values, the tool has to run it, and the specification calls that the fallback. The point of the whole site is that folding is the normal case and running is the exception, and that the two always give the same answer when both are possible.
+This project is about the other way of reading it. When a file only lists values, a tool can read them off the text without running the file at all, and the specification calls that **folding**. When a file does more than list values, the tool hands it to the JavaScript engine and takes whatever the exports hold when the program finishes; the specification calls that **running**, and it is the fallback. The YAML the tool writes is the same either way. What differs is whether the tool had to execute your file to produce it, and the point of the site is that folding is the normal case, running the exception, and the two always agree when both are possible.
 
 ## What you need on your machine
 
