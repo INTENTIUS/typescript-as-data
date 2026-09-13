@@ -16,7 +16,7 @@ npm install --silent --no-audit --no-fund ./intentius-tsad-conformance-*.tgz ./i
 
 cat > smoke.mjs <<'JS'
 import { loadFixtures, runFixtures, compareAdapters, bundledFixturesDir } from "@intentius/tsad-conformance";
-import { referenceAdapter } from "@intentius/tsad-reference";
+import { referenceAdapter, referenceDataHostAdapter } from "@intentius/tsad-reference";
 
 // An adapter that folds nothing: sound, useless, and it must not pass.
 const runsEverything = {
@@ -27,11 +27,16 @@ const runsEverything = {
 };
 
 const fixtures = loadFixtures(bundledFixturesDir());
-const reference = await runFixtures(referenceAdapter, fixtures);
+// Each fixture is judged in the profiles it is tagged for (F-Profile), by that profile's adapter.
+const inProfile = (p) => fixtures.filter((f) => f.profiles.includes(p));
+const reference = [
+  ...(await runFixtures(referenceAdapter, inProfile("full"))),
+  ...(await runFixtures(referenceDataHostAdapter, inProfile("data-host"))),
+];
 const stub = await runFixtures(runsEverything, fixtures);
-const disagreements = await compareAdapters(referenceAdapter, runsEverything, fixtures);
+const disagreements = await compareAdapters(referenceAdapter, runsEverything, inProfile("full"));
 const failed = reference.filter((r) => !r.pass);
-console.log(`fixtures: ${fixtures.length}; reference passes ${reference.length - failed.length}; stub passes ${stub.filter((r) => r.pass).length}; disagreements ${disagreements.length}`);
+console.log(`fixtures: ${fixtures.length}; reference passes ${reference.length - failed.length} of ${reference.length} profile runs; stub passes ${stub.filter((r) => r.pass).length}; disagreements ${disagreements.length}`);
 if (fixtures.length < 60 || failed.length > 0 || stub.every((r) => r.pass)) {
   console.error(failed.map((r) => `${r.fixture}: ${r.failures.join("; ")}`).join("\n"));
   process.exit(1);
