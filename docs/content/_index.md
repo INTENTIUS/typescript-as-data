@@ -1,9 +1,7 @@
 ---
 title: "typescript-as-data"
-description: "TypeScript in place of YAML. A file that is data is typed JSON, and the build reads it without executing it."
+description: "Configuration as code, read as data."
 ---
-
-New to TypeScript, to deploy tools, or to both? [Start here](/typescript-as-data/start-here/) assumes nothing, and [the glossary](/typescript-as-data/glossary/) has every term.
 
 ## A policy in YAML and in TypeScript
 
@@ -35,10 +33,4 @@ export const policy = {
 } satisfies GovernanceConfig;
 ```
 
-The second one has completion and a type error on a misspelt key. It reuses one helper across repositories. The tool reads the same object from either file and never executes the second one to get it.
-
-## Folded, or run
-
-A TypeScript file is a program that ends holding some exported values, and the build wants those values so it can write them out as YAML. The build can **fold** the file, reading the source and computing the values from the text alone, or it can **run** the file, handing it to the JavaScript engine and taking whatever the exports hold when the program finishes. The YAML is the same either way. What differs is whether the build had to execute your file to produce it.
-
-Folding is the default and the point. Running is the fallback for a file that is not data, and the verdict names the line that made it a program. The YAML is never run; only the TypeScript is, and only when it cannot be read.
+The second one has completion and a type error on a misspelt key. It reuses one helper across repositories. The tool reads the same object from either file and never executes the second one to get it. Three things follow, one page each below. New to any of this? [Start here](/typescript-as-data/start-here/).
