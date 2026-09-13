@@ -37,6 +37,10 @@ Each draft feeds one section of the paper.
 | `figures/` | #57 | two SVGs: the taint boundary, and the two-phase shape |
 | `../spec/prior-art.md` | #31 | the novelty narrowing, cited from related work |
 
+## The assembled draft
+
+`draft.md` is the sections below assembled into one document for readers, with the repository references removed and the numbers refreshed to the artifacts appendix B names. `just paper` renders it to HTML, and to PDF when tectonic is installed. It is the extended draft, about twice the venue's length; the cut to length is the pass that waits on the 2027 call.
+
 ## Still to write
 
 Every section has a draft. What remains is the pass that turns seven Markdown files into thirteen pages: cutting to length, deciding what the mechanism section keeps when it has four pages rather than open space, and the figures. That pass wants the 2027 call in hand.
