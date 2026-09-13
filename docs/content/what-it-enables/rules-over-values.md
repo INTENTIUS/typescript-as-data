@@ -1,13 +1,14 @@
 ---
-title: "Semantic linting"
-description: "A check over the declared values, across resources, whose findings are data a person or an agent can act on."
+title: "Rules over values"
+description: "A rule sees the declared values of every file before anything is emitted, with nothing run, and its findings are data."
 weight: 2
 diataxis: explanation
+aliases: ["/what-it-enables/rules-over-values/"]
 ---
 
 The editor catches a misspelt key and a value of the wrong kind as you type. That is TypeScript's type checker, worth having and not linting. A type can say a field is a number in a range, and no type can say that `requirePullRequestReviews: true` with `requiredApprovingReviewCount: 0` is a contradiction, or that an owned org has no branch protection on its default branch, because those are conditions over the values, and over several resources at once.
 
-Semantic linting is a check over the values a project declares. The specification defines no such check. It defines the contract a host's checks run under, [`rules.md`](/typescript-as-data/spec/normative/rules/), which says what a check sees and when it runs, and then what a check may do and what a finding is. chant's lexicon rules and forgejo-warden's guardrails are checks; what they have in common is that contract.
+A rule over values is a check over what a project declares, which tools call semantic linting. The specification defines no such check. It defines the contract a host's checks run under, [`rules.md`](/typescript-as-data/spec/normative/rules/), which says what a check sees and when it runs, and then what a check may do and what a finding is. chant's lexicon rules and forgejo-warden's guardrails are checks; what they have in common is that contract.
 
 ## What the fold adds
 
