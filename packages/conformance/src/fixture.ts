@@ -24,7 +24,7 @@
  *                    "exports":   { "config.ts": { "port": 8080 } },              // optional, for files that finally fold
  *                    "rejectRule": { "app.ts": "F-Eval-CallLocal" },              // optional, the rule a run verdict must name; checked when the adapter reports one
  *                    "host":      "shapes",                                       // optional, a named host from host.ts; required if the sources import one
- *                    "mode":      "isolated",                                     // optional, J2's ι; "open" by default. An adapter that cannot honour it reports "unavailable"
+ *                    "mode":      "isolated",                                     // optional, J2's ι: "open" (default, strict), "isolated" or "executing" (spec 1.8). An adapter that cannot honour it reports "unavailable"
  *                    "findings":  { "bucket.ts": [ { "rule": "SHAPES001", "subject": "bad", "severity": "error" } ],   // optional (#101): the host's rules' findings, keyed by the
  *                                   "artifact":  [ { "rule": "SHAPES002", "subject": "missing: Bucket", "severity": "warning" } ] }, //   file whose namespace holds the subject (pre) or "artifact" (post); "at" optional
  *                    "counters":  { "projectFactoryInvocations": 0 },              // optional (F-Obs-Counters): the build's counters; the keys given are compared, all three must be reported

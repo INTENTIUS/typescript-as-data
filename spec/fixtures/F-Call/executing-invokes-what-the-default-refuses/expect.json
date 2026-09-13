@@ -1,0 +1,23 @@
+{
+  "rules": [
+    "F-Call",
+    "F-Eval-CallLocal"
+  ],
+  "project": true,
+  "mode": "executing",
+  "profiles": [
+    "full"
+  ],
+  "verdicts": {
+    "lib.ts": "fold",
+    "app.ts": "fold"
+  },
+  "exports": {
+    "app.ts": {
+      "v": {
+        "n": 4
+      }
+    }
+  },
+  "note": "twice is a declared project function whose body is outside S-FnBody (a let), so F-Eval-CallLocal refuses it and by default app.ts runs. Under executing (1.8) F-Call step 2 continues to step 6: the module is imported, twice invoked as project-owned code, and the fold carries its result. An implementation without the mode reports unavailable rather than a verdict."
+}

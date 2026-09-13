@@ -4,6 +4,10 @@ The versioned history of the rule set. The policy is in [`README.md`](./README.m
 
 Each entry lists the rules that changed and how, in the four kinds the policy defines. A change confined to non-normative text is not versioned and is not listed here; the rationale sections and the inventory are the usual cases.
 
+## 1.8, 2026-09-13
+
+Tag `spec-1.8`. One addition (#131). J2's isolation mode gains a third value, `executing`, the one opt-in under which F-Call step 2 continues to step 6 when a declared project function's body cannot fold: the function is invoked as project-owned code and the fold carries what a run would compute in the folding process. `open` stays the default and is strict, which is the order chant#2453 settled; `isolated` is unchanged; `data-host` has no such mode. The first codebase nobody here maintains found chant's open mode doing this silently, and the mode makes it a declared choice.
+
 ## 1.7, 2026-09-13
 
 Tag `spec-1.7`. One widening (#126). F-Eval-CallLocal is checked before the two registered call shapes. A call through a name the project bound is the project function's call whatever the registry says; F-Eval-CallHelper and F-Eval-CallIntrinsic now require the name not to be so bound. Until `1.6` a registered name kept its meaning and a file that bound one fell back. That order was taken from chant's expression classifier (`L2.11`) and its whole-build fold had never used it; the peer's probes with chant's own `output` showed it. F-Host-NoSubstitution's second consequence says so and the divergence row narrows to a binding from anywhere but the project or the host. The F-Div-Provenance fixture's verdicts move from run to fold. One fixture per profile pins a project `ref` over the registry's.

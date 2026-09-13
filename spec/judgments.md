@@ -58,7 +58,7 @@ another language embeds, or a JavaScript tool that folds and never runs. It is
 |---|---|
 | J1, every `F-Eval-*` rule, with ECMAScript coercion reproduced (R10) | applies in full |
 | `S-*`, `F-Div-*`, `F-Direction` | apply in full |
-| J2, `F-Bind` through `F-Total` | apply, with `ι = isolated` always and F-IsolatedRefusal the only fallback: a file that does not fold is an **error**, never a demotion to `run` |
+| J2, `F-Bind` through `F-Total` | apply, with `ι = isolated` always (`executing` is unavailable, there being nothing to invoke) and F-IsolatedRefusal the only fallback: a file that does not fold is an **error**, never a demotion to `run` |
 | J3, `F-Seed` through `F-Verdict`, `F-Capture`, `F-CallLeak`, `F-Memo` | absent. Nothing runs, so nothing taints, and every file's verdict is its own |
 | `F-Val-Fate` | altered: revival is serialization. An envelope is the output; `{__resource}`, `{__intrinsic}` and `{__attrRef}` reach the artifact as data for the host's serializer to map. No constructor and no function is invoked |
 | `F-Eval-CallHelper`, `F-Eval-CallEager`, `F-Host-Admission`, `F-Host-NoSubstitution` | absent: there is nothing to invoke. A registered helper or eager name is an ordinary unresolved identifier |
@@ -249,7 +249,12 @@ Formalises R4.1, R6.1, R6.6, R2.1, R2.2, R7, R8, R9.3. Derived from
 `resolveDeclaratorValue` (`:3522`), `resolveLiveValue` (`:1331`),
 `resolveCallExpression` (`:1416`), at `e4074c17`.
 
-`ι ∈ {open, isolated}` is the isolation mode (#36). On `fold`, `X` is the
+`ι ∈ {open, isolated, executing}` is the isolation mode (#36). `open` is the
+default and is strict: nothing folds by executing project code. `isolated`
+refuses every project-owned invocation (F-IsolatedRefusal). `executing`, the
+one opt-in (`1.8`), lets F-Call invoke a declared project function whose body
+cannot fold; the value is then what a run would compute in the folding
+process, environment included, and the build asked for that. On `fold`, `X` is the
 complete export namespace (R5.1) and `L ⊆ F` the files whose objects `f`
 captured (F-Capture, J3). The verdict is evaluated per file, without regard
 to other files' verdicts except through F-Import; it is *tentative*, and J3
@@ -371,7 +376,11 @@ F-IsolatedRefusal like any other.
 
 1. `c` must be a bare identifier; otherwise `run(callExpressionMessage)`.
 2. If `externals[c]` is a `FoldableFunction`, the call is J1's project-local
-   call (R6.5): evaluated statically, nothing imported.
+   call (R6.5): evaluated statically, nothing imported. If that refuses, the
+   file runs with F-Eval-CallLocal's reason, except under `ι = executing`
+   (`1.8`), where the call continues at step 6 as a project-owned invocation.
+   chant's `open` mode invoked here until 0.72.3 (chant#2453), and the
+   invocation carried the folding process's environment into the fold.
 3. Otherwise `c` must be an import binding; else `run`.
 4. If the binding is *interpretable* (R7.2, rules 1–5): the factory body is
    **interpreted** against the defining module's scope; the module is never
@@ -721,11 +730,15 @@ INTENTIUS/chant#1093). The fold/run decision is therefore parameterized by
 whether project code may execute in this process.
 
 **Decided (#36): isolation is an optional capability, modelled in the
-judgment.** J2 takes an isolation mode `ι ∈ {open, isolated}`; under
-`isolated`, a file whose fold would require invoking project-owned code is
-`run`, not `fold` (F-IsolatedRefusal, judgments.md). An implementation
-declares whether it supports `isolated`; conformance reports it separately
-and does not require it. The observable is R9.2's `projectFactoryInvocations`
+judgment.** J2 takes an isolation mode `ι ∈ {open, isolated, executing}`;
+under `isolated`, a file whose fold would require invoking project-owned code
+is `run`, not `fold` (F-IsolatedRefusal, judgments.md). `executing` is the
+opposite opt-in (`1.8`), under which a declared project function whose body
+cannot fold is invoked at a declarator (F-Call step 2), so the fold may
+depend on the folding process. It is never the default, since a fold that reads the
+environment silently is what chant#2453 found. An implementation declares
+which modes it supports; conformance reports them separately and requires
+neither `isolated` nor `executing`. The observable is R9.2's `projectFactoryInvocations`
 counter, which must be zero for every folded file under `isolated`. Nix
 import-from-derivation is the cited precedent for evaluation escaping into a
 contained execution and resuming (`prior-art.md`). The reference

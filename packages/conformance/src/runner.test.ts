@@ -28,7 +28,8 @@ describe("conformance runner (#7) over the reference implementation (#10)", () =
   test("the project fixtures are actually exercised, not all skipped (#24)", async () => {
     const reports = (await runFixtures(referenceAdapter, fixtures)).filter((r) => projectFixtures(fixtures).some((p) => p.id === r.fixture));
     expect(reports.length).toBe(projectFixtures(fixtures).length);
-    expect(reports.filter((r) => r.skipped)).toEqual([]);
+    // The one project fixture the reference may skip is the one judged under `executing` (spec 1.8), which asks for an invocation this package never performs (CAVEATS.md).
+    expect(reports.filter((r) => r.skipped).map((r) => `${r.fixture}: ${r.skipped}`)).toEqual(["F-Call/executing-invokes-what-the-default-refuses: project entry unavailable"]);
   });
   test("a stub adapter that runs every file fails the project fixtures that expect a fold", async () => {
     // The control the fixtures themselves describe: falling back everywhere is

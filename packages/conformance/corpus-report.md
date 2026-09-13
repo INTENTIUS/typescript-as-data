@@ -25,7 +25,7 @@ None.
 
 ## The data-host column
 
-- evaluator: `tsad-eval/0.1.0`, declaring spec `1.7`, no JavaScript runtime
+- evaluator: `tsad-eval/0.1.0`, declaring spec `1.8`, no JavaScript runtime
 
 | Files | Agreed | Both fold |
 |---|---|---|

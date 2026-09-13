@@ -55,4 +55,6 @@ because step 6 would import and invoke the project module and this package
 never imports project code. So `open` is the mode this package cannot
 answer in full, not `isolated`: a fixture whose fold depends on step 6 has no
 verdict here, and F-Obs-Counters' `projectFactoryInvocations` is zero in
-either mode.
+either mode. The third mode, `executing` (spec `1.8`), asks for exactly the
+invocation this package never performs, so the adapter answers `unavailable`
+for a project judged under it rather than a verdict it cannot stand behind.
