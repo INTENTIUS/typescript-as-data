@@ -191,5 +191,4 @@ untrusted repository controls both its source and its `node_modules`.
 A build that supplies no lexicon list keeps only arm 2, disabled, not loosened
 (L9.4). One documented, accepted unsoundness: the bare-specifier resolution
 cache is process-wide and assumes no nested `node_modules` version override
-(L9.6); the spec should state it as an assumption rather than inherit it
-silently.
+(L9.6). That assumption is stated here and not inherited silently.

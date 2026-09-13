@@ -6,8 +6,7 @@
   "discourse/punchy-fragments": 4,
   "claude/colon-reveal": 6,
   "tricolon/comma-series": 2,
-  "anaphora/repeated-opening": 1,
-  "repetition/near-duplicate": 1
+  "anaphora/repeated-opening": 1
  },
  "spec/grammar.md": {
   "claude/colon-reveal": 7,
@@ -34,7 +33,7 @@
  "spec/judgments.md": {
   "discourse/punchy-fragments": 22,
   "claude/colon-reveal": 16,
-  "repetition/near-duplicate": 11,
+  "repetition/near-duplicate": 12,
   "anaphora/repeated-opening": 12,
   "tricolon/comma-series": 12,
   "tricolon/density": 1
@@ -42,11 +41,14 @@
  "spec/prior-art.md": {
   "anaphora/repeated-opening": 1
  },
+ "spec/rules.md": {
+  "anaphora/repeated-opening": 1
+ },
  "spec/values.md": {
   "claude/colon-reveal": 2,
   "tricolon/comma-series": 3,
-  "discourse/punchy-fragments": 5,
-  "repetition/near-duplicate": 6
+  "discourse/punchy-fragments": 4,
+  "repetition/near-duplicate": 5
  },
  "paper/README.md": {
   "anaphora/repeated-opening": 1

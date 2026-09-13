@@ -44,12 +44,11 @@ row per decision point, derived from a complete read of chant core's fold path,
 and the last column names the `S-*` or `F-*` rule that governs the row, or
 `GAP` with an out-of-scope reason.
 
-[`prior-art.md`](/typescript-as-data/spec/normative/prior-art/) is a finding rather than
-a rule. It asks whether the novelty claim stands, and concludes that it does
-not stand as originally stated but does stand in a narrowed form. Graceful
-fallback from static evaluation to execution is well established; what has no
-visible precedent is the combination of per-file granularity with shared object
-identity across the boundary, which is what forces J3.
+[`prior-art.md`](/typescript-as-data/spec/normative/prior-art/) is a survey
+rather than a rule. Graceful fallback from static evaluation to execution is
+well established. What the sweep found no precedent for is the combination of
+per-file granularity with shared object identity across the boundary, which is
+what forces J3.
 
 ## The process rules
 

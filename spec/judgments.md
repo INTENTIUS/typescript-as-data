@@ -539,12 +539,6 @@ flows from a tainted file `f` in two directions at once:
   longer the instance the build collects; `c`'s folded result is stale. So `c`
   runs too, and re-obtains everything through real imports.
 
-The first revision of `requirements.md` stated the forward direction as
-"a file that imports a non-folding file is tainted." That is the *opposite*
-edge, and it is not how taint propagates, it is handled earlier, by J2: a
-file whose import cannot be resolved to a folded `X(g)` fails to fold on its
-own and is in `Seed`. Corrected there in the same commit as this file.
-
 **F-Taint.** `T(B)` is the least set containing `Seed(B)` and closed under
 `Succ`.
 
@@ -708,7 +702,7 @@ implementation's tooling; a second implementation cannot share strings.
 
 Non-normative. The reasoning that motivated each rule, carried over from the retired `requirements.md`. Keyed by the rule(s) each note supports.
 
-**F-NoOwnExecution** *(Folding executes none of the folded file's own statements, and the spec must say exactly that)*
+**F-NoOwnExecution** *(Folding executes none of the folded file's own statements)*
 
 The claim is narrower than "no execution", and stating it loosely is the single
 easiest way to write a specification that is either false or useless.
@@ -757,12 +751,11 @@ requirement is checked rather than trusted.
 
 **F-Total, F-Scan** *(All or nothing, per file, at the normative entry point)*
 
-Two entry points exist and the first revision conflated them. `tryFoldFile`
-returns a `FoldFileResult` (L8.1): ok with the complete export namespace, or a
+Two entry points exist. `tryFoldFile` returns a `FoldFileResult` (L8.1): ok with the complete export namespace, or a
 reason. One unrecognized export disqualifies the file (L8.2). `foldModule`
 (L8.3) is per-export, carries an ok/false entry per declaration, and silently
 skips non-`new` exports. **The per-file entry point is normative**; the
-per-export one is a diagnostic surface, and the spec must say so.
+per-export one is a diagnostic surface.
 
 The reason fallback is per-module rather than per-declaration is stated in the
 statement gate itself (L1.7) and belongs in the spec: an unfoldable export can
@@ -775,18 +768,16 @@ reference or be referenced by a foldable one in ways only running proves safe.
 - **Forward, along imports.** A tainted file taints every file it imports or
   re-exports from: if `f` runs, its real import of `g` constructs `g`'s
   entities, and a folded `g` would be a second copy, so `g` runs even if it
-  would have folded alone. (The first revision stated this edge backwards -
-  "an importer of a non-folding file is tainted", which is not the taint walk
-  at all but J2's resolution failure putting the importer in the seed.
-  Corrected with judgments.md J3.)
+  would have folded alone. Reading it the other way round, as an importer of a
+  non-folding file being tainted, describes J2's resolution failure putting
+  the importer in the seed. That happens earlier than this walk.
 - **Reverse.** A file whose *objects were captured* by an already-folded file
   taints the capturer. `liveSources` records only non-primitive captures
   (L8.5), a primitive has no identity to disagree about.
 - **Through calls.** A project-local function whose call *returns* a live
   object the body produced, not one merely passed through the arguments -
   records the same taint edge (L5.9, `leakedIdentity`). Identity propagates
-  through invocation, not only through import, and the first revision missed
-  this entirely.
+  through invocation as well as through import.
 
 **F-Taint, F-Fix** *(The fixpoint and its termination)*
 
@@ -803,10 +794,8 @@ path.
 
 `MAX_FUNCTION_CALL_DEPTH = 32` (L5.8), `MAX_INTERPRETATION_DEPTH` (L7.8),
 `MAX_RESOLUTION_DEPTH` (L8.10). Each terminates a different recursion and each
-turns exhaustion into a fallback. No requirement in the first revision
-mentioned them. The spec must either fix the bounds or say they are
-implementation-defined and that exceeding one is a fallback, never wrong
-output.
+turns exhaustion into a fallback. The bounds are implementation-defined, and
+exceeding one is a fallback and never wrong output.
 
 **F-Prebuild** *(Where a same-file instance comes from)*
 
@@ -844,8 +833,8 @@ exists to preserve.
 
 A successful fold yields every exported name's value, not only the
 entity-valued ones (L8.4). This holds *because* the statement gate
-disqualifies any file with an unrecognized export. The first revision stated
-the property without its enforcement.
+disqualifies any file with an unrecognized export, which is what enforces
+it.
 
 **F-Succ** *(The reverse and through-call edges)*
 
@@ -882,8 +871,8 @@ name is invisible.
 
 **Lookup order is `consts`, then `externals`** (L5.2, `fold.ts` identifier
 branch). A name in the file's own `consts` is never looked up in `externals`,
-which is the mechanism behind's shadowing rule and must be stated as the
-order rather than only as its consequence.
+which is the mechanism behind the shadowing rule. The order is the rule, and
+shadowing is its consequence.
 
 **A project-local function's body folds in the defining module's scope**
 (L5.5, `callFoldableFunction`): the arguments fold in the caller's `consts`/
@@ -900,8 +889,8 @@ unspecified.
 
 **F-Call** *(There are three evaluation modes)*
 
-The first revision described fold-to-envelope and revival. There is a third,
-and it is the one that makes folding under isolation possible.
+Beyond fold-to-envelope and revival there is a third, and it is the one that
+makes folding under isolation possible.
 
 **F-Call step 4** *(Interpret, never importing the defining module)*
 
@@ -953,9 +942,8 @@ must say how the binding enters and that it is recorded.
 
 **J4** *(Outputs beyond values, and what must be observable)*
 
-Folding produces more than the value tree, and the first revision had no place
-for any of it. Four things, each decided here as a recommendation for the
-normative text.
+Folding produces more than the value tree. Four things, each of which J4
+states.
 
 **F-Obs-Provenance** *(Provenance is an optional capability, outside the equivalence objective)*
 
@@ -1053,16 +1041,15 @@ the object expression is a plain identifier, any other shape is refused,
 because there is no name to key the reference on and silently indexing the
 envelope produced wrong output (L3.11, chant#1535).
 
-**F-Eval-Template** *(Template spans coerce by ECMAScript `ToString`, and the spec must say what that does to an envelope)*
+**F-Eval-Template** *(Template spans coerce by ECMAScript `ToString`)*
 
 `String(fold(span))` (L3.2). For scalars that is ECMAScript. For a symbolic
 envelope it is `"[object Object]"`, and the run path produces the same,
 because `AttrRef` defines no `toString`.
 
-So fold and run agree, and the output is silently wrong on both. The
-implementation guards the eager-intrinsic case for exactly this hazard and not
-the template span. The spec should refuse an envelope in a plain template span
-rather than inherit `ToString`; chant's side of it is tracked as a lint gap.
+So fold and run agree, and the output is silently wrong on both. That is why
+`F-Div-TemplateEnvelope` refuses an envelope in a plain template span instead
+of inheriting `ToString` (L3.23).
 
 **F-Eval-Object, F-Eval-Array** *(Key and element ordering are ECMAScript's, and byte-identity depends on it)*
 
@@ -1082,9 +1069,9 @@ Whether order is *observable* depends on the emitter, verified in chant.
   github) and their text is emitted as-is, so for them the walker's insertion
   order *is* the output order.
 
-The rule must therefore be stated. An implementation targeting a host that
-preserves order would fail byte-identity with a different key order, and
-nothing in the objective says which hosts those are.
+An implementation targeting a host that preserves order would fail
+byte-identity with a different key order, and nothing in the objective says
+which hosts those are.
 
 **F-Eval-Object, F-Eval-Array** *(Spread departs from ECMAScript in one direction)*
 

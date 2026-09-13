@@ -213,8 +213,6 @@ exist at build time in either path.
 
 **F-Val-Fate, F-Val-Position** *(Exactly one envelope survives to serialization, and its validity is position-dependent)*
 
-This corrects the first revision, which had it backwards.
-
 `reviveFoldedValue` (L6.1–L6.9) resolves every envelope *except* `__attrRef`
 through the folding file's own imports and invokes the real function or
 constructor: `__intrinsic` in both forms (L6.3), `__helper` (L6.4),
@@ -228,7 +226,7 @@ look-alike plain object would produce wrong output rather than absent output.
 Composite-step arguments revive with `requireLiveRefs: false` because a
 composite stores its props rather than inspecting them (L6.9).
 
-So the spec must say: the same value is valid in one position and invalid in
+The same value is therefore valid in one position and invalid in
 another, and which positions are which. A domain definition alone does not
 capture this.
 
@@ -243,7 +241,7 @@ referenced without calling it is refused with "call it instead" (L3.17).
 The specification must therefore define a **serializable sub-domain** and say
 which positions require it.
 
-**F-Val-Live** *(Liveness is observable and the spec must say so)*
+**F-Val-Live** *(Liveness is observable)*
 
 `carriesLiveObject` (L4.5) distinguishes folded data from a live instance by
 prototype, anything other than `Object`/`Array`/`null`, and additionally
@@ -278,8 +276,8 @@ element into `null` before any YAML exists. That is what makes chant's
 build-parameters documentation true ("dropped from the output in both JSON and
 YAML rather than shipped as `null`").
 
-Both facts must be stated, because they are the difference between "absent"
-and "null", which platforms treat differently. For the six YAML-native
+The two facts are the difference between "absent" and "null", which platforms
+treat differently. For the six YAML-native
 lexicons above, the walker's `undefined` reaches *their* emitter directly, so
 the rule there is each serializer's and not `JSON.stringify`'s.
 

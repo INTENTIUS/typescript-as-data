@@ -1,27 +1,18 @@
-# Prior art: does the novelty claim stand?
+# Prior art
 
-Not normative.
+Not normative. A survey of the neighboring systems and where each one is
+nearest.
 
-## The claim as the plan stated it
+## Summary
 
-> Every comparable system answers out-of-subset source with a syntax error;
-> this one falls back to real execution per file, provably produces the same
-> bytes, and draws the boundary so object identity survives crossing it. The
-> fallback is the contribution.
+Graceful fallback from static evaluation to execution is well established.
+Two families do it, and one of them, compile-time function execution, makes
+the same argument this work makes: the same function runs in either context,
+so the result cannot differ.
 
-## Verdict
-
-**The claim does not stand as stated. It stands in a narrowed form.**
-
-"Everyone else errors" is false. Two well-established families fall back
-gracefully from static evaluation to execution, and one of them, compile-time
-function execution, makes exactly chant's argument that the same function runs
-in either context so the result cannot differ.
-
-What none of the neighbors has is the combination of per-file granularity
-with shared object identity across the boundary, which is what forces the
-bidirectional taint fixpoint. That fixpoint is the part with no visible
-precedent, and it should be the paper's center rather than "the fallback".
+No neighbor combines per-file granularity with shared object identity across
+the boundary. That combination is what forces the bidirectional taint
+fixpoint, and the fixpoint is where this sweep found no precedent.
 
 ## Nearest neighbors, by the dimension they are nearest on
 
@@ -152,8 +143,6 @@ fallback executes *the source file itself*. IFD is the better precedent for
 | Jsonnet | yes, lazy | no | dynamic |
 | Nickel | yes, Turing-complete | yes, constrained to commutative | gradual, with contracts |
 
-Nickel's row corrects the plan's earlier framing, which listed it as total.
-
 None has a fallback to executing out-of-subset source; all reject it. The
 plan's comparison was right about these and wrong to generalize from them to
 "every comparable system".
@@ -165,8 +154,7 @@ Sestoft) remains the right frame: the shape classifier is a BTA, `fold()` is
 the specializer. Two refinements the sweep suggests:
 
 1. chant's per-file decision with taint is closer to an *online* decision over
-   a coarse unit than to a classical offline BTA, and the paper should say
-   which it is.
+   a coarse unit than to a classical offline BTA.
 2. The "lift" operation, a static value flowing into a dynamic context, is the
    fine-grained version of what forcing a folded file back to run does
    coarsely.
@@ -174,25 +162,22 @@ the specializer. Two refinements the sweep suggests:
 Multi-stage programming (Taha & Sheard) is the neighbor where staging is
 explicit in the language rather than inferred.
 
-## What survives, precisely
+## Where the precedent stands
 
-1. **Per-file partial evaluation with a fallback to executing the unit.**
-   Precedented in shape (Next.js) and in principle (CTFE). Not novel alone.
-2. **Same-function agreement via revival through the file's own imports.**
-   Precedented by CTFE's design principle. Not novel alone. Cite it as the
-   same argument.
-3. **Byte-identical agreement as a discharged obligation over a real corpus.**
-   Not found in this sweep as a stated, tested property; not searched for
-   specifically. A methodological contribution, not a conceptual one.
-4. **Bidirectional identity taint over the module graph, so that a shared
-   entity is never two objects when one side folds and the other runs.** No
-   precedent found. This is the contribution, and it exists *because* chant
-   chose per-file granularity while keeping shared identity, the one
+1. Per-file partial evaluation with a fallback to executing the unit.
+   Precedented in shape by Next.js and in principle by CTFE.
+2. Same-function agreement via revival through the file's own imports.
+   Precedented by CTFE's design principle, and citable as the same argument.
+3. Byte-identical agreement as a discharged obligation over a real corpus.
+   Not found in this sweep as a stated, tested property, and not searched for
+   specifically. A methodological contribution.
+4. Bidirectional identity taint over the module graph, so that a shared entity
+   is never two objects when one side folds and the other runs. No precedent
+   found. It follows from per-file granularity with shared identity, the one
    combination none of the neighbors has.
 
 ## Open
 
-Heldal & Hughes 2000 has to be read in full, for the camera-ready citation
-rather than to decide item 4; see the narrowed conclusion above. Every route
-reachable from here is refused or restricted, so this needs the author's own
-library access.
+Heldal & Hughes 2000 has to be read in full, for the camera-ready citation.
+Item 4 does not turn on it. Every route reachable from here is refused or
+restricted, so this needs the author's own library access.

@@ -87,12 +87,12 @@ evaluator's own language, since there is no JavaScript to run.
 
 Non-normative, as in the other rule files: the reasoning behind each rule, keyed by the rules it supports.
 
-**F-Rule-Input, F-Rule-Phase.** The fold's user-facing consequence, and the
-one the paper had not stated: a syntax linter sees tokens and a
-configuration language with constraints in the type sees one field; neither
-has the values of every file in the build. chant's post-synthesis checks
-read `ctx.entities` for the values and `ctx.outputs` or `ctx.docs` for the
-artifact, from one hook, which is why the phase is named by the input.
+**F-Rule-Input, F-Rule-Phase.** A syntax linter sees tokens, and a
+configuration language with constraints in the type sees one field. Neither
+has the values of every file in the build, and that is the fold's
+user-facing consequence. chant's post-synthesis checks read `ctx.entities`
+for the values and `ctx.outputs` or `ctx.docs` for the artifact, from one
+hook, which is why the phase is named by the input.
 
 **F-Rule-Finding.** The subject is an artifact-side name on purpose. chant's
 own comment says a finding names an identifier from the synthesized output

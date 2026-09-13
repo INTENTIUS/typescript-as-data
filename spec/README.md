@@ -10,8 +10,8 @@ J4 properties and observables), [`values.md`](./values.md) (`F-Val-*`),
 (`F-Rule-*`). Each ends with a non-normative
 Rationale section. [`inventory.md`](./inventory.md) is the coverage ledger.
 Every decision point in chant core cites the rule that governs it, and CI
-gates on it. [`prior-art.md`](./prior-art.md) asks whether the novelty claim
-stands and answers it in a narrowed form.
+gates on it. [`prior-art.md`](./prior-art.md) surveys the neighboring systems
+and says where each one is nearest.
 
 ## Process rules for the specification itself
 
@@ -158,8 +158,7 @@ A host supplies seven things, listed under `F-Host-Interface` in
 
 chant's lexicons are one instantiation of it. The generality this buys covers
 **host vocabularies** and stops there. "Parameterized by a host" reaches no
-further, and the specification should say so plainly enough that nobody reads
-language portability into it.
+further.
 
 ### What another language would reuse
 
@@ -182,8 +181,8 @@ a host's real constructors, and declares the `full` profile at the version in
 without `new`, and the suite judges it on that profile's fixtures too.
 
 What it does not cover is `packages/reference/CAVEATS.md`, where the one gap
-is F-Call step 6 in open mode: invoking a project module. A reader should not
-assume the reference is complete.
+is F-Call step 6 in open mode: invoking a project module. Read the conformance
+numbers with that partiality in mind.
 
 
 ## Identifiers

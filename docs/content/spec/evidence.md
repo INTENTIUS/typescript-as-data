@@ -22,7 +22,7 @@ No figure on this site was typed by hand. Each one below is read from an artifac
 | The evaluator as WebAssembly | {{< figure "wasmKB" >}} KB, no imports | `evaluators/rust` built for `wasm32-unknown-unknown`; `rust-wasm-agreement.test.ts` | The same crate as the binary; it proves embedding, and the profile's proof is the column below |
 | The data-host column | {{< figure "corpus.dataHost.agreed" >}} of {{< figure "corpus.dataHost.files" >}} agree, {{< figure "corpus.dataHost.bothFold" >}} fold on both | same, with `evaluators/rust` built | Two evaluators on one profile; neither runs anything |
 
-## The claims, held and caught
+## The claims, and the scenarios that check them
 
 Each claim on [what it enables](/typescript-as-data/what-it-enables/) has a scenario under `scripts/smoke/scenarios/` that runs on a throwaway Forgejo and prints one verdict line per step. The weekly demo workflow runs every scenario twice and commits the result here. The second run sets `BREAK=1`, which sabotages the setup so the scenario has to catch it.
 
