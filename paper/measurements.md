@@ -52,7 +52,7 @@ The chant side's `false` is also an unsampled invariant: the run fails unless ev
 
 | Pin | Fixtures | Rules with a fixture | Shape and fold agreement |
 |---|---|---|---|
-| chant `0.72.2` | 127, of which 65 are whole-build | 135 of 139 | all, on the 118 the pin answers; one is held out under chant#2441, one under chant#2446, two under chant#2453 and chant#2455, and the four round-trip fixtures skip, chant having no generator |
+| chant `0.72.3` | 127, of which 65 are whole-build | 135 of 139 | all, on the 120 the pin answers; three wait on the adapter (the counters fixture and the executing pair, both halves in the release), and the four round-trip fixtures skip, chant having no generator |
 
 The 4 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a reason each. All are properties no adapter can observe from verdicts: provenance, the host's own module tree, and what a host may vary or must not execute. One disagreement existed between the reference and chant, on an envelope inside a template span. The spec recorded the recommendation, chant-v0.68.0 implemented it, and a fixture now pins it (chant#2349).
 
@@ -76,6 +76,7 @@ The 4 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a 
 | `chant-v0.72.1` at `75c05827`, 109 entries, spec `1.7` | 441 | 440 | 440 | 304 |
 | `chant-v0.72.2` at `b9209042`, 109 entries, spec `1.7`, chant declaring `1.6` | 441 | 440 | 440 | 304 |
 | `chant-v0.72.2` at `b9209042`, 109 entries, spec `1.8`, chant declaring `1.6` | 441 | 440 | 440 | 304 |
+| `chant-v0.72.3` at `9891edd4`, 109 entries, spec `1.8`, chant declaring `1.6` | 441 | 440 | 440 | 304 |
 
 A file is comparable when nothing disarmed either implementation before the comparison started. Four things did so under `chant-v0.70.1`, two under `chant-v0.71.0`, and one remains under spec `1.6`, the single file that imports a package the host cannot load, which is the reference's limit. Each of the others retired for its own reason. Two were limits of chant's entry point rather than of chant, 52 files reading a host data export that `foldProject` could not resolve without a lexicon list and 19 in entries with build parameters it could not be given, until chant#2422 gave it both (#96). Another held 290 files reaching a host factory until the reference implemented F-Call (#109). The final one held 68 files calling a package export outside a declarator; it went when spec `1.6` wrote chant's behaviour into F-Declarator and F-Call (#110).
 
@@ -88,9 +89,9 @@ A file is comparable when nothing disarmed either implementation before the comp
 | Checkout | Entries | Files | Comparable | Agreed | Both fold | No host |
 |---|---|---|---|---|---|---|
 | `jhgaylor/home-cloud` at `7c7868cc` | 16 | 19 | 12 | 12 | 9 | 7 |
-| `jhgaylor/infisical-chant` at `91cdf130` | 6 | 31 | 13 | 12 | 5 | 18 |
+| `jhgaylor/infisical-chant` at `91cdf130` | 6 | 31 | 13 | 13 | 5 | 18 |
 
-The host limit is large there because both projects were written against an older chant, so a package export the pinned release no longer has disarms every file that imports it. The one disagreement is the kind the row exists to find: a file whose only declarator calls a project function that reads `process.env`, which chant folds by invoking the function at fold time and the specification says runs (F-Call step 2, then F-Eval-Ident's pointed rejection). Filed as chant#2453 and held in the manifest against it, asserted to persist until chant moves.
+The host limit is large there because both projects were written against an older chant, so a package export the pinned release no longer has disarms every file that imports it. The first run found one disagreement, the kind the row exists to find: a file whose only declarator calls a project function that reads `process.env`, which chant folded by invoking the function at fold time and the specification says runs (F-Call step 2, then F-Eval-Ident's pointed rejection). Filed as chant#2453, fixed in `chant-v0.72.3`, and spec `1.8` made the old behaviour an opt-in mode; since that release the rows agree on every comparable file.
 
 **What the fourth run settled (#110).** The first draft of the rule went too far. It admitted a package call in any position, so the reference folded five shapes chant refuses, and the fixture cross-check caught that before the corpus could. Probed shape by shape on `chant-v0.72.1`, a package call folds when a declarator reaches it through a const alias or as its own call's direct argument, and nowhere else; nested inside an object literal or an array it runs, and so does one inside a `new` or a tag's interpolation. Written down, that is F-Declarator's alias case together with F-Call's argument resolution. No J1 rule was added and `data-host` is untouched; 68 files entered the comparable set and every one agrees.
 
@@ -155,6 +156,6 @@ The corpus is chant's own examples, and chant's documentation says the number is
 
 - Twelve mixed entries and one adversarial build are a small sample, all from one project.
 - Fixture coverage is 135 of 139 rules. The 4 without one are listed with a reason, and the list may only shrink.
-- J3's whole-build fixtures reach both implementations whether or not they name a host; the two exceptions are held out under chant#2441 and chant#2446. Comparing verdicts alone would not be enough, since a seed and a taint casualty are both `run`; the tentative verdict and the taint edge are compared too.
+- J3's whole-build fixtures reach both implementations whether or not they name a host; the three exceptions wait on the chant adapter for the counters and the executing mode. Comparing verdicts alone would not be enough, since a seed and a taint casualty are both `run`; the tentative verdict and the taint edge are compared too.
 - Revival is implemented for all six envelopes since #109; `{__compositeStep}` resolves the composite through F-Call. Isolation is honoured at F-Call step 5; step 6 in open mode, invoking a project module, is what the reference cannot answer (`packages/reference/CAVEATS.md`).
 - The independent rewrite found two specification gaps. Two is a small sample, and it is the sample a single author working alone can produce.
