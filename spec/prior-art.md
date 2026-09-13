@@ -1,6 +1,6 @@
 # Prior art: does the novelty claim stand?
 
-Finding for #31, written 2026-09-09. Not normative.
+Not normative.
 
 ## The claim as the plan stated it
 
@@ -124,8 +124,7 @@ citation for "partial evaluation has been made modular before"; chant's
 contribution is orthogonal to it, a per-module fall-back with identity
 preserved across the resulting boundary. Confidence is moderate, resting on
 the abstract and the authors' own précis rather than the body of the paper.
-The full text should still be read before camera-ready (#47), but this is no
-longer the unknown that gates #15 and #28.
+The full text should still be read before camera-ready.
 
 ### Evaluation that escapes into execution (Nix import-from-derivation)
 
@@ -136,7 +135,7 @@ the result deterministic because the build is sandboxed and content-addressed.
 
 IFD escapes into a *build* of something else; chant's
 fallback executes *the source file itself*. IFD is the better precedent for
-`--sandbox` than for folding, and belongs in the isolation discussion (#36).
+`--sandbox` than for folding, and belongs in the isolation discussion.
 
 ### Total configuration languages, the original comparison set
 
@@ -181,15 +180,6 @@ explicit in the language rather than inferred.
    precedent found. This is the contribution, and it exists *because* chant
    chose per-file granularity while keeping shared identity, the one
    combination none of the neighbours has.
-
-## What this changes in the plan
-
-| Issue | Change |
-|---|---|
-| #5, #27 | Lead related work with CTFE and Heldal & Hughes, not with the configuration languages. Retire the "every comparable system errors" sentence. |
-| #15 | The identity-taint fixpoint is the paper's technical centre. Write its spec issue knowing that. |
-| #36 | Cite Nix IFD as the precedent for evaluation escaping into a sandboxed execution. |
-| #28 | The theorem to state is about identity across the boundary, not about the fallback existing. |
 
 ## Must do before submission
 

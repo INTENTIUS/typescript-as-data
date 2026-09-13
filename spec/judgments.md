@@ -1,9 +1,9 @@
 # Judgments
 
-Normative draft. Three judgments: expression evaluation (#13), the per-file
-fold-or-run verdict (#14), and the identity-taint fixpoint (#15). This file
+Normative draft. Three judgments: expression evaluation, the per-file
+fold-or-run verdict, and the identity-taint fixpoint. This file
 currently carries the third in full; the first two are stubs pointing at the
-requirements they will formalise. Identifiers are `F-*` per #6: every rule
+requirements they will formalise. Identifiers are `F-*`: every rule
 here needs resolution, a registry, or the module graph, and is not decidable
 from syntax.
 
@@ -19,9 +19,9 @@ observationally equivalent.**
 A source file may be reduced from its AST to the entities it declares, or
 imported and executed, and the build cannot tell which happened from the
 output. In chant this is discharged by a differential over the example corpus
-asserting identical errors and byte-identical serialized output
-(INTENTIUS/chant#1025), with the caveat that the differential currently
-compares only entries where every file folded (INTENTIUS/chant#2345), so the
+asserting identical errors and byte-identical serialized output,
+with the caveat that the differential currently
+compares only entries where every file folded, so the
 mixed case, which is where the interesting requirements below actually fire,
 has no differential evidence yet.
 
@@ -38,7 +38,7 @@ identity across the fold/run boundary, which is why J2 and J3 exist.
 
 ---
 
-## Profiles (#78)
+## Profiles
 
 A profile names the subset of this specification an implementation claims.
 Two exist. An implementation declares which it implements alongside the
@@ -56,7 +56,7 @@ another language embeds, or a JavaScript tool that folds and never runs. It is
 
 | Rule or family | In `data-host` |
 |---|---|
-| J1, every `F-Eval-*` rule, with ECMAScript coercion reproduced (R10) | applies in full |
+| J1, every `F-Eval-*` rule, with ECMAScript coercion reproduced | applies in full |
 | `S-*`, `F-Div-*`, `F-Direction` | apply in full |
 | J2, `F-Bind` through `F-Total` | apply, with `ι = isolated` always (`executing` is unavailable, there being nothing to invoke) and F-IsolatedRefusal the only fallback: a file that does not fold is an **error**, never a demotion to `run` |
 | J3, `F-Seed` through `F-Verdict`, `F-Capture`, `F-CallLeak`, `F-Memo` | absent. Nothing runs, so nothing taints, and every file's verdict is its own |
@@ -81,15 +81,15 @@ consulted.
 
 ---
 
-## J1. Expression evaluation `Γ, H ⊢ e ⇓ v` (#13)
+## J1. Expression evaluation `Γ, H ⊢ e ⇓ v`
 
-Formalises R1, R3, R6.3–R6.6, R7.3, R10. `Γ = (consts, externals, depth)`
-per R6.6, `depth` is the number of project-local function bodies being
+`Γ = (consts, externals, depth)`
+`depth` is the number of project-local function bodies being
 folded around `e`, 0 at a file's top level. `H = (ρ, helpers)` is the host
 (hosts.md): the intrinsic registry and the authoring-helper allowlist. `v`
 ranges over the value domain (values.md); `⟦e⟧` abbreviates
-`Γ, H ⊢ e ⇓ v`. Every rule that fails does so with a located rejection
-(R9.3). Derived from `fold()` (`fold.ts:896–1300`), `foldResource`,
+`Γ, H ⊢ e ⇓ v`. Every rule that fails does so with a located rejection.
+Derived from `fold()` (`fold.ts:896–1300`), `foldResource`,
 `foldTaggedTemplate`, `foldIntrinsicValue`, `callFoldableFunction`, at
 `e4074c17` with chant-v0.63.0's `?.` rules. Rules are keyed to the grammar's
 productions.
@@ -101,29 +101,29 @@ that is part of an optional chain continues the chain (F-Eval-Member).
 numeric literal to `Number(text)`; `true`, `false`, `null` to themselves.
 **F-Eval-Undefined.** The identifier `undefined` folds to `undefined`.
 
-**F-Eval-Ident.** For identifier `n`, in order (R6.6):
+**F-Eval-Ident.** For identifier `n`, in order:
 1. `n ∈ consts` with initializer `new …`: if `n ∈ externals`, `⟦n⟧ =
-   externals[n]` (the one instance F-Prebuild put there, R4.6); else
+   externals[n]` (the one instance F-Prebuild put there); else
    **reject** - re-folding would construct a duplicate (F-Div-SameFileNew).
 2. `n ∈ consts` otherwise: `⟦n⟧ = ⟦consts[n]⟧`.
 3. `n ∈ externals`: if it is callable, a `FoldableFunction` or any function
    the host supplied, **reject** (F-Val-Callable): a callable is reached by
    `new`, by a registered call or tag, or by F-Eval-CallLocal, never as a
-   value, and a registered eager name says "call it instead" (#69).
+   value, and a registered eager name says "call it instead".
    Otherwise `⟦n⟧ = externals[n]` unchanged, a live object passes through
    (F-Val-Live).
-4. `n = process`: **reject** with the build-parameters message (R8).
+4. `n = process`: **reject** with the build-parameters message.
 5. Otherwise **reject** `unresolved identifier: n` (F-Reference).
 
-**F-Eval-Template.** `⟦`h ${e₁} t₁ … ${eₖ} tₖ`⟧ = h ⧺ ToString(⟦e₁⟧) ⧺ t₁ ⧺ …`
-per R10.4. An envelope among the `⟦eᵢ⟧` is a located rejection at that span,
+**F-Eval-Template.** `⟦`h ${e₁} t₁ … ${eₖ} tₖ`⟧ = h ⧺ ToString(⟦e₁⟧) ⧺ t₁ ⧺ …`.
+An envelope among the `⟦eᵢ⟧` is a located rejection at that span,
 because a symbolic value has no string form until the build resolves it.
 
 - chant refuses such a span on both paths and reports it at lint time as
-  EVL011 (chant#2349), and since v0.69.0 it covers every envelope kind that
-  can reach a span, which inventory row L3.23 lists (chant#2397).
+  EVL011, and since v0.69.0 it covers every envelope kind that
+  can reach a span, which inventory row L3.23 lists.
 
-**F-Eval-Tagged.** For `tag`…``: if `depth > 0`, **reject** (R6.3). If `ρ`
+**F-Eval-Tagged.** For `tag`…``: if `depth > 0`, **reject**. If `ρ`
 does not register `tag` with `isTag`, **reject**. Otherwise
 `{__intrinsic: tag, strings, values}` where each interpolation is folded by
 **F-Eval-Interior**.
@@ -138,15 +138,15 @@ binding must reach the intrinsic as the shared object (J3).
 **F-Eval-Object.** Members in source order into a fresh object: `k: e` sets
 `k ↦ ⟦e⟧` (`k` must be a literal key, else reject); shorthand `n` sets
 `n ↦ ⟦n⟧`; `...e` requires `⟦e⟧` to be a non-null object and copies its own
-enumerable entries in their order, later keys winning (R10.5, R10.6). Any
+enumerable entries in their order, later keys winning. Any
 other member kind rejects.
 
 **F-Eval-Array.** Elements in order into a fresh array; `...e` requires
-`⟦e⟧` to be an array (`Array.isArray`) and splices its elements (R10.6).
+`⟦e⟧` to be an array (`Array.isArray`) and splices its elements.
 
 **F-Eval-Member.** For `o.m` (or `o?.m`), in order:
 1. If `o` is an identifier in `consts` whose initializer is `new …`:
-   `⟦o.m⟧ = {__attrRef: {entity: o, attribute: m}}` (R10.3), before anything
+   `⟦o.m⟧ = {__attrRef: {entity: o, attribute: m}}`, before anything
    else, the reference is by *name*.
 2. If `m = step` and `o` is a call whose callee is an unclaimed bare
    identifier (L3.20): if `depth > 0` reject; else
@@ -155,29 +155,29 @@ other member kind rejects.
    if this access continues the chain, else `undefined`.
 4. If `x` is `null` or `undefined`: with `?.`, yield the sentinel (or
    `undefined` if nothing continues the chain); with `.`, **reject**
-   naming `m` and pointing at `?.` (R10.2, chant-v0.63.0).
+   naming `m` and pointing at `?.` (chant-v0.63.0).
 5. If `x` is a `{__resource}` envelope: if `o` is a plain identifier,
-   `{__attrRef: {entity: o, attribute: m}}`; else **reject** (R10.3,
-   chant#1535).
+   `{__attrRef: {entity: o, attribute: m}}`; else **reject**.
 6. Otherwise `⟦o.m⟧ = x[m]`, a plain index, which on a live instance runs
    its real getter and yields a real `AttrRef` (F-Val-Live).
 
 **F-Eval-Index.** `o[k]`: `k` must be a string or numeric literal, else
 reject (EVL003). Then as F-Eval-Member with `m = k`.
 
-**F-Eval-Unary.** `⟦!e⟧ = ¬truthy(⟦e⟧)`; `⟦-e⟧ = −ToNumber(⟦e⟧)` (R10.1).
+**F-Eval-Unary.** `⟦!e⟧ = ¬truthy(⟦e⟧)`; `⟦-e⟧ = −ToNumber(⟦e⟧)`.
 Any other operator rejects.
 
-**F-Eval-Binary.** `&&`, `||`, `??`: fold the left; fold the right **only**
-if ECMAScript would (falsy / truthy / nullish respectively); result per
-ECMAScript (F-Exc-Lazy). Every other supported operator: fold both, then
-apply the ECMAScript operator (R10.1). An unsupported operator rejects.
+**F-Eval-Binary.** `&&`, `||`, `??`: the left operand folds, the right one
+**only** if ECMAScript would evaluate it (falsy / truthy / nullish
+respectively), and the result is ECMAScript's (F-Exc-Lazy). Every other
+supported operator takes both operands folded and applies the ECMAScript
+operator. An unsupported operator rejects.
 
-**F-Eval-Conditional.** `⟦c ? t : f⟧`: fold `c`; fold **only** the taken
+**F-Eval-Conditional.** `⟦c ? t : f⟧`: `c` folds, then **only** the taken
 branch (F-Exc-Lazy).
 
 **F-Eval-New.** For `new C(a₁ … aₙ)`: `C` must be a plain identifier, else
-reject (F-Div-NsNew). If `depth > 0`, reject (R6.3). Then
+reject (F-Div-NsNew). If `depth > 0`, reject. Then
 (F-Val-Arity): with no arguments, `{__resource: C, props: {}}`; with `a₁`
 an object literal and `n = 1`, `{__resource: C, props: ⟦a₁⟧}`; with `n = 2`
 and both object literals, `{…, attributes: ⟦a₂⟧}`; otherwise
@@ -185,27 +185,24 @@ and both object literals, `{…, attributes: ⟦a₂⟧}`; otherwise
 object-literal argument folded, or `{}`.
 
 **F-Eval-CallHelper.** For `h(args)` with `h ∉ consts`, `h ∈ helpers` and
-`externals[h]` not a `FoldableFunction` (`1.7`, #126): if `depth > 0`
+`externals[h]` not a `FoldableFunction`: if `depth > 0`
 reject; else `{__helper: h, args: ⟦args⟧}`. A name the project bound is the
 project's and F-Eval-CallLocal's; for any other binding, revival resolves
 the name through the file's own import and refuses what is not the host's
 (F-Host-NoSubstitution, F-Div-Provenance).
 
 **F-Eval-CallIntrinsic.** For `i(args)` with `i ∉ consts`, `ρ` registering
-`i` with `foldsAsCall` and `externals[i]` not a `FoldableFunction` (`1.7`):
+`i` with `foldsAsCall` and `externals[i]` not a `FoldableFunction`:
 if `depth > 0` reject; else
 `{__intrinsic: i, args}` with each argument by F-Eval-Interior.
 
 **F-Eval-CallLocal.** For `φ(args)` where `externals[φ]` is a
-`FoldableFunction`, checked *before* the two registered shapes since `1.7`
-(#126): a name the project bound is the project's, whatever the registry
-says. Until `1.6` it was checked after them, so a registered name kept its
-meaning and a file that bound one fell back; chant's whole-build fold had
-never done that, only its expression classifier (`L2.11`):
+`FoldableFunction`, checked *before* the two registered shapes:
+a name the project bound is the project's, whatever the registry says:
 1. `φ`'s declaration must satisfy S-FnBody, else reject naming the reason.
 2. If the implementation's call-depth bound is exceeded (F-Depth), reject
    ("call depth exceeded"). The value is the implementation's; exhaustion
-   is a fallback and never wrong output (#71).
+   is a fallback and never wrong output.
 3. A spread argument rejects. Each `aᵢ` folds in the **caller's** `Γ`.
 4. The body folds in `Γ' = (consts_φ, externals_φ, depth + 1)`, the
    *defining* module's scope, with each parameter bound by removing its
@@ -217,11 +214,11 @@ never done that, only its expression classifier (`L2.11`):
 6. If the result carries a live object (F-Val-Live) that no argument
    carried, `leakedIdentity(φ)` is set (F-CallLeak, J3).
 7. A rejection inside the body is re-thrown at the call, naming `φ`, its
-   file, the inner position, and the reason (R9.3).
+   file, the inner position, and the reason.
 
 **F-Eval-CallEager.** For `g(args)` with `g ∉ consts` and `ρ` registering `g`
 with `foldsEagerly`: `externals[g]` must be a function, else reject; then
-`⟦g(args)⟧ = g(⟦args⟧)`, evaluated now, the result possibly live (R7.3).
+`⟦g(args)⟧ = g(⟦args⟧)`, evaluated now, the result possibly live.
 
 **F-Eval-CallMethod.** For `o.m(args)` (or `o?.m(args)`): let `x = ⟦o⟧`.
 If `x` is the chain sentinel, propagate. If `x` is `null`/`undefined`: with
@@ -240,30 +237,30 @@ rejects (F-Val-Callable).
 Revive. Every envelope J1 produces is a finished value (F-Val-Envelope) that
 J2 hands to revival. J1 executes nothing of the folded file's own, its only
 executions are F-Eval-CallEager and F-Eval-CallMethod on real receivers,
-both of which run code the file *imported*, not code it wrote (R2, R7.3).
+both of which run code the file *imported*, not code it wrote.
 
-## J2. Per-file verdict `B, ι ⊢ f ⇓ fold(X, L) | run(reason)` (#14)
+## J2. Per-file verdict `B, ι ⊢ f ⇓ fold(X, L) | run(reason)`
 
-Formalises R4.1, R6.1, R6.6, R2.1, R2.2, R7, R8, R9.3. Derived from
+Derived from
 `tryFoldFileCore` (`fold-import.ts:3539`), `buildExternals` (`:3345`),
 `resolveDeclaratorValue` (`:3522`), `resolveLiveValue` (`:1331`),
 `resolveCallExpression` (`:1416`), at `e4074c17`.
 
-`ι ∈ {open, isolated, executing}` is the isolation mode (#36). `open` is the
+`ι ∈ {open, isolated, executing}` is the isolation mode. `open` is the
 default and is strict: nothing folds by executing project code. `isolated`
 refuses every project-owned invocation (F-IsolatedRefusal). `executing`, the
-one opt-in (`1.8`), lets F-Call invoke a declared project function whose body
+one opt-in, lets F-Call invoke a declared project function whose body
 cannot fold; the value is then what a run would compute in the folding
 process, environment included, and the build asked for that. On `fold`, `X` is the
-complete export namespace (R5.1) and `L ⊆ F` the files whose objects `f`
+complete export namespace and `L ⊆ F` the files whose objects `f`
 captured (F-Capture, J3). The verdict is evaluated per file, without regard
 to other files' verdicts except through F-Import; it is *tentative*, and J3
-makes it final. Every `run(reason)` carries a located reason (R9.3).
+makes it final. Every `run(reason)` carries a located reason.
 
 ### Preconditions on the file
 
 **F-NotProject.** A file inside chant's own module tree is not project source
-and is `run("chant's own module is not project source")`. Trust (R2.1) is
+and is `run("chant's own module is not project source")`. Trust is
 about what may be *imported*; this is about what may be *folded*.
 
 **F-Scan.** The statement gate (grammar §1). If any exported statement matches
@@ -279,27 +276,26 @@ folding to have anything to produce; it is not folded to an empty namespace.
 
 ### Scope
 
-**F-Bind.** `consts` is every top-level `const ⟨Identifier⟩ = e` (R6.6,
-exported or not) whose `e` is not a function; `locals` is every top-level
+**F-Bind.** `consts` is every top-level `const ⟨Identifier⟩ = e` (exported or not) whose `e` is not a function; `locals` is every top-level
 binding the resolver may read by name, the same set, plus destructured locals
 from a composite call (`const { a } = C({…})`). Every S-LocalFunction binds
 its name in `externals` to a `FoldableFunction` for the file's own scope
-whether or not it is exported (spec `1.2`). A same-file call therefore
+whether or not it is exported. A same-file call therefore
 reaches F-Eval-CallLocal, and a use as a value is step 3's rejection.
-Resolution consults `locals`/`consts` before `externals` (R6.6).
+Resolution consults `locals`/`consts` before `externals`.
 
 **F-Import.** For each named import binding `n` of `f`:
 
-- *`params`* (R8): if the build has a binding `P` and `n` is `params` from
+- *`params`*: if the build has a binding `P` and `n` is `params` from
   chant's params module, bare `@intentius/chant/params`, or a project path
   that resolves to it, then `externals[n] = P`.
-- *bare specifier, active lexicon package* (R2.1 arm 1): `externals[n]` is
+- *bare specifier, active lexicon package* (arm 1): `externals[n]` is
   the package's real export, obtained by importing the already-loaded
   package. "Active" is F-Host-Interface item 5's trust set, the packages
   this build resolved and loaded; a build that supplies no package list has
   an empty set, and every bare specifier then takes the next arm
   (F-Host-Trust, L9.4). A callable export is bound like any other and is
-  reached only by the form that invokes it (F-Eval-Ident step 3, #69). A
+  reached only by the form that invokes it (F-Eval-Ident step 3). A
   lexicon package is never a member of `F` and is never folded.
 - *bare specifier, anything else*: **not resolved**. `n` is absent from
   `externals`; a reference to it is an unresolved identifier (F-Reference).
@@ -313,12 +309,12 @@ Resolution consults `locals`/`consts` before `externals` (R6.6).
 **F-Namespace.** `import * as ns from "./g"` resolves to a *synthetic plain
 object* of `X_g`'s entries, so `ns.x` indexes it like any object; `g ∈ L(f)`
 if any entry has identity. `import * as ns from "<package>"` is **never
-resolved**, which is why `new ns.Type(...)` is rejected (R6.3, L3.15): the
+resolved**, which is why `new ns.Type(...)` is rejected (L3.15): the
 class is unreachable through a namespace of a package.
 
 **F-Reference.** An identifier absent from `consts`, `locals` and
 `externals` is a located rejection `unresolved identifier: n`, or the
-pointed `process` message (R8). An unresolved *import* that is never
+pointed `process` message. An unresolved *import* that is never
 referenced does not by itself force `run`.
 
 ### Producing the namespace
@@ -339,7 +335,7 @@ F-IsolatedRefusal like any other.
 
 - *resource* `export const x = new T(…)`: `foldResource` (J1) yields a
   `{__resource}` envelope, which is **revived** into a real instance by the
-  class `T` resolves to through `f`'s own imports (R1.2, R7.1). F-Prebuild has
+  class `T` resolves to through `f`'s own imports. F-Prebuild has
   already built this initializer, and the instance it built is the one bound
   here; a second construction would put two entities where running puts one
   (F-Count). Under `isolated`, a `T` from a project file is
@@ -347,17 +343,15 @@ F-IsolatedRefusal like any other.
 - *single* `export const x = e`: if `e` is a call, its direct arguments are
   resolved first. An argument that is itself a package call resolves by
   F-Call, as does a member read on such a call or a const alias of either;
-  every other argument is J1's (`1.6`, #110, `L2.18`). Then the call is
+  every other argument is J1's (`L2.18`). Then the call is
   F-Call for an unregistered callee, or J1's registered form for a helper or
   an intrinsic. If `e` is a member or element access on a
   call's result, F-Call then index (base must be an indexable object); when
   `e` is an identifier bound by a top-level `const`,
   through any chain of such aliases (`L7.7`), to a call or to a member access
   on one, the same again, with the call resolved once per file (F-Count);
-  otherwise J1 on `e`, revived. The alias case was added in `1.6` (#110),
-  since chant had followed it for a composite and for any package export
-  alike (`L2.18`); a call reached any other way, nested inside an expression,
-  stays J1's rejection.
+  otherwise J1 on `e`, revived (`L2.18`). A call reached any other way,
+  nested inside an expression, stays J1's rejection.
 - *destructure* `export const { a, b: c } = e`: `e`, through the same
   aliases, must resolve to a composite instance or an indexable object; each
   element indexes it.
@@ -368,7 +362,7 @@ F-IsolatedRefusal like any other.
 - *re-export* `export { a } from "./g"`: `X_g[a]`, with `g ∈ L(f)` if it has
   identity, a re-export is a capture.
 - *function* `export function φ`: `X[φ]` is the `FoldableFunction` F-Bind
-  bound (R1.3); the body's own foldability is judged at the call, never here.
+  bound; the body's own foldability is judged at the call, never here.
 - *default* `export default e` (`data-host`, S-ExportDefault): `X["default"]`
   is `⟦e⟧` revived, as *single* is; `import n from "./g"` binds it (F-Import).
 
@@ -376,39 +370,36 @@ F-IsolatedRefusal like any other.
 
 1. `c` must be a bare identifier; otherwise `run(callExpressionMessage)`.
 2. If `externals[c]` is a `FoldableFunction`, the call is J1's project-local
-   call (R6.5): evaluated statically, nothing imported. If that refuses, the
+   call: evaluated statically, nothing imported. If that refuses, the
    file runs with F-Eval-CallLocal's reason, except under `ι = executing`
-   (`1.8`), where the call continues at step 6 as a project-owned invocation.
-   chant's `open` mode invoked here until 0.72.3 (chant#2453), and the
+   where the call continues at step 6 as a project-owned invocation.
+   chant's `open` mode invoked here until 0.72.3, and the
    invocation carried the folding process's environment into the fold.
 3. Otherwise `c` must be an import binding; else `run`.
-4. If the binding is *interpretable* (R7.2, rules 1–5): the factory body is
+4. If the binding is *interpretable* (rules 1–5): the factory body is
    **interpreted** against the defining module's scope; the module is never
-   imported; `factoryInterpretations += 1` (R9.2).
+   imported; `factoryInterpretations += 1`.
 5. Otherwise, under `ι = isolated`, F-IsolatedRefusal unless the binding is
-   trusted (R2.1).
+   trusted.
 6. Otherwise the module is imported (once per build) and `c` **invoked** with
    the resolved arguments; `factoryInvocations += 1`, and
    `projectFactoryInvocations += 1` if the specifier is a project file.
    An argument is resolved as F-Declarator says, a direct package call by
    this rule in turn and the rest by J1; a call nested deeper inside an
    argument is J1's rejection. Arguments that are live objects pass
-   through unchanged; a `{__attrRef}` among them stays symbolic (R1.2, `L6.9`).
-7. The result is a value, live or plain, and is what the declarator binds
-   (`1.6`, #110); a destructured declarator needs an indexable object
-   (F-Declarator). Before `1.6` the text required an entity or a composite
-   instance here, which chant never implemented (`L8.19`).
+   through unchanged; a `{__attrRef}` among them stays symbolic (`L6.9`).
+7. The result is a value, live or plain, and is what the declarator binds;
+   a destructured declarator needs an indexable object (F-Declarator,
+   `L8.19`).
 
 **F-Count.** Within `f`, a composite call reached by several member accesses
 or destructured names is resolved once (`ResolveCtx.memo`); a same-file
 `new` bound to a `const` is constructed once, in source order, by F-Prebuild
-(R4.6).
-
 **F-IsolatedRefusal.** Under `ι = isolated`, any step above that would
-resolve *and invoke or import* a binding not on the trust allowlist (R2.1) -
+resolve *and invoke or import* a binding not on the trust allowlist -
 a project-owned factory, constructor, or intrinsic, is
 `run("isolation")`, even where `B, open ⊢ f ⇓ fold(…)`. Interpretation (step
-4) is not an invocation and is unaffected. Observable: R9.2's
+4) is not an invocation and is unaffected. The observable:
 `projectFactoryInvocations` is zero across every folded file under
 `isolated`.
 
@@ -418,11 +409,11 @@ a project-owned factory, constructor, or intrinsic, is
 exported name to its value, plain values included, and `L` is the capture
 set accumulated by F-Import, F-Namespace, re-exports, and F-CallLeak (J3).
 If any declarator failed, `run(reason)` for the **whole file**: no partial
-namespace is ever produced (R4.1).
+namespace is ever produced.
 
 **F-Reason.** `reason` names the declarator and carries the innermost located
 cause; for a failure inside a project-local call it is re-anchored at the
-call site with the callee's file and position in the message (R9.3).
+call site with the callee's file and position in the message.
 
 ### What J2 does not decide
 
@@ -457,7 +448,7 @@ A build is `B = (F, →, P)`:
 - `f → g`, `f` imports or re-exports from `g`, by a relative or absolute
   specifier, `g ∈ F`. (`buildProjectImportEdges`. Bare specifiers are not
   edges: a package is never a member of `F`.)
-- `P`, the build-parameter binding (R8).
+- `P`, the build-parameter binding.
 
 J2 gives each `f` a tentative verdict `w(f) ∈ {fold, run}`; when
 `w(f) = fold` it also gives `X(f)` and `L(f)`.
@@ -499,7 +490,7 @@ relation the proposition needs.
 
 **F-CallLeak.** Let `φ` be a project-local function defined in `g` and called
 from `f` during `f`'s fold. If the call **returns** a value that carries a live
-object (R1.4) *which was not already carried in by the arguments*, then the
+object *which was not already carried in by the arguments*, then the
 call leaked `g`'s identity into `f`: `leakedIdentity(φ)` is set and `g ∈ L(f)`
 (L5.9). The test here is F-Identity's entity test. A function returning only
 plain data never leaks, which is what keeps a parameter helper from tainting
@@ -514,7 +505,7 @@ edge to a *copy*, and the judgment would be vacuous.
 **F-Count.** Within one file, a composite call reached through several member
 accesses or destructured names is invoked once, and a same-file construction
 bound to a `const` is built once in source order; every reference reads the
-same object (L8.12, L3.8, R4.6). F-Memo across files, F-Count within one.
+same object (L8.12, L3.8). F-Memo across files, F-Count within one.
 
 ### The fixpoint
 
@@ -540,7 +531,7 @@ flows from a tainted file `f` in two directions at once:
   longer the instance the build collects; `c`'s folded result is stale. So `c`
   runs too, and re-obtains everything through real imports.
 
-The first revision of `requirements.md` R4.2 stated the forward direction as
+The first revision of `requirements.md` stated the forward direction as
 "a file that imports a non-folding file is tainted." That is the *opposite*
 edge, and it is not how taint propagates, it is handled earlier, by J2: a
 file whose import cannot be resolved to a folded `X(g)` fails to fold on its
@@ -580,7 +571,7 @@ file's import, from an `AttrRef`, is that object.
    with `f → g` has `g ∈ Succ(f)`; if `f ∉ T(B)` then `g ∉ T(B)`,
    contradiction; so `f` runs and its import of `g` is the run path's own
    module instance, one per file, by the host module system (or the single
-   bundle under isolation, R2.2). Any `f` with `f ⇝ g` is in `T(B)` by the
+   bundle under isolation). Any `f` with `f ⇝ g` is in `T(B)` by the
    backward edge and its folded capture is discarded.
 
 No entity therefore has both a folded and a run object alive. ∎
@@ -588,7 +579,7 @@ No entity therefore has both a folded and a run object alive. ∎
 The sketch relies on two things outside this judgment: F-Memo/F-Count (the
 implementation's session and per-node memos), and the run path's own
 one-instance-per-module guarantee. The second is why isolation bundles every
-run-fallback file into **one** module graph rather than one per file (R2.2):
+run-fallback file into **one** module graph rather than one per file:
 two bundles would be two module instances of a shared import, and the
 proposition would fail on the run side.
 
@@ -604,13 +595,13 @@ condition.
 **A folded file can still be forced to run by a file it never imports.** The
 backward edge means `c`'s verdict depends on the verdict of a file `c` only
 *captured from*. Nothing in `c`'s own source predicts it. Fallback reporting
-(R9.3) must therefore be able to say "forced to run because `f` runs and you
+ must therefore be able to say "forced to run because `f` runs and you
 captured its objects," not merely quote a construct in `c`.
 
 ### Validation status
 
 Until chant#2345 (landed 2026-09-10 as chant PR #2364) the differential that
-discharges the objective (chant#1025) compared fold against run **only for
+discharges the objective compared fold against run **only for
 builds where `T(B) = ∅`**, every file folded, which are exactly the builds
 in which this judgment does nothing. chant#2345 removes that early return: every non-empty corpus entry is now
 built both ways and held to error parity and byte-identical output, with a
@@ -621,7 +612,7 @@ least one run-fallback file, **drift 0**, allowlist empty. Every mixed
 entry, where `T(B) ≠ ∅` and both taint directions can fire, agrees fold-vs-
 run. That was the proposition's first differential evidence; before it the
 claim rested on the argument above and on the crash class it was written to
-prevent (chant#1044, #1020).
+prevent.
 
 **chant-v0.65.0 (chant#2347, PR #2375) added the adversarial entry**
 `examples/fold-adversarial/`: nine files, each named for one resolution-time
@@ -652,7 +643,7 @@ none of its top-level statements is executed by the build. What still
 executes is bounded and named: revival of envelopes (F-Val-Fate),
 F-Eval-CallEager, F-Eval-CallMethod on a real receiver, and, under `open` -
 invocation of an imported factory (J2 F-Call step 6). All of it is code the
-file *imported*; none of it is code the file *wrote*. (Was R2.)
+file *imported*; none of it is code the file *wrote*. (Was.)
 
 **F-Depth.** An implementation bounds three recursions and may choose the values.
 
@@ -663,7 +654,7 @@ file *imported*; none of it is code the file *wrote*. (Was R2.)
 | `MAX_RESOLUTION_DEPTH` | 200 | the cross-file resolution stack |
 
 - The values must be stated, and they are the implementation's to choose;
-  F-Eval-CallLocal step 2 names no number (#71).
+  F-Eval-CallLocal step 2 names no number.
 - Exhaustion must produce `run`, never a failure and never a silent change of
   evaluation mode. How the recursion is counted is also the
   implementation's: chant's call-depth bound counts nested folded bodies on
@@ -672,14 +663,14 @@ file *imported*; none of it is code the file *wrote*. (Was R2.)
 - chant has met both for all three bounds since v0.68.0, when the
   interpretation bound stopped degrading to invocation under a `fold` verdict
   and began throwing a propagated depth error that names the bound and falls
-  the file back to run (chant#2370; was R4.5).
+  the file back to run (chant#2370).
 
 **F-Obs-Counters.** A conforming implementation exposes, per build and
 resettable, three non-negative integers: in-process factory/constructor
 invocations performed while folding; of those, how many resolved to
 project-owned code; and how many factory bodies were interpreted instead.
 Names are not normative; the shape is. Under `isolated` the second is zero
-across every folded file (F-IsolatedRefusal). (Was R9.2, R2.3.)
+across every folded file (F-IsolatedRefusal). (Was.)
 
 **F-Obs-Report.** A conforming implementation reports, per file, the final
 verdict and, for `run`, a located reason (F-Reason). A fallback is not an
@@ -687,27 +678,27 @@ error, which is exactly why an unreported one would make F-NoOwnExecution
 unauditable. Summary versus verbose is presentation. A reason produced by
 J3's backward edge must be able to say "forced to run because `f` runs and
 you captured its objects", since nothing in the file's own source predicts
-it. (Was R9.3.)
+it. (Was.)
 
 **F-Obs-Provenance.** Path provenance, which composite parameter produced
 which emitted field, first (innermost) writer wins, is an *optional*
 capability outside the equivalence objective: the run path does not
 uniformly produce it, so requiring it would oblige fold and run to agree on
 something one side lacks. Conformance reports whether it is supported.
-(Was R9.1.)
+(Was.)
 
 **F-Obs-Messages.** Message *stability* is not normative. Location and rule
 identifier are (F-Reason). One-builder-per-kind is a property of one
 implementation's tooling; a second implementation cannot share strings.
-(Was R9.4.)
+(Was.)
 
 ---
 
 ## Rationale
 
-Non-normative. The reasoning that motivated each rule, carried over from the retired `requirements.md` (#46). Keyed by the rule(s) each note supports.
+Non-normative. The reasoning that motivated each rule, carried over from the retired `requirements.md`. Keyed by the rule(s) each note supports.
 
-**F-NoOwnExecution** *(was R2. Folding executes none of the folded file's own statements, and the spec must say exactly that)*
+**F-NoOwnExecution** *(Folding executes none of the folded file's own statements, and the spec must say exactly that)*
 
 The claim is narrower than "no execution", and stating it loosely is the single
 easiest way to write a specification that is either false or useless.
@@ -715,49 +706,46 @@ easiest way to write a specification that is either false or useless.
 **Guaranteed:** none of the top-level statements of the file being folded are
 executed. That is the whole of the guarantee.
 
-**Still executes:** revival (R1.2) and eager evaluation (R7.3). A `__resource`
+**Still executes:** revival and eager evaluation. A `__resource`
 envelope names a constructor; the bridge reads the folding file's own `import`
 declarations, imports *that* module, and calls the real class with the folded
 arguments. The implementation's own justification: the run path imports the
 same module to obtain the same class, so the only thing skipped is the file's
 own statements (`fold-import.ts` module doc).
 
-**F-IsolatedRefusal** *(was R2.2. Isolation changes what folds, so it is part of the mechanism)*
+**F-IsolatedRefusal** *(Isolation changes what folds, so it is part of the mechanism)*
 
 Under sandboxed execution a fold whose revival would invoke *project-owned*
 code is refused and the file falls back to run (L9.5,
 INTENTIUS/chant#1093). The fold/run decision is therefore parameterized by
 whether project code may execute in this process.
 
-**Decided (#36): isolation is an optional capability, modelled in the
+**Decided: isolation is an optional capability, modelled in the
 judgment.** J2 takes an isolation mode `ι ∈ {open, isolated, executing}`;
 under `isolated`, a file whose fold would require invoking project-owned code
 is `run`, not `fold` (F-IsolatedRefusal, judgments.md). `executing` is the
-opposite opt-in (`1.8`), under which a declared project function whose body
+opposite opt-in, under which a declared project function whose body
 cannot fold is invoked at a declarator (F-Call step 2), so the fold may
 depend on the folding process. It is never the default, since a fold that reads the
 environment silently is what chant#2453 found. An implementation declares
 which modes it supports; conformance reports them separately and requires
-neither `isolated` nor `executing`. The observable is R9.2's `projectFactoryInvocations`
+neither `isolated` nor `executing`. The observable is `projectFactoryInvocations`
 counter, which must be zero for every folded file under `isolated`. Nix
 import-from-derivation is the cited precedent for evaluation escaping into a
 contained execution and resuming (`prior-art.md`). The reference
 implementation is not required to ship a sandbox before submission.
 
-**F-Obs-Counters** *(was R2.3. The observable)*
+**F-Obs-Counters** *(The observable)*
 
 `FoldExecutionCounts` (L10.1), `factoryInvocations`,
 `projectFactoryInvocations`, `factoryInterpretations`, is how this
-requirement is checked rather than trusted. #43 decides what a conforming
-implementation must expose.
+requirement is checked rather than trusted.
 
 ---
 
-**J3** *(was R4. The decision is per file, total, and closed under a bidirectional fixpoint)*
+**J3** *(The decision is per file, total, and closed under a bidirectional fixpoint)*
 
-
-
-**F-Total, F-Scan** *(was R4.1. All or nothing, per file, at the normative entry point)*
+**F-Total, F-Scan** *(All or nothing, per file, at the normative entry point)*
 
 Two entry points exist and the first revision conflated them. `tryFoldFile`
 returns a `FoldFileResult` (L8.1): ok with the complete export namespace, or a
@@ -770,7 +758,7 @@ The reason fallback is per-module rather than per-declaration is stated in the
 statement gate itself (L1.7) and belongs in the spec: an unfoldable export can
 reference or be referenced by a foldable one in ways only running proves safe.
 
-**F-Succ, F-Capture, F-CallLeak** *(was R4.2. Contagion runs in both directions, and through calls)*
+**F-Succ, F-Capture, F-CallLeak** *(Contagion runs in both directions, and through calls)*
 
 `planFoldTaint` (L8.6–L8.8):
 
@@ -790,18 +778,18 @@ reference or be referenced by a foldable one in ways only running proves safe.
   through invocation, not only through import, and the first revision missed
   this entirely.
 
-**F-Taint, F-Fix** *(was R4.3. The fixpoint and its termination)*
+**F-Taint, F-Fix** *(The fixpoint and its termination)*
 
 Seed with every file that would not fold on its own; walk the union of forward
 and reverse edges to closure. Monotone over a finite file set, so it
 terminates. State it as a least fixpoint, not as the worklist.
 
-**F-Cycle** *(was R4.4. Cycles are a located error, not divergence)*
+**F-Cycle** *(Cycles are a located error, not divergence)*
 
 `FoldSession.stack` (L8.9) detects a genuine reference cycle and reports the
 path.
 
-**F-Depth** *(was R4.5. Three depth bounds, all of which decide fold versus run)*
+**F-Depth** *(Three depth bounds, all of which decide fold versus run)*
 
 `MAX_FUNCTION_CALL_DEPTH = 32` (L5.8), `MAX_INTERPRETATION_DEPTH` (L7.8),
 `MAX_RESOLUTION_DEPTH` (L8.10). Each terminates a different recursion and each
@@ -810,7 +798,7 @@ mentioned them. The spec must either fix the bounds or say they are
 implementation-defined and that exceeding one is a fallback, never wrong
 output.
 
-**F-Prebuild** *(added by #68, from the corpus cross-check of #25)*
+**F-Prebuild** *(Where a same-file instance comes from)*
 
 F-Eval-Ident step 1 always read its answer out of `externals` and called it
 "the one instance J2 pre-built", and no rule of J2 built it. The rules that
@@ -822,7 +810,7 @@ along (`preresolveResourceConsts`, chant#1169). The rule was lost in the
 abstraction from code to specification, and 22 corpus files disagreed
 because of one missing sentence.
 
-**F-Count** *(was R4.6. Evaluation count is observable semantics)*
+**F-Count** *(Evaluation count is observable semantics)*
 
 A composite call reached through several member accesses or destructured names
 is invoked **exactly once** (L8.12, `ResolveCtx.memo`), explicitly "matching
@@ -833,7 +821,7 @@ two entities where running produces one.
 
 ---
 
-**F-Memo** *(was R5. A cross-file entity has exactly one instance per build)*
+**F-Memo** *(A cross-file entity has exactly one instance per build)*
 
 Every referrer of a folded file must observe the same objects. A per-build
 session memoizes each file's fold so a file imported by many is folded exactly
@@ -841,14 +829,14 @@ once (L8.11), and revival passes live objects through unchanged rather than
 reconstructing them (L6.1), the generic walk would destroy the identity it
 exists to preserve.
 
-**F-Total** *(was R5.1. The exported namespace is complete, and the statement gate is why)*
+**F-Total** *(The exported namespace is complete, and the statement gate is why)*
 
 A successful fold yields every exported name's value, not only the
-entity-valued ones (L8.4). This holds *because* the statement gate (R6.1)
+entity-valued ones (L8.4). This holds *because* the statement gate
 disqualifies any file with an unrecognized export. The first revision stated
 the property without its enforcement.
 
-**F-Succ** *(was R5.2. R5 is why R4.2 exists)*
+**F-Succ** *(The reverse and through-call edges)*
 
 The reverse and through-call taint edges are the consequence of this
 requirement: single-instance-per-build cannot hold if one side of a sharing
@@ -856,7 +844,7 @@ relationship folds while the other runs.
 
 ---
 
-**F-Eval-New, F-Eval-Tagged, F-Eval-CallHelper, F-Eval-CallIntrinsic, F-Eval-Member step 2** *(was R6.3. Admissibility depends on where the expression sits)*
+**F-Eval-New, F-Eval-Tagged, F-Eval-CallHelper, F-Eval-CallIntrinsic, F-Eval-Member step 2** *(Admissibility depends on where the expression sits)*
 
 Five constructs that fold at a file's top level are refused inside a folded
 function body: `new`, a tagged template, a helper call, an intrinsic call, and
@@ -865,14 +853,14 @@ the *caller's* imports, which is not the scope the body was written in.
 `new ns.Type(...)` is refused everywhere: a namespace-qualified constructor
 cannot be resolved through named imports (L3.15).
 
-**F-Eval-Ident** *(was R6.4. Shadowing)*
+**F-Eval-Ident** *(Shadowing)*
 
 `consts` is consulted before `externals` (L5.3). A local `const` defeats a
 registered helper or intrinsic name, the file's own binding wins, so a local
 `Ref` is not the lexicon's. A parameter or body binding shadows a module-level
 const of the same name.
 
-**F-Bind, F-Eval-Ident, F-Eval-CallLocal** *(was R6.6. What a binding is, and the order names resolve in)*
+**F-Bind, F-Eval-Ident, F-Eval-CallLocal** *(What a binding is, and the order names resolve in)*
 
 **A top-level binding is a `const` with an identifier name and an initializer**
 (`collectConsts`, L5.1). Nothing else is: a top-level destructured `const`
@@ -883,7 +871,7 @@ name is simply invisible.
 
 **Lookup order is `consts`, then `externals`** (L5.2, `fold.ts` identifier
 branch). A name in the file's own `consts` is never looked up in `externals`,
-which is the mechanism behind R6.4's shadowing rule and must be stated as the
+which is the mechanism behind's shadowing rule and must be stated as the
 order rather than only as its consequence.
 
 **A project-local function's body folds in the defining module's scope**
@@ -892,19 +880,19 @@ order rather than only as its consequence.
 `externals`, with each parameter bound by deleting the name from that copy of
 `consts` and setting it in `externals` (so a parameter shadows a module-level
 const of the same name); `externals` are read live, so a function declared
-before a const it reads still sees the const's value. R7.2 states the same
+before a const it reads still sees the const's value. states the same
 scope rule for composite factories; this is its counterpart for plain
 functions, and without it a helper in `lib/` reading `lib/`'s own imports is
 unspecified.
 
 ---
 
-**F-Call** *(was R7. There are three evaluation modes, not two)*
+**F-Call** *(There are three evaluation modes, not two)*
 
 The first revision described fold-to-envelope and revival. There is a third,
 and it is the one that makes folding under isolation possible.
 
-**F-Call step 4** *(was R7.2. Interpret, never importing the defining module)*
+**F-Call step 4** *(Interpret, never importing the defining module)*
 
 A composite factory is *interpreted* (L7.1–L7.8) when: (1) the calling file
 imports it from a project file, by text, never a package; (2) the defining
@@ -919,7 +907,7 @@ singleton the run path shares, and interpretation would not, and
 (`L7.7`). The defining module is never imported; members are built by the
 lexicon's constructors from the folded props.
 
-**F-Eval-CallEager, F-Eval-CallMethod** *(was R7.3. Evaluate eagerly)*
+**F-Eval-CallEager, F-Eval-CallMethod** *(Evaluate eagerly)*
 
 A lexicon function registered with `intrinsicCallFoldsEagerly` (L2.13) is
 called at fold time with folded arguments rather than enveloped, because its
@@ -931,7 +919,7 @@ and the spec must name them as such.
 
 ---
 
-**F-Import** *(was R8. Build parameters are an input to folding)*
+**F-Import** *(Build parameters are an input to folding)*
 
 `FoldSession.buildParams` (L5.11) is consulted for exactly one bare specifier:
 a named `params` import resolving to chant's `params` module. `params.<name>`
@@ -945,13 +933,13 @@ must say how the binding enters and that it is recorded.
 
 ---
 
-**J4** *(was R9. Outputs beyond values, and what must be observable)*
+**J4** *(Outputs beyond values, and what must be observable)*
 
 Folding produces more than the value tree, and the first revision had no place
 for any of it. Four things, each decided here as a recommendation for the
-normative text (#43).
+normative text.
 
-**F-Obs-Provenance** *(was R9.1. Provenance is an optional capability, outside the equivalence objective)*
+**F-Obs-Provenance** *(Provenance is an optional capability, outside the equivalence objective)*
 
 `setPathProvenance` (L10.2) records, during fold, which composite parameter
 produced which emitted field; the first (innermost) writer wins. It is real
@@ -965,20 +953,17 @@ reports whether it does; the equivalence claim is over serialized output only.
 The first-writer-wins rule is stated for implementations that do expose it, so
 two of them agree on which writer.
 
-**F-Obs-Counters** *(was R9.2. The no-execution observable is normative in shape, not in name)*
+**F-Obs-Counters** *(The no-execution observable is normative in shape, not in name)*
 
-R2 is checkable only through `FoldExecutionCounts` (L10.1). A conforming
-implementation must expose, per build and resettable: the number of factory or
-constructor invocations performed in-process during folding; of those, how
-many resolved to project-owned code; and how many factory bodies were
-interpreted instead. Three non-negative integers. That is sufficient for a
-conformance harness to assert "zero project-owned invocations" under isolation
-(R2.2) and to measure interpretation coverage (R7.2). Names are not normative.
+No-execution is checkable only through the counters (`L10.1`). The rule
+therefore fixes their shape and leaves their names to the implementation.
+Three integers are enough for a harness to assert zero project-owned
+invocations under isolation.
 
-**F-Obs-Report, F-Reason** *(was R9.3. Fallback reporting is normative)*
+**F-Obs-Report, F-Reason** *(Fallback reporting is normative)*
 
-A fallback is not an error (R4.1), which is exactly why it must be reported: an
-unreported fallback is indistinguishable from a fold, and R2's guarantee
+A fallback is not an error, which is exactly why it must be reported: an
+unreported fallback is indistinguishable from a fold, and the guarantee
 becomes unauditable. A conforming implementation must report, per file, the
 decision taken and, for a fallback, a located reason (L10.3). The reason's
 wording is unconstrained.
@@ -993,7 +978,7 @@ primary, because R-spec.3's "located" is otherwise ambiguous for exactly this
 case. Whether the report is summarized or verbose by
 default is presentation, not conformance.
 
-**F-Obs-Messages** *(was R9.4. Message stability is not normative; location and rule are)*
+**F-Obs-Messages** *(Message stability is not normative; location and rule are)*
 
 chant builds every rejection message of a given kind through one shared
 builder so two sites cannot drift (L10.5). That is a property of one
@@ -1004,15 +989,13 @@ identifier, and `FoldError` carries exactly those (L10.4).
 
 ---
 
-**J1** *(was R10. Semantics a second implementation cannot guess)*
-
-R1 defines the domain and R3 defines membership. Neither says what an operator
+**J1** *(Semantics a second implementation cannot guess)* defines the domain and defines membership. Neither says what an operator
 *means*. "As ECMAScript" is the obvious discharge and it is available for most
 of this section, but not all of it, and the places where the implementation
 departs from ECMAScript are exactly the ones a second implementation would get
 wrong by assuming it.
 
-**F-Eval-Unary, F-Eval-Binary** *(was R10.1. Operators are ECMAScript's, on the folded operand values)*
+**F-Eval-Unary, F-Eval-Binary** *(Operators are ECMAScript's, on the folded operand values)*
 
 The supported binary operators (L2.8, L3.14): `+` `-` `*` `/` `===` `!==` `>`
 `<` `>=` `<=`, and the lazy `&&` `||` `??` (L3.13). Unary `!` and `-`
@@ -1023,24 +1006,24 @@ the host JavaScript operator to the folded values, so the semantics, including
 spec should say so per operator and require an implementation in another
 language to reproduce ECMAScript coercion for these operators, not its host's.
 
-**F-Eval-Member step 4** *(was R10.2. Member access on `null`/`undefined` refuses; optional chaining short-circuits)*
+**F-Eval-Member step 4** *(Member access on `null`/`undefined` refuses; optional chaining short-circuits)*
 
 Resolved by chant-v0.63.0 (INTENTIUS/chant#2328, commit `8ce54e5e`). A plain
 property or element read whose object folds to `null`/`undefined` is
 **refused** with a located rejection naming the member and pointing at `?.`
 (L3.10); the file falls back to run, where the same expression throws a
 `TypeError`. Fold produces no output and run produces an error, equivalence
-in the sense of R4.1's "a fallback is not wrong output". `?.` is implemented
+in the sense that a fallback is not wrong output. `?.` is implemented
 with ECMAScript short-circuit semantics: a nullish object under `?.` yields a
 chain-short-circuit sentinel that propagates through the remainder of the
 chain, further member and element reads, `!` non-null assertions, and a
 `?.()` method call, and resolves to `undefined` where the chain ends (L3.21,
 L3.22). So "as ECMAScript" *is* now available for member access, and the
 departure the first revision of this clause recorded no longer exists. chant's
-shape classifier still admits both forms (the object's value is resolution),
-which is the R3.1 direction; it is added to R3.1's divergence list.
+shape classifier still admits both forms, the object's value being a
+resolution, which is the permitted direction; the divergence list carries it.
 
-**F-Eval-Member steps 1, 5** *(was R10.3. Attribute references are produced by two rules and refused by a third)*
+**F-Eval-Member steps 1, 5** *(Attribute references are produced by two rules and refused by a third)*
 
 Property or element access on an identifier bound to a same-file `new` yields
 `{__attrRef: {entity, attribute}}` keyed by the identifier (L3.9). Access on a
@@ -1049,17 +1032,17 @@ the object expression is a plain identifier, any other shape is refused,
 because there is no name to key the reference on and silently indexing the
 envelope produced wrong output (L3.11, chant#1535).
 
-**F-Eval-Template** *(was R10.4. Template spans coerce by ECMAScript `ToString`, and the spec must say what that does to an envelope)*
+**F-Eval-Template** *(Template spans coerce by ECMAScript `ToString`, and the spec must say what that does to an envelope)*
 
 `String(fold(span))` (L3.2). For scalars that is ECMAScript. For a symbolic
 envelope it is `"[object Object]"`, and, verified, the run path produces the
 same, because `AttrRef` defines no `toString`. So fold and run *agree* and the
 output is silently wrong on both; the implementation guards the
-eager-intrinsic case for exactly this hazard (R7.3) and not the template span.
+eager-intrinsic case for exactly this hazard and not the template span.
 The spec should refuse an envelope in a plain template span rather than
 inherit `ToString`; chant's side of it is tracked as a lint gap.
 
-**F-Eval-Object, F-Eval-Array** *(was R10.5. Key and element ordering are ECMAScript's, and byte-identity depends on it)*
+**F-Eval-Object, F-Eval-Array** *(Key and element ordering are ECMAScript's, and byte-identity depends on it)*
 
 Object literals evaluate members in source order; spread is `Object.assign`,
 so spread keys land in the source's insertion order and a later key wins
@@ -1078,7 +1061,7 @@ implementation targeting a host that preserves order would fail byte-identity
 with a different key order, and nothing in the objective says which hosts
 those are.
 
-**F-Eval-Object, F-Eval-Array** *(was R10.6. Spread departs from ECMAScript in one direction)*
+**F-Eval-Object, F-Eval-Array** *(Spread departs from ECMAScript in one direction)*
 
 Object spread requires a non-null object; array spread requires
 `Array.isArray` (L3.4, L3.5). ECMAScript array spread accepts any iterable -

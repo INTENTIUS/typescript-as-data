@@ -1,8 +1,7 @@
 # Fold mechanism inventory
 
 Every decision point in chant core's fold path, with the requirement that covers
-it. Derived from a complete read of the four files below at commit `e4074c17`
-(2026-09-09); rows L3.10, L3.21, L3.22 updated to chant-v0.63.0 (`11572c7a`); L3.23 to chant-v0.69.0 (`f8ae312b`).
+it. Derived from a complete read of the four files below.
 
 A **decision point** is anywhere the mechanism chooses between admitting and
 rejecting, between evaluation modes, or between representations. One row each.
@@ -18,7 +17,7 @@ can span several.
 
 The coverage column names the `S-*`/`F-*` rule that governs the row (grammar.md,
 judgments.md, values.md, divergence.md, hosts.md), or **GAP** with a reason.
-Since #46 it cites rules only; `R*` is retired.
+It cites rules only.
 
 ---
 
@@ -29,7 +28,7 @@ The gate that runs before any expression is classified. Disqualifies whole files
 | # | Decision | Behaviour | Covers |
 |---|---|---|---|
 | L1.1 | admissible export shapes | `export const X = new Type(...)`, `export const X = <expr>`, `export const {a,b} = <expr>`, `export {a,b}`, `export {a,b} from "./m"`, `export function f(){}` | S-Module, S-ExportResource … S-ExportTypeOnly (grammar.md) |
-| L1.2 | `export default` | disqualifies the file in `full`; the declarator named `default` in `data-host` since spec `1.2` | S-Disqualify; S-ExportDefault (grammar.md) |
+| L1.2 | `export default` | disqualifies the file in `full`; the declarator named `default` in `data-host` | S-Disqualify; S-ExportDefault (grammar.md) |
 | L1.3 | `export * from` | disqualifies; no enumerable element list | S-Disqualify (grammar.md) |
 | L1.4 | exported class, `let`/`var` | disqualifies | S-Disqualify (grammar.md) |
 | L1.5 | destructured export with rest, nested, or defaulted element | disqualifies | S-Disqualify (grammar.md) |
@@ -52,14 +51,14 @@ Shape only. No resolution, no evaluation.
 | L2.8 | operators | closed sets `SUPPORTED_BINARY_OPERATORS` (13) and `SUPPORTED_UNARY_OPERATORS` (2) | S-Unary, S-Binary; F-Eval-Unary, F-Eval-Binary |
 | L2.9 | flow insensitivity | every branch of `&&`/`\|\|`/`??`/`?:` must be shape-valid | F-Exc-Lazy (divergence.md) |
 | L2.10 | `new` | every argument classified positionally, no props-position assumption | S-New |
-| L2.11 | call; registered helper | name-only check, provenance deferred; this is the expression classifier, and `foldProject`'s `resolveCallExpression` asks for a project binding first (#126) | F-Div-Provenance (divergence.md); F-Eval-CallLocal |
+| L2.11 | call; registered helper | name-only check, provenance deferred; this is the expression classifier, and `foldProject`'s `resolveCallExpression` asks for a project binding first | F-Div-Provenance (divergence.md); F-Eval-CallLocal |
 | L2.12 | call; intrinsic call form | registry-gated, registry is an optional parameter | F-Exc-(divergence.md) |
 | L2.13 | call; eager intrinsic | registry-gated | S-CallEager; F-Eval-CallEager |
 | L2.14 | call; method (`x.y()`) | admitted unconditionally, receiver and args recursed | S-CallMethod; F-Eval-CallMethod |
 | L2.15 | call; `<call>(...).step` | admitted unconditionally at the property-access node | S-CompositeStep; F-Eval-Member step 2 |
 | L2.16 | any other call | violation, `callExpressionMessage` | S-Reject; F-Eval-Reject |
-| L2.17 | project-local call shape (added #95) | the classifier rejected it while the build folded it until chant-v0.72.0 (chant#2435, #2437); `1.2` gives it S-CallLocal | S-CallLocal (grammar.md) |
-| L2.18 | a const alias of a package call at a declarator (added #110) | `resolveLiveValue` follows a top-level const, through alias chains, to a call of any lexicon export or a member access on one, and resolves the call there; the same read nested inside an expression stays `callExpressionMessage`. `1.6` writes it into F-Declarator | F-Declarator; F-Call; F-Count |
+| L2.17 | project-local call shape | the classifier rejected it while the build folded it until chant-v0.72.0 (chant#2435); `1.2` gives it S-CallLocal | S-CallLocal (grammar.md) |
+| L2.18 | a const alias of a package call at a declarator | `resolveLiveValue` follows a top-level const, through alias chains, to a call of any lexicon export or a member access on one, and resolves the call there; the same read nested inside an expression stays `callExpressionMessage`. `1.6` writes it into F-Declarator | F-Declarator; F-Call; F-Count |
 
 ## L3. Expression reduction (`fold`)
 
@@ -74,7 +73,7 @@ Shape only. No resolution, no evaluation.
 | L3.7 | bare `process` | pointed rejection naming build parameters | F-Eval-Ident step 4 |
 | L3.8 | identifier bound to same-file `new` | only `externals` may answer, which F-Prebuild is what makes possible; a folder with no module graph cannot construct, so it rejects and the file falls back to run | F-Eval-Ident step 1; F-Prebuild; F-Div-SameFileNew; F-Count |
 | L3.9 | property access on a resource-bound const | `{__attrRef}` keyed by the const's name | F-Eval-Member step 1 |
-| L3.10 | property access on `null`/`undefined` | ~~returns `undefined`~~ **refused** since chant-v0.63.0 (#2328); a located rejection pointing at `?.`; file falls back to run, where it throws | F-Eval-Member step 4; F-Div-Nullish |
+| L3.10 | property access on `null`/`undefined` | ~~returns `undefined`~~ **refused** since chant-v0.63.0; a located rejection pointing at `?.`; file falls back to run, where it throws | F-Eval-Member step 4; F-Div-Nullish |
 | L3.11 | property access on a `{__resource}` envelope | `{__attrRef}` when the object is a plain identifier; **rejected otherwise** (chant#1535; silent wrong output otherwise) | F-Eval-Member step 5 |
 | L3.12 | `-x`, `!x` | JS coercion | F-Eval-Unary |
 | L3.13 | `&&`, `\|\|`, `??` | lazily evaluated, JS truthiness | F-Eval-Binary; F-Exc-Lazy |
@@ -110,15 +109,15 @@ Shape only. No resolution, no evaluation.
 | L5.5 | body scope | folds in the **defining** module's scope, parameters bound on top | F-Eval-CallLocal step 4 |
 | L5.6 | parameter defaults | folded in the callee's scope when the argument is `undefined` | F-Eval-CallLocal step 4 |
 | L5.7 | block body with no `return` | evaluates to `undefined`, as running would | F-Eval-CallLocal step 5 |
-| L5.8 | recursion bound | `MAX_FUNCTION_CALL_DEPTH = 32` on the expression path; a cross-file recursion ends at the engine's stack, caught as a fallback (#71) | F-Eval-CallLocal step 2; F-Depth |
+| L5.8 | recursion bound | `MAX_FUNCTION_CALL_DEPTH = 32` on the expression path; a cross-file recursion ends at the engine's stack, caught as a fallback | F-Eval-CallLocal step 2; F-Depth |
 | L5.9 | `leakedIdentity` | a call returning a live object the body produced records a taint edge; one merely passed through the arguments does not | F-CallLeak; F-Eval-CallLocal step 6 |
 | L5.10 | error re-anchoring | a failure inside a callee is re-thrown at the call site naming callee, file, position, reason | F-Eval-CallLocal step 7; F-Reason |
 | L5.11 | `params` bare-specifier case | the one recognized bare import: `@intentius/chant/params` resolves against `FoldSession.buildParams` | F-Import (params) |
-| L5.12 | `hasObjectIdentity` (added #14 read) | a captured value has identity when it is an object **or a function**; only those add to `liveSources` | F-Import (judgments.md) |
-| L5.13 | namespace import of a project file (added #14 read) | resolves to a synthetic plain object of the target's `exportedValues`; capture if any entry has identity | F-Namespace (judgments.md) |
-| L5.14 | namespace import of a package (added #14 read) | never resolved; the reason `new ns.Type(...)` is unreachable | F-Namespace (judgments.md), |
-| L5.15 | unresolved import never referenced (added #14 read) | does not force run; failure recorded for diagnostics only | F-Reference (judgments.md) |
-| L5.16 | same-file project-local functions (added #95, probed at chant-v0.71.0) | a top-level `function` declaration, exported or not, and a `const` bound to an arrow both fold when called; chant did this before the text said so | S-LocalFunction; F-Bind |
+| L5.12 | `hasObjectIdentity` | a captured value has identity when it is an object **or a function**; only those add to `liveSources` | F-Import (judgments.md) |
+| L5.13 | namespace import of a project file | resolves to a synthetic plain object of the target's `exportedValues`; capture if any entry has identity | F-Namespace (judgments.md) |
+| L5.14 | namespace import of a package | never resolved; the reason `new ns.Type(...)` is unreachable | F-Namespace (judgments.md), |
+| L5.15 | unresolved import never referenced | does not force run; failure recorded for diagnostics only | F-Reference (judgments.md) |
+| L5.16 | same-file project-local functions | a top-level `function` declaration, exported or not, and a `const` bound to an arrow both fold when called; chant did this before the text said so | S-LocalFunction; F-Bind |
 
 ## L6. Revival (`reviveFoldedValue`)
 
@@ -168,13 +167,13 @@ module is never imported.
 | L8.10 | `MAX_RESOLUTION_DEPTH` | a second bound, separate from L5.8 and L7.8 | F-Depth |
 | L8.11 | per-file fold memo | a file imported by many is folded **exactly once**; every referrer shares the result | F-Memo |
 | L8.12 | per-initializer-node memo | a composite call reached through several member accesses is invoked **exactly once**, "matching what actually running the file would do" | F-Count |
-| L8.13 | zero declarators after the gate (added #14 read) | `run("no foldable resource exports")`; a file must export something | F-NoExports (judgments.md) |
-| L8.14 | file inside chant's own module tree (added #14 read) | `run`; not project source | F-NotProject (judgments.md) |
-| L8.15 | composite-call result type (added #14 read) | must be a `CompositeInstance` or `Declarable`, else run | F-Call step 7 (judgments.md) |
-| L8.16 | destructure source (added #14 read) | must be a composite instance or indexable object | F-Declarator (judgments.md) |
-| L8.17 | a re-export is a capture (added #14 read) | `export { a } from "./g"` adds `g` to `liveSources` when the value has identity | F-Declarator (judgments.md) |
-| L8.19 | `applyResolvedValue` (added #110) | sets the export to whatever the invoked factory returned, unconditionally; the `isDeclarable \|\| isCompositeInstance` test after it only tallies entities for the fold line. There is no step-7 refusal in chant, which `1.6` wrote into F-Call | F-Call step 7 |
-| L8.18 | same-file construction pre-pass (added #68) | every top-level `new`-valued const constructed once, in source order, before any declarator; the exported-declarator loop reuses the instance rather than constructing a second one (`preresolveResourceConsts`, chant#1169) | F-Prebuild; F-Count |
+| L8.13 | zero declarators after the gate | `run("no foldable resource exports")`; a file must export something | F-NoExports (judgments.md) |
+| L8.14 | file inside chant's own module tree | `run`; not project source | F-NotProject (judgments.md) |
+| L8.15 | composite-call result type | must be a `CompositeInstance` or `Declarable`, else run | F-Call step 7 (judgments.md) |
+| L8.16 | destructure source | must be a composite instance or indexable object | F-Declarator (judgments.md) |
+| L8.17 | a re-export is a capture | `export { a } from "./g"` adds `g` to `liveSources` when the value has identity | F-Declarator (judgments.md) |
+| L8.19 | `applyResolvedValue` | sets the export to whatever the invoked factory returned, unconditionally; the `isDeclarable \|\| isCompositeInstance` test after it only tallies entities for the fold line. There is no step-7 refusal in chant, which `1.6` wrote into F-Call | F-Call step 7 |
+| L8.18 | same-file construction pre-pass | every top-level `new`-valued const constructed once, in source order, before any declarator; the exported-declarator loop reuses the instance rather than constructing a second one (`preresolveResourceConsts`, chant#1169) | F-Prebuild; F-Count |
 
 ## L9. Trust and isolation
 
@@ -196,18 +195,18 @@ module is never imported.
 | L10.3 | per-file decision line | `[fold:fold]` / `[fold:run] <reason>`, summarized without `--verbose` | F-Obs-Report |
 | L10.4 | `FoldError` | located, carries an EVL rule id, constructed with `stackTraceLimit = 0` | F-Reason |
 | L10.5 | one wording per rejection kind | shared message builders so two sites cannot drift | F-Obs-Messages |
-| L11.1 | `PostSynthContext.entities` (added #79) | every declared entity by name, the folded namespace after J3 | F-Rule-Input (rules.md) |
-| L11.2 | `PostSynthContext.outputs` (added #79) | the serialized output per lexicon, text | F-Rule-Input (rules.md) |
-| L11.3 | `PostSynthContext.docs` (added #79) | the outputs parsed once per build, cached (chant#975) | F-Rule-Input (rules.md) |
-| L11.4 | `PostSynthContext.env` (added #79) | the environment or stack name, so a policy may branch on it | F-Rule-Input (rules.md) |
-| L11.5 | `PostSynthDiagnostic` (added #79) | `checkId`, `severity`, `message`, an artifact-side `entity` or a missing-resource marker (chant#2113), never a source line | F-Rule-Finding (rules.md) |
-| L11.6 | severity configuration (added #79) | `lint.config` overrides a check's own severity | F-Rule-Finding (rules.md) |
-| L11.7 | project policies under `--sandbox` (added #79) | `loadPolicyChecks` refuses in-process while the sandbox is armed; checks run in the child (chant#1131) | F-Rule-Pure; F-Rule-Supply (rules.md) |
-| L11.8 | rule registry (added #79) | lexicon checks and project policies keyed by id; a duplicate id is a registry error | F-Rule-Supply (rules.md) |
-| L12.1 | `TypeScriptGenerator.generate(ir)` (added #80) | one generator interface behind `chant import`, `--from` live import and carve-out (`import/generator.ts`, `cli/commands/import.ts`, `import-live.ts`, `carve-emit.ts`); a lexicon supplies the generator | F-Val-Source |
-| L12.2 | `export const <id> = new <Class>({…})` (added #80) | the k8s generator's form per resource: the logical id is the binding, the class is resolved from the kind, nested property entities are constructors (`K8sGenerator.generate`, `emitProps`) | F-Val-Source |
-| L12.3 | `emitLiteral` (added #80) | scalars, arrays and objects emitted as literals; a key that is not an identifier is quoted | F-Val-Source |
-| L12.4 | k8s round-trip suite (added #80) | `roundtrip.test.ts` parses YAML and generates; `scripts/full-roundtrip.sh` re-serializes and compares resource count and kinds, not bytes, over kubernetes/examples at a 95% pass threshold | F-Val-Source |
+| L11.1 | `PostSynthContext.entities` | every declared entity by name, the folded namespace after J3 | F-Rule-Input (rules.md) |
+| L11.2 | `PostSynthContext.outputs` | the serialized output per lexicon, text | F-Rule-Input (rules.md) |
+| L11.3 | `PostSynthContext.docs` | the outputs parsed once per build, cached (chant#975) | F-Rule-Input (rules.md) |
+| L11.4 | `PostSynthContext.env` | the environment or stack name, so a policy may branch on it | F-Rule-Input (rules.md) |
+| L11.5 | `PostSynthDiagnostic` | `checkId`, `severity`, `message`, an artifact-side `entity` or a missing-resource marker (chant#2113), never a source line | F-Rule-Finding (rules.md) |
+| L11.6 | severity configuration | `lint.config` overrides a check's own severity | F-Rule-Finding (rules.md) |
+| L11.7 | project policies under `--sandbox` | `loadPolicyChecks` refuses in-process while the sandbox is armed; checks run in the child (chant#1131) | F-Rule-Pure; F-Rule-Supply (rules.md) |
+| L11.8 | rule registry | lexicon checks and project policies keyed by id; a duplicate id is a registry error | F-Rule-Supply (rules.md) |
+| L12.1 | `TypeScriptGenerator.generate(ir)` | one generator interface behind `chant import`, `--from` live import and carve-out (`import/generator.ts`, `cli/commands/import.ts`, `import-live.ts`, `carve-emit.ts`); a lexicon supplies the generator | F-Val-Source |
+| L12.2 | `export const <id> = new <Class>({…})` | the k8s generator's form per resource: the logical id is the binding, the class is resolved from the kind, nested property entities are constructors (`K8sGenerator.generate`, `emitProps`) | F-Val-Source |
+| L12.3 | `emitLiteral` | scalars, arrays and objects emitted as literals; a key that is not an identifier is quoted | F-Val-Source |
+| L12.4 | k8s round-trip suite | `roundtrip.test.ts` parses YAML and generates; `scripts/full-roundtrip.sh` re-serializes and compares resource count and kinds, not bytes, over kubernetes/examples at a 95% pass threshold | F-Val-Source |
 
 ---
 
@@ -216,12 +215,8 @@ module is never imported.
 **The rule for the column.** A row is *covered* only when a specific rule -
 `S-Template`, `F-Eval-Member step 4`, `F-Val-Fate`, governs what the row
 does. A citation of a whole file or judgment is not coverage. A partially
-covered row is GAP. There is no double counting. #44's gate checks that every
-cited identifier is defined in a spec file.
-
-The first version of this file broke that rule on fourteen rows and reported
-44 covered / 58 gaps; #45 corrected it to 32 / 67. After the #41 rewrite of
-`requirements.md`:
+covered row is GAP. There is no double counting, and the coverage gate checks
+that every cited identifier is defined in a spec file.
 
 | | Rows | Covered | GAP |
 |---|---|---|---|
@@ -240,32 +235,10 @@ The first version of this file broke that rule on fourteen rows and reported
 **Row identifiers are stable and append-only.** `L3.10` names one decision
 point forever; a new row in a layer takes the next number and nothing is ever
 renumbered. A row that turns out to be wrong is struck through with a note, not
-removed, so a citation of it stays resolvable. This is the same stability rule
-#6 gives rule identifiers, for the same reason: #44's gate cites these.
-
-**20 findings beyond the 14 the review already knew about.** They are marked
-`GAP (new)` above. The ones that change a requirement rather than adding one:
-
-- **L3.10**, property access on `null`/`undefined` returns `undefined` where
-  JavaScript throws. The mechanism does not inherit JS semantics wholesale, so
-  F5 cannot be discharged by saying "as JavaScript".
-- **L6.3**, `{__intrinsic}` is revived, not passed through. `requirements.md`
-  the first requirements draft stated the opposite. F6 is now answered. F-Val-Fate: **only `{__attrRef}` survives to
-  serialization**, and even that is rejected in a live-ref position (L6.8).
-- **L5.9**, identity leaks through project-local function calls, not only
-  through imports. The first taint description missed this; F-CallLeak carries it.
-- **L8.12**, a composite call reached through several member accesses is
-  invoked exactly once. Evaluation *count* is observable semantics, not an
-  optimization, and no requirement says so.
-- **L3.16**, five constructs that fold at a file's top level are refused inside
-  a folded function body. Admissibility is scope-dependent, which no requirement
-  currently allows for.
+removed, so a citation of it stays resolvable. Row identifiers are as stable as rule identifiers, and for the same reason:
+the coverage gate cites them.
 
 ## What this inventory does not cover
 
 `fold-import.ts` was read for decision points, not line by line end to end. The
-two regions the first version named as unread, the member-access and
-destructuring paths around `resolveLiveValue`, and `buildExternals`'s
-namespace-import handling, were read for #14 (J2) and produced rows
-L5.12–L5.15 and L8.13–L8.17. No known unread region remains at the
-decision-point level; #44's precondition is met.
+No known unread region remains at the decision-point level.

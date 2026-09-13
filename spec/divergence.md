@@ -1,7 +1,7 @@
 # Divergence between the shape classifier and the folder
 
-Normative draft (#17). One subset, two consumers with unequal information
-(R3). This file states the direction in which they may disagree as a claim
+Normative draft. One subset, two consumers with unequal information.
+This file states the direction in which they may disagree as a claim
 with a proof obligation, enumerates every known divergence, and states the
 two exceptions with the reason each is tolerated. Derived from
 `subset.ts`'s module doc and `findSubsetViolation`, and `fold()`, at
@@ -36,7 +36,7 @@ run" (`subset.ts` module doc, point 2c).
 every remaining disagreement is a *resolution* the classifier does not
 perform, enumerated below. And by fixture: one accepting and one rejecting
 fixture per row of F-Div, asserting the classifier's and the folder's verdicts
-side by side (#8, #24). chant's `subset-doc-parity.test.ts` is the precedent.
+side by side. chant's `subset-doc-parity.test.ts` is the precedent.
 
 ## F-Div (the divergences in the permitted direction)
 
@@ -46,7 +46,7 @@ Shape accepts; the folder may reject, because it resolves.
 |---|---|---|---|
 | F-Div-Ident | any bare identifier is valid | resolves in `consts` then `externals`; `process` is a pointed rejection | L2.3, L3.6, L3.7 |
 | F-Div-Tag | any tagged-template tag; interior opaque | tag is a registered, tag-foldable intrinsic; interior folds | L2.4 |
-| F-Div-Provenance | a registered helper *name* | the name is unbound or bound by an import from the host; a project binding is F-Eval-CallLocal's instead (`1.7`), any other falls back | L2.11 |
+| F-Div-Provenance | a registered helper *name* | the name is unbound or bound by an import from the host; a project binding is F-Eval-CallLocal's instead, any other falls back | L2.11 |
 | F-Div-SpreadType | a spread operand of valid shape | operand folds to an object (object spread) or array (array spread) | L3.4, L3.5 |
 | F-Div-SameFileNew | a bare identifier | if bound to a same-file `new`, only `externals` may answer, and F-Prebuild is what puts the instance there; a folder that cannot construct rejects rather than build a duplicate | L3.8 |
 | F-Div-Nullish | `a.b`, `a[k]` | the object does not fold to `null`/`undefined`; `?.` short-circuits instead (chant-v0.63.0) | L3.10, L3.21 |
@@ -81,7 +81,7 @@ plain call is the folder's own; without one, every plain call is a violation,
 including `Ref(bucket)` that the folder accepts (L2.12, L2.13). *Tolerated
 because:* the registry-less answer is the conservative one, it is a
 parameter rather than a guess, and the lint engine now threads the active
-lexicons' registry through (chant#1106) so the exception is closed in
+lexicons' registry through so the exception is closed in
 practice for `chant lint` while remaining true of the classifier in
 isolation.
 
@@ -99,15 +99,15 @@ that go the other way are named, bounded, and justified.
 
 ## Rationale
 
-Non-normative. The reasoning that motivated each rule, carried over from the retired `requirements.md` (#46). Keyed by the rule(s) each note supports.
+Non-normative. The reasoning that motivated each rule, carried over from the retired `requirements.md`. Keyed by the rule(s) each note supports.
 
-**F-Direction** *(was R3. Membership is decided once, by a classifier permitted to err in one direction only)*
+**F-Direction** *(Membership is decided once, by a classifier permitted to err in one direction only)*
 
 The subset has exactly one definition: `findSubsetViolation` (`subset.ts:289`),
 shared by the folder and by the lint rules EVL001/EVL003 so the linted subset
 and the folded subset cannot drift (L2.*).
 
-**F-Div-*** *(was R3.1. The direction is the requirement, not the agreement)*
+**F-Div-*** *(The direction is the requirement, not the agreement)*
 
 The two consumers have different information. A lint pass has no binding
 resolver and no lexicon registry; the folder has both. The shape-only
@@ -118,7 +118,7 @@ spread-source runtime type (L3.4, L3.5), a bare identifier bound to a
 same-file construction (L3.8), and, since chant-v0.63.0, a member read whose
 object resolves to `null`/`undefined` (L3.10; shape-valid, folder refuses).
 
-**F-Exc-Lazy, F-Exc-Registry** *(was R3.2. The two exceptions must be stated, not tidied away)*
+**F-Exc-Lazy, F-Exc-Registry** *(The two exceptions must be stated, not tidied away)*
 
 1. **Short-circuit laziness** (L2.9, L3.13). The folder evaluates `&&`, `||`,
    `??` and the conditional lazily; the classifier requires every branch to be
