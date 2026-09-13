@@ -9,10 +9,10 @@ aliases: ["/reference/overview/"]
 implementation of the specification in `spec/`. It is a workspace package in
 this repository, published to npm at the specification's version.
 
-It is deliberately partial, and the partiality is the point of
-[what it does not do](/typescript-as-data/spec/reference/limits/), which summarises
-`packages/reference/CAVEATS.md`. A reader who assumes the reference is complete
-will misread the conformance numbers.
+It is deliberately partial.
+[What it does not do](/typescript-as-data/spec/reference/limits/) says where,
+summarising `packages/reference/CAVEATS.md`. A reader who assumes the
+reference is complete will misread the conformance numbers.
 
 ## What it covers
 
