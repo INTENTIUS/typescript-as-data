@@ -6,8 +6,9 @@ who supplies it. The identifiers are `F-Rule-*` (#79). This is neither a
 language for writing checks nor any particular check; those are host
 vocabulary, a lexicon's or a governance tool's. What is specified is the
 guarantee the fold provides and nothing else does. A check sees the values
-of every file in the build before anything is emitted, so the check at the
-keystroke is the check in CI, over real data and across resources.
+of every file in the build before anything is emitted and without running
+any of them, so it runs wherever the fold runs and gives the answer a run
+would have given.
 
 Derived from chant's post-synthesis engine (`packages/core/src/lint/post-synth.ts`),
 its policy layer (`lint/policy.ts`), and its severity configuration
@@ -59,8 +60,8 @@ name. A configured severity may override the rule's own (L11.6).
 For conforming source, a rule's findings are the same whether the build
 folded the file or ran it. This follows from the objective (judgments.md)
 and from F-Rule-Pure: the inputs are equal on both paths and the rule is a
-function of them. It is what "the check at the keystroke is the check in
-CI" means, stated as a property.
+function of them. It is what lets a check run before the build and mean the
+same thing as one run after it, stated as a property.
 
 ## F-Rule-Supply (who supplies a rule)
 

@@ -5,7 +5,7 @@ disableKinds = ["taxonomy", "term"]
 
 [params]
   repo = "https://github.com/INTENTIUS/typescript-as-data"
-  description = "TypeScript in place of YAML. A file that is data is typed JSON, and it means the same thing whether it is folded or run."
+  description = "TypeScript in place of YAML. A file that is data is typed JSON, and the build reads it without executing it."
 
 # The header's fixed entries. Consumers are not listed here: the header
 # renders a "For your platform" menu from data/consumers.yaml, so a new
