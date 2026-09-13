@@ -1,0 +1,53 @@
+{{- /* The in-browser fold: the Rust evaluator as WebAssembly, fetched once from static/tsad-eval/ (built by scripts/build-wasm.sh), called through its four exports. */ -}}
+<div class="fold-demo">
+<textarea id="fold-source" rows="14" spellcheck="false">const owner = "platform";
+const base = { hasWiki: false, allowSquashMerge: true };
+
+export const policy = {
+  orgs: {
+    "my-org": {
+      repos: {
+        api: { ...base, topics: ["service", "api"], owner },
+        web: { ...base, topics: ["site"], owner: `${owner}-web` },
+      },
+    },
+  },
+};
+</textarea>
+<p><button id="fold-run" type="button">Fold</button> <span id="fold-status">Loading the evaluator once.</span></p>
+<pre id="fold-output"></pre>
+</div>
+
+<script type="module">
+const status = document.getElementById("fold-status");
+const output = document.getElementById("fold-output");
+const source = document.getElementById("fold-source");
+const button = document.getElementById("fold-run");
+let call;
+async function load() {
+  const res = await fetch("/typescript-as-data/tsad-eval/tsad-eval.wasm");
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  const { instance } = await WebAssembly.instantiate(bytes, {});
+  const ex = instance.exports;
+  call = (req) => {
+    const enc = new TextEncoder().encode(JSON.stringify(req));
+    const ptr = ex.tsad_alloc(enc.length);
+    new Uint8Array(ex.memory.buffer, ptr, enc.length).set(enc);
+    const out = ex.tsad_eval(ptr, enc.length);
+    ex.tsad_free(ptr, enc.length);
+    const len = new DataView(ex.memory.buffer).getUint32(out, true);
+    const text = new TextDecoder().decode(new Uint8Array(ex.memory.buffer, out + 4, len));
+    ex.tsad_free(out, len + 4);
+    return JSON.parse(text);
+  };
+  const v = call({ op: "version" });
+  status.textContent = `${v.name}, spec ${v.specVersion}, profile ${v.profile}, ${WebAssembly.Module.imports(new WebAssembly.Module(bytes)).length} imports.`;
+}
+function fold() {
+  if (!call) return;
+  const r = call({ op: "foldProject", files: { "policy.ts": source.value }, host: {} });
+  output.textContent = JSON.stringify(r.verdicts["policy.ts"], null, 2);
+}
+button.addEventListener("click", fold);
+load().then(fold).catch((e) => { status.textContent = `The evaluator did not load: ${e.message}`; });
+</script>

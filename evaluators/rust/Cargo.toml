@@ -5,6 +5,14 @@ edition = "2021"
 description = "An evaluator for the typescript-as-data data-host profile, written from the specification, with no JavaScript runtime"
 license = "MIT"
 
+[lib]
+name = "tsad_eval"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "tsad-eval"
+path = "src/main.rs"
+
 [dependencies]
 oxc_allocator = "0.149"
 oxc_ast = "0.149"
@@ -15,3 +23,6 @@ serde_json = { version = "1", features = ["preserve_order", "arbitrary_precision
 
 [profile.release]
 opt-level = 2
+# The wasm build is what these two buy: a smaller module and no unwinding tables.
+lto = true
+panic = "abort"

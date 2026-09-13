@@ -51,6 +51,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.98.1
+          targets: wasm32-unknown-unknown
       - uses: actions/cache@v5
         with:
           path: |
@@ -58,15 +59,16 @@ jobs:
             ~/.cargo/git
             evaluators/rust/target
           key: rust-${{ runner.os }}-${{ hashFiles('evaluators/rust/Cargo.lock') }}
-      - name: Build and unit-test the evaluator
+      - name: Build and unit-test the evaluator, native and wasm
         working-directory: evaluators/rust
         run: |
           cargo build --release --locked
           cargo test --release --locked
+          cargo build --release --locked --target wasm32-unknown-unknown
       - name: Install dependencies
         run: npm install
-      - name: The data-host fixtures and agreement with the reference
-        run: npx vitest run packages/conformance/src/rust-agreement.test.ts
+      - name: The data-host fixtures and agreement with the reference, in both forms
+        run: npx vitest run packages/conformance/src/rust-agreement.test.ts packages/conformance/src/rust-wasm-agreement.test.ts
 
   docs-build:
     runs-on: ubuntu-latest

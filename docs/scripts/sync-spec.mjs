@@ -7,7 +7,7 @@
 // Anchors: every heading that starts with a rule or row identifier
 // (R3.3, R-spec.3, L3.10) gets an explicit <a id> so citations are stable
 // across heading-text edits.
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { statSync, readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -93,6 +93,9 @@ try {
   if (rev && totals) corpus = { corpusVersion: rev[1], revision: rev[2], entries: +rev[3], files: +totals[1], comparable: +totals[2], agreed: +totals[3], bothFold: +totals[4], noHost: +totals[5], noInvocation: +totals[6], chantDeclares: declared ? declared[1] : null, dataHost };
 } catch {}
 mkdirSync(dataDir, { recursive: true });
-const figures = { specVersion, chantPin, referenceVersion, conformanceVersion, rulesWithFixture: cov ? +cov[1] : null, rulesTotal: cov ? +cov[2] : null, fixtures: fixtureDirs.length, wholeBuildFixtures: wholeBuild, corpus };
+// The evaluator's WebAssembly module, when scripts/build-wasm.sh has run: its size in kilobytes, so the page that loads it can say what it is asking the reader to download.
+let wasmKB = null;
+try { wasmKB = Math.round(statSync(join(root, "docs", "static", "tsad-eval", "tsad-eval.wasm")).size / 1024); } catch {}
+const figures = { specVersion, chantPin, referenceVersion, conformanceVersion, rulesWithFixture: cov ? +cov[1] : null, rulesTotal: cov ? +cov[2] : null, fixtures: fixtureDirs.length, wholeBuildFixtures: wholeBuild, corpus, wasmKB };
 writeFileSync(join(dataDir, "figures.json"), JSON.stringify(figures, null, 2) + "\n");
 console.log("figures.json:", JSON.stringify(figures));

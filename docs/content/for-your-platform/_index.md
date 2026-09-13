@@ -27,7 +27,23 @@ The conformance suite, `@intentius/tsad-conformance`: the fixtures at the spec v
 
 ## Evaluators in other languages
 
-The reference is TypeScript. `tsad-eval`, in [`evaluators/rust`](https://github.com/INTENTIUS/typescript-as-data/tree/main/evaluators/rust), is the `data-host` profile written from the text in Rust on oxc with no JavaScript runtime: it passes every fixture tagged for the profile, agrees with the reference on each, and is a column in the corpus cross-check. As WASM it would embed without a subprocess in Go and Python, in the browser and in an editor. It is not "rust-as-data"; the language a user writes is TypeScript whatever evaluates it.
+The reference is TypeScript. `tsad-eval`, in [`evaluators/rust`](https://github.com/INTENTIUS/typescript-as-data/tree/main/evaluators/rust), is the `data-host` profile written from the text in Rust on oxc with no JavaScript runtime: it passes every fixture tagged for the profile, agrees with the reference on each, and is a column in the corpus cross-check. It is not "rust-as-data"; the language a user writes is TypeScript whatever evaluates it.
+
+It comes in two forms from one crate. The binary speaks JSON on stdin and stdout. The WebAssembly module is the same code compiled for `wasm32-unknown-unknown`, with four exports and no imports, so it instantiates with an empty import object in a browser, in Node with no subprocess, in an editor, or in Go through wazero. [This page folds a file with it](/typescript-as-data/try-it/in-the-browser/). The calling convention is a request buffer in and an answer buffer out:
+
+```js
+const { instance } = await WebAssembly.instantiate(bytes, {});
+const { memory, tsad_alloc, tsad_eval, tsad_free } = instance.exports;
+const req = new TextEncoder().encode(JSON.stringify({ op: "foldProject", files, host: {} }));
+const ptr = tsad_alloc(req.length);
+new Uint8Array(memory.buffer, ptr, req.length).set(req);
+const out = tsad_eval(ptr, req.length);
+const len = new DataView(memory.buffer).getUint32(out, true);
+const answer = JSON.parse(new TextDecoder().decode(new Uint8Array(memory.buffer, out + 4, len)));
+tsad_free(ptr, req.length); tsad_free(out, len + 4);
+```
+
+In CI the module passes the same fixtures as the binary and agrees with it answer for answer, in `packages/conformance/src/rust-wasm-agreement.test.ts`, so embedding it gets you what the cross-check measured.
 
 ## Who has done it
 
