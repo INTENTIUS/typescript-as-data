@@ -9,9 +9,9 @@ run-name: publish — ${{ github.ref_name }}
 # installs and exercises both packages from a clean directory before it
 # publishes either, so a tag on a commit that would not install cannot ship.
 #
-# Provenance comes from npm's trusted publishing (id-token). Until the two
-# packages have a trusted-publisher record on npm, NPM_TOKEN is the fallback,
-# the same shape chant's publish workflow uses.
+# Provenance and auth come from npm's trusted publishing (id-token): both
+# packages have a trusted-publisher record naming this workflow, and there is
+# no NPM_TOKEN in this repository. The same shape as chant's publish workflow.
 on:
   push:
     tags: ['tsad-v*']
@@ -61,14 +61,15 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-          registry-url: 'https://registry.npmjs.org'
+          # Deliberately no registry-url: with it, setup-node writes an .npmrc
+          # carrying `_authToken=${NODE_AUTH_TOKEN}`, and an empty or
+          # placeholder token is sent as auth, so npm answers ENEEDAUTH
+          # instead of falling through to OIDC. Without an .npmrc, npm publish
+          # sees the id-token environment and exchanges it for a short-lived
+          # token through the trusted-publisher record.
       - run: npm install
       # conformance first: reference depends on it.
       - name: Publish @intentius/tsad-conformance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --workspace packages/conformance --provenance --access public
       - name: Publish @intentius/tsad-reference
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --workspace packages/reference --provenance --access public
