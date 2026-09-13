@@ -1,6 +1,6 @@
 ---
 title: "typescript-as-data"
-description: "A specification for building JSON and YAML compilers from TypeScript."
+description: "A specification for JSON and YAML compilers."
 ---
 
 ## A policy in YAML and in TypeScript
