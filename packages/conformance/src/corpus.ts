@@ -22,7 +22,7 @@
  * `classify`'s subject, below, and it is most of this file.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { relative, resolve, dirname, posix } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -30,7 +30,7 @@ import * as ts from "typescript";
 import { foldProject as chantFoldProject } from "@intentius/chant";
 import { findInfraFiles } from "@intentius/chant/discovery/files";
 import { FOLDABLE_AUTHORING_HELPERS, isChantOwnedSpecifier } from "@intentius/chant/fold/foldable-helpers";
-import { foldProject as referenceFoldProject, type Host } from "@intentius/tsad-reference";
+import { foldProject as referenceFoldProject, findFactoryViolation, type Host } from "@intentius/tsad-reference";
 import type { ConformanceAdapter } from "./adapter.js";
 import type { ConformanceHost } from "./host.js";
 import { rustAdapter, rustEvaluatorPath } from "./adapters/rust.js";
@@ -56,6 +56,8 @@ export interface CorpusEntry {
   readonly lexicons: readonly string[];
   /** The entry's build parameters, resolved the way the CLI resolves them, so a file reading `params.<name>` folds on chant's side. */
   readonly buildParams: Readonly<Record<string, string | number | boolean>>;
+  /** Directories under `srcDir` that are entries of their own (a nested `chant.config.ts`), so no file is counted twice. */
+  readonly exclude?: readonly string[];
 }
 
 export interface ChantCheckout {
@@ -110,6 +112,87 @@ export async function discoverCorpus(checkout: ChantCheckout): Promise<CorpusEnt
       buildParams: Object.fromEntries((await mod.entryBuildParams(e)).map((p) => [p.name, p.value])),
     })),
   );
+}
+
+// ── codebases nobody here maintains (#129) ──────────────────────────────────
+
+/** One checkout from `corpus-external.json`, and what is on disk for it. */
+export interface ExternalCheckout {
+  readonly name: string;
+  readonly repo: string;
+  /** The revision the manifest pins. */
+  readonly rev: string;
+  readonly note?: string;
+  /** Disagreements triaged to an issue, by entry-relative file: excused from agreement by name and asserted to persist, so an excuse cannot outlive its cause. */
+  readonly disagreements?: Readonly<Record<string, string>>;
+  readonly root: string;
+  /** The revision on disk, or `missing` when the checkout is absent. */
+  readonly headRevision: string;
+}
+
+const EXTERNAL_MANIFEST = resolve(REPO_ROOT, "packages", "conformance", "corpus-external.json");
+
+/**
+ * The external checkouts `TSAD_CORPUS_EXTERNAL` holds, one per manifest
+ * entry, or `undefined` when the variable is unset. A missing checkout is
+ * returned with `headRevision: "missing"` rather than dropped, so the test
+ * can say which one `scripts/fetch-corpus-external.sh` has to fetch.
+ */
+export function findExternalCheckouts(): ExternalCheckout[] | undefined {
+  if (!process.env.TSAD_CORPUS_EXTERNAL) return undefined;
+  const dir = resolve(REPO_ROOT, process.env.TSAD_CORPUS_EXTERNAL);
+  const manifest = JSON.parse(readFileSync(EXTERNAL_MANIFEST, "utf8")) as { checkouts: Omit<ExternalCheckout, "root" | "headRevision">[] };
+  return manifest.checkouts.map((c) => {
+    const root = resolve(dir, c.name);
+    let headRevision = "missing";
+    try { headRevision = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(); } catch { /* absent */ }
+    return { ...c, root, headRevision };
+  });
+}
+
+/**
+ * Every directory in an external checkout that holds a `chant.config.ts` is
+ * one entry, the way `chant build` would scope it: its source directory is
+ * the config's `sourceDir`, else `src/`, else the directory itself. Lexicons
+ * come from the project's own config through chant's resolver, the intrinsic
+ * registry from the chant checkout's tables for those lexicons, and the build
+ * parameters the way the CLI resolves them, so both implementations see the
+ * host a real build of that project would have at the pinned chant.
+ */
+export async function discoverExternal(checkout: ChantCheckout, ext: ExternalCheckout): Promise<CorpusEntry[]> {
+  const mod = (await import(/* @vite-ignore */ resolve(checkout.root, "examples", "differential-corpus.ts"))) as {
+    INTRINSICS_BY_LEXICON: Record<string, readonly ChantIntrinsic[]>;
+    entryBuildParams(entry: unknown): Promise<readonly { name: string; value: string | number | boolean }[]>;
+  };
+  const { resolveProjectLexicons } = await import("@intentius/chant/cli");
+  const { loadChantConfigUpward } = await import("@intentius/chant/config");
+  const dirs: string[] = [];
+  const walk = (d: string) => {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      if (!e.isDirectory() || e.name === "node_modules" || e.name.startsWith(".")) continue;
+      const p = resolve(d, e.name);
+      if (existsSync(resolve(p, "chant.config.ts"))) dirs.push(p);
+      walk(p);
+    }
+  };
+  if (existsSync(resolve(ext.root, "chant.config.ts"))) dirs.push(ext.root);
+  walk(ext.root);
+  const scoped: { dir: string; srcDir: string }[] = [];
+  for (const dir of dirs.sort()) {
+    const { config } = (await loadChantConfigUpward(dir)) as { config: { sourceDir?: string } };
+    const candidates = [config.sourceDir ? resolve(dir, config.sourceDir) : undefined, resolve(dir, "src"), dir].filter((c): c is string => !!c && existsSync(c));
+    scoped.push({ dir, srcDir: candidates[0] });
+  }
+  const entries: CorpusEntry[] = [];
+  for (const { dir, srcDir } of scoped) {
+    const lexicons = await resolveProjectLexicons(srcDir);
+    const rel = relative(ext.root, dir).split("\\").join("/");
+    const exclude = scoped.filter((o) => o.srcDir !== srcDir && o.srcDir.startsWith(srcDir + "/")).map((o) => o.srcDir);
+    const base = { name: `${ext.name}/${rel || "."}`, srcDir, intrinsics: lexicons.flatMap((n) => mod.INTRINSICS_BY_LEXICON[n] ?? []), lexicons, exclude };
+    const buildParams = Object.fromEntries((await mod.entryBuildParams({ ...base, buildParams: {} })).map((p) => [p.name, p.value]));
+    entries.push({ ...base, buildParams });
+  }
+  return entries;
 }
 
 // ── the host ────────────────────────────────────────────────────────────────
@@ -186,15 +269,26 @@ export type Side = "fold" | "run";
  */
 export type Limit =
   /** The reference has no bindings for a package it cannot load (#20 is not finished). */
-  "host";
+  | "host"
+  /**
+   * A declarator calls a project export that is neither a function the file
+   * declares (F-Call step 2, folded or refused by F-Eval-CallLocal) nor an
+   * interpretable composite (step 4): a `Composite(fn, …)` whose factory is
+   * outside S-FactoryBody, or a const holding a value made at run time. In
+   * open mode step 6 imports the module and invokes it, which chant does and
+   * the reference never does (`packages/reference/CAVEATS.md`). Decided from
+   * syntax: the export's declaration in the file the import names (#129).
+   */
+  | "invocation";
 
 /**
  * Both limits disarm the reference, and a limit can only make its own side
  * refuse more. Two chant-side limits used to sit here, for a lexicon list and
  * build parameters chant's entry could not be given; chant-v0.71.0 takes both
- * (chant#2422) and they are gone (#96).
+ * (chant#2422) and they are gone (#96). `invocation` arrived with the first
+ * codebase nobody here maintains (#129); chant's own examples never hit it.
  */
-export const LIMIT_SIDE: Readonly<Record<Limit, "reference">> = { host: "reference" };
+export const LIMIT_SIDE: Readonly<Record<Limit, "reference">> = { host: "reference", invocation: "reference" };
 
 /** The data-host column of one file: the reference and the Rust evaluator, both in `data-host`. */
 export interface DataHostComparison {
@@ -393,11 +487,119 @@ function compareData(a: unknown, b: unknown): { values: "equal" | "differ" | "no
   return { values: "differ", valuesDiff: `at ${i}: chant …${at(left)}… reference …${at(right)}…` };
 }
 
+/** A relative specifier resolved on disk the way the reference resolves it against its key set: as written, `.ts`, `.js` rewritten to `.ts`, or a directory's `index.ts`. */
+function resolveOnDisk(fromAbs: string, spec: string): string | undefined {
+  const base = resolve(dirname(fromAbs), spec);
+  for (const cand of [base, `${base}.ts`, base.replace(/\.js$/, ".ts"), resolve(base, "index.ts")]) {
+    try { if (statSync(cand).isFile()) return cand; } catch { /* not there */ }
+  }
+  return undefined;
+}
+
+/**
+ * The entry's files and every project file they reach by relative import,
+ * transitively, the way a build of the entry reaches them (#129): a stack
+ * inside a larger project imports its composites and helpers from beside it.
+ * Keys are relative to `srcDir`, so a file outside it starts with `../`.
+ */
+function closeOverImports(srcDir: string, entryPaths: readonly string[]): Map<string, string> {
+  const keyOf = (abs: string) => relative(srcDir, abs).split("\\").join("/");
+  const sources = new Map<string, string>();
+  const queue = [...entryPaths];
+  while (queue.length) {
+    const abs = queue.shift()!;
+    const key = keyOf(abs);
+    if (sources.has(key)) continue;
+    const source = readFileSync(abs, "utf8");
+    sources.set(key, source);
+    for (const spec of specifiersOf(source, key).project) {
+      const target = resolveOnDisk(abs, spec);
+      if (target && !sources.has(keyOf(target))) queue.push(target);
+    }
+  }
+  return sources;
+}
+
+/**
+ * The `invocation` seed, from syntax alone: a declarator whose call, reached
+ * directly, through a member read or through a const alias (F-Declarator),
+ * names an import from a project file, where that file's export of the name
+ * is not a function it declares (a declaration or a const bound to an arrow,
+ * which F-Call step 2 routes to F-Eval-CallLocal whatever the body holds) and
+ * not an interpretable composite (step 4). What is left is step 6's case in
+ * open mode: a `Composite(fn, …)` whose factory violates S-FactoryBody, or a
+ * const bound to something made at run time.
+ */
+function invocationSeed(sources: ReadonlyMap<string, string>, entryKeys: ReadonlySet<string>): Set<string> {
+  const keys = new Set(sources.keys());
+  const parsed = new Map<string, ts.SourceFile>();
+  const sf = (key: string) => { let f = parsed.get(key); if (!f) { f = ts.createSourceFile(key, sources.get(key)!, ts.ScriptTarget.Latest, true); parsed.set(key, f); } return f; };
+  const unwrap = (e: ts.Expression): ts.Expression =>
+    ts.isParenthesizedExpression(e) || ts.isAsExpression(e) || ts.isSatisfiesExpression(e) || ts.isNonNullExpression(e) ? unwrap(e.expression) : e;
+  const isFn = (e: ts.Expression) => ts.isArrowFunction(e) || ts.isFunctionExpression(e);
+  /** Whether `key` exports `name` as something F-Call step 6 would invoke: not a declared function, not an interpretable composite. */
+  const invocable = (key: string, name: string): boolean => {
+    for (const st of sf(key).statements) {
+      const exported = ts.canHaveModifiers(st) ? (ts.getModifiers(st)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false) : false;
+      if (!exported) continue;
+      if (ts.isFunctionDeclaration(st) && st.name?.text === name) return false;
+      if (ts.isVariableStatement(st)) {
+        for (const d of st.declarationList.declarations) {
+          if (!ts.isIdentifier(d.name) || d.name.text !== name || !d.initializer) continue;
+          const init = unwrap(d.initializer);
+          if (isFn(init)) return false;
+          if (ts.isCallExpression(init) && ts.isIdentifier(init.expression) && init.expression.text === "Composite") {
+            const factory = init.arguments[0] ? unwrap(init.arguments[0]) : undefined;
+            return !factory || !isFn(factory) || findFactoryViolation(factory) !== undefined;
+          }
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+  const seed = new Set<string>();
+  for (const key of entryKeys) {
+    const file = sf(key);
+    const imports = new Map<string, { target: string; name: string }>();
+    const consts = new Map<string, ts.Expression>();
+    for (const st of file.statements) {
+      if (ts.isImportDeclaration(st) && ts.isStringLiteral(st.moduleSpecifier) && isProjectSpecifier(st.moduleSpecifier.text)) {
+        const target = resolveKey(key, st.moduleSpecifier.text, keys);
+        const named = st.importClause?.namedBindings;
+        if (target && named && ts.isNamedImports(named)) for (const el of named.elements) imports.set(el.name.text, { target, name: (el.propertyName ?? el.name).text });
+      }
+      if (ts.isVariableStatement(st) && (st.declarationList.flags & ts.NodeFlags.Const) !== 0) {
+        for (const d of st.declarationList.declarations) if (ts.isIdentifier(d.name) && d.initializer) consts.set(d.name.text, d.initializer);
+      }
+    }
+    const callee = (e: ts.Expression, seen = new Set<string>()): string | undefined => {
+      const inner = unwrap(e);
+      if (ts.isPropertyAccessExpression(inner) || ts.isElementAccessExpression(inner)) return callee(inner.expression, seen);
+      if (ts.isCallExpression(inner) && ts.isIdentifier(inner.expression)) return inner.expression.text;
+      if (ts.isIdentifier(inner) && consts.has(inner.text) && !seen.has(inner.text)) { seen.add(inner.text); return callee(consts.get(inner.text)!, seen); }
+      return undefined;
+    };
+    for (const st of file.statements) {
+      if (!ts.isVariableStatement(st) || !ts.getModifiers(st)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)) continue;
+      for (const d of st.declarationList.declarations) {
+        if (!d.initializer) continue;
+        const c = callee(d.initializer);
+        const bound = c ? imports.get(c) : undefined;
+        if (bound && !consts.has(c!) && invocable(bound.target, bound.name)) seed.add(key);
+      }
+    }
+  }
+  return seed;
+}
+
 /** Run one corpus entry through both implementations and classify every file. */
 export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry): Promise<EntryReport> {
-  const paths = await findInfraFiles(entry.srcDir);
+  const paths = (await findInfraFiles(entry.srcDir)).filter((p) => !(entry.exclude ?? []).some((x) => p.startsWith(x + "/")));
   const keyOf = (abs: string) => relative(entry.srcDir, abs).split("\\").join("/");
-  const sources = new Map(paths.map((p) => [keyOf(p), readFileSync(p, "utf8")]));
+  // Both implementations see what a build sees: the entry's files and the project files they import (#129).
+  const sources = closeOverImports(entry.srcDir, paths);
+  const entryKeys = new Set(paths.map(keyOf));
 
   const host = await buildHost(checkout, entry, sources);
   const chant = await chantFoldProject(paths, entry.intrinsics as never, { lexicons: entry.lexicons, buildParams: entry.buildParams });
@@ -409,6 +611,7 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
     if (bare.some((s) => !isChantOwnedSpecifier(s) || host.unloadable.has(s))) hostSeed.add(key);
   }
   const hostLimited = spread(hostSeed, sources, reference.taintSource);
+  const invocationLimited = spread(invocationSeed(sources, entryKeys), sources, reference.taintSource);
 
   // The data-host column: the same host as a description, no code in it.
   const description: Host = { profile: "data-host", intrinsics: host.intrinsics, helpers: [], ownedSpecifierPrefixes: host.ownedSpecifierPrefixes, values: new Map() };
@@ -435,7 +638,7 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
     const rv = reference.verdicts.get(file);
     const chantSide: Side = cv?.verdict === "fold" ? "fold" : "run";
     const referenceSide: Side = rv?.kind === "fold" ? "fold" : "run";
-    const limit: Limit | undefined = hostLimited.has(file) ? "host" : undefined;
+    const limit: Limit | undefined = hostLimited.has(file) ? "host" : invocationLimited.has(file) ? "invocation" : undefined;
     const base: FileComparison = {
       file,
       chant: chantSide,
@@ -486,7 +689,7 @@ export interface CorpusSummary {
 
 export function summarize(reports: readonly EntryReport[]): CorpusSummary {
   let files = 0, comparable = 0, comparableAgreed = 0, comparableBothFold = 0, comparableValuesNotData = 0;
-  const limited: Record<Limit, number> = { host: 0 };
+  const limited: Record<Limit, number> = { host: 0, invocation: 0 };
   const disagreements: Disagreement[] = [];
   const referenceMorePermissive: Disagreement[] = [];
   let dhFiles = 0, dhAgreed = 0, dhBothFold = 0;
@@ -515,16 +718,21 @@ export function summarize(reports: readonly EntryReport[]): CorpusSummary {
 }
 
 /** The committed evidence artifact. Numbers here are produced by the run, never typed in. */
+/** One external checkout's run (#129): its rows sit beside chant's corpus and never inside its totals. */
+export interface ExternalRun { readonly checkout: ExternalCheckout; readonly summary: CorpusSummary; readonly reports: readonly EntryReport[] }
+
 export function renderCorpusReport(
   checkout: ChantCheckout,
   engine: { name: string; specVersion: string },
   summary: CorpusSummary,
   reports: readonly EntryReport[],
+  external: readonly ExternalRun[] = [],
 ): string {
-  const rows = reports.map((r) => {
+  const row = (r: EntryReport) => {
     const s = summarize([r]);
-    return `| \`${r.name}\` | ${r.files} | ${s.comparable} | ${s.comparableAgreed} | ${s.limited.host} |`;
-  });
+    return `| \`${r.name}\` | ${r.files} | ${s.comparable} | ${s.comparableAgreed} | ${s.limited.host} | ${s.limited.invocation} |`;
+  };
+  const rows = [...reports.map(row), ...external.flatMap((x) => x.reports.map(row))];
   const line = (d: Disagreement) =>
     `- \`${d.entry}/${d.file}\`: chant ${d.chant}, reference ${d.reference}${d.values ? `, values ${d.values}` : ""}${d.valuesDiff ? ` (${d.valuesDiff})` : ""}` +
     `${d.referenceReason ? ` — reference ${d.referenceRule}: ${d.referenceReason}` : ""}` +
@@ -539,12 +747,12 @@ export function renderCorpusReport(
     "",
     "## Totals",
     "",
-    "| Files | Comparable | Agreed | Both fold | No host |",
-    "|---|---|---|---|---|",
+    "| Files | Comparable | Agreed | Both fold | No host | No invocation |",
+    "|---|---|---|---|---|---|",
     `| ${summary.files} | ${summary.comparable} | ${summary.comparableAgreed} | ${summary.comparableBothFold} |` +
-      ` ${summary.limited.host} |`,
+      ` ${summary.limited.host} | ${summary.limited.invocation} |`,
     "",
-    "The one limit disarms the reference. chant is given the entry's lexicons and build parameters, the inputs a real build has.",
+    "Both limits disarm the reference: a package its host could not load, and a project function a declarator would invoke in open mode (F-Call step 6), which the reference never does. chant is given the entry's lexicons and build parameters, the inputs a real build has.",
     "",
     `Of the comparable files both implementations folded, ${summary.comparableValuesNotData} held something that is not data on one side or the other, so only the verdict was compared there.`,
     "",
@@ -572,10 +780,29 @@ export function renderCorpusReport(
       summary.dataHost.disagreements.length === 0 ? "No disagreements." : summary.dataHost.disagreements.map((d) => `- \`${d.entry}/${d.file}\`: reference ${d.dataHost!.reference}, evaluator ${d.dataHost!.rust}${d.dataHost!.diff ? ` (${d.dataHost!.diff})` : ""}`).join("\n"),
       "",
     ] : []),
+    ...(external.length ? [
+      "## Codebases nobody here maintains",
+      "",
+      "Read at a pinned revision by `scripts/fetch-corpus-external.sh` from `corpus-external.json` (#129), folded with the host a build of that project would have at the pinned chant, and kept out of the totals above.",
+      "",
+      "| Checkout | Revision | Entries | Files | Comparable | Agreed | Both fold | No host | No invocation |",
+      "|---|---|---|---|---|---|---|---|---|",
+      ...external.map((x) => `| \`${x.checkout.name}\` | \`${x.checkout.headRevision.slice(0, 8)}\` | ${x.summary.entries} | ${x.summary.files} | ${x.summary.comparable} | ${x.summary.comparableAgreed} | ${x.summary.comparableBothFold} | ${x.summary.limited.host} | ${x.summary.limited.invocation} |`),
+      "",
+      ...external.flatMap((x) => [
+        `### \`${x.checkout.name}\``,
+        "",
+        x.checkout.note ?? "",
+        "",
+        x.summary.disagreements.length === 0 ? "No disagreements inside the comparable set." : x.summary.disagreements.map((d) => `${line(d)}${x.checkout.disagreements?.[`${d.entry}/${d.file}`] ? ` — triaged: ${x.checkout.disagreements[`${d.entry}/${d.file}`]}` : ""}`).join("\n"),
+        ...(x.summary.referenceMorePermissive.length ? ["", "Reference folds where chant runs:", "", x.summary.referenceMorePermissive.map(line).join("\n")] : []),
+        "",
+      ]),
+    ] : []),
     "## Per entry",
     "",
-    "| Entry | Files | Comparable | Agreed | No host |",
-    "|---|---|---|---|---|",
+    "| Entry | Files | Comparable | Agreed | No host | No invocation |",
+    "|---|---|---|---|---|---|",
     ...rows,
     "",
   ].join("\n");

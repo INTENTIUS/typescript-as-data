@@ -127,9 +127,16 @@ jobs:
       - name: Check the corpus is readable
         run: test -f "${{ env.CHANT_DIR }}/examples/differential-corpus.ts"
 
+      # Codebases nobody here maintains (#129), at the revisions the manifest
+      # pins, seeded with chant's node_modules so chant resolves the lexicon
+      # packages from inside them the way it does from its own examples.
+      - name: Fetch the external checkouts
+        run: scripts/fetch-corpus-external.sh .chant-external ${{ env.CHANT_DIR }}
+
       - name: Corpus cross-check
         env:
           TSAD_CHANT_REPO: ${{ github.workspace }}/${{ env.CHANT_DIR }}
+          TSAD_CORPUS_EXTERNAL: ${{ github.workspace }}/.chant-external
           TSAD_CORPUS_REPORT: '1'
         run: npx vitest run packages/conformance/src/corpus.test.ts packages/conformance/src/rules.test.ts
 
