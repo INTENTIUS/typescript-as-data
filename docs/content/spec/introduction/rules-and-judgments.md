@@ -81,10 +81,15 @@ cites both.
 
 ### J2, the per-file verdict
 
-Written `B, ι ⊢ f ⇓ fold(X, L) | run(reason)`. `ι ∈ {open, isolated}` is the
-isolation mode. On `fold`, `X` is the complete export namespace and `L` is the
-subset of the build's files whose objects `f` captured. Every `run(reason)`
-carries a located reason.
+Written `B, ι ⊢ f ⇓ fold(X, L) | run(reason)`. A file is a program that ends
+holding its exported values; `fold` means the values were computed from the
+source without executing it, and `run` means the build executes the file with
+the JavaScript engine and takes what the exports hold when it finishes. The
+artifact is the same; `run` is the fallback, and its `reason` names the line
+that made the file a program rather than data. The isolation mode is
+`ι ∈ {open, isolated, executing}`; `open` is the strict default. On `fold`
+the namespace `X` holds every export and `L` holds the build's files whose
+objects `f` captured.
 
 The verdict is evaluated per file, without regard to other files' verdicts
 except through `F-Import`. It is *tentative*, and J3 is what makes it final.

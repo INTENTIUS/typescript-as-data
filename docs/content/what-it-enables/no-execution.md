@@ -1,11 +1,11 @@
 ---
 title: "Pure synthesis, no execution"
-description: "The file becomes the artifact without being run, so the output is a function of the source and nothing else."
+description: "The file becomes the artifact without being executed, so the output is a function of the source and nothing else."
 weight: 1
 diataxis: explanation
 ---
 
-A TypeScript file whose values are fixed by its source can be reduced to data by reading it. Those values are literals, constants and references to other declarations. Nothing executes. No constructor runs, no environment variable is read and no network call happens. The specification calls this folding, and `F-NoOwnExecution` states the property.
+A TypeScript file whose values are fixed by its source can be reduced to data by reading it. Those values are literals, constants and references to other declarations. Nothing executes. No constructor is called, no environment variable is read and no network call happens. The specification calls this folding, and `F-NoOwnExecution` states the property. The alternative is the run path: the build executes the file as a program and takes its exports, which gives the same artifact at the cost of everything below.
 
 ## What that buys
 
@@ -15,7 +15,7 @@ The user never has to think about folding, and meets it as a lint. The editor sa
 
 ## Who has it today
 
-chant folds every file it can and measures that it executed nothing. Its `test/leftness` profile reports project code executed `false` and 0 MB of definition-library code on the path, against about 1.7 MB for `cdk synth` on the same estate. Source outside the subset falls back to running in a sandbox, per file, and the two paths are required to agree byte for byte over chant's whole example corpus.
+chant folds every file it can and measures that it executed nothing. Its `test/leftness` profile reports project code executed `false` and 0 MB of definition-library code on the path, against about 1.7 MB for `cdk synth` on the same estate. Source outside the subset takes the run path in a sandbox, one file at a time. The two paths are required to agree byte for byte over chant's whole example corpus.
 
 The reference implementation folds with no runtime at all. At spec {{< figure "specVersion" >}} it agrees with chant {{< figure "chantPin" >}} on every one of {{< figure "corpus.comparable" >}} comparable corpus files, and on the {{< figure "corpus.bothFold" >}} that fold on both sides the export namespaces are identical.
 
