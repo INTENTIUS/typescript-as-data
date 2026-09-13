@@ -4,6 +4,15 @@ This package is written from `spec/` and nothing else (#50). Where the
 specification is silent, ambiguous, or asks for something the package cannot
 supply, the gap is recorded here rather than papered over in the code.
 
+## The marker test is this host's
+
+`isLiveObject` treats any own symbol or non-enumerable own property as an
+entity marker. That is F-Host-Interface item 1 read for a host with one marker
+kind, which the conformance host is. chant carries seven marker symbols, and
+under this test an intrinsic or a stack output would count as an entity, so an
+implementation for such a host tests the marker by identity (chant#2444,
+inventory `L6.1`). The reading here is the reference's choice, not the rule.
+
 ## Two identity predicates
 
 Resolved in the specification by **F-Identity** (J3), which names the entity

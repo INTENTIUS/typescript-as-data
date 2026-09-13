@@ -7,6 +7,8 @@
 #
 # Usage: scripts/fetch-corpus-external.sh <dir> <chant checkout>
 set -euo pipefail
+# A private or missing repository must fail here with its name, never hang on a credential prompt.
+export GIT_TERMINAL_PROMPT=0
 dir=${1:?target directory}
 chant=${2:?chant checkout}
 root=$(cd "$(dirname "$0")/.." && pwd)
@@ -23,7 +25,7 @@ node -e '
     rm -rf "$target"
     mkdir -p "$target"
     git -C "$target" init -q
-    git -C "$target" fetch -q --depth 1 "$repo" "$rev"
+    git -C "$target" fetch -q --depth 1 "$repo" "$rev" || { echo "$name: could not fetch $rev from $repo (private, moved, or the revision is gone); the manifest requires a public repository" >&2; exit 1; }
     git -C "$target" checkout -q FETCH_HEAD
     echo "$name at $(git -C "$target" rev-parse HEAD)"
   fi

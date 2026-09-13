@@ -77,7 +77,7 @@ its own CI job.
 
 **The two implementations agree on a corpus nobody wrote for the purpose**,
 measured by `packages/conformance/src/corpus.test.ts` over chant's example
-corpus and over two codebases nobody here maintains, described in
+corpus and over a codebase nobody here maintains, described in
 [the corpus cross-check](/typescript-as-data/spec/conformance/corpus/).
 
 The first four run in `npm test` and `.github/workflows/ci.yml` on every pull
