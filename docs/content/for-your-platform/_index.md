@@ -29,7 +29,7 @@ The conformance suite, `@intentius/tsad-conformance`: the fixtures at the spec v
 
 The reference is TypeScript. `tsad-eval`, in [`evaluators/rust`](https://github.com/INTENTIUS/typescript-as-data/tree/main/evaluators/rust), is the `data-host` profile written from the text in Rust on oxc with no JavaScript runtime: it passes every fixture tagged for the profile, agrees with the reference on each, and is a column in the corpus cross-check. It is not "rust-as-data"; the language a user writes is TypeScript whatever evaluates it.
 
-It comes in two forms from one crate. The binary speaks JSON on stdin and stdout. The WebAssembly module is the same code compiled for `wasm32-unknown-unknown`, with four exports and no imports, so it instantiates with an empty import object in a browser, in Node with no subprocess, in an editor, or in Go through wazero. [This page folds a file with it](/typescript-as-data/try-it/in-the-browser/). The calling convention is a request buffer in and an answer buffer out:
+One crate builds two forms. The binary speaks JSON on stdin and stdout. The WebAssembly module is the same code compiled for `wasm32-unknown-unknown`; with four exports and no imports it instantiates against an empty import object, which is what lets a browser or an editor load it and Node or Go call it without a subprocess. [This page folds a file with it](/typescript-as-data/try-it/in-the-browser/). The calling convention is a request buffer in and an answer buffer out:
 
 ```js
 const { instance } = await WebAssembly.instantiate(bytes, {});
