@@ -5,7 +5,7 @@ disableKinds = ["taxonomy", "term"]
 
 [params]
   repo = "https://github.com/INTENTIUS/typescript-as-data"
-  description = "Configuration as code, parsed as data."
+  description = "A specification for building JSON and YAML compilers from TypeScript."
 
 # The header's fixed entries. Consumers are not listed here: the header
 # renders a "For your platform" menu from data/consumers.yaml, so a new
