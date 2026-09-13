@@ -1,6 +1,6 @@
 ---
 title: "typescript-as-data"
-description: "A specification for compiling TypeScript to configuration."
+description: "Compiling TypeScript to configuration."
 ---
 
 ## A policy in YAML and in TypeScript
