@@ -121,6 +121,26 @@ orthogonal to it: a per-module fall-back with identity preserved across the
 resulting boundary. Confidence is moderate resting on the abstract and the
 authors' own précis rather than the body of the paper.
 
+### Incremental computation (Salsa, Adapton)
+
+Salsa's red-green algorithm maintains a dependency graph and decides per node
+whether a cached result may be reused or must be recomputed. Adapton's
+demand-driven dirtying answers the same question. Propagation runs in both
+directions along that graph and settles to a fixpoint. That is the shape of J3, and the resemblance is close
+enough that the absence of this dimension from earlier drafts read as not
+having looked.
+
+What they decide is a different question. An incremental system chooses
+between recomputing a value and reusing a cached one. Both paths run the same
+evaluator and yield the same object. J3 chooses between two evaluation paths
+that construct different objects for one entity. That is where its whole
+difficulty lives, and nothing in an incremental system corresponds to it.
+
+The dimension these are nearest on is dependency-graph invalidation rather
+than partial evaluation. Item 4 below is narrower for it. The fixpoint is an
+ordinary closure over a finite lattice. The contribution is the obligation it
+discharges rather than the algorithm that discharges it.
+
 ### Evaluation that escapes into execution (Nix import-from-derivation)
 
 Nix evaluation is pure. IFD pauses it to realise a store object (a build) then
@@ -145,6 +165,43 @@ fallback executes *the source file itself*. IFD is the better precedent for
 None has a fallback to executing out-of-subset source; all reject it. The
 plan's comparison was right about these and wrong to generalize from them to
 "every comparable system".
+
+### Infrastructure as code in a general-purpose language (CDK, Pulumi, cdk8s, cdktf)
+
+This is the family a reader arrives with and the one this project is
+positioned against. Earlier drafts of this sweep omitted it while the site
+compared against `cdk synth` by name.
+
+All four describe infrastructure as a typed program and all four produce the
+artifact by running it. CDK's construct tree comes into existence because
+constructors execute inside `cdk synth`. Pulumi's engine records what a running
+program registers.
+
+Two consequences follow and both are structural.
+
+The artifact is a function of the source and of whatever the process observed
+while running. CDK's context lookups make this concrete. `Vpc.fromLookup`
+resolves against a live account at synth time and caches the answer into
+`cdk.context.json`. The same source then yields different output against a
+different account or a stale cache.
+
+None of them can answer "is this file data" before the program has run.
+Until it runs there is nothing to inspect. The `S-*` classifier answers from
+syntax alone with no binding resolver and no registry. That is what puts the
+question in an editor. The difference is one of kind rather than of degree and
+it rests on no measurement.
+
+What is not novel here is the typed-resources part. Pulumi's native providers
+are generated from the same upstream schemas the lexicons are, `aws-native`
+from Cloud Control and `azure-native` from ARM, and cdktf generates bindings
+from Terraform provider schemas. Generated types across the three clouds and
+Kubernetes under one authoring pattern is occupied territory. The conjunction
+with static evaluation is what this sweep found unoccupied.
+
+The provider-provenance and context-lookup claims in this section rest on each
+project's own documentation rather than on a checkout. They date from this
+sweep. Both are the kind of detail that changes when a provider is
+regenerated. A camera-ready citation should re-check them.
 
 ### Theory to cite
 
