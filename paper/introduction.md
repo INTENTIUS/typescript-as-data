@@ -30,7 +30,7 @@ The answer is a fixpoint over the module graph, closed under two edges: a runnin
 
 ## What we provide
 
-A specification of the subset and its edge, as a grammar and four judgments with identified rules. A reference implementation of the expression layer, written from the specification text. A conformance suite in which every rule is cited by the fixtures that exercise it, and a ledger in which every decision point of a production implementation cites the rule that governs it. And measurements from that production implementation: a differential over 107 corpus entries requiring identical errors and byte-identical output, an execution-boundary measurement, and a build designed to make the fixpoint fire in both directions.
+A specification of the subset and its edge, as a grammar and four judgments with identified rules. A reference implementation of the expression layer, written from the specification text. A conformance suite in which every rule is cited by the fixtures that exercise it, and a ledger in which every decision point of a production implementation cites the rule that governs it. And measurements from that production implementation: a differential over 109 corpus entries requiring identical errors and byte-identical output, an execution-boundary measurement, and a build designed to make the fixpoint fire in both directions.
 
 ## What we do not claim
 

@@ -221,16 +221,18 @@ that every cited identifier is defined in a spec file.
 | | Rows | Covered | GAP |
 |---|---|---|---|
 | L1 statement scan | 7 | 7 | 0 |
-| L2 shape classification | 16 | 16 | 0 |
+| L2 shape classification | 18 | 18 | 0 |
 | L3 expression reduction | 23 | 23 | 0 |
 | L4 value domain | 5 | 5 | 0 |
-| L5 scope and local calls | 15 | 15 | 0 |
+| L5 scope and local calls | 16 | 16 | 0 |
 | L6 revival | 9 | 9 | 0 |
 | L7 interpretation | 8 | 8 | 0 |
-| L8 file decision and taint | 17 | 17 | 0 |
+| L8 file decision and taint | 19 | 19 | 0 |
 | L9 trust and isolation | 6 | 6 | 0 |
 | L10 observables | 5 | 5 | 0 |
-| **total** | **111** | **111** | **0** |
+| L11 rules over values | 8 | 8 | 0 |
+| L12 generators | 4 | 4 | 0 |
+| **total** | **128** | **128** | **0** |
 
 **Row identifiers are stable and append-only.** `L3.10` names one decision
 point forever; a new row in a layer takes the next number and nothing is ever
