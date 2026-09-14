@@ -1,6 +1,6 @@
 # Divergence between the shape classifier and the folder
 
-Normative draft. One subset, two consumers with unequal information.
+Normative draft. One subset and two consumers with unequal information.
 This file states the direction in which they may disagree as a claim
 with a proof obligation, enumerates every known divergence, and states the
 two exceptions with the reason each is tolerated. Derived from
@@ -19,28 +19,28 @@ environment `Γ`.
 > `shape(e, ρ)` accepts, *except* in the two cases F-Exc-Lazy and
 > F-Exc-Registry below.
 
-Equivalently: the classifier may accept what the folder rejects (a *false
+Equivalently, the classifier may accept what the folder rejects (a *false
 negative* relative to fold, visible only as a later fallback), and must never
 reject what the folder accepts (a *false positive*, visible as a lint error on
 folding code), outside the two named exceptions.
 
 **Why this direction.** A false negative costs a fallback the author learns
 about from `[fold:run]`. A false positive costs a lint error on correct
-source, and a lint that cries wolf gets disabled. The classifier is also the
+source and a lint that cries wolf gets disabled. The classifier is also the
 predicate a downstream tool asks "will this fold?", a tool with no registry
 must get an answer that is safe to act on, which means erring toward "it may
 run" (`subset.ts` module doc, point 2c).
 
-**Discharge.** By construction: both consumers import one classifier
+**Discharge.** By construction, both consumers import one classifier
 (`subset.ts`), so they cannot disagree on node kinds, operators or key shapes;
 every remaining disagreement is a *resolution* the classifier does not
-perform, enumerated below. And by fixture: one accepting and one rejecting
+perform, enumerated below. And by fixture, one accepting and one rejecting
 fixture per row of F-Div, asserting the classifier's and the folder's verdicts
 side by side. chant's `subset-doc-parity.test.ts` is the precedent.
 
 ## F-Div (the divergences in the permitted direction)
 
-Shape accepts; the folder may reject, because it resolves.
+Shape accepts; the folder may reject because it resolves.
 
 | Rule | Shape sees | Folder additionally requires | Row |
 |---|---|---|---|
@@ -57,7 +57,7 @@ Shape accepts; the folder may reject, because it resolves.
 | F-Div-Eager | a registered eager intrinsic name | resolves to a function; is called, not referenced | L3.17 |
 | F-Div-TemplateEnvelope | a member access or call inside a template span | the span does not fold to an envelope; chant refuses all five reachable kinds since v0.69.0 | L3.23 |
 
-Every row is a fallback, never wrong output. That property, a divergence in
+Every row is a fallback. That property, a divergence in
 this direction can only lose coverage, is what makes the direction the safe
 one.
 
@@ -86,47 +86,11 @@ practice for `chant lint` while remaining true of the classifier in
 isolation.
 
 There is no third exception. An implementation that discovers one has found
-either a bug or a new rule, and must add it here before shipping it.
+either a bug or a new rule and must add it here before shipping it.
 
 ## What this file does not claim
 
-That the classifier and the folder agree. They do not, and the enumeration
+That the classifier and the folder agree. They do not and the enumeration
 above is the point. The claim is narrower and more useful: **every
 disagreement outside F-Exc costs coverage, never correctness**, and the two
 that go the other way are named, bounded, and justified.
-
----
-
-## Rationale
-
-Non-normative. The reasoning that motivated each rule, carried over from the retired `requirements.md`. Keyed by the rule(s) each note supports.
-
-**F-Direction** *(Membership is decided once, by a classifier permitted to err in one direction only)*
-
-The subset has exactly one definition: `findSubsetViolation` (`subset.ts:289`),
-shared by the folder and by the lint rules EVL001/EVL003 so the linted subset
-and the folded subset cannot drift (L2.*).
-
-**F-Div-*** *(The direction is the requirement)*
-
-The two consumers have different information. A lint pass has no binding
-resolver and no lexicon registry; the folder has both. The shape-only
-classifier may accept what the resolving evaluator rejects, and must never
-reject what it accepts.
-
-Enumerated divergences in that direction:
-
-- identifier resolution (L2.3),
-- tag registration (L2.4),
-- helper provenance (L2.11),
-- spread-source runtime type (L3.4, L3.5),
-- a bare identifier bound to a same-file construction (L3.8),
-- a member read whose object resolves to `null`/`undefined` (L3.10;
-  shape-valid, folder refuses).
-
-**F-Exc-Lazy, F-Exc-Registry** *(Two exceptions run the other way)*
-
-Both are named and bounded in F-Exc above. Each is tolerated for a reason that
-would cost more to remove than the exception costs: a flow-sensitive
-classifier is an evaluator, and the optional registry parameter is what lets a
-downstream tool ask "will this fold?" without running a fold.

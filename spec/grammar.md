@@ -1,24 +1,24 @@
 # Grammar of the fold subset
 
-Normative draft. Identifiers are `S-*`: every production here is
-decidable from syntax alone. Where the folder is stricter than the shape rule
-- because it also resolves names or consults a registry, the production says
-so and names the `F-*` rule (judgments.md) that adds the condition. That is
-the one direction permits; a production must never be stricter than the
-folder.
+Normative draft. Identifiers are `S-*`. Every production here is
+decidable from syntax alone. Where the folder is stricter than the shape rule,
+because it also resolves names or consults a registry, the production says
+so and names the `F-*` rule (evaluation.md, verdict.md) that adds the condition. That is
+the one direction F-Direction permits; a production must never be stricter
+than the folder.
 
-Derived from `findSubsetViolation` (`subset.ts:289`), `fold()`
-(`fold.ts:896`), `scanExports` (`fold-import.ts:591`),
+Derived from `findSubsetViolation` (`subset.ts`), `fold()`
+(`fold.ts`), `scanExports` (`fold-import.ts`),
 `findFunctionSubsetViolation` and `findFactorySubsetViolation`, at
 `e4074c17`, with the `?.` forms from chant-v0.63.0 (`11572c7a`, #2328). Node kinds are TypeScript's.
 
-Notation: `⟨X⟩` is a nonterminal; `|` alternation; `*` zero or more; `+` one
-or more. Terminals are TypeScript tokens or node kinds. Each production cites
+In the notation below, `⟨X⟩` is a nonterminal; `|` alternation; `*` zero or
+more; `+` one or more. Terminals are TypeScript tokens or node kinds. Each production cites
 its inventory row.
 
 ---
 
-## 1. Module and statements, the gate
+## 1. The module and statement gate
 
 **S-Module.** A module is a sequence of top-level statements. The gate
 examines **only statements carrying `export`**. Every other statement, a
@@ -54,10 +54,10 @@ S-ExportTypeOnly    ::= export type { … }  |  a type-only element of S-ExportN
 ⟨PlainElement⟩      ::= ⟨Identifier⟩ | ⟨PropertyName⟩ : ⟨Identifier⟩     -- no rest, no default, no nesting
 ```
 
-Notes. S-ExportFunction: an overload signature (no body) is skipped, not a
-disqualifier; the bodied declaration that follows is the export. S-ReExport:
-named elements only. S-ExportNamed: a local name must be an identifier, the
-TS 4.5 string module-export-name form disqualifies.
+Notes. Under S-ExportFunction an overload signature (no body) is skipped, not
+a disqualifier, and the bodied declaration that follows is the export.
+S-ReExport takes named elements only. Under S-ExportNamed a local name must be
+an identifier, and the TS 4.5 string module-export-name form disqualifies.
 
 S-ExportDefault is the declarator named `default`, admitted in the
 `data-host` profile; in `full` it stays a disqualifier
@@ -78,7 +78,7 @@ S-Disqualify ::= export default …                              -- full only; d
 
 ---
 
-## 2. Expressions, the classifier
+## 2. The expression classifier
 
 `⟨Expr⟩` is any production below. The shape rule is what `findSubsetViolation`
 decides; an **F** note is a condition only the folder can check.
@@ -114,7 +114,7 @@ S-Call        ::= S-CallHelper | S-CallIntrinsic | S-CallEager | S-CallMethod | 
 S-Reject      ::= anything else
 ```
 
-Per-production conditions and divergences:
+The per-production conditions and divergences follow.
 
 | Production | Row | Shape rule | F: what the folder adds |
 |---|---|---|---|
@@ -151,7 +151,7 @@ that no other S-Call form claims. The callee must not be:
 - shadowed by a local `const`
 
 Only the bare-identifier part is decidable from syntax. The four conditions
-are resolution, so S-CompositeStep admits any call at shape level and
+are resolution so S-CompositeStep admits any call at shape level and
 F-Eval-Member step 2 applies the full test.
 
 **Explicitly outside the subset** (S-Reject at shape level, and rejected by
@@ -162,7 +162,7 @@ bitwise operators, `in`, `instanceof`; a computed property name; a
 non-literal element-access key; a call not matching any S-Call form. Optional chaining is
 specified rather than merely admitted: since chant-v0.63.0 a `?.` on a nullish object
 produces a chain-short-circuit value that propagates through the remaining
-`.`/`[]`/`!`/`?.()` of the same chain and becomes `undefined` at its end,
+`.`/`[]`/`!`/`?.()` of the same chain and becomes `undefined` at its end
 which is ECMAScript's semantics.
 
 ---
@@ -182,7 +182,7 @@ S-FnBody   ::= ⟨Expr⟩
 
 No generator, no `async`, no early `return`, no `let`/`var`, no uninitialized
 `const`, no other statement kind. A block with no `return` evaluates to
-`undefined`. Inside S-FnBody the expression grammar **loses** five
+`undefined` (L5.7). Inside S-FnBody the expression grammar **loses** five
 productions: S-New and S-Tagged, S-CallHelper and S-CallIntrinsic, and
 S-CompositeStep (L3.16).
 
@@ -201,7 +201,7 @@ the contract above `resolveInterpretableFactory`; `checkFactoryExpression`'s
 exact set is not transcribed here).
 
 The asymmetry between the two. S-FnBody tolerates a missing `return` and
-S-FactoryBody requires one, which the specification decides rather than
+S-FactoryBody requires one which the specification decides rather than
 inherits.
 
 ---
@@ -209,63 +209,6 @@ inherits.
 ## What this grammar does not decide
 
 Resolution, registration, trust, the fold/run verdict and
-its taint (judgments.md), and every semantic rule. A string that
+its taint (verdict.md, taint.md), and every semantic rule. A string that
 parses under this grammar is *shape-admissible*; whether it folds is the
 judgments' question.
-
----
-
-## Rationale
-
-Non-normative. The reasoning that motivated each rule, carried over from the retired `requirements.md`. Keyed by the rule(s) each note supports.
-
-**S-Call** *(A call is structurally unrepresentable, with an enumerated set of exceptions)*
-
-A function call as a value has no evaluation case, it is absent from the
-mechanism, not forbidden by a rule (L2.16). The spec must enumerate the
-exceptions exhaustively, and say which *kind* each is:
-
-| Exception | Kind | Rows |
-|---|---|---|
-| registered authoring helper | closed allowlist, name **and** import provenance | L2.11 |
-| lexicon intrinsic, call form opted in | closed allowlist, per intrinsic | L2.12 |
-| project-local function with a foldable body | open, local; the callee's binding is visible in the file, which is S-CallLocal | L2.17, L5.4 |
-| eagerly-evaluated lexicon function | closed allowlist, evaluates at fold time | L2.13, |
-| method call on a real receiver | receiver-type condition, method never checked by name | L2.14, L3.18, L3.19 |
-| `<Identifier>(...).step` | one idiom, member fixed, callee must be unclaimed | L2.15, L3.20 |
-
-"The callee is admitted" and "the receiver is admitted" are different
-admissibility rules and an implementer will conflate them.
-
----
-
-**S-Module, S-Disqualify** *(Admissibility is decided at two layers: the statement gate runs first and disqualifies whole files)*
-
-`scanExports` (L1.1–L1.6) recognizes exactly: `export const X = new Type(...)`,
-`export const X = <expr>`, `export const {a, b} = <expr>`, `export {a, b}`,
-`export {a, b} from "./m"`, and `export function f() {}`. Anything else
-disqualifies the file: `export default`, `export * from`, an exported class,
-`let`/`var`, a destructured export with a rest, nested or defaulted element.
-`export type {...}` and type-only re-export elements are erased, not
-disqualifiers (L1.6).
-
-**§2** *(The expression layer)*
-
-Every expression reachable from an admitted statement is classified by's
-single definition. The admissible forms, literals, templates with spans,
-object members with literal keys, element access with literal keys, the
-operator sets, positional `new` arguments, are enumerated by the grammar,
-not here.
-
-**S-FnBody, S-FactoryBody** *(Two further statement-level subsets, and an asymmetry between them)*
-
-A **project-local function** is admissible (L5.4) when its parameters bind
-plainly, its body is a single expression or `const` declarations followed by
-one `return`, and it is not a generator, async, rest-parameter, early-return,
-or `let`/`var` function. Parameter defaults fold in the callee's scope (L5.6).
-A block body with no `return` evaluates to `undefined` (L5.7).
-
-A **composite factory** is admissible under rules 3–5 of the same
-shape, except that its body **must** end in `return` and an empty body is
-rejected (L7.4). The two subsets differ on exactly this point, and the
-difference is open.

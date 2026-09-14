@@ -1,10 +1,10 @@
 # The value domain
 
 Normative draft. What a fold produces. Rules are `F-Val-*`: the value
-domain is a property of folding's output, so it takes the `F-*` prefix. Derived from `FoldedValue` and its cases
-(`fold.ts:116–300`), `FoldableFunction` (`fold.ts:378`), `carriesLiveObject`
-(`fold.ts:411`), `isFoldSymbolicEnvelope`, and `reviveFoldedValue`
-(`fold-import.ts:2643`), at `e4074c17`.
+domain is a property of folding's output so it takes the `F-*` prefix. Derived from `FoldedValue` and its cases
+(`fold.ts`), `FoldableFunction` (`fold.ts`), `carriesLiveObject`
+(`fold.ts`), `isFoldSymbolicEnvelope`, and `reviveFoldedValue`
+(`fold-import.ts`), at `e4074c17`.
 
 ---
 
@@ -29,18 +29,18 @@ Nothing else. In particular no function is a `v` (F-Val-Callable), and no
 live instance is a `v`, a live instance is what an envelope becomes
 (F-Val-Live).
 
-## F-Val-Envelope (six envelopes, recognized by key)
+## F-Val-Envelope (six envelopes recognized by key)
 
 A value is an *envelope* iff it is a non-array object carrying one of the keys
 `__attrRef`, `__intrinsic`, `__helper`, `__resource`, `__compositeStep`,
 `__symbol` (`isFoldSymbolicEnvelope`). An envelope is a finished value that
-*denotes* something not yet constructed; it is never a thunk, and an
+*denotes* something not yet constructed; it is never a thunk and an
 implementation must not attempt to force it.
 
 ## F-Val-Fate (what happens to each envelope)
 
-Revival (`reviveFoldedValue`) walks a folded tree and replaces
-envelopes:
+Revival (`reviveFoldedValue`) walks a folded tree and replaces each
+envelope by its fate.
 
 | Envelope | Fate |
 |---|---|
@@ -51,13 +51,13 @@ envelopes:
 | `__compositeStep` | revived: the composite is resolved (J2 F-Call), then `.step` is read off the real result (L6.5) |
 | `__symbol` | revived: the text must match a simple dotted chain; its root resolves through the file's imports and the rest is real property access (L6.2) |
 
-In the `data-host` profile (F-Profile-DataHost, judgments.md) none of these
-fates runs: revival is serialization, every envelope is the output, and the
+In the `data-host` profile (F-Profile-DataHost, objective.md) none of these
+fates runs. Revival is serialization, every envelope is the output, and the
 host's serialization mapping is what turns it into the artifact.
 
 **Exactly one envelope survives to serialization: `__attrRef`.** The other
 five must never reach a serializer. An implementation that emits a
-`__resource` envelope has produced wrong output, not a placeholder.
+`__resource` envelope has produced wrong output.
 
 ## F-Val-Position (validity is position-dependent)
 
@@ -70,7 +70,7 @@ Revival carries a flag `requireLiveRefs`.
   absent output.
 - **False** for the arguments of a `__compositeStep` and for a top-level
   resource's props (L6.9). A composite stores its props rather than
-  inspecting them, and the serializer resolves the envelope by name.
+  inspecting them and the serializer resolves the envelope by name.
 
 So the same `v` is valid in one position and a rejection in another. A
 specification of the domain alone does not capture this; the rule is part of
@@ -86,19 +86,19 @@ Live objects reached through cross-file resolution, an `AttrRef` instance, a
 `Declarable`, a `CompositeInstance`, an `Intrinsic` instance, **pass through
 revival unchanged** (L6.1). The generic walk would rebuild a plain copy and
 destroy the identity J3 exists to preserve. `isIntrinsic` is keyed on a global
-`Symbol.for`, so this holds across separately loaded copies of the core.
+`Symbol.for` so this holds across separately loaded copies of the core.
 
-Liveness is the *entity test* of F-Identity (J3), and is what F-CallLeak
+Liveness is the *entity test* of F-Identity (J3) and is what F-CallLeak
 tests. F-Capture and F-Import test something broader; F-Identity says which
 is normative and what the difference costs.
 
-## F-Val-Callable (functions are callable, never values)
+## F-Val-Callable (functions are callable)
 
 `FoldableFunction` is a marker for a project-local function J1 may
 *call*. It is **not** a `v`, never appears inside a folded tree, and is
 refused anywhere a value is required: `{ resolver: φ }` does not fold though
 `φ(x)` does (L3.1, L4.4). An eagerly-evaluated lexicon function referenced
-without calling it is refused likewise, with "call it instead" (L3.17).
+without calling it is refused likewise with "call it instead" (L3.17).
 
 ## F-Val-Serializable (the sub-domain that may reach output)
 
@@ -119,7 +119,7 @@ spreading it, and `props` is reported for readers but never re-passed (L4.2).
 `undefined` is a scalar of the domain (L4.3). A property whose value is
 `undefined` is **present** in the folded namespace, with that value, and a
 spread copies it like any other own entry. The namespace therefore keeps the
-distinction between an absent key and an `undefined` one, which a consumer
+distinction between an absent key and an `undefined` one which a consumer
 whose contract is selective-by-omission depends on.
 
 Emission is where the key is dropped, and an `undefined` array element becomes
@@ -138,7 +138,7 @@ the top of a folded tree.
 
 For every value `v` of F-Val-Domain there is source in the subset
 (grammar.md) whose fold, in the profile named, is `v`. The table names one
-such form per case, which is the form a generator should prefer and not the
+such form per case which is the form a generator should prefer and not the
 only one the subset admits.
 
 | Case | A source form that folds to it | In |
@@ -159,134 +159,3 @@ live instance there and to the envelope in `data-host`; the round trip
 (README.md, "the generator obligation") is stated per profile for that
 reason. A live instance has no source form of its own: its form is the
 envelope's.
-
----
-
-## Rationale
-
-Non-normative. The reasoning that motivated each rule, carried over from the retired `requirements.md`. Keyed by the rule(s) each note supports.
-
-**F-Val-Domain** *(The value domain is closed, and its symbolic cases are finished values)*
-
-The spec must define what a fold produces. Every other requirement quantifies
-over it, and it is currently defined only by a TypeScript union
-(`FoldedValue`, `fold.ts:116`; L4.1).
-
-There are nine cases, and six of them are ordinary JSON, the scalars with
-`undefined` beside them, plus arrays and plain objects. The rest carry
-envelopes:
-
-| Case | Envelope key | Denotes | Fate |
-|---|---|---|---|
-| `AttrRefValue` | `__attrRef` | an attribute of another entity, resolved at apply | survives |
-| `FoldedIntrinsicTag` | `__intrinsic` | registered intrinsic, tagged-template form | revived |
-| `FoldedIntrinsicCall` | `__intrinsic` | registered intrinsic, call form | revived |
-| `FoldedHelperCall` | `__helper` | registered authoring helper call | revived |
-| `FoldedResource` | `__resource` | a construction, top-level or nested as a value | revived |
-| `FoldedCompositeStepCall` | `__compositeStep` | `<Identifier>(...).step`, member fixed | revived |
-| `SymbolicValue` | `__symbol` | source text preserved inside an intrinsic interior | revived |
-
-**F-Val-Source.** The round trip, `fold(generate(v)) = v`, is what makes
-the choice of language a matter of correctness. A generator decides what
-each value is: this string is a literal and that one is a reference to
-another resource's attribute, while a repetition across forty resources is
-one `const`. Each decision needs a form the subset can express and the fold
-reverses, and the rule is the completeness half of that property, written
-as a table rather than a sentence so that a generator author can read off a
-form per case. The table names one form per case and requires only that one exists, so
-generators stay comparable without being constrained to agree; and the
-property is stated per profile, because in `full` the fold of a resource's
-form is a live instance and not the envelope. chant's three generators, `chant import` from a template,
-`--from` live import and carve-out from Terraform, emit through one
-pipeline (`L12.1`) whose forms are the table's; its Kubernetes round-trip
-suite compares resource count and kinds after re-serialization and not
-bytes (`L12.4`), so the byte-level measurement the paper wants is still to be
-taken.
-
-**F-Val-Envelope** *(Symbolic is not unevaluated)*
-
-An `__attrRef` is not a thunk. It is the envelope `AttrRef.prototype.toJSON()`
-produces at runtime, and the serializer accepts it without a live instance. A
-specification that describes these as "unevaluated" invites an implementation
-that tries to force them, which is precisely wrong: the denoted value does not
-exist at build time in either path.
-
-**F-Val-Fate, F-Val-Position** *(Exactly one envelope survives to serialization, and its validity is position-dependent)*
-
-`reviveFoldedValue` (L6.1–L6.9) resolves every envelope *except* `__attrRef`
-through the folding file's own imports and invokes the real function or
-constructor: `__intrinsic` in both forms (L6.3), `__helper` (L6.4),
-`__compositeStep` (L6.5), `__resource` (L6.6), `__symbol` via a dotted-chain
-regex (L6.2). None of those may reach a serializer.
-
-`__attrRef` passes through unrevived (L6.7), **except** inside an intrinsic's
-or authoring helper's arguments, where it is rejected (L6.8, `requireLiveRefs`)
-because the receiver performs `instanceof` checks and `WeakRef` derefs and a
-look-alike plain object would produce wrong output rather than absent output.
-Composite-step arguments revive with `requireLiveRefs: false` because a
-composite stores its props rather than inspecting them (L6.9).
-
-The same value is therefore valid in one position and invalid in
-another, and which positions are which. A domain definition alone does not
-capture this.
-
-**F-Val-Callable** *(Callables are in the domain but are not values)*
-
-`FoldableFunction` (L4.4) lets a call to a project-local function fold, and is
-explicitly *not* a `FoldedValue`: it never appears inside a folded tree. A
-function used as a value is refused (L3.1), a `FoldableFunction` reached as a
-bare identifier is refused, and an eagerly-evaluated lexicon function
-referenced without calling it is refused with "call it instead" (L3.17).
-
-The specification must therefore define a **serializable sub-domain** and say
-which positions require it.
-
-**F-Val-Live** *(Liveness is observable)*
-
-`carriesLiveObject` (L4.5) distinguishes folded data from a live instance by
-prototype, anything other than `Object`/`Array`/`null`, and additionally
-treats `typeof value === "function"` as live. That predicate is what makes the
-identity rules in and statable: without a definition of "this value is a
-live entity rather than plain data," there is nothing for identity to be a
-property of.
-
-**F-Val-Arity** *(Constructor arity is contractual)*
-
-`FoldedResource.args` (L4.2) is present when the argument list is not the
-classic `(props)` / `(props, attributes)` shape, and is then authoritative:
-the entity is constructed by spreading it. `props` is a view. The
-`undefined` case in the union (L4.3) has no rule today.
-
----
-
-**F-Val-Fate** *(Envelope, then revive)*
-
-The default for everything's table marks *revived*: `fold()` executes
-nothing and records what was named; the bridge resolves the name through the
-folding file's imports and invokes it.
-
-**F-Val-Undefined** *(`undefined` is absent, not `null`, in a property; and is `null` in an array)*
-
-The domain admits `undefined` (L4.3). The serializer walker passes it through
-unchanged and keeps the key (`serializer-walker.ts:33`, `:117`). The drop
-happens at emission, and it happens for both formats, because YAML is produced
-by round-tripping the sorted JSON (`build.ts:743–746`). `JSON.stringify` has
-already removed an `undefined`-valued key and turned an `undefined` array
-element into `null` before any YAML exists. That is what makes chant's
-build-parameters documentation true ("dropped from the output in both JSON and
-YAML rather than shipped as `null`").
-
-The two facts are the difference between "absent" and "null", which platforms
-treat differently. For the six YAML-native
-lexicons above, the walker's `undefined` reaches *their* emitter directly, so
-the rule there is each serializer's and not `JSON.stringify`'s.
-
-**F-Val-Arity** *(Constructor arity)*
-
-`FoldedResource.args` (L4.2): present when the argument list is not
-`(props)` or `(props, attributes)`, authoritative when present, the entity
-constructed by spreading it; `props` is a view, never re-passed. An
-implementation that assumed the props object is always first would construct
-`new Parameter("String", {...})` wrongly.
-
----

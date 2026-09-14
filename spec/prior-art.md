@@ -12,11 +12,11 @@ so the result cannot differ.
 
 No neighbor combines per-file granularity with shared object identity across
 the boundary. That combination is what forces the bidirectional taint
-fixpoint, and the fixpoint is where this sweep found no precedent.
+fixpoint and the fixpoint is where this sweep found no precedent.
 
-## Nearest neighbors, by the dimension they are nearest on
+## Nearest neighbors by the dimension they are nearest on
 
-### Same function, static or dynamic, same result, the CTFE family
+### The CTFE family
 
 D's compile-time function execution, Zig's `comptime`, Rust's `const fn`,
 C++'s `constexpr`. The D specification states the principle directly, quoted in the next
@@ -32,17 +32,17 @@ time. The compile time evaluation of a function does the equivalent of running
 the function at run time. The semantics of a function cannot depend on compile
 time values of the function."
 
-A required context that cannot be evaluated is illegal, and there is no
+A required context that cannot be evaluated is illegal and there is no
 fallback. The spec's own example "is illegal, because the runtime code for
 `foo` cannot be generated", and DMD reports "cannot be interpreted at compile
 time". `__ctfe` exists to give "an alternative execution path to avoid
-operations which are forbidden in CTFE". chant decides per *file*, and a file
+operations which are forbidden in CTFE". chant decides per *file* and a file
 that cannot be folded is run.
 
-A CTFE'd value is *copied* into the compiled program, so nothing at run time
+A CTFE'd value is *copied* into the compiled program so nothing at run time
 shares identity with a compile-time object. chant's folded entities are the
-same objects the run path would have built, and other files hold references to
-them. That is the whole reason the taint fixpoint exists, and CTFE has no
+same objects the run path would have built and other files hold references to
+them. That is the whole reason the taint fixpoint exists and CTFE has no
 analogue because it has no such sharing.
 
 ### Per-unit static-versus-execute decision (Next.js, Astro)
@@ -64,16 +64,16 @@ is also never stated as a discharged property.
 
 Facebook's Prepack evaluates a JavaScript program's global code at build time,
 captures the resulting heap, and emits a residual program that reconstructs it.
-Code it cannot evaluate is *residualized*, emitted as code that runs later -
+Code it cannot evaluate is *residualized*, emitted as code that runs later,
 tracked through abstract values. There is no per-unit fallback to the original; the output is always one
 residual program.
 
 Residualization is finer-grained than per-file fallback
-and keeps identity trivially, because the residual program is one program with
+and keeps identity trivially because the residual program is one program with
 one heap. chant's choice of a coarse per-file decision is what makes identity
 non-trivial. Prepack's own limitation is instructive for the paper: it has no
-model of `document` or `window` and such reads "evaluate to `undefined`", the
-same silent-undefined hazard INTENTIUS/chant#2328 records in `fold()`'s
+model of `document` or `window` and such reads "evaluate to `undefined`".
+That is the silent-undefined hazard INTENTIUS/chant#2328 records in `fold()`'s
 property-access branch.
 
 On the identity question specifically: Prepack's `ResidualHeapVisitor`
@@ -100,39 +100,39 @@ This is the closest theoretical neighbor to per-file folding and the paper
 must engage it directly.
 
 **Read at abstract level.** ACM DL and ScienceDirect both refuse
-the fetcher (403), including ScienceDirect's bronze-open-access PDF that
+the fetcher (403) including ScienceDirect's bronze-open-access PDF that
 Unpaywall reports for the TCS version. Hughes' Chalmers page links a
 PostScript copy marked "provided only to the TFR reviewers"; it was not
 fetched. What is established from the published
 abstract and from the Chalmers group's own summary of the work
-(`cse.chalmers.se/~rjmh/TFR/results.html`): they pose **two** problems -
-the program to be specialized arrives one module at a time (PLDI '97), or the
+(`cse.chalmers.se/~rjmh/TFR/results.html`): they pose **two** problems.
+The program to be specialized arrives one module at a time (PLDI '97), or the
 *static data* is divided into "data modules" and the residual program is built
 in stages, one residual module per data module (PEPM '97, extended in TCS
 2000). Both are about the modular *structure* of specialization: how the
 input's modules map onto the residual's modules while the whole program is
 specialized. As posed, neither is a per-module *choice* to specialize or not. The setting is a functional language where
-object identity is not a concept, so the identity problem chant's fixpoint
+object identity is not a concept so the identity problem chant's fixpoint
 solves has no obvious way to arise there.
 
-Not a rediscovery, then. Heldal & Hughes is the citation for "partial
-evaluation has been made modular before", and chant's contribution is
+Heldal & Hughes is the citation for "partial
+evaluation has been made modular before" and chant's contribution is
 orthogonal to it: a per-module fall-back with identity preserved across the
-resulting boundary. Confidence is moderate, resting on the abstract and the
+resulting boundary. Confidence is moderate resting on the abstract and the
 authors' own précis rather than the body of the paper.
 
 ### Evaluation that escapes into execution (Nix import-from-derivation)
 
-Nix evaluation is pure. IFD pauses it to realise a store object (a build), then
+Nix evaluation is pure. IFD pauses it to realise a store object (a build) then
 resumes with the contents. The community's own framing is that
 IFD "is bind" for Nix builds. It is an escape from pure evaluation that keeps
 the result deterministic because the build is sandboxed and content-addressed.
 
 IFD escapes into a *build* of something else; chant's
 fallback executes *the source file itself*. IFD is the better precedent for
-`--sandbox` than for folding, and belongs in the isolation discussion.
+`--sandbox` than for folding and belongs in the isolation discussion.
 
-### Total configuration languages, the original comparison set
+### Total configuration languages
 
 | Language | Recursion | Side effects | Types |
 |---|---|---|---|
@@ -166,18 +166,18 @@ explicit in the language rather than inferred.
 1. Per-file partial evaluation with a fallback to executing the unit.
    Precedented in shape by Next.js and in principle by CTFE.
 2. Same-function agreement via revival through the file's own imports.
-   Precedented by CTFE's design principle, and citable as the same argument.
+   Precedented by CTFE's design principle and citable as the same argument.
 3. Byte-identical agreement as a discharged obligation over a real corpus.
    Not found in this sweep as a stated, tested property, and not searched for
    specifically. A methodological contribution.
-4. Bidirectional identity taint over the module graph, so that a shared entity
+4. Bidirectional identity taint over the module graph so that a shared entity
    is never two objects when one side folds and the other runs. No precedent
-   found. It follows from per-file granularity with shared identity, the one
-   combination none of the neighbors has.
+   found. It follows from per-file granularity with shared identity. No
+   neighbor has that combination.
 
 ## Open
 
-Heldal & Hughes 2000 has been read only at abstract level, from the published
-abstract and the Chalmers group's own summary. Item 4 does not turn on it, and
+Heldal & Hughes 2000 has been read only at abstract level from the published
+abstract and the Chalmers group's own summary. Item 4 does not turn on it and
 a camera-ready citation should rest on the full text. ACM DL and ScienceDirect
-both paywall it, so the full text needs institutional or purchased access.
+both paywall it so the full text needs institutional or purchased access.

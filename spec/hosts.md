@@ -1,11 +1,11 @@
 # The host interface
 
 Normative draft. What a host supplies to make the subset mean
-something, and the rule by which each supplied thing is admitted. Rules are
+something and the rule by which each supplied thing is admitted. Rules are
 `F-Host-*`. Derived from `IntrinsicDef` and the three fold predicates
-(`lexicon.ts:219–352`), `createResource`/`createProperty` (`runtime.ts:21,
-67`), `FOLDABLE_AUTHORING_HELPERS` and its admission criteria
-(`foldable-helpers.ts`), `isTrustedExecutableBinding`, and
+(`lexicon.ts`), `createResource`/`createProperty`
+(`runtime.ts`), `FOLDABLE_AUTHORING_HELPERS` and its admission
+criteria (`foldable-helpers.ts`), `isTrustedExecutableBinding`, and
 `findCompositeDefinition`, at `e4074c17`.
 
 The extraction confirmed this list without
@@ -20,27 +20,27 @@ implementation does not yet port.
 Seven things. The first four are the parameters of the subset, the next two are
 what the trust rules need, and the last is the rules contract's.
 
-1. **Entity constructors.** Classes whose instances are entities: built by
-   `createResource(type, lexicon, attrMap)`, `new (props, attributes?)` -
+1. Entity constructors. Classes whose instances are entities: built by
+   `createResource(type, lexicon, attrMap)`, `new (props, attributes?)`,
    or `createProperty(type, lexicon)`, `new (props)`. They carry a
    non-enumerable declarable marker, `lexicon`, `entityType`, and for
    properties `kind: "property"`. Revival constructs them (F-Val-Fate).
-2. **Attribute exposure.** `attrMap` names the attributes an entity exposes;
+2. Attribute exposure. `attrMap` names the attributes an entity exposes;
    reading one on a live instance yields an `AttrRef` bound to that instance
-   (F-Val-Live), and on a *name* yields the `{__attrRef}` envelope.
-3. **An intrinsic registry** `ρ`: a list of `IntrinsicDef`.
-4. **An authoring-helper allowlist**: names a call may fold through as a
+   (F-Val-Live) and on a *name* yields the `{__attrRef}` envelope.
+3. An intrinsic registry `ρ`: a list of `IntrinsicDef`.
+4. An authoring-helper allowlist: names a call may fold through as a
    `{__helper}` envelope.
-5. **A trust set**: the package specifiers this build resolved and loaded
-   (arm 1), plus the host's own module tree (arm 2).
-6. **A composite registration form**, `export const N = Composite(fn, "N")`
+5. A trust set: the package specifiers this build resolved and loaded
+   (arm 1) plus the host's own module tree (arm 2).
+6. A composite registration form, `export const N = Composite(fn, "N")`
    with `Composite` imported from the host, that makes a project-defined
    factory *interpretable*.
-7. **Rules**: the host's semantic checks over the folded namespace and the
-   artifact, under the contract of `rules.md` (F-Rule-Supply). A project may
+7. Rules: the host's semantic checks over the folded namespace and the
+   artifact under the contract of `rules.md` (F-Rule-Supply). A project may
    supply more as a policy.
 
-In the `data-host` profile (F-Profile-DataHost, judgments.md) a host is a
+In the `data-host` profile (F-Profile-DataHost, objective.md) a host is a
 description rather than code: item 3, item 5, and a serialization mapping
 that says what each envelope becomes in the artifact. Items 1, 2, 4 and 6
 need something to invoke and are absent.
@@ -63,7 +63,7 @@ IntrinsicDef = { name, isTag: boolean, foldsAsCall?: boolean, foldsEagerly?: boo
 - A registration is **validated against the export it names**, tagged
   template signature versus plain call, and presence in the package's own
   exports (`chant dev check-lexicon`). A host must provide the equivalent
-  check, or its registry is a claim.
+  check or its registry is a claim.
 
 ## F-Host-Admission (when a call may be registered)
 
@@ -100,12 +100,12 @@ A call into a **package** folds only two ways:
   alias (F-Declarator), where the result is a value whatever it is.
 
 A call nested inside an expression never folds through a package. A call into
-a **project file** folds whenever the callee's body is itself in the subset,
+a **project file** folds whenever the callee's body is itself in the subset
 with no allowlist.
 
 The asymmetry is the trust boundary. Package code is already
 loaded and executed by the build before discovery begins; admitting a call
-into it costs no execution the process was not performing, so it is admitted
+into it costs no execution the process was not performing so it is admitted
 by declaration and verified by registration. Project code is the untrusted
 input; it is admitted only when it can be *evaluated without being
 executed*, folded or interpreted, which a syntactic body check decides and
@@ -113,17 +113,17 @@ an allowlist could not.
 
 ## F-Host-NoSubstitution (the function that runs is the one imported)
 
-For every registered name, helper, intrinsic, constructor, composite -
+For every registered name (helper, intrinsic, constructor, composite),
 revival resolves the name **through the folding file's own `import`
 bindings** and invokes what it finds (F-Val-Fate, J2 F-Call). A host never
 substitutes its own implementation for a registered name.
 
-Two consequences:
+There are two consequences.
 
 - A same-named function the file declared or imported from a project file is
   that function's call (F-Eval-CallLocal). One imported from anywhere else is
-  not the host's, and the file falls back (F-Div-Provenance).
-- The registry cannot drift from the helpers' real behavior, because it never
+  not the host's and the file falls back (F-Div-Provenance).
+- The registry cannot drift from the helpers' real behavior because it never
   reimplements them.
 
 This is the CTFE principle ([`prior-art.md`](./prior-art.md)) made a rule.
@@ -145,7 +145,7 @@ A named import from an **active** package resolves to the package's real
 export (J2 F-Import). A plain-data export, a pseudo-parameter namespace, an
 action-constant table, folds as a value; a live `Intrinsic` instance passes
 through revival unchanged (F-Val-Live). A namespace import of a package is
-never resolved (F-Namespace), so nothing is reachable through `ns.x` from a
+never resolved (F-Namespace) so nothing is reachable through `ns.x` from a
 package: the class or intrinsic has to be reachable through a *named*
 import.
 
@@ -156,7 +156,7 @@ Two arms, and nothing else:
 1. A specifier that is an active package of this build, or a subpath of one,
    matched by text against the closed set the build already resolved.
 2. A specifier that *resolves* to a path inside the host's own module tree.
-   Text is insufficient here, because an untrusted repository controls both
+   Text is insufficient here because an untrusted repository controls both
    its source and its `node_modules`.
 
 A build with no package list keeps only arm 2. Under `ι = isolated`, an import
@@ -164,31 +164,11 @@ outside both arms is F-IsolatedRefusal (J2).
 
 ## F-Host-Generality (what varies and what does not)
 
-What a host may vary: the seven items of F-Host-Interface. What it may not:
+A host may vary the seven items of F-Host-Interface. It may not vary
 the syntax (grammar.md), the semantics of admitted operators (J1), the
 module system, the value domain's shape (values.md), the judgments (J1–J3),
 and the direction claim (divergence.md). Generality is over **host
-vocabularies**, not languages (`README.md`, Scope). A host is one
-instantiation; chant's lexicons are the reference instantiation, and the
+vocabularies** (`README.md`, Scope). A host is one
+instantiation; chant's lexicons are the reference instantiation and the
 reference implementation is meant to carry the interface without
 any of them.
-
----
-
-## Rationale
-
-Non-normative. The reasoning that motivated each rule, carried over from the retired `requirements.md`. Keyed by the rule(s) each note supports.
-
-**F-Host-Trust** *(Trust is decided by resolution, never by the text of a specifier)*
-
-Two arms (L9.1–L9.4). Arm 1: an active lexicon package of *this build*,
-matched by text against a closed set built from names the build already
-resolved, and its subpaths, by extracting the package root from the specifier
-text (L9.2). Arm 2: the specifier is *resolved* and the resulting path checked
-against chant-core's own tree; text is explicitly insufficient because an
-untrusted repository controls both its source and its `node_modules`.
-
-A build that supplies no lexicon list keeps only arm 2, disabled, not loosened
-(L9.4). One documented, accepted unsoundness: the bare-specifier resolution
-cache is process-wide and assumes no nested `node_modules` version override
-(L9.6). That assumption is stated here and not inherited silently.

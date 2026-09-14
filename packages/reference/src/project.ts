@@ -1,7 +1,7 @@
 /**
  * J2, the per-file verdict, and J3, the identity-taint fixpoint.
  *
- * Written from `spec/judgments.md` (#21, #22), not derived from any
+ * Written from `spec/verdict.md` and `spec/taint.md` (#21, #22), not derived from any
  * implementation. A project here is a map of path to source; there is no
  * filesystem and no real module system, which is enough for the judgments
  * because both are defined over a finite set of files and the edges between

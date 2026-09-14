@@ -28,7 +28,7 @@
     "spec/"
   ],
   "scripts": {
-    "build": "rm -rf dist fixtures spec && tsc -p tsconfig.build.json && cp -R ../../spec/fixtures fixtures && mkdir spec && cp ../../spec/VERSION ../../spec/grammar.md ../../spec/judgments.md ../../spec/values.md ../../spec/divergence.md ../../spec/hosts.md ../../spec/rules.md spec/",
+    "build": "rm -rf dist fixtures spec && tsc -p tsconfig.build.json && cp -R ../../spec/fixtures fixtures && mkdir spec && cp ../../spec/VERSION ../../spec/grammar.md ../../spec/objective.md ../../spec/evaluation.md ../../spec/verdict.md ../../spec/taint.md ../../spec/observables.md ../../spec/values.md ../../spec/divergence.md ../../spec/hosts.md ../../spec/rules.md ../../spec/rationale.md spec/",
     "prepack": "npm run build"
   },
   "dependencies": {}

@@ -1,5 +1,5 @@
 /**
- * Expression evaluation: judgments.md J1, one branch per F-Eval-* rule.
+ * Expression evaluation: evaluation.md (J1), one branch per F-Eval-* rule.
  *
  * Written from the specification text, not derived from any implementation
  * (#50). Executes nothing of the source under fold. Its only executions are
