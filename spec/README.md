@@ -93,6 +93,42 @@ price of the paper being able to call this a specification and of the
 conformance suite testing chant against a document chant cannot invalidate
 by itself.
 
+## What this specification decided
+
+The ordering above is a policy. What follows is the record of where it was
+exercised. It exists so that "extracted from chant" can be checked rather than
+assumed.
+
+**`S-ExportDefault`.** A default export is the declarator named `default`.
+The profile table admits it in `data-host`. In `full` it is permitted rather
+than required, and chant does not yet admit it. forgejo-warden's loader asks
+for that form. Its error message tells a user to export the policy as
+`export default`. It accepts `export const policy` as a fallback. That form
+folds as an ordinary `S-TopConst` export. So the form warden instructs its
+users to write is one chant cannot fold.
+
+**`F-Profile-DataHost`.** chant has no equivalent mode. The profile exists for
+an evaluator with no JavaScript runtime. warden names it explicitly and folds
+with an empty host.
+
+Those two answer the transcription charge. A document transcribed from chant
+would carry neither. warden would still run because its fallback form folds
+without `S-ExportDefault`. The form it teaches would not fold and the profile
+it names would not exist.
+
+The rest are smaller and none has a consumer yet.
+
+- `F-Eval-New`, `F-Prebuild` and `F-Count` are permitted rather than required,
+  so an implementation may reject `new` under `F-Eval-Reject` instead.
+- `ι ∈ {open, isolated, executing}` is a parameter of J2 rather than a flag of
+  one implementation. Conformance requires neither `isolated` nor `executing`.
+- `F-Rule-Supply` admits a rule written in the evaluator's own language. For a
+  data-host evaluator that is not JavaScript.
+- `F-Val-Source` is stated per profile. chant's single profile does not need
+  that split.
+- `F-Host-Interface` items 1, 2 and 6 live in revival and interpretation, which
+  the reference implementation does not yet port.
+
 ## Versioning
 
 **A version names a set of rules.** It is the `S-*` and `F-*` identifiers
