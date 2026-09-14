@@ -21,6 +21,15 @@
  * Prose is whatever survives scripts/lib/doc-prose.mjs and the package's
  * `extractProse`, so rule definitions, tables, fences, headings, list markers
  * and inline code are already out of scope.
+ *
+ * A WARNING for whoever satisfies this rule. Across the three PRs that applied
+ * it, every fix that made the prose worse was a RELOCATION and none was a
+ * deletion: commas replaced by "and ... and ... and", a sentence split that
+ * collided with an anaphora three sentences later, a trailing clause moved so
+ * that its "which" attached to the wrong noun. All three satisfied a rule.
+ * Moving words changes what every neighbouring word is adjacent to, and a
+ * green run says the shape is gone rather than that the prose improved. Prefer
+ * the cut, and re-run after each edit rather than at the end.
  */
 import { describe, test, expect } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";

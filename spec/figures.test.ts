@@ -29,6 +29,12 @@
  * The allowlist is SHRINK-ONLY, the same discipline `fixtures.test.ts` applies
  * to UNCOVERED.md: an entry that no longer matches anything is a failure, so a
  * stale exemption cannot be left behind.
+ *
+ * MEASURED at merge: the accepted set is 24 values, 11 of them between 10 and
+ * 40. That density is the residual weakness — a per-entry figure quoted from
+ * the corpus report, gone stale, coinciding with another accepted value.
+ * Narrowing the slurp to the report's own table cells is #190, and it is to be
+ * judged against 24 rather than asserted to have helped.
  */
 import { describe, test, expect } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
