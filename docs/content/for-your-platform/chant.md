@@ -21,12 +21,12 @@ Three generators share one pipeline. `chant import` reads an existing template, 
 
 ## Proof
 
-chant {{< figure "chantPin" >}} passes every fixture it can answer and agrees with the reference implementation on every one. Over chant's own example corpus the two implementations agree on every comparable file, and produce identical export namespaces wherever both fold.
+chant {{< figure "chantPin" >}} passes every fixture it can answer and agrees with the reference implementation on every one. Over chant's own example corpus the two implementations agree on every comparable file's verdict. On the smaller set that folds on both sides the export namespaces are identical too, which is the stronger of the two claims and the lower of the two figures.
 
 | Over chant's example corpus | Count |
 |---|---|
 | Projects and files at <code>{{< figure "corpus.revision" >}}</code> | {{< figure "corpus.entries" >}} projects, {{< figure "corpus.files" >}} files |
-| Comparable, all agreed | {{< figure "corpus.comparable" >}} |
+| Comparable, verdicts agree | {{< figure "corpus.comparable" >}} |
 | Both fold, namespaces identical | {{< figure "corpus.bothFold" >}} |
 
 [The corpus cross-check](/typescript-as-data/spec/conformance/corpus/) counts the limits that make the other files incomparable.

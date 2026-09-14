@@ -5,7 +5,7 @@ weight: 3
 diataxis: explanation
 ---
 
-Folding goes one way, source to data, and a generator goes the other. Put them together and an existing artifact becomes TypeScript that folds back to exactly the data it came from, whether that artifact is a CloudFormation template, a live Kubernetes namespace or an org's current settings. The property is `fold(generate(v)) = v`.
+Folding goes one way, source to data, and a generator goes the other. Put them together and an existing artifact becomes TypeScript that folds back to exactly the data it came from, whether that artifact is a CloudFormation template, a live Kubernetes namespace or an org's current settings. The property is `fold(generate(v)) = v` in `data-host` and `fold(generate(v)) = revive(v)` in `full`. The fold of a resource's form is a live instance there rather than the envelope it came from.
 
 ## Why the language matters here
 

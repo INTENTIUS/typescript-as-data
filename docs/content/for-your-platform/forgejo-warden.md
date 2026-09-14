@@ -24,3 +24,5 @@ Warden reads live reality and diffs it against the declared source; the plan it 
 ## Proof
 
 The `.ts` and `.yml` forms of the same policy load to the same object, asserted in warden's tests, and `--config-mode check` asserts it for any policy by folding and running it. The evaluator is the published reference, so the consumer needs no chant install. The whole loop runs against the e2e sandbox, which is [the tutorial](/typescript-as-data/try-it/).
+
+Warden names the profile it runs in. At [`86dc640`](https://github.com/INTENTIUS/forgejo-warden/tree/86dc640600314ef01793a42b59893ac59d01f66a) its loader calls `foldProject` with an empty host and `profile: "data-host"`. That commit is the one the weekly demo pins. Nothing of the policy is invoked to produce the plan. A file that is not data is refused there with its rule and its reason rather than demoted to a run. That refusal is what `F-Profile-DataHost` requires of an evaluator with no runtime.
