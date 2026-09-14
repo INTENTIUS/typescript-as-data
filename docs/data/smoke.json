@@ -1,7 +1,7 @@
 {
   "_comment": "Written by scripts/smoke-record.sh from the weekly demo workflow; one row per claim under scripts/smoke/scenarios/. verdict is the plain run, break the BREAK=1 run, which must be caught.",
-  "commit": "9c9e2a9",
-  "date": "2026-09-13",
+  "commit": "3304d9a",
+  "date": "2026-09-14",
   "warden": "86dc6406",
   "claims": [{"claim":"fold-equals-run","title":"Folding and running the same policy give the same values, and a file that would differ is refused before either is trusted. ~1 min.","command":"just smoke fold-equals-run","verdict":"pass","break":"caught"},{"claim":"no-execution","title":"The fold produces the plan without running the file, so a side effect the file carries never happens. ~1 min.","command":"just smoke no-execution","verdict":"pass","break":"caught"},{"claim":"round-trip","title":"After an apply, reading live back and diffing against the declared source finds nothing; a drift is named exactly. ~1 min.","command":"just smoke round-trip","verdict":"pass","break":"caught"},{"claim":"rules-over-values","title":"A rule over the declared values, the removal cap, holds a plan that removes too much before anything is applied. ~1 min.","command":"just smoke rules-over-values","verdict":"pass","break":"caught"}]
 }
