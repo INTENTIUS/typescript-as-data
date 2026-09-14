@@ -195,6 +195,11 @@ module is never imported.
 | L10.3 | per-file decision line | `[fold:fold]` / `[fold:run] <reason>`, summarized without `--verbose` | F-Obs-Report |
 | L10.4 | `FoldError` | located, carries an EVL rule id, constructed with `stackTraceLimit = 0` | F-Reason |
 | L10.5 | one wording per rejection kind | shared message builders so two sites cannot drift | F-Obs-Messages |
+
+## L11. Rules over values
+
+| # | Decision | Behavior | Covers |
+|---|---|---|---|
 | L11.1 | `PostSynthContext.entities` | every declared entity by name, the folded namespace after J3 | F-Rule-Input (rules.md) |
 | L11.2 | `PostSynthContext.outputs` | the serialized output per lexicon, text | F-Rule-Input (rules.md) |
 | L11.3 | `PostSynthContext.docs` | the outputs parsed once per build, cached (chant#975) | F-Rule-Input (rules.md) |
@@ -203,6 +208,11 @@ module is never imported.
 | L11.6 | severity configuration | `lint.config` overrides a check's own severity | F-Rule-Finding (rules.md) |
 | L11.7 | project policies under `--sandbox` | `loadPolicyChecks` refuses in-process while the sandbox is armed; checks run in the child (chant#1131) | F-Rule-Pure; F-Rule-Supply (rules.md) |
 | L11.8 | rule registry | lexicon checks and project policies keyed by id; a duplicate id is a registry error | F-Rule-Supply (rules.md) |
+
+## L12. Generators
+
+| # | Decision | Behavior | Covers |
+|---|---|---|---|
 | L12.1 | `TypeScriptGenerator.generate(ir)` | one generator interface behind `chant import`, `--from` live import and carve-out (`import/generator.ts`, `cli/commands/import.ts`, `import-live.ts`, `carve-emit.ts`); a lexicon supplies the generator | F-Val-Source |
 | L12.2 | `export const <id> = new <Class>({…})` | the k8s generator's form per resource: the logical id is the binding, the class is resolved from the kind, nested property entities are constructors (`K8sGenerator.generate`, `emitProps`) | F-Val-Source |
 | L12.3 | `emitLiteral` | scalars, arrays and objects emitted as literals; a key that is not an identifier is quoted | F-Val-Source |
