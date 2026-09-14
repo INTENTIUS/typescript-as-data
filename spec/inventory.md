@@ -1,6 +1,6 @@
 # Fold mechanism inventory
 
-Every decision point in chant core's fold path, with the requirement that covers
+Every decision point in chant core's fold path with the requirement that covers
 it. Derived from a complete read of the four files below.
 
 A **decision point** is anywhere the mechanism chooses between admitting and
@@ -8,15 +8,15 @@ rejecting, between evaluation modes, or between representations. One row each.
 Rows are not lines of code; several rows can live in one function and one row
 can span several.
 
-| File | Lines | Read |
-|---|---|---|
-| `packages/core/src/fold/subset.ts` | 497 | complete |
-| `packages/core/src/fold/fold.ts` | 1,440 | complete |
-| `packages/core/src/fold/foldable-helpers.ts` | 251 | complete |
-| `packages/core/src/discovery/fold-import.ts` | 3,930 | module doc, session/context types, scan, resolution, revival, interpretation, trust, taint, instrumentation |
+| File | Read |
+|---|---|
+| `packages/core/src/fold/subset.ts` | complete |
+| `packages/core/src/fold/fold.ts` | complete |
+| `packages/core/src/fold/foldable-helpers.ts` | complete |
+| `packages/core/src/discovery/fold-import.ts` | module doc, session/context types, scan, resolution, revival, interpretation, trust, taint, instrumentation |
 
 The coverage column names the `S-*`/`F-*` rule that governs the row (grammar.md,
-judgments.md, values.md, divergence.md, hosts.md), or **GAP** with a reason.
+evaluation.md, verdict.md, taint.md, observables.md, values.md, divergence.md, hosts.md), or **GAP** with a reason.
 It cites rules only.
 
 ---
@@ -33,11 +33,11 @@ The gate that runs before any expression is classified. Disqualifies whole files
 | L1.4 | exported class, `let`/`var` | disqualifies | S-Disqualify (grammar.md) |
 | L1.5 | destructured export with rest, nested, or defaulted element | disqualifies | S-Disqualify (grammar.md) |
 | L1.6 | `export type {...}` and `isTypeOnly` re-export elements | skipped, erased; not a disqualifier | S-ExportTypeOnly (grammar.md) |
-| L1.7 | rationale for per-module rather than per-declaration fallback | an unfoldable export can reference or be referenced by a foldable one in ways only running proves safe | F-Total (judgments.md); S-Module rationale |
+| L1.7 | rationale for per-module rather than per-declaration fallback | an unfoldable export can reference or be referenced by a foldable one in ways only running proves safe | F-Total (verdict.md); S-Module rationale |
 
 ## L2. Expression shape classification (`findSubsetViolation`)
 
-Shape only. No resolution, no evaluation.
+Shape only.
 
 | # | Decision | Behavior | Covers |
 |---|---|---|---|
@@ -113,10 +113,10 @@ Shape only. No resolution, no evaluation.
 | L5.9 | `leakedIdentity` | a call returning a live object the body produced records a taint edge; one merely passed through the arguments does not | F-CallLeak; F-Eval-CallLocal step 6 |
 | L5.10 | error re-anchoring | a failure inside a callee is re-thrown at the call site naming callee, file, position, reason | F-Eval-CallLocal step 7; F-Reason |
 | L5.11 | `params` bare-specifier case | the one recognized bare import: `@intentius/chant/params` resolves against `FoldSession.buildParams` | F-Import (params) |
-| L5.12 | `hasObjectIdentity` | a captured value has identity when it is an object **or a function**; only those add to `liveSources` | F-Import (judgments.md) |
-| L5.13 | namespace import of a project file | resolves to a synthetic plain object of the target's `exportedValues`; capture if any entry has identity | F-Namespace (judgments.md) |
-| L5.14 | namespace import of a package | never resolved; the reason `new ns.Type(...)` is unreachable | F-Namespace (judgments.md), |
-| L5.15 | unresolved import never referenced | does not force run; failure recorded for diagnostics only | F-Reference (judgments.md) |
+| L5.12 | `hasObjectIdentity` | a captured value has identity when it is an object **or a function**; only those add to `liveSources` | F-Import (verdict.md) |
+| L5.13 | namespace import of a project file | resolves to a synthetic plain object of the target's `exportedValues`; capture if any entry has identity | F-Namespace (verdict.md) |
+| L5.14 | namespace import of a package | never resolved; the reason `new ns.Type(...)` is unreachable | F-Namespace (verdict.md), |
+| L5.15 | unresolved import never referenced | does not force run; failure recorded for diagnostics only | F-Reference (verdict.md) |
 | L5.16 | same-file project-local functions | a top-level `function` declaration, exported or not, and a `const` bound to an arrow both fold when called; chant did this before the text said so | S-LocalFunction; F-Bind |
 
 ## L6. Revival (`reviveFoldedValue`)
@@ -167,11 +167,11 @@ module is never imported.
 | L8.10 | `MAX_RESOLUTION_DEPTH` | a second bound, separate from L5.8 and L7.8 | F-Depth |
 | L8.11 | per-file fold memo | a file imported by many is folded **exactly once**; every referrer shares the result | F-Memo |
 | L8.12 | per-initializer-node memo | a composite call reached through several member accesses is invoked **exactly once**, "matching what actually running the file would do" | F-Count |
-| L8.13 | zero declarators after the gate | `run("no foldable resource exports")`; a file must export something | F-NoExports (judgments.md) |
-| L8.14 | file inside chant's own module tree | `run`; not project source | F-NotProject (judgments.md) |
-| L8.15 | composite-call result type | must be a `CompositeInstance` or `Declarable`, else run | F-Call step 7 (judgments.md) |
-| L8.16 | destructure source | must be a composite instance or indexable object | F-Declarator (judgments.md) |
-| L8.17 | a re-export is a capture | `export { a } from "./g"` adds `g` to `liveSources` when the value has identity | F-Declarator (judgments.md) |
+| L8.13 | zero declarators after the gate | `run("no foldable resource exports")`; a file must export something | F-NoExports (verdict.md) |
+| L8.14 | file inside chant's own module tree | `run`; not project source | F-NotProject (verdict.md) |
+| L8.15 | composite-call result type | must be a `CompositeInstance` or `Declarable`, else run | F-Call step 7 (verdict.md) |
+| L8.16 | destructure source | must be a composite instance or indexable object | F-Declarator (verdict.md) |
+| L8.17 | a re-export is a capture | `export { a } from "./g"` adds `g` to `liveSources` when the value has identity | F-Declarator (verdict.md) |
 | L8.19 | `applyResolvedValue` | sets the export to whatever the invoked factory returned, unconditionally; the `isDeclarable \|\| isCompositeInstance` test after it only tallies entities for the fold line. There is no step-7 refusal in chant, which `1.6` wrote into F-Call | F-Call step 7 |
 | L8.18 | same-file construction pre-pass | every top-level `new`-valued const constructed once, in source order, before any declarator; the exported-declarator loop reuses the instance rather than constructing a second one (`preresolveResourceConsts`, chant#1169) | F-Prebuild; F-Count |
 
@@ -212,8 +212,8 @@ module is never imported.
 
 ## Coverage summary
 
-**The rule for the column.** A row is *covered* only when a specific rule -
-`S-Template`, `F-Eval-Member step 4`, `F-Val-Fate`, governs what the row
+**The rule for the column.** A row is *covered* only when a specific rule
+(`S-Template`, `F-Eval-Member step 4`, `F-Val-Fate`) governs what the row
 does. A citation of a whole file or judgment is not coverage. A partially
 covered row is GAP. There is no double counting, and the coverage gate checks
 that every cited identifier is defined in a spec file.
@@ -235,7 +235,7 @@ that every cited identifier is defined in a spec file.
 **Row identifiers are stable and append-only.** `L3.10` names one decision
 point forever; a new row in a layer takes the next number and nothing is ever
 renumbered. A row that turns out to be wrong is struck through with a note, not
-removed, so a citation of it stays resolvable. Row identifiers are as stable as rule identifiers, and for the same reason:
+removed, so a citation of it stays resolvable. Row identifiers are as stable as rule identifiers and for the same reason:
 the coverage gate cites them.
 
 ## What this inventory does not cover

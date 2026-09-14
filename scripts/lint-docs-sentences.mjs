@@ -40,6 +40,7 @@ import { RULES } from "sentences/lint/registry";
 import { runRules } from "sentences/lint/engine";
 import { buildDocAnalysis } from "sentences/lint/build-doc";
 import { extractProse } from "sentences/lint/markdown-prose";
+import { toProse } from "./lib/doc-prose.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 // The docs site's authored pages are prose too (#85); content/spec/normative
@@ -71,17 +72,6 @@ function docFiles(dir) {
   return out.sort();
 }
 
-/** The frontmatter block replaced by spaces, so every offset after it is unchanged. */
-// A shortcode such as `{{< figure "corpus.files" >}}` is a value, not prose;
-// the dots inside it would end sentences. It is read as the number it renders.
-function blankExpressions(text) {
-  return text.replace(/\{\{[<%][^\n]*?[>%]\}\}/g, "0");
-}
-function blankFrontmatter(text) {
-  const m = /^---\r?\n[\s\S]*?\r?\n---[ \t]*(\r?\n|$)/.exec(text);
-  return m ? m[0].replace(/[^\n]/g, " ") + text.slice(m[0].length) : text;
-}
-
 /** 1-based line of a prose-text offset — extractProse blanks non-prose but
  * preserves every offset, so spans map straight onto the source file. */
 function lineOf(text, offset) {
@@ -97,11 +87,11 @@ const detail = [];
 for (const file of files) {
   const rel = relative(join(here, ".."), file);
   const text = readFileSync(file, "utf8");
-  // YAML frontmatter is metadata, not prose. `extractProse` blanks fences,
-  // tables and inline code but leaves the `---` block, whose delimiters read
-  // as em dashes and whose `key: value` lines read as colon nameplates; every
-  // page was paying for its own frontmatter. Blank it, offsets preserved.
-  const prose = extractProse(blankExpressions(blankFrontmatter(text)));
+  // scripts/lib/doc-prose.mjs blanks what is not prose before `extractProse`
+  // runs: frontmatter, shortcodes, rule definitions and judgment notation,
+  // heading and list markers, parenthesised citations. Offsets are preserved
+  // throughout, so a span still indexes this file.
+  const prose = extractProse(toProse(text));
   const doc = buildDocAnalysis(prose);
   const { findings, errors } = runRules(RULES, doc);
   for (const e of errors) detail.push(`${rel}: rule ${e.ruleId} errored: ${e.message}`);

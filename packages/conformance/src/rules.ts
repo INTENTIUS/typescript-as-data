@@ -28,8 +28,29 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-/** The five files that define rules, in reading order. The same list `spec/fixtures.test.ts` gates on. */
-export const RULE_FILES = ["grammar.md", "judgments.md", "values.md", "divergence.md", "hosts.md", "rules.md"] as const;
+/**
+ * The files that define rules, in reading order. The same list
+ * `spec/fixtures.test.ts` gates on.
+ *
+ * `rationale.md` is here because a rationale note headed `**F-Call step 4**`
+ * matches `DEFINITION` (the identifier is followed by a space) and its text is
+ * appended to the rule's. That was true when every note lived at the foot of
+ * its rule file, and listing the file keeps the index byte-identical now that
+ * they live together.
+ */
+export const RULE_FILES = [
+  "grammar.md",
+  "objective.md",
+  "evaluation.md",
+  "verdict.md",
+  "taint.md",
+  "observables.md",
+  "values.md",
+  "divergence.md",
+  "hosts.md",
+  "rules.md",
+  "rationale.md",
+] as const;
 
 export interface Rule {
   readonly id: string;
