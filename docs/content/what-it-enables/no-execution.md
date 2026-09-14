@@ -32,8 +32,12 @@ The steps, in the order they print: the policy carries a `writeFileSync` at top 
 
 chant folds every file it can and measures that it executed nothing. Its `test/leftness` profile reports project code executed `false` and 0 MB of definition-library code on the path, against about 1.7 MB for `cdk synth` on the same estate. Source outside the subset takes the run path in a sandbox, one file at a time.
 
+Both profiler recordings are readable in the browser. [The `cdk synth` recording](https://spicypath.intentius.workers.dev/leftness-cdk) carries a marker on the moment the app starts, and stays lit from there. [The `chant build` recording](https://spicypath.intentius.workers.dev/leftness-chant) answers the same search with no matches. [Flame graphing the leftness of infra tooling](https://lex00.github.io/posts/flame-graphing-the-leftness-of-infra-tooling/) walks through both, and the harness that regenerates them is [`test/leftness`](https://github.com/INTENTIUS/chant/tree/main/test/leftness).
+
 The reference implementation folds with no runtime at all. At spec {{< figure "specVersion" >}} it agrees with chant {{< figure "chantPin" >}} on every one of {{< figure "corpus.comparable" >}} comparable corpus files, and on the {{< figure "corpus.bothFold" >}} that fold on both sides the export namespaces are identical.
 
 ## Where the rule lives
 
-`F-NoOwnExecution` in `judgments.md` J4 states it, with the grammar's `S-*` productions for the lint. [The specification](/typescript-as-data/spec/normative/) is the full text and [the corpus cross-check](/typescript-as-data/spec/conformance/corpus/) is the measurement.
+`F-NoOwnExecution` in `judgments.md` J4 states it, with the grammar's `S-*` productions for the lint. [The specification](/typescript-as-data/spec/normative/) is the full text.
+
+This rule has no fixture, and `spec/fixtures/UNCOVERED.md` gives the reason: an adapter reports verdicts, and a verdict cannot say what ran. The conformance suite reaches the property's observable instead. `F-Obs-Counters` requires a build to report `projectFactoryInvocations`, which is zero across every folded file, and [that one is tested](/typescript-as-data/spec/conformance/coverage/). The recordings above are the direct evidence, measured on the process rather than read off a verdict.
