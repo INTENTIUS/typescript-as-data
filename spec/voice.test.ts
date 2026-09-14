@@ -22,14 +22,29 @@
  * `extractProse`, so rule definitions, tables, fences, headings, list markers
  * and inline code are already out of scope.
  *
- * A WARNING for whoever satisfies this rule. Across the three PRs that applied
- * it, every fix that made the prose worse was a RELOCATION and none was a
- * deletion: commas replaced by "and ... and ... and", a sentence split that
- * collided with an anaphora three sentences later, a trailing clause moved so
- * that its "which" attached to the wrong noun. All three satisfied a rule.
- * Moving words changes what every neighbouring word is adjacent to, and a
- * green run says the shape is gone rather than that the prose improved. Prefer
- * the cut, and re-run after each edit rather than at the end.
+ * A WARNING for whoever satisfies this rule. DELETION IS THE ONLY EDIT THAT
+ * CANNOT CREATE A NEW ADJACENCY. Every fix that made the prose worse, across
+ * seven edits and three rules, rearranged what sat next to what:
+ *
+ *   - commas replaced by "and ... and ... and", satisfying tricolon/comma-series
+ *     and reading worse than the commas
+ *   - a sentence split to fix a comma, colliding with an anaphora three
+ *     sentences later
+ *   - a trailing clause moved so its "which" attached to the wrong noun
+ *   - a parenthetical unwrapped, moving an item INTO a comma series without
+ *     moving a word: the parens were holding it out
+ *   - a sentence split to reduce a tricolon, which moved the boundary without
+ *     removing an item, so the density rule fired again
+ *
+ * The last two are the instructive ones. Unwrapping and splitting feel like
+ * reductions and are not; a rule counting items sees the same items in a new
+ * arrangement. One of the seven was introduced while fixing a FACTUAL error,
+ * so the failure mode does not care what kind of edit you are making, only
+ * that you moved something.
+ *
+ * None was caught on the first pass by the person making the edit. That is
+ * what these gates are for: not the tics you wrote, the tics your fix
+ * introduced. Prefer the cut, and re-run after each edit rather than at the end.
  */
 import { describe, test, expect } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
