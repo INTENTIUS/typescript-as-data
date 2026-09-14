@@ -133,20 +133,38 @@ The fixpoint itself is indifferent to cycles in `→`.
 one object, and every reference to `e`, from a folded file's `X`, from a run
 file's import, from an `AttrRef`, is that object.
 
-*Sketch.* Let `e` be produced by file `g`.
+**Lemma (capture implies import).** `f ⇝ g` implies `f → g`. F-Capture
+requires the captured value be reached through `f`'s resolved imports of `g`.
+F-CallLeak records the same edge for a function `f` imported from `g`. A
+re-export chain decomposes rather than escaping this. Where `h` re-exports
+from `g` the re-export arm of F-Declarator records `h ⇝ g` alongside `h → g`,
+and `f` importing that binding from `h` records `f ⇝ h` alongside `f → h`.
+The closure composes the two.
 
-1. If `g ∉ T(B)`, `g` folded, and `e` is the object in `X(g)`, unique by
-   F-Memo and F-Count. Any `f` referring to `e` either folded and captured it
-   (`f ⇝ g`), in which case `f ∉ T(B)`, else `g ∈ T(B)` by the backward edge,
-   contradiction, and `f`'s reference is the F-Memo object; or `f` runs,
-   `f → g`, and then `g ∈ T(B)` by the forward edge, contradiction. So every
-   referrer folded and holds the one object.
-2. If `g ∈ T(B)`, `g` runs, and `e` is constructed by real execution. Any `f`
-   with `f → g` has `g ∈ Succ(f)`; if `f ∉ T(B)` then `g ∉ T(B)`,
-   contradiction; so `f` runs and its import of `g` is the run path's own
-   module instance, one per file, by the host module system (or the single
-   bundle under isolation). Any `f` with `f ⇝ g` is in `T(B)` by the
-   backward edge and its folded capture is discarded.
+*Sketch.* Let `e` be produced by file `g` and let `f` be any file referring
+to `e`.
+
+1. If `g ∉ T(B)` then `g` folded and `e` is the object in `X(g)`, unique by
+   F-Memo and F-Count. Suppose `f` folded. It obtained `e` through its
+   resolved imports of `g` and therefore `f ⇝ g`. Were `f ∈ T(B)` the lemma
+   would give `f → g` and the forward edge would put `g ∈ T(B)`. So
+   `f ∉ T(B)` and its reference is the F-Memo object. Suppose instead `f`
+   runs. Then `f ∈ T(B)` and `f → g`, and the forward edge puts `g ∈ T(B)`
+   again. Every referrer therefore folded and holds the one object.
+2. If `g ∈ T(B)` then `g` runs and `e` is constructed by real execution. `f`
+   holds `e` through a binding imported from `g` or from a file that
+   re-exports it. Let `g'` be the first file on that chain whose verdict is
+   `run`. That is `g` itself for a direct import and is reached by the
+   backward edge otherwise. J2 resolves a binding from `g'` only where `g'`
+   folds. F-Import leaves it unresolved and records `g'`'s reason against it.
+   A reference to it is then F-Reference's located rejection and `f`'s own
+   tentative verdict is `run`. That puts `f` in `Seed(B)` on its own account
+   rather than by any edge. Its import of `g'` is the run path's own module
+   instance, one per file, by the host module system (or the single bundle
+   under isolation). A file that imports `g'` without referencing the binding
+   folds (L5.15). It holds no entity of `g`'s and is therefore not a referrer
+   of `e`. Where `f ⇝ g` was recorded before `g` was tainted, the backward
+   edge puts `f ∈ T(B)` and its folded capture is discarded.
 
 No entity therefore has both a folded and a run object alive. ∎
 
