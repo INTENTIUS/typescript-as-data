@@ -10,6 +10,7 @@
 import { statSync, readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
+import { fixtureCounts, coverageCounts } from "../../scripts/lib/figures.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const specDir = join(here, "..", "..", "spec");
@@ -74,12 +75,10 @@ const specVersion = readFileSync(join(specDir, "VERSION"), "utf8").trim();
 const chantPin = json(join(root, "package.json")).devDependencies["@intentius/chant"];
 const referenceVersion = json(join(root, "packages", "reference", "package.json")).version;
 const conformanceVersion = json(join(root, "packages", "conformance", "package.json")).version;
-const uncovered = readFileSync(join(specDir, "fixtures", "UNCOVERED.md"), "utf8");
-const cov = /(\d+) of (\d+) rules have fixtures/.exec(uncovered);
-const fixtureDirs = readdirSync(join(specDir, "fixtures"), { withFileTypes: true })
-  .filter((d) => d.isDirectory())
-  .flatMap((d) => readdirSync(join(specDir, "fixtures", d.name), { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => join(specDir, "fixtures", d.name, e.name)));
-const wholeBuild = fixtureDirs.filter((d) => { try { return json(join(d, "expect.json")).project === true; } catch { return false; } }).length;
+// Counted in scripts/lib/figures.mjs, which spec/figures.test.ts also reads,
+// so the site's figures and the gate on the prose share one definition (#174).
+const { rulesWithFixture, rulesTotal } = coverageCounts(specDir);
+const { fixtures, wholeBuildFixtures } = fixtureCounts(specDir);
 let corpus = null;
 try {
   const report = readFileSync(join(root, "packages", "conformance", "corpus-report.md"), "utf8");
@@ -96,6 +95,6 @@ mkdirSync(dataDir, { recursive: true });
 // The evaluator's WebAssembly module, when scripts/build-wasm.sh has run: its size in kilobytes, so the page that loads it can say what it is asking the reader to download.
 let wasmKB = null;
 try { wasmKB = Math.round(statSync(join(root, "docs", "static", "tsad-eval", "tsad-eval.wasm")).size / 1024); } catch {}
-const figures = { specVersion, chantPin, referenceVersion, conformanceVersion, rulesWithFixture: cov ? +cov[1] : null, rulesTotal: cov ? +cov[2] : null, fixtures: fixtureDirs.length, wholeBuildFixtures: wholeBuild, corpus, wasmKB };
+const figures = { specVersion, chantPin, referenceVersion, conformanceVersion, rulesWithFixture, rulesTotal, fixtures, wholeBuildFixtures, corpus, wasmKB };
 writeFileSync(join(dataDir, "figures.json"), JSON.stringify(figures, null, 2) + "\n");
 console.log("figures.json:", JSON.stringify(figures));
