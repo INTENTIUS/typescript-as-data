@@ -80,6 +80,13 @@ describe("inventory summary matches the rows it summarises (#182)", () => {
 
 // ── 2. integers in the paper's prose ────────────────────────────────────────
 
+/** Issue references, versions and years are identifiers, not counts. */
+function blankIdentifiers(text: string): string {
+  return text
+    .replace(/(?:[A-Za-z][\w-]*)?#\d+/g, (m) => " ".repeat(m.length))
+    .replace(/\b(?:19|20)\d{2}\b/g, (m) => " ".repeat(m.length));
+}
+
 /**
  * Integers the tree can account for. A figure and anything derived from it by
  * subtraction, since the paper legitimately says "the 4 without one".
@@ -89,17 +96,17 @@ function computable(): Set<number> {
   const { rulesWithFixture, rulesTotal } = coverageCounts(specDir);
   const report = readFileSync(join(root, "packages", "conformance", "corpus-report.md"), "utf8");
   const nums = new Set<number>([fixtures, wholeBuildFixtures, rulesWithFixture, rulesTotal]);
+  // Two hardcoded derivations, because the paper writes "the 4 without one".
+  // Not a general "accept N - k": 126 does not pass as "127 without one".
   nums.add(rulesTotal - rulesWithFixture);
   nums.add(fixtures - wholeBuildFixtures);
-  for (const m of report.matchAll(/\b(\d{2,4})\b/g)) nums.add(+m[1]); // every figure the corpus run reported
+  // Every figure the corpus run reported, with identifiers blanked FIRST. The
+  // blanking has to run on this side too, or the accepted set grows silently
+  // whenever somebody writes another issue reference into the report — a
+  // number in one place changing what a check elsewhere accepts, which is the
+  // failure this gate exists to catch, sitting in the gate's own input.
+  for (const m of blankIdentifiers(report).matchAll(/\b(\d{2,4})\b/g)) nums.add(+m[1]);
   return nums;
-}
-
-/** Issue references, versions and years are identifiers, not counts. */
-function blankIdentifiers(text: string): string {
-  return text
-    .replace(/(?:[A-Za-z][\w-]*)?#\d+/g, (m) => " ".repeat(m.length))
-    .replace(/\b(?:19|20)\d{2}\b/g, (m) => " ".repeat(m.length));
 }
 
 /**
