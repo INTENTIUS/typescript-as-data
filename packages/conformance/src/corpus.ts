@@ -306,6 +306,12 @@ export interface FileComparison {
   readonly limit?: Limit;
   /** The data-host column, when the evaluator with no JavaScript runtime was present (#86). */
   readonly dataHost?: DataHostComparison;
+  /**
+   * chant's verdict under `ι = isolated` (#171). `undefined` where the entry's
+   * isolated fold could not be taken at all, which is counted apart rather
+   * than read as a refusal.
+   */
+  readonly chantIsolated?: Side;
   /** Both folded, and their export namespaces were compared as data. */
   readonly values?: "equal" | "differ" | "not-data";
   /** Where the two encodings first differ, with a little context either side, so a difference is a diff and not a verdict. */
@@ -319,6 +325,8 @@ export interface EntryReport {
   readonly name: string;
   readonly files: number;
   readonly comparisons: readonly FileComparison[];
+  /** Why this entry's isolated fold could not be taken, when it could not (#171). */
+  readonly isolatedUnavailableReason?: string;
 }
 
 const isProjectSpecifier = (s: string) => s.startsWith(".") || s.startsWith("/");
@@ -605,6 +613,18 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
   const chant = await chantFoldProject(paths, entry.intrinsics as never, { lexicons: entry.lexicons, buildParams: entry.buildParams });
   const reference = referenceFoldProject(sources, host);
 
+  // #171: the same build under `ι = isolated`, which maps to chant's sandbox
+  // (L9.5, chant#1093). A throw here is counted apart rather than read as a
+  // refusal, so an entry that breaks isolation is visible instead of silent.
+  let chantIsolated: Awaited<ReturnType<typeof chantFoldProject>> | undefined;
+  let isolatedUnavailableReason: string | undefined;
+  try {
+    chantIsolated = await chantFoldProject(paths, entry.intrinsics as never, { lexicons: entry.lexicons, buildParams: entry.buildParams, sandbox: true });
+  } catch (e) {
+    chantIsolated = undefined;
+    isolatedUnavailableReason = e instanceof Error ? e.message : String(e);
+  }
+
   const hostSeed = new Set<string>();
   for (const [key, source] of sources) {
     const { bare } = specifiersOf(source, key);
@@ -645,6 +665,7 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
       reference: referenceSide,
       limit,
       dataHost,
+      chantIsolated: chantIsolated ? (chantIsolated.get(abs)?.verdict === "fold" ? "fold" : "run") : undefined,
       referenceRule: rv?.kind === "run" ? rv.rule : undefined,
       referenceReason: rv?.kind === "run" ? rv.reason : undefined,
       chantReason:
@@ -657,7 +678,7 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
     const right = Object.fromEntries(rv.exports);
     return { ...base, ...compareData(left, right) };
   });
-  return { name: entry.name, files: paths.length, comparisons };
+  return { name: entry.name, files: paths.length, comparisons, isolatedUnavailableReason };
 }
 
 // ── the summary the paper cites ─────────────────────────────────────────────
@@ -685,6 +706,28 @@ export interface CorpusSummary {
   readonly referenceMorePermissive: readonly Disagreement[];
   /** The data-host column, when the evaluator with no JavaScript runtime was present. */
   readonly dataHost?: { readonly files: number; readonly agreed: number; readonly bothFold: number; readonly disagreements: readonly Disagreement[] };
+  /**
+   * The isolation column (#171): what refusing every project-owned invocation
+   * costs in coverage. `lost` is what folds under `open` and does not under
+   * `isolated`, which is the price of the guarantee.
+   */
+  readonly isolated?: {
+    readonly files: number;
+    readonly openFolds: number;
+    readonly isolatedFolds: number;
+    /** Counted from `lostFiles`, never subtracted, so the number and the list it sits above cannot disagree. */
+    readonly lost: number;
+    /**
+     * Files that run under `open` and fold under `isolated`. `F-IsolatedRefusal`
+     * only refuses more, so this is zero. It is counted rather than assumed,
+     * because the subtraction that used to produce `lost` would have absorbed
+     * one of these silently.
+     */
+    readonly gained: number;
+    readonly unavailable: number;
+    readonly unavailableReason?: string;
+    readonly lostFiles: readonly Disagreement[];
+  };
 }
 
 export function summarize(reports: readonly EntryReport[]): CorpusSummary {
@@ -694,9 +737,21 @@ export function summarize(reports: readonly EntryReport[]): CorpusSummary {
   const referenceMorePermissive: Disagreement[] = [];
   let dhFiles = 0, dhAgreed = 0, dhBothFold = 0;
   const dhDisagreements: Disagreement[] = [];
+  let isoFiles = 0, isoOpenFolds = 0, isoFolds = 0, isoUnavailable = 0, isoGained = 0;
+  let isoUnavailableReason: string | undefined;
+  const isoLostFiles: Disagreement[] = [];
   for (const report of reports) {
     files += report.files;
+    isoUnavailableReason ??= report.isolatedUnavailableReason;
     for (const c of report.comparisons) {
+      if (c.chantIsolated === undefined) isoUnavailable++;
+      else {
+        isoFiles++;
+        if (c.chant === "fold") isoOpenFolds++;
+        if (c.chantIsolated === "fold") isoFolds++;
+        if (c.chant === "fold" && c.chantIsolated === "run") isoLostFiles.push({ ...c, entry: report.name });
+        if (c.chant === "run" && c.chantIsolated === "fold") isoGained++;
+      }
       if (c.dataHost) {
         dhFiles++;
         if (c.dataHost.agreed) { dhAgreed++; if (c.dataHost.reference === "fold") dhBothFold++; } else dhDisagreements.push({ ...c, entry: report.name });
@@ -714,6 +769,9 @@ export function summarize(reports: readonly EntryReport[]): CorpusSummary {
     entries: reports.length, files, comparable, comparableAgreed, comparableBothFold,
     comparableValuesNotData, limited, disagreements, referenceMorePermissive,
     dataHost: dhFiles ? { files: dhFiles, agreed: dhAgreed, bothFold: dhBothFold, disagreements: dhDisagreements } : undefined,
+    isolated: isoFiles
+      ? { files: isoFiles, openFolds: isoOpenFolds, isolatedFolds: isoFolds, lost: isoLostFiles.length, gained: isoGained, unavailable: isoUnavailable, unavailableReason: isoUnavailableReason, lostFiles: isoLostFiles }
+      : undefined,
   };
 }
 
@@ -740,7 +798,7 @@ export function renderCorpusReport(
   return [
     "# Corpus cross-check",
     "",
-    "Generated by `npm run corpus` (#25). Do not edit.",
+    "Generated by `npm run corpus` (#25). Do not edit, and do not regenerate partially. A run without the Rust evaluator built, or without the external checkouts fetched, silently drops whole sections and every value in them — and anything downstream that trusted those values then fails somewhere that does not point at the cause. Regenerate all of it or none of it.",
     "",
     `- engine under test: \`${engine.name}\`, declaring spec \`${engine.specVersion}\``,
     `- corpus: chant \`${checkout.corpusVersion}\` at \`${checkout.revision}\`, ${summary.entries} entries, ${summary.files} files`,
@@ -778,6 +836,26 @@ export function renderCorpusReport(
       "The reference and the evaluator are both judged in `data-host`, on the same host description and no code. A file that folds on both sides has the same namespace on both, envelopes included.",
       "",
       summary.dataHost.disagreements.length === 0 ? "No disagreements." : summary.dataHost.disagreements.map((d) => `- \`${d.entry}/${d.file}\`: reference ${d.dataHost!.reference}, evaluator ${d.dataHost!.rust}${d.dataHost!.diff ? ` (${d.dataHost!.diff})` : ""}`).join("\n"),
+      "",
+    ] : []),
+    ...(summary.isolated ? [
+      "## The isolation column",
+      "",
+      "What `ι = isolated` costs in coverage (#171). Under it `F-IsolatedRefusal` refuses every project-owned invocation, so a file whose fold would invoke project code runs instead. The difference is the price of the guarantee.",
+      "",
+      "| Files | Folds under `open` | Folds under `isolated` | Lost to isolation |",
+      "|---|---|---|---|",
+      `| ${summary.isolated.files} | ${summary.isolated.openFolds} | ${summary.isolated.isolatedFolds} | ${summary.isolated.lost} |`,
+      "",
+      ...(summary.isolated.unavailable
+        ? [`${summary.isolated.unavailable} files had no isolated verdict and are counted apart, so an entry that breaks isolation is visible rather than silent.${summary.isolated.unavailableReason ? ` First reason: ${summary.isolated.unavailableReason}` : ""}`, ""]
+        : []),
+      ...(summary.isolated.gained
+        ? [`**${summary.isolated.gained} files fold under \`isolated\` and run under \`open\`.** \`F-IsolatedRefusal\` only refuses more, so this should be zero and is a defect in the implementation or in the rule.`, ""]
+        : []),
+      summary.isolated.lost === 0
+        ? "Nothing folds under `open` and runs under `isolated`."
+        : `Files that fold under \`open\` and run under \`isolated\`:\n\n${summary.isolated.lostFiles.map((d) => `- \`${d.entry}/${d.file}\``).join("\n")}`,
       "",
     ] : []),
     ...(external.length ? [

@@ -89,7 +89,10 @@ try {
   // The data-host column (#86): present when the report was taken with the Rust evaluator built.
   const column = /## The data-host column\n\n- evaluator: `([^`]+)`[^\n]*\n\n\| Files \| Agreed \| Both fold \|\n\|[-|]+\|\n\| (\d+) \| (\d+) \| (\d+) \|/.exec(report);
   const dataHost = column ? { evaluator: column[1], files: +column[2], agreed: +column[3], bothFold: +column[4] } : null;
-  if (rev && totals) corpus = { corpusVersion: rev[1], revision: rev[2], entries: +rev[3], files: +totals[1], comparable: +totals[2], agreed: +totals[3], bothFold: +totals[4], noHost: +totals[5], noInvocation: +totals[6], chantDeclares: declared ? declared[1] : null, dataHost };
+  // The isolation column (#171): what refusing every project-owned invocation costs in coverage.
+  const iso = /## The isolation column\n[\s\S]*?\| Files \| Folds under `open` \| Folds under `isolated` \| Lost to isolation \|\n\|[-|]+\|\n\| (\d+) \| (\d+) \| (\d+) \| (\d+) \|/.exec(report);
+  const isolated = iso ? { files: +iso[1], openFolds: +iso[2], isolatedFolds: +iso[3], lost: +iso[4] } : null;
+  if (rev && totals) corpus = { corpusVersion: rev[1], revision: rev[2], entries: +rev[3], files: +totals[1], comparable: +totals[2], agreed: +totals[3], bothFold: +totals[4], noHost: +totals[5], noInvocation: +totals[6], chantDeclares: declared ? declared[1] : null, dataHost, isolated };
 } catch {}
 mkdirSync(dataDir, { recursive: true });
 // The evaluator's WebAssembly module, when scripts/build-wasm.sh has run: its size in kilobytes, so the page that loads it can say what it is asking the reader to download.
