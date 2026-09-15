@@ -7,16 +7,14 @@
   <p class="hero-actions"><a class="button" href="{{ "try-it/" | relURL }}">Try it in ten minutes</a> <a class="button secondary" href="{{ "for-your-platform/" | relURL }}">Add it to your platform</a> <a class="button secondary" href="{{ "spec/" | relURL }}">The specification</a></p>
 </section>
 
-{{- /* The three beats are the three pages of what-it-enables/, read from
-       their front matter, so the landing page cannot say something a page
-       does not. */ -}}
-<section class="beats">
-  {{ range (site.GetPage "/what-it-enables").RegularPages.ByWeight }}
-  <div class="beat">
-    <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
-    <p>{{ .Description }}</p>
-  </div>
-  {{ end }}
+{{- /* The loop draws all three of what-it-enables', so it stands in place of
+       the beats row that used to repeat them: the zone is no-execution, the
+       return arc is the round trip, and rules over values is a box. The pages
+       keep their links, read from their own front matter, so the landing page
+       still cannot name a page that does not exist. */ -}}
+<section class="loop-section">
+  {{ partial "governance-loop.html" . }}
+  <p class="loop-links">{{ range (site.GetPage "/what-it-enables").RegularPages.ByWeight }}<a href="{{ .RelPermalink }}">{{ .Title }}</a>{{ end }}</p>
 </section>
 
 <section class="platforms">
