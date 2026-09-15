@@ -86,7 +86,7 @@ the exports hold when it finishes.
 
 The artifact is the same either way. `run` is the fallback, and its `reason`
 names the line that made the file a program rather than data. The isolation
-mode `ι` is one of `open`, `isolated` and `executing`, `open` being the strict
+mode `ι` is one of `open`, `isolated` and `executing`. `open` is the strict
 default.
 
 The verdict is evaluated per file, without regard to other files' verdicts

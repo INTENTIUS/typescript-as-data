@@ -150,7 +150,7 @@ chant's fold-coverage history records that three predictions about what would un
 - lexicon package exports moved twenty-one
 - constructions as values moved twenty-one more
 
-The corpus is chant's own examples, and chant's documentation says the number is not an estimate for other codebases. Both statements stay in the paper.
+The corpus is chant's own examples. chant's documentation says the number is not an estimate for other codebases. Both statements stay in the paper.
 
 ## Limits
 

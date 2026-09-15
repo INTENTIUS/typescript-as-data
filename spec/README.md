@@ -32,7 +32,7 @@ where each one is nearest.
 
 ## Process rules for the specification itself
 
-Not rules of the mechanism; rules of this document set. No fixture cites them. CI structure enforces them.
+These govern the document set rather than the mechanism. CI structure enforces them and no fixture cites them.
 
 - **Every normative rule carries a stable identifier**.
 - **Every identifier is exercised by at least one fixture and every fixture

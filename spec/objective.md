@@ -130,9 +130,13 @@ from `g`" and `f ⇝ g` is "`f` captured an object from `g`" (F-Capture).
 
 ### Grammar
 
-`grammar.md` uses BNF. `⟨X⟩` is a nonterminal; `|` alternation; `*` zero or
-more; `+` one or more; `::=` "is defined as". Terminals are TypeScript tokens
-or node kinds.
+`grammar.md` uses BNF. A terminal is a TypeScript token or a node kind.
+
+- `⟨X⟩` a nonterminal
+- `|` alternation
+- `*` zero or more
+- `+` one or more
+- `::=` "is defined as"
 
 ### Reading one rule
 
