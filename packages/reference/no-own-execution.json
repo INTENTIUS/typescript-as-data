@@ -1,0 +1,65 @@
+{
+  "specVersion": "2.1",
+  "panels": [
+    {
+      "id": "A",
+      "title": "data-host invokes nothing",
+      "claim": "F-Profile-DataHost: no constructor and no function is invoked, asserted on both observers rather than observed",
+      "fixtures": 19,
+      "invocations": 0,
+      "witnessed": 0,
+      "byRule": {},
+      "counters": {
+        "factoryInvocations": 0,
+        "projectFactoryInvocations": 0,
+        "factoryInterpretations": 0
+      },
+      "failures": []
+    },
+    {
+      "id": "B",
+      "title": "a fully folding estate runs only what the rule admits",
+      "claim": "F-NoOwnExecution: every invocation maps to a named rule, and two independent counts of them agree",
+      "fixtures": 29,
+      "invocations": 24,
+      "witnessed": 24,
+      "byRule": {
+        "F-Eval-CallEager": 1,
+        "F-Val-Fate": 23
+      },
+      "counters": {
+        "factoryInvocations": 0,
+        "projectFactoryInvocations": 0,
+        "factoryInterpretations": 0
+      },
+      "failures": []
+    },
+    {
+      "id": "C",
+      "title": "a mixed estate shows the run path and its taint casualties",
+      "claim": "F-NoOwnExecution is per file: a neighbour that runs licenses no execution inside a file that folds",
+      "fixtures": 32,
+      "invocations": 21,
+      "witnessed": 21,
+      "byRule": {
+        "F-Val-Fate": 15,
+        "F-Call": 6
+      },
+      "counters": {
+        "factoryInvocations": 6,
+        "projectFactoryInvocations": 0,
+        "factoryInterpretations": 9
+      },
+      "failures": []
+    }
+  ],
+  "arms": {
+    "reached": {
+      "F-Val-Fate": 38,
+      "F-Eval-CallEager": 1,
+      "F-Eval-CallMethod": 1,
+      "F-Call": 6
+    },
+    "missing": []
+  }
+}

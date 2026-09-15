@@ -654,9 +654,11 @@ bad props reports mid-fold as a failure to fold with no rule identifier and
 no position. F-Rule-Finding names the rule and the position and reaches the
 author at the keystroke.
 
-The published measurement changes status. `paper/measurements.md`'s 0 MB row
-was a property of chant's generated lexicons being data holders. It is now a
-property the specification requires of any conforming host.
+The published measurement is a separate question. `paper/measurements.md`'s
+0 MB row records what a CPU profile could see and carries that instrument's
+floor. What 2.1 requires is the thinness that row reflects rather than the row
+itself. A constructor still runs under revival and counting one exactly is
+F-Obs-Counters' job.
 
 ---
 

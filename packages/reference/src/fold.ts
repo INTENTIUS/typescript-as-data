@@ -16,6 +16,7 @@ import {
 import { isFoldableHelperName } from "./foldable-helpers.js";
 import { isLiteralKey, isLiteralElementKey, isUnclaimedCallee } from "./subset.js";
 import { findFnBodyViolation, plainBindingKey, type FnDecl } from "./fnbody.js";
+import { record } from "./trace";
 
 /** A located rejection, per R9.3: the node and the rule, wording unconstrained. */
 export class FoldRejection extends Error {
@@ -656,7 +657,9 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
       // F-Eval-CallEager
       if (host.intrinsics.some((i) => i.name === name && intrinsicCallFoldsEagerly(i))) {
         if (typeof local !== "function") reject("F-Eval-CallEager", node, `"${name}" did not resolve to a function`);
-        return (local as (...a: unknown[]) => unknown)(...node.arguments.map((a) => F(a)));
+        const eagerArgs = node.arguments.map((a) => F(a));
+        record("F-Eval-CallEager", "eager intrinsic", name);
+        return (local as (...a: unknown[]) => unknown)(...eagerArgs);
       }
 
       // S-FactoryBody rule 5: inside a factory body a call through a bare
@@ -681,7 +684,9 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
       }
       const fn = (receiver as Record<string, unknown>)[method];
       if (typeof fn !== "function") reject("F-Eval-CallMethod", node, `"${method}" is not a callable method on the folded value`);
-      return (fn as (...a: unknown[]) => unknown).apply(receiver, node.arguments.map((a) => F(a)));
+      const methodArgs = node.arguments.map((a) => F(a));
+      record("F-Eval-CallMethod", "method on a real receiver", method);
+      return (fn as (...a: unknown[]) => unknown).apply(receiver, methodArgs);
     }
 
     reject("F-Eval-Reject", node, "function call as a value is not foldable");

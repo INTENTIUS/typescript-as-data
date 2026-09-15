@@ -98,6 +98,24 @@ mkdirSync(dataDir, { recursive: true });
 // The evaluator's WebAssembly module, when scripts/build-wasm.sh has run: its size in kilobytes, so the page that loads it can say what it is asking the reader to download.
 let wasmKB = null;
 try { wasmKB = Math.round(statSync(join(root, "docs", "static", "tsad-eval", "tsad-eval.wasm")).size / 1024); } catch {}
-const figures = { specVersion, chantPin, referenceVersion, conformanceVersion, rulesWithFixture, rulesTotal, fixtures, wholeBuildFixtures, corpus, wasmKB };
+// The F-NoOwnExecution recording (#178): an exact ledger of everything the
+// reference invokes while folding, with the rule that admits each one. Read
+// as JSON rather than slurped out of a report, which is #190's lesson.
+let execution = null;
+try {
+  const r = json(join(root, "packages", "reference", "no-own-execution.json"));
+  const panel = (id) => r.panels.find((p) => p.id === id);
+  execution = {
+    dataHostFixtures: panel("A").fixtures,
+    foldingFixtures: panel("B").fixtures,
+    foldingInvocations: panel("B").invocations,
+    mixedFixtures: panel("C").fixtures,
+    mixedInvocations: panel("C").invocations,
+    invocations: r.panels.reduce((n, p) => n + p.invocations, 0),
+    arms: Object.keys(r.arms.reached).length,
+    unmapped: r.panels.reduce((n, p) => n + p.failures.length, 0),
+  };
+} catch {}
+const figures = { specVersion, chantPin, referenceVersion, conformanceVersion, rulesWithFixture, rulesTotal, fixtures, wholeBuildFixtures, corpus, execution, wasmKB };
 writeFileSync(join(dataDir, "figures.json"), JSON.stringify(figures, null, 2) + "\n");
 console.log("figures.json:", JSON.stringify(figures));
