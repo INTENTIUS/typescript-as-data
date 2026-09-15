@@ -71,9 +71,83 @@ consulted.
 
 ## Notation
 
-`Γ = (consts, externals, depth)`
-`depth` is the number of project-local function bodies being folded around
-`e`, 0 at a file's top level. `H = (ρ, helpers)` is the host (hosts.md): the
-intrinsic registry and the authoring-helper allowlist. `v` ranges over the
-value domain (values.md), and `⟦e⟧` abbreviates `Γ, H ⊢ e ⇓ v`. Every rule
-that fails does so with a located rejection.
+The rules are written in three conventions borrowed from three places. A
+reader who has met none of them can read every rule from this section alone.
+Nothing here is normative. It says what the symbols mean rather than what
+the rules require.
+
+### Judgments
+
+```
+Γ, H ⊢ e ⇓ v
+```
+
+Read it left to right: **in environment `Γ` with host `H`, expression `e`
+evaluates to value `v`.** The turnstile `⊢` is "in this context", and the
+double arrow `⇓` is "evaluates to". This is the shape a judgment takes in
+operational semantics. J1, J2 and J3 are each one judgment written this way. J2's is `B, ι ⊢ f ⇓ fold(X, L) | run(reason)`: in build `B` under
+isolation mode `ι`, file `f` either folds to a namespace and a capture set,
+or runs with a reason.
+
+What stands on the left of `⊢` is whatever the judgment needs to know:
+
+- `Γ = (consts, externals, depth)`. `depth` counts the project-local
+  function bodies being folded around `e` and is 0 at a file's top level.
+- `H = (ρ, helpers)` is the host (hosts.md): the intrinsic registry and the
+  authoring-helper allowlist.
+- `B` is the build, `ι` the isolation mode, `v` a value of the domain
+  (values.md).
+
+### Brackets
+
+```
+⟦e⟧
+```
+
+Shorthand for the judgment above, so `⟦e⟧` is "what `e` evaluates to". It
+saves writing `Γ, H ⊢ e ⇓` in front of every subexpression. A rule like
+`⟦!e⟧ = ¬truthy(⟦e⟧)` reads: the value of `!e` is the negation of the
+truthiness of the value of `e`. Every use expands back to a judgment and
+carries no meaning the judgment does not.
+
+### The fixpoint
+
+J3 defines the tainted set by a least fixed point:
+
+```
+T(B) = μX . Seed(B) ∪ ⋃_{f ∈ X} Succ(f)
+```
+
+`μX . …` is **the smallest `X` that satisfies what follows**. Here: the
+smallest set containing the seed and closed under `Succ`. Reading it as a
+procedure is also correct and is how an implementation does it. Start with
+`Seed(B)` and keep adding the successors of everything in it until the set
+stops growing. It stops because `F` is finite and the set only grows. `∪` is union,
+`⋃` a union over many, `∈` membership, `∉` its negation, `⊆` subset.
+
+The arrows are relations between files. `f → g` is "`f` imports or re-exports
+from `g`" and `f ⇝ g` is "`f` captured an object from `g`" (F-Capture).
+
+### Grammar
+
+`grammar.md` uses BNF. `⟨X⟩` is a nonterminal; `|` alternation; `*` zero or
+more; `+` one or more; `::=` "is defined as". Terminals are TypeScript tokens
+or node kinds.
+
+### Reading one rule
+
+`evaluation.md`'s first rule is
+
+> **F-Eval-Unwrap.** `⟦(e)⟧ = ⟦e as T⟧ = ⟦e satisfies T⟧ = ⟦e!⟧ = ⟦e⟧`
+
+which says that four pieces of TypeScript syntax all evaluate to whatever `e`
+does:
+
+- `(e)` parenthesises it
+- `e as T` asserts its type
+- `e satisfies T` checks its type
+- `e!` asserts it non-null
+
+Each changes what the compiler thinks and none changes the value.
+
+Every rule that fails does so with a located rejection.
