@@ -16,6 +16,7 @@ import {
   findChantCheckout, discoverCorpus, runCorpusEntry, summarize, renderCorpusReport,
   findExternalCheckouts, discoverExternal,
   type ChantCheckout, type CorpusSummary, type EntryReport, type ExternalRun,
+  isolationRefusalOf,
 } from "./corpus";
 
 const checkout = findChantCheckout();
@@ -106,5 +107,29 @@ describe.skipIf(!checkout)("the corpus against both implementations (#25)", () =
     // disagreement wherever it appears.
     const lines = summary.referenceMorePermissive.map((d) => `${d.entry}/${d.file}: ${d.chantReason ?? ""}`);
     expect(lines, lines.join("\n")).toEqual([]);
+  });
+});
+
+/**
+ * The isolation refusal classifier (#171), outside the skip above: it reads
+ * strings rather than a chant checkout, so it runs everywhere. The wordings
+ * here are chant's own, built by `sandboxedExecutionRefusal` from a `what` of
+ * "composite factory", "constructor" or "import".
+ */
+describe("isolation refusals are classified by what chant refused (#171)", () => {
+  test("each of chant's three wordings, and anything else", () => {
+    expect(isolationRefusalOf('composite factory "prodConverge" is imported from "./ops", which is neither chant\'s own nor an active lexicon')).toBe("factory");
+    expect(isolationRefusalOf('constructor "Repository" is imported from "./repo"')).toBe("constructor");
+    expect(isolationRefusalOf('import "thing" is imported from "./x"')).toBe("import");
+    expect(isolationRefusalOf("a wording this report does not know")).toBe("other");
+    expect(isolationRefusalOf(undefined)).toBeUndefined();
+  });
+
+  test("an unknown wording is never put in a known bucket", () => {
+    // The split is short by the unclassified count rather than wrong, which is
+    // what keeps a chant rewording visible instead of silently miscounted.
+    for (const r of ["refused", "project code", "sandbox", ""]) {
+      expect(isolationRefusalOf(r) === "factory" || isolationRefusalOf(r) === "constructor").toBe(false);
+    }
   });
 });
