@@ -1,0 +1,74 @@
+{{- /*
+  The governance loop. Inlined rather than served as a file so it takes the
+  page's own tokens: the site is light-first with a real dark mode, and a
+  flat-coloured asset would be unreadable in one of them.
+
+  One claim: everything but the apply happens without running your program,
+  and the loop closes because live reality reads back into source.
+*/ -}}
+<figure class="loop-fig">
+  <svg class="loop" viewBox="0 0 1120 440" role="img"
+       aria-label="A governance loop running left to right. The live estate is imported to typed source, folded to values without the file itself being run, checked as rules over those values, and emitted as the target's own artifact. Only the apply step crosses the execution boundary. A return arc reads live reality back and diffs it against the declared source.">
+    <defs>
+      <marker id="lp-ah" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path class="lp-head" d="M0,0 L6.5,3 L0,6 Z"/>
+      </marker>
+      <marker id="lp-ah-a" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path class="lp-head-a" d="M0,0 L6.5,3 L0,6 Z"/>
+      </marker>
+    </defs>
+
+    <rect class="lp-zone" x="8" y="56" width="892" height="264" rx="10"/>
+    <text class="lp-zone-label" x="26" y="78">EACH FOLDED FILE IS READ, NEVER RUN</text>
+
+    <line class="lp-boundary" x1="926" y1="50" x2="926" y2="340"/>
+    <text class="lp-boundary-label" x="926" y="42" text-anchor="middle">execution boundary</text>
+
+    <rect class="lp-box" x="20" y="120" width="118" height="68" rx="6"/>
+    <text class="lp-title" x="79" y="150" text-anchor="middle">Live estate</text>
+    <text class="lp-sub" x="79" y="212" text-anchor="middle">the estate</text>
+    <text class="lp-sub" x="79" y="226" text-anchor="middle">you already have</text>
+
+    <rect class="lp-box" x="186" y="120" width="130" height="68" rx="6"/>
+    <text class="lp-title" x="251" y="150" text-anchor="middle">Typed source</text>
+    <text class="lp-sub" x="251" y="212" text-anchor="middle">keystroke check,</text>
+    <text class="lp-sub" x="251" y="226" text-anchor="middle">no evaluator</text>
+
+    <rect class="lp-box" x="364" y="120" width="130" height="68" rx="6"/>
+    <text class="lp-title" x="429" y="150" text-anchor="middle">Folded values</text>
+    <text class="lp-sub" x="429" y="212" text-anchor="middle">a function of</text>
+    <text class="lp-sub" x="429" y="226" text-anchor="middle">the source</text>
+
+    <rect class="lp-box" x="542" y="120" width="146" height="68" rx="6"/>
+    <text class="lp-title" x="615" y="150" text-anchor="middle">Rules over values</text>
+    <text class="lp-sub" x="615" y="212" text-anchor="middle">AWS · Azure · GCP · K8s</text>
+    <text class="lp-sub" x="615" y="226" text-anchor="middle">written once</text>
+
+    <rect class="lp-box" x="736" y="120" width="138" height="68" rx="6"/>
+    <text class="lp-title" x="805" y="150" text-anchor="middle">Target artifact</text>
+    <text class="lp-sub" x="805" y="212" text-anchor="middle">CloudFormation · ARM</text>
+    <text class="lp-sub" x="805" y="226" text-anchor="middle">Kubernetes YAML</text>
+
+    <rect class="lp-box-out" x="962" y="120" width="124" height="68" rx="6"/>
+    <text class="lp-title" x="1024" y="150" text-anchor="middle">Apply</text>
+    <text class="lp-sub" x="1024" y="212" text-anchor="middle">plan / what-if</text>
+    <text class="lp-sub" x="1024" y="226" text-anchor="middle">still work</text>
+
+    <line class="lp-edge" x1="142" y1="154" x2="178" y2="154" marker-end="url(#lp-ah)"/>
+    <text class="lp-edge-label" x="160" y="142" text-anchor="middle">import</text>
+    <line class="lp-edge" x1="320" y1="154" x2="356" y2="154" marker-end="url(#lp-ah)"/>
+    <text class="lp-edge-label" x="338" y="142" text-anchor="middle">fold</text>
+    <line class="lp-edge" x1="498" y1="154" x2="534" y2="154" marker-end="url(#lp-ah)"/>
+    <text class="lp-edge-label" x="516" y="142" text-anchor="middle">check</text>
+    <line class="lp-edge" x1="692" y1="154" x2="728" y2="154" marker-end="url(#lp-ah)"/>
+    <text class="lp-edge-label" x="710" y="142" text-anchor="middle">emit</text>
+    <line class="lp-edge" x1="878" y1="154" x2="954" y2="154" marker-end="url(#lp-ah)"/>
+
+    <text class="lp-note" x="26" y="286">Portable: the same values in an editor, a CI job or a browser tab,</text>
+    <text class="lp-note" x="26" y="306">with no JavaScript runtime required.</text>
+
+    <path class="lp-arc" d="M 1024 192 V 380 Q 1024 400 1004 400 H 99 Q 79 400 79 380 V 196" marker-end="url(#lp-ah-a)"/>
+    <text class="lp-arc-label" x="551" y="392" text-anchor="middle">read live back · diff against declared source</text>
+  </svg>
+  <figcaption>The loop closes because reality reads back into source. Only the final hop crosses the boundary, and what crosses it is an artifact in the target's own format rather than a program.</figcaption>
+</figure>
