@@ -29,6 +29,7 @@ function locate(n: ts.Node): [number, number] {
 import { revive } from "./revive.js";
 import type { FnDecl } from "./fnbody.js";
 import { plainBindingKey } from "./fnbody.js";
+import { record } from "./trace";
 
 export type Verdict =
   | { kind: "fold"; exports: Map<string, unknown>; captures: Set<string> }
@@ -409,6 +410,7 @@ function foldFile(path: string, session: Session): Verdict {
       // Step 6: invoked with the resolved arguments; a live argument passes through and an attribute reference stays symbolic (L6.9).
       const args = folded.map((v, i) => live(v, call.arguments[i], c.text));
       counters.factoryInvocations += 1;
+      record("F-Call", "package factory (step 6)", c.text);
       try {
         result = (bound as (...a: unknown[]) => unknown)(...args);
       } catch (err) {
@@ -427,6 +429,7 @@ function foldFile(path: string, session: Session): Verdict {
     if (isCompositeFactory(bound)) return live(interpret(bound, args, sf, 0, evalHost), sf, callee);
     if (hostBound.has(callee) && typeof bound === "function") {
       counters.factoryInvocations += 1;
+      record("F-Call", "package factory (step 6)", callee);
       let r: unknown;
       try { r = (bound as (...a: unknown[]) => unknown)(...args); }
       catch (err) { throw new FoldRejection("F-Call", 1, 1, `invoking "${callee}" threw: ${err instanceof Error ? err.message : String(err)}`); }

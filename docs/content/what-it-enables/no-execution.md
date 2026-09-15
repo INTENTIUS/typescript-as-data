@@ -44,6 +44,19 @@ chant folds every file it can and measures that it executed nothing. Its `test/l
 
 Both profiler recordings are readable in the browser. [The `cdk synth` recording](https://spicypath.intentius.workers.dev/leftness-cdk) carries a marker on the moment the app starts, and stays lit from there. [The `chant build` recording](https://spicypath.intentius.workers.dev/leftness-chant) answers the same search with no matches. [Flame graphing the leftness of infra tooling](https://lex00.github.io/posts/flame-graphing-the-leftness-of-infra-tooling/) walks through both, and the harness that regenerates them is [`test/leftness`](https://github.com/INTENTIUS/chant/tree/main/test/leftness).
 
+A profile is the wrong instrument for the claim, because the claim is closure rather than volume. A `--cpu-prof` figure has a sampling floor, so 0 MB means everything the profiler could see. So the reference counts instead. Every site in it that invokes code it did not write records the invocation and the rule that admits it, and a counting proxy around the host's callables counts the same invocations without being told what they are. Across {{< figure "execution.foldingFixtures" >}} fully folding whole-build fixtures the ledger holds {{< figure "execution.foldingInvocations" >}} invocations and the two counts agree. Each one names an arm of `F-NoOwnExecution`. An invocation either observer sees and the other does not is an unmapped frame and fails the build. There are {{< figure "execution.unmapped" >}}.
+
+The arms are the rule's own closed list:
+
+- revival of an envelope (`F-Val-Fate`)
+- an eager intrinsic (`F-Eval-CallEager`)
+- a method on a real receiver (`F-Eval-CallMethod`)
+- a package's factory at `F-Call` step 6
+
+Nothing reached any other, and a listed arm that nothing reaches fails too, so the list has no dead entry.
+
+Two things the profile cannot show, and this does. Under `data-host` the count is zero across {{< figure "execution.dataHostFixtures" >}} fixtures, which is `F-Profile-DataHost` made visible rather than measured. And {{< figure "execution.mixedFixtures" >}} fixtures are estates that do not fold completely, where a file that folds sits beside one that runs. chant's harness fails unless every file folds, so it has never recorded one.
+
 The reference implementation folds with no runtime at all. At spec {{< figure "specVersion" >}} it agrees with chant {{< figure "chantPin" >}} on every one of {{< figure "corpus.comparable" >}} comparable corpus files, and on the {{< figure "corpus.bothFold" >}} that fold on both sides the export namespaces are identical.
 
 ## Where the rule lives

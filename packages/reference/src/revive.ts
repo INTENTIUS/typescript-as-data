@@ -14,6 +14,7 @@
  * declarator produced.
  */
 import { FoldRejection, isEnvelope, isLiveObject } from "./fold.js";
+import { record } from "./trace";
 
 /** Where a revival happened, for the located rejection F-Reason wants. */
 export interface RevivalSite {
@@ -95,17 +96,38 @@ function reviveEnvelope(e: Env, bindings: ReadonlyMap<string, unknown>, site: Re
     const name = e.__resource as string;
     const C = callable(name, bindings, site) as unknown as new (...a: unknown[]) => unknown;
     // F-Val-Arity: spread `args` when present, otherwise props and optional attributes.
-    if (Array.isArray(e.args)) return new C(...(e.args as unknown[]).map((x) => revive(x, bindings, site, false)));
+    if (Array.isArray(e.args)) {
+      const spread = (e.args as unknown[]).map((x) => revive(x, bindings, site, false));
+      record("F-Val-Fate", "entity constructor", name);
+      return new C(...spread);
+    }
     const props = revive(e.props, bindings, site, false);
-    return "attributes" in e ? new C(props, revive(e.attributes, bindings, site, false)) : new C(props);
+    // The arity is the envelope's, never the revived value's: `attributes`
+    // present and reviving to undefined is still the two-argument form
+    // (F-Val-Arity).
+    const hasAttributes = "attributes" in e;
+    const attributes = hasAttributes ? revive(e.attributes, bindings, site, false) : undefined;
+    record("F-Val-Fate", "entity constructor", name);
+    return hasAttributes ? new C(props, attributes) : new C(props);
   }
   if ("__intrinsic" in e) {
     const fn = callable(e.__intrinsic as string, bindings, site);
     // The tag form keeps its cooked strings; the call form is a plain call.
-    if (Array.isArray(e.strings)) return fn(e.strings as unknown as string[], ...args(e.values));
-    return fn(...args(e.args));
+    if (Array.isArray(e.strings)) {
+      const values = args(e.values);
+      record("F-Val-Fate", "intrinsic", e.__intrinsic as string);
+      return fn(e.strings as unknown as string[], ...values);
+    }
+    const callArgs = args(e.args);
+    record("F-Val-Fate", "intrinsic", e.__intrinsic as string);
+    return fn(...callArgs);
   }
-  if ("__helper" in e) return callable(e.__helper as string, bindings, site)(...args(e.args));
+  if ("__helper" in e) {
+    const helper = callable(e.__helper as string, bindings, site);
+    const helperArgs = args(e.args);
+    record("F-Val-Fate", "authoring helper", e.__helper as string);
+    return helper(...helperArgs);
+  }
   if ("__symbol" in e) {
     const text = e.__symbol as string;
     if (!DOTTED.test(text)) fail(site, `a symbolic reference revives only through a simple dotted chain, and "${text}" is not one`);
