@@ -601,6 +601,46 @@ downstream tool ask "will this fold?" without running a fold.
 
 ## The host interface (`hosts.md`)
 
+**F-Host-Admission** *(The first clause is observable, partly)*
+
+The clause requires a registered call be a pure function of its arguments.
+Nothing verified it. `chant dev check-lexicon` checks the signature and the
+export's presence (F-Host-Registry) and says nothing about purity. An eager
+intrinsic reading `process.env` was a conforming implementation with a
+non-conforming host. The document's own sentence applied to itself here: a
+host must provide the equivalent check or its registry is a claim.
+
+`rules.md` states the asymmetry without noticing it. F-Rule-Pure is
+"F-Host-Admission's third clause applied to rules" and the conformance runner
+has always asked each phase twice and held the two runs to one answer. The
+fold half had no such test.
+
+It has one now. Every project fixture is folded twice, the second time with
+the environment changed underneath, and the two namespaces must agree. Anything
+that makes the second fold differ fails against this rule's name: an
+environment read, a clock, a counter, a random source, module-level mutable
+state.
+
+**What it does not catch.** A network call that answers the same twice. A
+read of an environment name the probe does not set. A constructor that is
+heavy but deterministic, which is F-Host-Interface item 1's question rather
+than this one: item 1 says what an entity constructor carries and nothing
+about what it does, so a host may put validation or a dependency graph behind
+it and violate no rule. That gap is real and is not closed here. The
+measurement on the site rests on chant's lexicons being generated as data
+holders rather than on anything the specification requires.
+
+Partial in the way F-Obs-Counters is partial and shipped for the same
+reason. A check that catches the cheap cases beats an obligation nothing
+checks at all.
+
+Callables are outside it. F-Val-Callable puts a `FoldableFunction` outside the
+value domain and an implementation may hand one back carrying its own AST and
+a source path the harness writes to a fresh directory per fold. Comparing
+those would measure the harness.
+
+---
+
 **F-Host-Trust** *(Trust is decided by resolution)*
 
 Two arms (L9.1–L9.4). Arm 1 is an active lexicon package of *this build*,

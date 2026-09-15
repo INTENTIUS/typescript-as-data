@@ -1,4 +1,4 @@
-import type { ConformanceAdapter, Finding, RulePhase, ExecutionCounters } from "./adapter.js";
+import type { ConformanceAdapter, Finding, RulePhase, ExecutionCounters, ProjectResult } from "./adapter.js";
 import type { ExpressionFixture, Fixture, ProjectFixture, RoundtripFixture } from "./fixture.js";
 import { expressionFixtures, projectFixtures, roundtripFixtures } from "./fixture.js";
 import { requireHost } from "./host.js";
@@ -84,6 +84,111 @@ export function decodeValue(v: unknown): unknown {
 }
 
 /** #24 — a whole-build fixture. J3's edges are invisible in any single file, so this is the only shape that can test them. */
+/**
+ * A callable export, which F-Val-Callable puts outside the value domain: a
+ * function, or an implementation's own record of one. Recognised by carrying a
+ * source location beside a body rather than by any one implementation's shape,
+ * so this does not privilege chant's `FoldableFunction`.
+ */
+function isCallable(v: unknown): boolean {
+  if (typeof v === "function") return true;
+  if (v === null || typeof v !== "object") return false;
+  const o = v as Record<string, unknown>;
+  return typeof o.file === "string" && ("fn" in o || "body" in o || "declaration" in o);
+}
+
+/**
+ * `encodeValue` for a value that may be live. A folded namespace in `full`
+ * carries real instances whose `AttrRef`s reference their parent, so the plain
+ * encoder recurses forever; a revisited object becomes `$cycle` here. Only
+ * ever compared against itself from the other fold, so the marker is enough.
+ */
+function probeEncode(v: unknown): string {
+  const seen = new WeakSet<object>();
+  const walk = (x: unknown): unknown => {
+    if (x === undefined) return "$undefined";
+    if (typeof x === "function") return "$function";
+    if (typeof x === "number" && !Number.isFinite(x)) return String(x);
+    if (x === null || typeof x !== "object") return x;
+    if (seen.has(x)) return "$cycle";
+    seen.add(x);
+    if (Array.isArray(x)) return x.map(walk);
+    return Object.fromEntries(Object.entries(x).map(([k, e]) => [k, walk(e)]));
+  };
+  try {
+    return JSON.stringify(walk(v));
+  } catch {
+    return "$unencodable";
+  }
+}
+
+/**
+ * Names a host might read from the environment. Between the two folds of
+ * {@link purityProbe} each is set to a different value, so a registered call
+ * or a constructor that reads one produces a different namespace and is
+ * caught. Deliberately none of the runtime's own (`PATH`, `HOME`, `NODE_*`):
+ * changing those would break the evaluator rather than probe the host.
+ */
+const PROBE_ENV = ["TSAD_PROBE", "STAGE", "ENVIRONMENT", "DEPLOY_ENV", "AWS_REGION", "AWS_PROFILE", "CHANT_ENV", "CI"] as const;
+
+/**
+ * F-Host-Admission's first clause, made observable (#173).
+ *
+ * The rule requires a registered call be "a pure function of its arguments,
+ * no I/O, no environment read, no module-level mutable state, no observable
+ * side effect", and F-Rule-Pure says of rules that this "is
+ * F-Host-Admission's third clause applied to rules". The runner has always
+ * tested the rules half by asking each phase twice ({@link collectFindings}).
+ * This is the same test on the fold: fold once, fold again with the
+ * environment changed underneath, and require the same namespace.
+ *
+ * WHAT IT CATCHES: an environment read, a clock, a counter, a random source,
+ * module-level mutable state — anything that makes the second fold differ.
+ *
+ * WHAT IT DOES NOT: a network call that answers the same twice, a read of an
+ * environment name outside PROBE_ENV, or a heavy but deterministic
+ * constructor, which is F-Host-Interface item 1's unstated weight question
+ * rather than this clause. Partial in the way F-Obs-Counters is partial, and
+ * shipped for the same reason.
+ */
+async function purityProbe(adapter: ConformanceAdapter, f: ProjectFixture, first: ProjectResult): Promise<string[]> {
+  if (!adapter.foldProject) return [];
+  const folded = Object.entries(first.verdicts).flatMap(([path, v]) => (v.kind === "fold" ? [[path, v] as const] : []));
+  if (folded.length === 0) return [];
+  const saved = new Map(PROBE_ENV.map((k) => [k, process.env[k]]));
+  try {
+    for (const k of PROBE_ENV) process.env[k] = `tsad-probe-${k}`;
+    const second = await adapter.foldProject(f.files, f.host ? requireHost(f.host) : undefined, f.mode);
+    if (second === "unavailable") return [];
+    const out: string[] = [];
+    for (const [path, v] of folded) {
+      const w = second.verdicts[path];
+      if (w?.kind !== "fold") {
+        out.push(`${path}: folded once and did not fold again with the environment changed (F-Host-Admission)`);
+        continue;
+      }
+      // Per export rather than over the whole namespace, and cycle-safe: a
+      // folded namespace in `full` holds live instances whose attributes point
+      // back at their parent, so encoding one whole is unbounded.
+      const names = [...new Set([...Object.keys(v.exports), ...Object.keys(w.exports)])];
+      for (const name of names) {
+        // Values only. F-Val-Callable says a `FoldableFunction` "never appears
+        // inside a folded tree", and an implementation is free to hand one
+        // back carrying its AST and its source path, which the harness writes
+        // to a fresh temp directory per fold. Comparing those measures the
+        // harness rather than the host.
+        if (isCallable(v.exports[name]) || isCallable(w.exports[name])) continue;
+        const a = probeEncode(v.exports[name]);
+        const b = probeEncode(w.exports[name]);
+        if (a !== b) out.push(`${path}: export ${name} differs between two folds of the same source (F-Host-Admission: a registered call or a constructor read something outside its arguments)\n  ${a}\n  ${b}`);
+      }
+    }
+    return out;
+  } finally {
+    for (const [k, v] of saved) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+  }
+}
+
 export async function runProjectFixture(adapter: ConformanceAdapter, f: ProjectFixture): Promise<FixtureReport> {
   const base = { fixture: f.id, adapter: adapter.name };
   if (!adapter.foldProject) return { ...base, pass: true, skipped: "no project entry", failures: [] };
@@ -118,6 +223,8 @@ export async function runProjectFixture(adapter: ConformanceAdapter, f: ProjectF
       }
     }
   }
+  failures.push(...(await purityProbe(adapter, f, r)));
+
   if (f.findings) {
     const got = await collectFindings(adapter, f);
     if (got === "unavailable") return { ...base, pass: failures.length === 0, skipped: "rules unavailable", failures };
