@@ -298,6 +298,24 @@ export interface DataHostComparison {
   diff?: string;
 }
 
+/** What `F-IsolatedRefusal` turned away, as chant names it. */
+export type IsolationRefusal = "factory" | "constructor" | "import" | "other";
+
+/**
+ * chant builds its refusal as `<what> "<name>" is imported from ...`, with
+ * `what` one of "composite factory", "constructor" or "import"
+ * (`sandboxedExecutionRefusal`). Anything else is `other` rather than guessed
+ * at, so a wording change upstream shows as an unclassified bucket instead of
+ * silently landing in the wrong one.
+ */
+export function isolationRefusalOf(reason: string | undefined): IsolationRefusal | undefined {
+  if (!reason) return undefined;
+  if (/\bcomposite factory\b/.test(reason)) return "factory";
+  if (/\bconstructor\b/.test(reason)) return "constructor";
+  if (/\bimport\b\s+"/.test(reason)) return "import";
+  return "other";
+}
+
 export interface FileComparison {
   readonly file: string;
   readonly chant: Side;
@@ -312,6 +330,17 @@ export interface FileComparison {
    * than read as a refusal.
    */
   readonly chantIsolated?: Side;
+  /** Why the isolated fold refused, when it did, in the implementation's own words. */
+  readonly chantIsolatedReason?: string;
+  /**
+   * What isolation refused, from the reason (#171). chant names three kinds and
+   * they answer different questions: `factory` is F-Call step 6, which spec 2.0
+   * refuses outside `executing` in every mode, so that bucket is the cost of
+   * #169 rather than of isolation and goes to zero once chant implements #199.
+   * `constructor` is F-Val-Fate revival and `import` is a binding neither
+   * chant's own nor an active lexicon; those two are isolation's own cost.
+   */
+  readonly chantIsolatedRefusal?: IsolationRefusal;
   /** Both folded, and their export namespaces were compared as data. */
   readonly values?: "equal" | "differ" | "not-data";
   /** Where the two encodings first differ, with a little context either side, so a difference is a diff and not a verdict. */
@@ -659,6 +688,8 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
     const chantSide: Side = cv?.verdict === "fold" ? "fold" : "run";
     const referenceSide: Side = rv?.kind === "fold" ? "fold" : "run";
     const limit: Limit | undefined = hostLimited.has(file) ? "host" : invocationLimited.has(file) ? "invocation" : undefined;
+    const iv = chantIsolated?.get(abs);
+    const isolatedReason = iv?.verdict === "run" ? iv.reason : undefined;
     const base: FileComparison = {
       file,
       chant: chantSide,
@@ -666,6 +697,8 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
       limit,
       dataHost,
       chantIsolated: chantIsolated ? (chantIsolated.get(abs)?.verdict === "fold" ? "fold" : "run") : undefined,
+      chantIsolatedReason: isolatedReason,
+      chantIsolatedRefusal: isolationRefusalOf(isolatedReason),
       referenceRule: rv?.kind === "run" ? rv.rule : undefined,
       referenceReason: rv?.kind === "run" ? rv.reason : undefined,
       chantReason:
@@ -717,6 +750,12 @@ export interface CorpusSummary {
     readonly isolatedFolds: number;
     /** Counted from `lostFiles`, never subtracted, so the number and the list it sits above cannot disagree. */
     readonly lost: number;
+    /**
+     * `lost` split by what was refused. `factory` is F-Call step 6 and is the
+     * cost of #169 rather than of isolation; it goes to zero once chant
+     * implements #199. `constructor` and `import` are isolation's own.
+     */
+    readonly lostByKind: Readonly<Record<IsolationRefusal, number>>;
     /**
      * Files that run under `open` and fold under `isolated`. `F-IsolatedRefusal`
      * only refuses more, so this is zero. It is counted rather than assumed,
@@ -770,7 +809,17 @@ export function summarize(reports: readonly EntryReport[]): CorpusSummary {
     comparableValuesNotData, limited, disagreements, referenceMorePermissive,
     dataHost: dhFiles ? { files: dhFiles, agreed: dhAgreed, bothFold: dhBothFold, disagreements: dhDisagreements } : undefined,
     isolated: isoFiles
-      ? { files: isoFiles, openFolds: isoOpenFolds, isolatedFolds: isoFolds, lost: isoLostFiles.length, gained: isoGained, unavailable: isoUnavailable, unavailableReason: isoUnavailableReason, lostFiles: isoLostFiles }
+      ? {
+          files: isoFiles, openFolds: isoOpenFolds, isolatedFolds: isoFolds,
+          lost: isoLostFiles.length,
+          // Counted from the same list `lost` is, so the split cannot disagree
+          // with the total the way a subtraction could (#197).
+          lostByKind: isoLostFiles.reduce(
+            (acc, d) => ({ ...acc, [d.chantIsolatedRefusal ?? "other"]: acc[d.chantIsolatedRefusal ?? "other"] + 1 }),
+            { factory: 0, constructor: 0, import: 0, other: 0 } as Record<IsolationRefusal, number>,
+          ),
+          gained: isoGained, unavailable: isoUnavailable, unavailableReason: isoUnavailableReason, lostFiles: isoLostFiles,
+        }
       : undefined,
   };
 }
@@ -847,6 +896,13 @@ export function renderCorpusReport(
       "|---|---|---|---|",
       `| ${summary.isolated.files} | ${summary.isolated.openFolds} | ${summary.isolated.isolatedFolds} | ${summary.isolated.lost} |`,
       "",
+      "What was refused, from the reason chant gave. A `factory` is F-Call step 6, which spec 2.0 refuses outside `executing` in every mode, so that column is the cost of #169 rather than of isolation and reaches zero once chant implements #199. The other two are isolation's own.",
+      "",
+      "| Composite factory | Constructor | Import | Unclassified |",
+      "|---|---|---|---|",
+      `| ${summary.isolated.lostByKind.factory} | ${summary.isolated.lostByKind.constructor} | ${summary.isolated.lostByKind.import} | ${summary.isolated.lostByKind.other} |`,
+      "",
+      ...(summary.isolated.lostByKind.other ? [`${summary.isolated.lostByKind.other} refusal(s) did not match a wording this report knows, so the split is short by that many rather than putting them in the wrong column.`, ""] : []),
       ...(summary.isolated.unavailable
         ? [`${summary.isolated.unavailable} files had no isolated verdict and are counted apart, so an entry that breaks isolation is visible rather than silent.${summary.isolated.unavailableReason ? ` First reason: ${summary.isolated.unavailableReason}` : ""}`, ""]
         : []),
@@ -855,7 +911,7 @@ export function renderCorpusReport(
         : []),
       summary.isolated.lost === 0
         ? "Nothing folds under `open` and runs under `isolated`."
-        : `Files that fold under \`open\` and run under \`isolated\`:\n\n${summary.isolated.lostFiles.map((d) => `- \`${d.entry}/${d.file}\``).join("\n")}`,
+        : `Files that fold under \`open\` and run under \`isolated\`:\n\n${summary.isolated.lostFiles.map((d) => `- \`${d.entry}/${d.file}\`${d.chantIsolatedRefusal ? ` — ${d.chantIsolatedRefusal}` : ""}`).join("\n")}`,
       "",
     ] : []),
     ...(external.length ? [
