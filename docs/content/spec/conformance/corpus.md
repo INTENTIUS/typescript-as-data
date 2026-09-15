@@ -143,6 +143,31 @@ At <code>{{< figure "corpus.revision" >}}</code> the two agree on all
 {{< figure "corpus.dataHost.bothFold" >}} fold on both sides to the same
 namespace, envelopes included.
 
+## The isolation column
+
+The corpus runs a fourth time under `ι = isolated`. `F-IsolatedRefusal` refuses
+every project-owned invocation there. A file whose fold would invoke project
+code runs instead. The difference between the two runs is what the guarantee
+costs.
+
+| Files | Folds under `open` | Folds under `isolated` | Lost to isolation |
+|---|---|---|---|
+| {{< figure "corpus.isolated.files" >}} | {{< figure "corpus.isolated.openFolds" >}} | {{< figure "corpus.isolated.isolatedFolds" >}} | {{< figure "corpus.isolated.lost" >}} |
+
+`isolated` is the mode that executes no project code at all, and this is the
+coverage it costs. A reader deciding whether to build that way needs the number
+rather than an assurance that it is small.
+
+The report names every lost file and splits them by what chant refused: a
+composite factory, a constructor, or an import. All three kinds are isolation's
+own. Since spec 2.0 a project-file callee is refused at `F-Call` step 5 under
+every mode but `executing`, so what `isolated` refuses beyond that is a package
+this build did not load as an active lexicon.
+
+The column needs a complete run. `corpus.isolated` is absent from
+`figures.json` when the report was regenerated without it, and this page then
+fails the build rather than rendering a blank.
+
 ## What the test asserts
 
 `corpus.test.ts` has six assertions, and three of them guard against the check
