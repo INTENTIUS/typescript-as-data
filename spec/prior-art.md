@@ -10,9 +10,57 @@ Two families do it, and one of them, compile-time function execution, makes
 the same argument this work makes: the same function runs in either context,
 so the result cannot differ.
 
+Each of those families obtains its value **by executing the user's code**
+under restrictions. This work obtains it without executing the user's code at
+all. The axis has its own section below. A survey organised around fallback
+reports the fallback as precedented and never reaches the question the
+mechanism turns on.
+
 No neighbor combines per-file granularity with shared object identity across
 the boundary. That combination is what forces the bidirectional taint
 fixpoint and the fixpoint is where this sweep found no precedent.
+
+## Whether the static path executes the source
+
+The distinguishing axis. An earlier reading of this document missed it.
+
+The sections below were written to compare other dimensions. Each one records
+what its system does to obtain a value. Read together they say one thing.
+
+| System | How the build-time value is obtained |
+|---|---|
+| D CTFE and its family | an interpreter runs the user's function body |
+| Prepack | the program's global code is evaluated |
+| Next.js and Astro | the page is rendered |
+| Nix import-from-derivation | a derivation is built and its output read |
+| Total configuration languages | the configuration program is evaluated by its own interpreter |
+| **constant folding** | **expressions the compiler already holds are reduced** |
+
+D states it of itself in the quotation below. Prepack's first sentence is that
+it evaluates global code. Next.js prerenders a page by rendering it.
+
+Constant folding is the exception and it is the shallow end. A compiler
+reducing `2 + 3` runs no function of the user's. The technique is
+expression-local. It preserves semantics and a compiler may skip it entirely.
+Nobody builds a configuration mechanism on it because on its own it reaches
+nothing.
+
+This work is that technique at the scale of the other family. A whole file
+reduces to a closed value domain. Cross-file object identity survives the
+reduction and a per-file fallback carries what will not reduce. No statement
+of the project's own source is executed to produce the value.
+
+`F-NoOwnExecution` (observables.md) states the bound and names what does
+execute. The list is closed and every member of it is a package's code. Under
+`data-host` nothing is invoked at all (`F-Profile-DataHost`, objective.md).
+Since 2.0 a project-file callee is refused outside `ι = executing` (F-Call
+step 5).
+
+The consequence is the obligation's shape. CTFE reconciles two *executions* of
+one function. That is why D can state agreement as a principle and stop there.
+This work reconciles a reduction against an execution. The source in question
+shares object identity across the boundary. No system in the CTFE family
+carries that obligation. None of them has a non-executing path to reconcile.
 
 ## Nearest neighbors by the dimension they are nearest on
 
@@ -31,6 +79,9 @@ relies on: "All functions that execute in CTFE must also be executable at run
 time. The compile time evaluation of a function does the equivalent of running
 the function at run time. The semantics of a function cannot depend on compile
 time values of the function."
+
+CTFE obtains the value by running the function. The quoted sentence says so
+and it is the difference this work turns on rather than a detail of it.
 
 A required context that cannot be evaluated is illegal and there is no
 fallback. The spec's own example "is illegal, because the runtime code for
@@ -52,6 +103,9 @@ Next.js "automatic static optimization" decides per page: absent
 present, it is rendered per request. Astro's hybrid mode is the same shape. The
 decision is per unit, the fallback is execution, and a hybrid application
 mixes both.
+
+Both sides of that decision execute the page. Prerendering runs the component
+at build time and per-request rendering runs it later.
 
 There, the decision is by a *syntactic marker the author
 writes*, and an analysis of whether the unit is statically evaluable plays no
@@ -222,6 +276,10 @@ explicit in the language rather than inferred.
 
 1. Per-file partial evaluation with a fallback to executing the unit.
    Precedented in shape by Next.js and in principle by CTFE.
+1. A static path that does not execute the source. Constant folding is the
+   only precedent and it is expression-local. Every neighbor that reaches a
+   whole function or a whole unit gets there by running it. The earlier reading
+   of this document compared everything but this.
 2. Same-function agreement via revival through the file's own imports.
    Precedented by CTFE's design principle and citable as the same argument.
 3. Byte-identical agreement as a discharged obligation over a real corpus.
