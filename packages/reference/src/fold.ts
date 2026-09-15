@@ -16,7 +16,7 @@ import {
 import { isFoldableHelperName } from "./foldable-helpers.js";
 import { isLiteralKey, isLiteralElementKey, isUnclaimedCallee } from "./subset.js";
 import { findFnBodyViolation, plainBindingKey, type FnDecl } from "./fnbody.js";
-import { record } from "./trace";
+import { record } from "./trace.js";
 
 /** A located rejection, per R9.3: the node and the rule, wording unconstrained. */
 export class FoldRejection extends Error {

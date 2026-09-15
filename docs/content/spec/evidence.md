@@ -28,4 +28,12 @@ Each claim on [what it enables](/typescript-as-data/what-it-enables/) has a scen
 
 {{< smoke-rows >}}
 
+## What the consumer is running
+
+The site presents `forgejo-warden` as the demonstration that this specification is usable by a platform that is neither this repository nor chant, and a demonstration is worth what it actually runs. Warden pins its own evaluator, so the version it demonstrates is that repository's lockfile rather than this one's. Nothing here read it until #192, and it had drifted six minors behind unnoticed.
+
+{{< consumer-skew >}}
+
+Read rather than gated. Which version a consumer pins is that repository's decision, and no gate here can see its lockfile between runs. Nothing had to be added to warden for this: `spec/README.md` already asks an implementation to declare the version it implements, and the evaluator warden installs already carries the declaration. What was missing was something on this side that looked.
+
 `paper/measurements.md` is the full statement of each measurement and the history of what changed. The chant-side measurements (the fold differential, the execution-boundary profile) live in chant's repository and are cited there.

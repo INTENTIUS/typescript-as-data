@@ -14,7 +14,7 @@
  * declarator produced.
  */
 import { FoldRejection, isEnvelope, isLiveObject } from "./fold.js";
-import { record } from "./trace";
+import { record } from "./trace.js";
 
 /** Where a revival happened, for the located rejection F-Reason wants. */
 export interface RevivalSite {

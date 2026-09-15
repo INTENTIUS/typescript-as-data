@@ -74,12 +74,21 @@ jobs:
       - name: The claims, held and caught
         run: WARDEN_DIR="${{ github.workspace }}/${{ env.WARDEN_DIR }}" bash scripts/smoke-record.sh docs/data/smoke.json
 
+      # #192 — which specification version warden is actually running, read
+      # from the evaluator warden itself installed rather than from anything we
+      # ship. Reported and committed, never gated: the version a consumer pins
+      # is that repository's decision. `if: always()` because a skew is most
+      # worth knowing about on a run where something else went wrong.
+      - name: Report the consumer's version skew
+        if: always()
+        run: node scripts/consumer-skew.mjs "${{ github.workspace }}/${{ env.WARDEN_DIR }}" docs/data/consumer-skew.json
+
       - name: Commit the record
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/data/smoke.json
+          git add docs/data/smoke.json docs/data/consumer-skew.json
           git diff --cached --quiet || git commit -m "smoke: record of the weekly run" && git push
 
       - name: Tear down
