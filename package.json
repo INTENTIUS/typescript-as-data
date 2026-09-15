@@ -18,10 +18,10 @@
     "smoke:published": "bash scripts/smoke-published.sh"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
-    "typescript": "^5.9.0",
-    "vitest": "^4.0.0",
     "@intentius/chant": "0.72.5",
-    "sentences": "0.1.1"
+    "@types/node": "^24.0.0",
+    "sentences": "0.2.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0"
   }
 }

@@ -1,7 +1,6 @@
 {
  "spec/README.md": {
-  "anaphora/repeated-opening": 1,
-  "discourse/punchy-fragments": 1
+  "anaphora/repeated-opening": 1
  },
  "spec/divergence.md": {
   "tricolon/comma-series": 2
@@ -16,16 +15,13 @@
   "claude/colon-reveal": 3,
   "tricolon/comma-series": 3
  },
- "spec/judgments.md": {
-  "discourse/punchy-fragments": 1
- },
  "spec/prior-art.md": {
   "anaphora/repeated-opening": 1
  },
  "spec/rationale.md": {
   "tricolon/comma-series": 4,
   "tricolon/density": 1,
-  "discourse/punchy-fragments": 3,
+  "discourse/punchy-fragments": 2,
   "anaphora/repeated-opening": 1
  },
  "spec/taint.md": {
@@ -40,8 +36,7 @@
   "repetition/near-duplicate": 1
  },
  "paper/mechanism.md": {
-  "claude/colon-reveal": 5,
-  "discourse/punchy-fragments": 1
+  "claude/colon-reveal": 5
  },
  "paper/related-work.md": {
   "tricolon/comma-series": 1,
@@ -49,9 +44,6 @@
  },
  "paper/values-and-modes.md": {
   "tricolon/comma-series": 1
- },
- "README.md": {
-  "discourse/punchy-fragments": 1
  },
  "docs/content/for-your-platform/_index.md": {
   "anaphora/repeated-opening": 1
@@ -62,7 +54,6 @@
  },
  "docs/content/spec/conformance/fixtures.md": {
   "claude/colon-reveal": 4,
-  "discourse/punchy-fragments": 2,
   "anaphora/repeated-opening": 2
  },
  "docs/content/spec/conformance/overview.md": {

@@ -19,7 +19,7 @@ Reduction yields a value from a closed domain (`F-Val-Domain`). Six cases are or
 
 ### An envelope is a finished value
 
-An `__attrRef` is not a thunk. It is the same shape the runtime object serializes to, and the serializer accepts it without a live instance. Describing envelopes as *unevaluated* invites an implementation that tries to force them, which is exactly wrong: the value they denote does not exist at build time on either path, and will not until the platform resolves it (`F-Val-Envelope`).
+An `__attrRef` is the same shape the runtime object serializes to, and the serializer accepts it without a live instance. Describing envelopes as *unevaluated* invites an implementation that tries to force them, which is exactly wrong: the value they denote does not exist at build time on either path, and will not until the platform resolves it (`F-Val-Envelope`).
 
 ### Exactly one survives
 
