@@ -14,5 +14,5 @@
     "shapes.ts": "F-Eval-Function",
     "app.ts": "F-IsolatedRefusal"
   },
-  "note": "Under ι = isolated a project factory that step 4 cannot interpret is refused at step 5 rather than imported and invoked at step 6, even though in open mode the build would fold this file by invocation. The refusal is what isolation costs, stated as a verdict; F-Obs-Counters' projectFactoryInvocations is zero across every folded file under isolated."
+  "note": "Under ι = isolated a project factory that step 4 cannot interpret is refused at step 5 rather than imported and invoked at step 6. Since 2.0 every mode but executing refuses it, so this fixture pins isolation's own scope rather than a difference from open. The refusal is what isolation costs, stated as a verdict; F-Obs-Counters' projectFactoryInvocations is zero across every folded file under isolated."
 }

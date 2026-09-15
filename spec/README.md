@@ -166,6 +166,13 @@ apart unnoticed. chant declares its version in its own tree (its docs gate is
 where a stale declaration is caught); an implementation that declares none
 is reported as undeclared.
 
+**A major opens a bounded window.** Spec-first means the
+rule lands here before any implementation carries it so a major necessarily
+leaves chant declaring the previous one for a time. The suite allows a
+declaration at most one major behind while that is true and names the issue
+that closes it. It never allows two and it never allows undeclared. The
+assertion tightens back on its own once chant declares the current major.
+
 **What the paper cites** is one version, by tag, and the artifact is this
 repository at that tag (`paper/README.md`). Numbers in the paper that
 depend on the rule set say which version produced them.
@@ -232,9 +239,10 @@ a host's real constructors, and declares the `full` profile at the version in
 `VERSION`. With an empty host it is also an implementation of `data-host`
 without `new`, and the suite judges it on that profile's fixtures too.
 
-What it does not cover is `packages/reference/CAVEATS.md` where the one gap
-is F-Call step 6 in open mode: invoking a project module. Read the conformance
-numbers with that partiality in mind.
+What it does not cover is `packages/reference/CAVEATS.md`. Spec 2.0 closed
+the gap that used to sit there. F-Call step 6 for a project module belongs to
+`executing` alone. Never importing project code is conformant rather than
+partial.
 
 
 ## Identifiers
