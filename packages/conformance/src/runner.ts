@@ -147,9 +147,9 @@ const PROBE_ENV = ["TSAD_PROBE", "STAGE", "ENVIRONMENT", "DEPLOY_ENV", "AWS_REGI
  *
  * WHAT IT DOES NOT: a network call that answers the same twice, a read of an
  * environment name outside PROBE_ENV, or a heavy but deterministic
- * constructor, which is F-Host-Interface item 1's unstated weight question
- * rather than this clause. Partial in the way F-Obs-Counters is partial, and
- * shipped for the same reason.
+ * constructor, which F-Host-Interface item 1 bounds as of spec 2.1 and this
+ * clause does not. Partial in the way F-Obs-Counters is partial, and shipped
+ * for the same reason.
  */
 async function purityProbe(adapter: ConformanceAdapter, f: ProjectFixture, first: ProjectResult): Promise<string[]> {
   if (!adapter.foldProject) return [];

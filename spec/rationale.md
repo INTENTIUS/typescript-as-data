@@ -623,12 +623,7 @@ state.
 
 **What it does not catch.** A network call that answers the same twice. A
 read of an environment name the probe does not set. A constructor that is
-heavy but deterministic, which is F-Host-Interface item 1's question rather
-than this one: item 1 says what an entity constructor carries and nothing
-about what it does, so a host may put validation or a dependency graph behind
-it and violate no rule. That gap is real and is not closed here. The
-measurement on the site rests on chant's lexicons being generated as data
-holders rather than on anything the specification requires.
+heavy but deterministic. Item 1 answers that one at 2.1.
 
 Partial in the way F-Obs-Counters is partial and shipped for the same
 reason. A check that catches the cheap cases beats an obligation nothing
@@ -638,6 +633,30 @@ Callables are outside it. F-Val-Callable puts a `FoldableFunction` outside the
 value domain and an implementation may hand one back carrying its own AST and
 a source path the harness writes to a fresh directory per fold. Comparing
 those would measure the harness.
+
+**F-Host-Interface item 1** *(What a constructor may do)*
+
+Item 1 enumerated what an entity carries and said nothing about what building
+one may do. Revival invokes that constructor (F-Val-Fate). Item 1 was the
+one place code runs during a fold with no bound on it. An intrinsic has
+F-Host-Admission and a rule has F-Rule-Pure. A constructor had only the shape
+of its output and a host could build a dependency graph behind one and
+violate no rule.
+
+The bound was already implicit in the form the rule names. A class built by
+`createResource(type, lexicon, attrMap)` knows three names and nothing else.
+There is nowhere in that to put arbitrary work. The rule described the output
+of a construction it had already named and left the construction itself open
+by omission.
+
+Validation goes to a rule rather than nowhere. A constructor that throws on
+bad props reports mid-fold as a failure to fold with no rule identifier and
+no position. F-Rule-Finding names the rule and the position and reaches the
+author at the keystroke.
+
+The published measurement changes status. `paper/measurements.md`'s 0 MB row
+was a property of chant's generated lexicons being data holders. It is now a
+property the specification requires of any conforming host.
 
 ---
 
