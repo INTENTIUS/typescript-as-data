@@ -31,9 +31,13 @@ describe("specification version (#18)", () => {
     // a subset change goes spec-first -- landed here, then implemented in
     // chant, then released -- so a major necessarily opens a window where the
     // spec is ahead. Asserting same-major would forbid the very window the
-    // policy requires. One major behind is allowed while that window is open;
-    // #199 closes it, and the assertion tightens back on its own once chant
-    // declares the current major. Never "undeclared", in either case.
+    // policy requires. One major behind is allowed while that window is open,
+    // and the assertion tightens back on its own once chant declares the
+    // current major. Never "undeclared", in either case.
+    //
+    // #199 landed the rule and chant declares 2.1 on its main. The window is
+    // still open because this repository pins chant from npm, and the pinned
+    // release predates that. #210 is the pin bump that closes it.
     expect(chantAdapter.specVersion).toMatch(/^\d+\.\d+$/);
     const [specMajor, specMinor] = VERSION.split(".").map(Number);
     const [chantMajor, chantMinor] = chantAdapter.specVersion.split(".").map(Number);
