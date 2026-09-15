@@ -751,9 +751,16 @@ export interface CorpusSummary {
     /** Counted from `lostFiles`, never subtracted, so the number and the list it sits above cannot disagree. */
     readonly lost: number;
     /**
-     * `lost` split by what was refused. `factory` is F-Call step 6 and is the
-     * cost of #169 rather than of isolation; it goes to zero once chant
-     * implements #199. `constructor` and `import` are isolation's own.
+     * `lost` split by what was refused, all three of them isolation's own.
+     *
+     * `factory` is F-Call step 6. It used to carry #169's cost as well, since
+     * step 6 invoked project files under `open` too, and the note here said it
+     * would reach zero once chant implemented #199. chant 0.73.0 implements it
+     * and the column still reads 1, because what step 5 refuses is a PROJECT
+     * file and what remains is a package's factory: `prod-watch.op.ts` calls
+     * `WatchOp` from `@intentius/chant/op`, which folds under `open` and is
+     * untrusted under `isolated`. So the prediction was wrong about the kind
+     * of thing being counted, not about the rule.
      */
     readonly lostByKind: Readonly<Record<IsolationRefusal, number>>;
     /**
@@ -896,7 +903,7 @@ export function renderCorpusReport(
       "|---|---|---|---|",
       `| ${summary.isolated.files} | ${summary.isolated.openFolds} | ${summary.isolated.isolatedFolds} | ${summary.isolated.lost} |`,
       "",
-      "What was refused, from the reason chant gave. A `factory` is F-Call step 6, which spec 2.0 refuses outside `executing` in every mode, so that column is the cost of #169 rather than of isolation and reaches zero once chant implements #199. The other two are isolation's own.",
+      "What was refused, from the reason chant gave. All three are isolation's own. A `factory` is F-Call step 6, and spec 2.0 already refuses the project-file half of it in every mode, so what is left here is a package's factory that an isolated build will not trust.",
       "",
       "| Composite factory | Constructor | Import | Unclassified |",
       "|---|---|---|---|",
