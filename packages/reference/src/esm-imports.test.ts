@@ -47,6 +47,26 @@ function sources(dir: string): string[] {
  */
 const RELATIVE = /^(?:import|export)\b[^\n]*?\bfrom\s+"(\.\.?\/[^"]*)"/;
 
+describe("nothing compiled sits beside the sources", () => {
+  // `.gitignore` already calls these a mistake and stops them being committed.
+  // It cannot stop them shadowing: the sources import each other as `./x.js`,
+  // so a stale `x.js` emitted next to `x.ts` is what the suite loads, and the
+  // tests then pass against code that is no longer in the repository.
+  //
+  // That is not hypothetical. 52 of them sat in `packages/reference/src` while
+  // #217 was being written, and three cross-implementation disagreements
+  // "survived" a fix that had already been made — the fix was in the `.ts` and
+  // the suite was reading the `.js` (#217).
+  for (const pkg of PACKAGES) {
+    test(`${pkg}: no emitted artifacts under src`, () => {
+      const emitted = readdirSync(join(ROOT, pkg, "src"), { recursive: true, encoding: "utf8" })
+        .filter((f) => /\.(js|js\.map|d\.ts|d\.ts\.map)$/.test(f))
+        .sort();
+      expect(emitted, `delete these: a build emits to dist/, and beside the sources they shadow the .ts`).toEqual([]);
+    });
+  }
+});
+
 describe("published packages resolve as ESM", () => {
   for (const pkg of PACKAGES) {
     test(`${pkg}: every relative import carries its extension`, () => {

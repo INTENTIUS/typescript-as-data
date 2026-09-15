@@ -1,6 +1,12 @@
 {
-  "rules": ["F-Cycle"],
+  "rules": [
+    "F-Cycle"
+  ],
   "project": true,
-  "verdicts": { "a.ts": "run", "b.ts": "run" },
-  "note": "Resolution meets itself. The requirement is a located error naming the cycle, not an infinite regress, so the only assertion a conforming implementation must satisfy is that both files get a verdict at all."
+  "verdicts": {
+    "a.ts": "run",
+    "b.ts": "run"
+  },
+  "note": "Resolution meets itself. The requirement is a located error naming the cycle, not an infinite regress, so the only assertion a conforming implementation must satisfy is that both files get a verdict at all. `reasonsMayDiffer` records that: the reference reports F-Cycle from its resolution stack and tsad-eval reports F-Reference for the identifier that never resolved, and both are verdicts this fixture accepts (#217).",
+  "reasonsMayDiffer": true
 }

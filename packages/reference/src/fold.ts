@@ -484,7 +484,11 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
         'ambient "process" read is not foldable: declare a build-time parameter and reference it instead',
       );
     }
-    reject("F-Eval-Ident", node, `unresolved identifier: ${name}`);
+    // F-Eval-Ident step 5 hands this case to F-Reference by name: "Otherwise
+    // reject `unresolved identifier: n` (F-Reference)". `project.ts` already
+    // reports the neighbouring case that way, so naming F-Eval-Ident here
+    // disagreed with the specification and with this package (#217).
+    reject("F-Reference", node, `unresolved identifier: ${name}`);
   }
 
   // F-Eval-Tagged

@@ -297,6 +297,20 @@ export async function compareAdapters(a: ConformanceAdapter, b: ConformanceAdapt
     for (const path of new Set([...Object.keys(ra.verdicts), ...Object.keys(rb.verdicts)])) {
       const va = ra.verdicts[path]?.kind ?? "absent", vb = rb.verdicts[path]?.kind ?? "absent";
       if (va !== vb) dis.push(`${f.id} ${path}: ${a.name} ${va}, ${b.name} ${vb}`);
+      // The rule a `run` names, where both report one (#217). Agreement on the
+      // verdict alone says the two refused the same file and says nothing
+      // about whether they refused it for the same reason. That is how
+      // `F-Eval-Ident` survived in this package against a specification whose
+      // step 5 hands the case to `F-Reference` by name: no fixture pinned it,
+      // and the cross-check was not looking.
+      //
+      // Only when both sides report a rule. `F-Obs-Report` requires a located
+      // reason and not an identifier, and an adapter that supplies none is
+      // held to the verdict as before.
+      const ka = ra.verdicts[path], kb = rb.verdicts[path];
+      if (!f.reasonsMayDiffer && va === "run" && vb === "run" && ka?.kind === "run" && kb?.kind === "run" && ka.rule && kb.rule && ka.rule !== kb.rule) {
+        dis.push(`${f.id} ${path}: refused by different rules — ${a.name} ${ka.rule}, ${b.name} ${kb.rule}`);
+      }
       // The verdict alone cannot tell a seed from a taint casualty, and both of
       // those are "run". Where both implementations report the tentative
       // verdict and the edge, compare them: that is where J3 actually lives.

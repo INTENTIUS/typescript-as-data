@@ -23,6 +23,7 @@
  *                    "taintedBy": { "config.ts": "app.ts" },                      // optional, the file whose taint reached it
  *                    "exports":   { "config.ts": { "port": 8080 } },              // optional, for files that finally fold
  *                    "rejectRule": { "app.ts": "F-Eval-CallLocal" },              // optional, the rule a run verdict must name; checked when the adapter reports one
+ *                    "reasonsMayDiffer": true,                                    // optional, rare: the specification leaves the rule open here, so two implementations may name different ones
  *                    "host":      "shapes",                                       // optional, a named host from host.ts; required if the sources import one
  *                    "mode":      "isolated",                                     // optional, J2's ι: "open" (default, strict), "isolated" or "executing" (spec 1.8). An adapter that cannot honour it reports "unavailable"
  *                    "findings":  { "bucket.ts": [ { "rule": "SHAPES001", "subject": "bad", "severity": "error" } ],   // optional (#101): the host's rules' findings, keyed by the
@@ -71,6 +72,17 @@ export interface ProjectFixture {
   exports?: Record<string, Record<string, unknown>>;
   /** The rule a `run` verdict must name, per file. An adapter that reports no rule is not held to it. */
   rejectRule?: Record<string, string>;
+  /**
+   * The rule a `run` names is not part of this fixture's requirement, so two
+   * implementations may name different ones and still agree (#217).
+   *
+   * Rare and deliberate. `compareAdapters` compares the rule by default,
+   * because agreement on the verdict alone says two implementations refused
+   * the same file and says nothing about whether they refused it for the same
+   * reason. A fixture sets this only where the specification genuinely leaves
+   * the attribution open, and its `note` has to say why.
+   */
+  reasonsMayDiffer?: boolean;
   /** A named host from host.ts. Required for any fixture whose sources import one. */
   host?: string;
   /** J2's ι, `open` unless the fixture says `isolated` (F-IsolatedRefusal). */
@@ -141,7 +153,7 @@ export function loadFixtures(root: string): Fixture[] {
         out.push(fx);
       } else if (e.project) {
         const fx: ProjectFixture = { kind: "project", id, dir: d, rules: e.rules, files: readProject(join(d, "project")), profiles: [],
-          verdicts: e.verdicts, tentative: e.tentative, taintedBy: e.taintedBy, exports: e.exports, rejectRule: e.rejectRule, host: e.host, mode: e.mode, findings: e.findings, counters: e.counters, note: e.note };
+          verdicts: e.verdicts, tentative: e.tentative, taintedBy: e.taintedBy, exports: e.exports, rejectRule: e.rejectRule, reasonsMayDiffer: e.reasonsMayDiffer, host: e.host, mode: e.mode, findings: e.findings, counters: e.counters, note: e.note };
         fx.profiles = profilesOf(fx, e.profiles);
         out.push(fx);
       } else {
