@@ -23,7 +23,7 @@ A tool that executes your program cannot offer this. Until the program has run t
 
 The artifact is a function of the source and of the build-parameter binding. The same file gives the same output on any machine at any time, in whatever language the evaluator happens to be written in. A tool that cannot run JavaScript at all gets the same value the author sees in the editor, whether it is a Go binary, a WASM module or a CI job with no runtime.
 
-That guarantee is unconditional in `data-host`, where nothing is invoked to produce them. In `full` it is as good as the host's lexicons and the isolation mode. `F-IsolatedRefusal` refuses every project-owned invocation under `isolated`. The default `open` mode reaches two things no purity criterion covers. `F-Call` step 6 may invoke a project factory that nobody registered. `F-Host-Interface` item 1 says what an entity constructor carries without bounding what it does.
+That guarantee is unconditional in `data-host`, where nothing is invoked to produce them. In `full` it is as good as the host's lexicons and the isolation mode. `F-IsolatedRefusal` refuses every project-owned invocation under `isolated`. The default `open` mode reaches one thing no purity criterion covers: `F-Call` step 6 may invoke a project factory that nobody registered. An entity constructor holds its props and does no more (`F-Host-Interface` item 1).
 
 ## See it hold
 

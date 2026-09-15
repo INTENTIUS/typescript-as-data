@@ -25,6 +25,12 @@ what the trust rules need, and the last is the rules contract's.
    or `createProperty(type, lexicon)`, `new (props)`. They carry a
    non-enumerable declarable marker, `lexicon`, `entityType`, and for
    properties `kind: "property"`. Revival constructs them (F-Val-Fate).
+   A constructor holds the props it is given and exposes the attributes
+   `attrMap` names. It performs no I/O and no network call, reads no file
+   and no environment name, and constructs no entity it was not handed.
+   A host that validates or normalizes props does it in a rule. F-Rule-Pure
+   says the same of rule code and F-Rule-Finding carries the finding to the
+   author.
 2. Attribute exposure. `attrMap` names the attributes an entity exposes;
    reading one on a live instance yields an `AttrRef` bound to that instance
    (F-Val-Live) and on a *name* yields the `{__attrRef}` envelope.
