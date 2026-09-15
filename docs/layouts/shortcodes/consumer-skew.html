@@ -1,0 +1,9 @@
+{{- $c := hugo.Data.figures.consumer -}}
+{{- if $c -}}
+<p class="consumer-skew">The last weekly run read <code>{{ $c.name }}</code>'s own installed evaluator,
+<code>@intentius/tsad-reference</code> {{ $c.evaluator }}, which declares spec <code>{{ $c.declares }}</code>
+against this repository's <code>{{ hugo.Data.figures.specVersion }}</code>
+{{- if eq $c.skew "current" }} — current{{ else }} — {{ replace $c.skew "-" " " }}{{ end }}. Measured {{ $c.date }}.</p>
+{{- else -}}
+<p class="consumer-skew">No weekly run has recorded the consumer's declared version yet. <code>scripts/consumer-skew.mjs</code> reads it from the evaluator the consumer itself installed, and the demo workflow commits the result.</p>
+{{- end -}}

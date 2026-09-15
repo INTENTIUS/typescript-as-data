@@ -29,7 +29,7 @@ function locate(n: ts.Node): [number, number] {
 import { revive } from "./revive.js";
 import type { FnDecl } from "./fnbody.js";
 import { plainBindingKey } from "./fnbody.js";
-import { record } from "./trace";
+import { record } from "./trace.js";
 
 export type Verdict =
   | { kind: "fold"; exports: Map<string, unknown>; captures: Set<string> }

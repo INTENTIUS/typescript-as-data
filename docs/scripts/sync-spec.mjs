@@ -116,6 +116,14 @@ try {
     unmapped: r.panels.reduce((n, p) => n + p.failures.length, 0),
   };
 } catch {}
-const figures = { specVersion, chantPin, referenceVersion, conformanceVersion, rulesWithFixture, rulesTotal, fixtures, wholeBuildFixtures, corpus, execution, wasmKB };
+// #192 — the flagship consumer's own declared specification version, written
+// by the weekly demo from warden's installed evaluator. Absent until a demo
+// run has happened, like the corpus report.
+let consumer = null;
+try {
+  const r = json(join(dataDir, "consumer-skew.json"));
+  consumer = { name: r.consumer.name, declares: r.consumer.declares, evaluator: r.consumer.evaluator, skew: r.skew.kind, date: r.date };
+} catch {}
+const figures = { specVersion, chantPin, referenceVersion, conformanceVersion, rulesWithFixture, rulesTotal, fixtures, wholeBuildFixtures, corpus, execution, consumer, wasmKB };
 writeFileSync(join(dataDir, "figures.json"), JSON.stringify(figures, null, 2) + "\n");
 console.log("figures.json:", JSON.stringify(figures));
