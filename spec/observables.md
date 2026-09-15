@@ -5,9 +5,10 @@ Rules that are about the whole mechanism rather than one judgment.
 **F-NoOwnExecution (property).** For every file with final verdict `fold`,
 none of its top-level statements is executed by the build. What still
 executes is bounded and named: revival of envelopes (F-Val-Fate),
-F-Eval-CallEager, F-Eval-CallMethod on a real receiver, and, under `open`,
-invocation of an imported factory (J2 F-Call step 6). All of it is code the
-file *imported*; none of it is code the file *wrote*. (Was.)
+F-Eval-CallEager, F-Eval-CallMethod on a real receiver, and invocation of a
+package's factory (J2 F-Call step 6). All of it is code the file *imported*
+from a package; none of it is the project's. Under `ι = executing` a
+project-owned function is invoked as well, which is what that mode is.
 
 **F-Depth.** An implementation bounds three recursions and may choose the values.
 

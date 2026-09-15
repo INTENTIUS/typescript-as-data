@@ -144,7 +144,8 @@ F-IsolatedRefusal like any other.
    **interpreted** against the defining module's scope; the module is never
    imported; `factoryInterpretations += 1`.
 5. Otherwise, under `ι = isolated`, F-IsolatedRefusal unless the binding is
-   trusted.
+   trusted; and under any mode but `executing`, `run` where the specifier is
+   a project file. Project-owned invocation is `executing`'s, as step 2's is.
 6. Otherwise the module is imported (once per build) and `c` **invoked** with
    the resolved arguments; `factoryInvocations += 1`, and
    `projectFactoryInvocations += 1` if the specifier is a project file.
