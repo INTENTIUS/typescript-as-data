@@ -11,8 +11,10 @@ in both directions, in CI. `spec/fixtures.test.ts` is that gate.
 
 ## The four assertions
 
-The test collects every `S-` and `F-` identifier defined across `grammar.md`,
-`judgments.md`, `values.md`, `divergence.md`, `hosts.md` and `rules.md`. It also
+The test collects every `S-` and `F-` identifier defined across the eleven
+files `RULE_FILES` names, which is the grammar, the objective, the four
+judgment files, the value domain, divergence, hosts and rules, with the
+rationale last so a note appends to the rule it belongs to. It also
 collects
 every identifier cited by a fixture's `rules` array, and reads
 `spec/fixtures/UNCOVERED.md` as an allowlist. Then it asserts four things.

@@ -50,6 +50,10 @@ The steps, in the order they print. Five owned variables exist on the org and th
 
 chant's lexicons carry rules over values for each target, running over the folded values. The AWS lexicon knows which resource combinations are incoherent and the Kubernetes lexicon knows a container's hardening rules. forgejo-warden runs both phases without calling them that. Its config loader validates the declared policy with the exact field path on a bad shape, and its guardrails (`removalDeltaCap`, `adminFloor`) run over the computed plan before any apply.
 
+## What it does not establish
+
+A rule sees the values at one build-parameter binding. It proves a property of the estate that binding produces and says nothing about the others, so quantifying over the binding space is still a model-checking problem. What the fold removes is the need to model the program, not the need to model the policy space.
+
 ## Where the rule lives
 
 Evaluability, "is this file data", is the `S-*` classifier and `F-Div-*`. The contract for rules over values, `F-Rule-*`, is [`rules.md`](/typescript-as-data/spec/normative/rules/) since spec `1.4`. It fixes the input a rule sees and its purity, along with its findings and the two phases, and each of its six rules has a fixture whose expectation is a set of findings as data.

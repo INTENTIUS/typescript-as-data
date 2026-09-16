@@ -31,9 +31,9 @@ names the file that owns it.
 
 | Prefix | Owner |
 |---|---|
-| `F-Eval-` | `judgments.md` J1 |
-| bare `F-` | `judgments.md` J2 and J3 |
-| `F-Obs-`, `F-NoOwnExecution`, `F-Depth` | `judgments.md` J4 |
+| `F-Eval-` | `evaluation.md`, J1 |
+| bare `F-` | `verdict.md`, J2, and `taint.md`, J3 |
+| `F-Obs-`, `F-NoOwnExecution`, `F-Depth` | `observables.md`, J4 |
 | `F-Val-` | `values.md` |
 | `F-Div-`, `F-Exc-`, `F-Direction` | `divergence.md` |
 | `F-Host-` | `hosts.md` |
@@ -60,9 +60,10 @@ exercised by a fixture or listed in `spec/fixtures/UNCOVERED.md`.
 
 ## The four judgments
 
-`spec/judgments.md` carries all four, layered. J1 evaluates one expression and
-J2 decides one file; J3 decides a whole build; J4 states the properties that
-are about the mechanism rather than about any one of the others.
+One file each, layered, with `spec/judgments.md` as the index over them. J1
+evaluates one expression and J2 decides one file; J3 decides a whole build; J4
+states the properties that are about the mechanism rather than about any one of
+the others.
 
 ### J1, expression evaluation
 
@@ -74,7 +75,7 @@ intrinsic registry and the authoring-helper allowlist, both defined in
 `spec/values.md`.
 
 The rules here are keyed to the grammar's productions, so `S-Template` in
-`grammar.md` has `F-Eval-Template` in `judgments.md`, and a fixture normally
+`grammar.md` has `F-Eval-Template` in `evaluation.md`, and a fixture normally
 cites both.
 
 ### J2, the per-file verdict
@@ -94,8 +95,8 @@ except through `F-Import`. It is *tentative*, and J3 is what makes it final.
 
 ### J3, the identity-taint fixpoint
 
-This is the judgment with no precedent found, and `spec/judgments.md` says
-why it has to exist. Per-file partial evaluation is unsound in the presence of
+This is the judgment with no precedent found, and `spec/taint.md` says why it
+has to exist. Per-file partial evaluation is unsound in the presence of
 object identity unless something makes it sound. If file `A` folds and file `B`
 runs, and both refer to an entity that `A` produced, then `B`'s real import of
 `A` constructs a second copy of it.
@@ -104,7 +105,7 @@ Comparable systems avoid the problem by not having it. Compile-time function
 execution copies values across the boundary, per-page static rendering shares
 no runtime objects across it, and a whole-program partial evaluator has one
 heap. chant keeps per-file granularity and shared identity at the same time,
-and `spec/judgments.md` calls this judgment the price of that.
+and `spec/taint.md` calls this judgment the price of that.
 
 A build is `B = (F, →, P)`. That is the finite set of discovered project
 files, the import and re-export edges between them, and the build-parameter

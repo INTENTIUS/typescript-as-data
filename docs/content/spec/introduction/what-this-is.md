@@ -14,7 +14,7 @@ inventing a language. This specification carves a fragment out of an existing
 one and defines the edge, where source outside the subset falls back to real
 execution and the two paths must agree.
 
-That equivalence is the objective every judgment serves, and `spec/judgments.md`
+That equivalence is the objective every judgment serves, and `spec/objective.md`
 states it: at a fixed build-parameter binding, folding a file and running it
 are observationally equivalent. A source file may be reduced from its AST to
 the entities it declares, or imported and executed, and the build cannot tell
