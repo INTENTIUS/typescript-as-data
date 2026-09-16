@@ -59,6 +59,34 @@ difference is open.
 
 ---
 
+**S-Unary, S-Binary** *(Two of the exclusions are principled and the rest are inherited)*
+
+Thirteen binary operators and two unary ones are held as closed sets (L2.8).
+`F-Host-Generality` forbids a host from varying their semantics. The
+membership is therefore normative for a second implementation and the document
+should say which exclusions were decided.
+
+One principle covers three. An operator that observes a value's
+*representation* rather than its value answers differently per profile. A
+resource is a live instance in `full` and an envelope in `data-host`
+(F-Val-Fate). `typeof`, `in` and `instanceof` are all of that kind. Admitting
+one would make its answer depend on which profile ran. That is the thing
+`F-Host-Generality` exists to prevent.
+
+Two more are decided on their own terms. `==` and `!=` coerce. A subset whose
+point is that a value is fixed by its source should not carry an operator
+whose answer turns on a conversion the reader has to know. `delete`, `++` and
+`--` mutate, and nothing in the subset has a place to put the effect.
+
+**The rest are chant's set and have not been revisited.** No principle here
+admits `*` and `/` while excluding `%` and `**`. Those are the same arithmetic
+over the same folded numbers under the same ECMAScript semantics. The bitwise
+operators are the same again. Their absence is inherited from
+`SUPPORTED_BINARY_OPERATORS` rather than argued. Adding one would be a widening
+and would move the minor. Nothing in the design is waiting on it.
+
+---
+
 ## Judgments (`judgments.md`)
 
 **F-NoOwnExecution** *(Folding executes none of the folded file's own statements)*
