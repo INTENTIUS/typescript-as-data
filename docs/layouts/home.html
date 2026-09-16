@@ -7,6 +7,10 @@
   <p class="hero-actions"><a class="button" href="{{ "try-it/" | relURL }}">Try it in ten minutes</a> <a class="button secondary" href="{{ "for-your-platform/" | relURL }}">Add it to your platform</a> <a class="button secondary" href="{{ "spec/" | relURL }}">The specification</a></p>
 </section>
 
+<section class="platforms">
+  {{ .Content }}
+</section>
+
 {{- /* The loop draws all three of what-it-enables', so it stands in place of
        the beats row that used to repeat them: the zone is no-execution, the
        return arc is the round trip, and rules over values is a box. The pages
@@ -15,10 +19,6 @@
 <section class="loop-section">
   {{ partial "governance-loop.html" . }}
   <p class="loop-links">{{ range (site.GetPage "/what-it-enables").RegularPages.ByWeight }}<a href="{{ .RelPermalink }}">{{ .Title }}</a>{{ end }}</p>
-</section>
-
-<section class="platforms">
-  {{ .Content }}
 </section>
 
 <section class="platforms">
