@@ -18,6 +18,13 @@ a literal supplied at build invocation (F-Import, J2), so output is a function o
 *and* binding; "same source, same output" is true only with the binding held
 fixed.
 
+Naming the binding is what makes that statement checkable. A value coming in
+from the shell does not carry its origin and cannot be reproduced from the
+source alone. It reaches the artifact as a string indistinguishable from one
+an author typed. No inspection of the output can find it. A file that read one
+is reported as folded while two builds of it disagree. A declared parameter is
+the same value with its origin attached.
+
 Equivalence is what makes the fallback safe and the fallback is what
 distinguishes this from a configuration language that rejects out-of-subset
 source. What is new, per [`prior-art.md`](./prior-art.md), is that the
