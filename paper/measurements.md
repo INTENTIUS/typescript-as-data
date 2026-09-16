@@ -78,6 +78,12 @@ The 4 rules without a fixture are listed in `spec/fixtures/UNCOVERED.md` with a 
 | `chant-v0.72.2` at `b9209042`, 109 entries, spec `1.8`, chant declaring `1.6` | 441 | 440 | 440 | 304 |
 | `chant-v0.72.3` at `9891edd4`, 109 entries, spec `1.8`, chant declaring `1.6` | 441 | 440 | 440 | 304 |
 | `chant-v0.72.5` at `f5c68a5a`, 109 entries, spec `1.8`, chant declaring `1.8` | 441 | 440 | 440 | 304 |
+| `chant-v0.73.0` at `8ccbf3f4`, 109 entries, spec `2.1`, chant declaring `2.1` | 441 | 440 | 440 | 304 |
+
+The last row crosses a major. Spec `2.0` narrowed F-Call step 5 so that a
+project-file callee is refused outside `ι = executing`, and spec `2.1` bounded
+what an entity constructor may do. Neither moved the comparable set or the
+agreement.
 
 A file is comparable when nothing disarmed either implementation before the comparison started. Four things did so under `chant-v0.70.1`, two under `chant-v0.71.0`, and one remains under spec `1.6`, the single file that imports a package the host cannot load, which is the reference's limit. Each of the others retired for its own reason. Two were limits of chant's entry point rather than of chant, 52 files reading a host data export that `foldProject` could not resolve without a lexicon list and 19 in entries with build parameters it could not be given, until chant#2422 gave it both (#96). Another held 290 files reaching a host factory until the reference implemented F-Call (#109). The final one held 68 files calling a package export outside a declarator; it went when spec `1.6` wrote chant's behavior into F-Declarator and F-Call (#110).
 

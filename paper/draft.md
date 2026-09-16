@@ -256,6 +256,9 @@ The conformance package runs chant's example corpus through both implementations
 | chant 0.71.0, with the call rule | 441 | 372 | 372 | 258 |
 | chant 0.72.1, specification 1.6 | 441 | 440 | 440 | 304 |
 | chant 0.72.3, specification 1.8 | 441 | 440 | 440 | 304 |
+| chant 0.73.0, specification 2.1 | 441 | 440 | 440 | 304 |
+
+The last row crosses a major. Specification 2.0 narrowed the call rule so that a project-file callee is refused outside the executing mode, and 2.1 bounded what an entity constructor may do. Neither moved the comparable set or the agreement.
 
 A file is comparable when nothing disarmed either implementation before the comparison. Four things did at the first pin and one remains, the single file that imports a package the reference's host cannot load. Two were limits of chant's entry point, 52 files reading a host export that needed a lexicon list and 19 in entries with build parameters the entry could not be given, until chant `0.71.0` took both; one held 290 files reaching a host factory until the reference implemented the call rule; the last held 68 files calling a package export outside a declarator, until specification `1.6` wrote chant's behavior into the declarator and call rules.
 
@@ -325,7 +328,7 @@ Claimed as new. Per-file partial evaluation with a fallback is precedented in sh
 
 ## 8. Discussion
 
-Costs. Section 2.5 named two. A third is that coverage is not the security-relevant number: a file that folds executes none of its own code either way, so partial coverage does nothing for the files that matter, and isolating the fallback is what bounds the remainder, which is why isolation is a mode of the verdict rather than a deployment detail.
+Costs. Section 2.5 named two. A third is that coverage is not the security-relevant number: a file that folds executes none of its own code either way, so partial coverage does nothing for the files that matter, and isolating the fallback is what bounds the remainder, which is why isolation is a mode of the verdict rather than a deployment detail. A fourth is that security is the cheaper property and the claim is not pitched there. A sandbox answers it well. Nothing but declining to run the source answers whether the output repeats, since a run returns a value and says nothing about where the value came from.
 
 Unresolved. Three places where the implementation settled a question by accident, recorded as such. The classifier is flow-insensitive, and making it flow-sensitive means writing an evaluator inside a lint rule. One member name, `.step`, is admitted after a call because one idiom uses it, and no boundary stated in the rule admits it and excludes the next member somebody needs. And one class of registered call is evaluated at fold time because its usual use coerces the result to a string.
 
@@ -359,4 +362,4 @@ The subset is not the contribution; six languages have carved one more completel
 
 ## Appendix B. Artifacts
 
-The specification is at version `1.8`, tagged `spec-1.8`, in the typescript-as-data repository under the INTENTIUS organization. The reference implementation and the conformance suite sit beside it with the Rust evaluator, and the two packages are published to npm at `1.8.0`. Every number in section 6 was taken on 13 September 2026 with chant pinned at `0.72.3` and the corpus at that release's revision, from the corpus report committed there; the external checkouts are pinned by revision in the conformance package's manifest. The documentation site renders every figure from those artifacts at build time, and one of its pages folds a file in the reader's browser with the WebAssembly evaluator.
+The specification is at version `2.1`, tagged `spec-2.1`, in the typescript-as-data repository under the INTENTIUS organization. The reference implementation and the conformance suite sit beside it with the Rust evaluator, and the two packages are published to npm at `2.1.0`. Every number in section 6 was taken on 15 September 2026 with chant pinned at `0.73.0` and the corpus at that release's revision, from the corpus report committed there; the external checkouts are pinned by revision in the conformance package's manifest. The documentation site renders every figure from those artifacts at build time, and one of its pages folds a file in the reader's browser with the WebAssembly evaluator.

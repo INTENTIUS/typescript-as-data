@@ -10,6 +10,15 @@ Draft for #54.
 
 **Coverage is not the security-relevant number.** A file that folds executes none of its own code either way, so partial coverage does nothing for the files that matter. Isolating the fallback is what bounds the remainder, and it changes what folds: a fold that would invoke project-owned code is refused under isolation. The specification therefore carries isolation as a mode of the verdict rather than as a deployment detail.
 
+**Security is the cheaper property and the claim is not pitched there.** A
+sandbox answers "do not let this code touch my machine" and answers it well.
+Nothing answers "will this produce the same output tomorrow" short of
+declining to run the source. A run returns a value and says nothing about
+where the value came from, so no inspection of the artifact recovers the
+difference. The security consequence is real and downstream. A build that
+reproduces from source alone is one that never executed the source. Pitching
+it the other way round invites a substitution that does not hold.
+
 ## What is unresolved
 
 Three places where the implementation settled a question by accident rather than decision, each recorded in the specification rather than smoothed over.
