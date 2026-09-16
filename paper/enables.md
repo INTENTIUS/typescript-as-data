@@ -16,4 +16,4 @@ The fold goes from source to data. A generator goes from data to source. Compose
 
 ## Which profile each needs
 
-The first two need only the `data-host` profile (`F-Profile-DataHost`, `judgments.md`), and so they are available to an evaluator with no JavaScript runtime. The third needs whichever profile the generator targets. None of the three needs the `run` fallback or J3; those exist so that source outside the subset can still be built by an implementation that has a runtime, and they are the part of the specification the paper is about. The capabilities are the part a platform adopts.
+The first two need only the `data-host` profile (`F-Profile-DataHost`, `objective.md`), and so they are available to an evaluator with no JavaScript runtime. The third needs whichever profile the generator targets. None of the three needs the `run` fallback or J3; those exist so that source outside the subset can still be built by an implementation that has a runtime, and they are the part of the specification the paper is about. The capabilities are the part a platform adopts.

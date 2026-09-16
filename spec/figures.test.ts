@@ -128,6 +128,7 @@ const ALLOWLIST: Record<string, string> = {
   "measurements.md:52": "files probed shape by shape at chant-v0.72.1",
   "measurements.md:290": "same probe",
   "measurements.md:68": "same probe",
+  "draft.md:15": "the day in appendix B's date, not a count; the previous day coincided with a computable value and passed by luck",
   "draft.md:52": "same probe, restated in the draft",
   "draft.md:290": "same probe",
   "draft.md:68": "same probe",
