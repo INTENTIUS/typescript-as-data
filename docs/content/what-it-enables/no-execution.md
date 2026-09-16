@@ -59,8 +59,12 @@ Two things the profile cannot show, and this does. Under `data-host` the count i
 
 The reference implementation folds with no runtime at all. At spec {{< figure "specVersion" >}} it agrees with chant {{< figure "chantPin" >}} on every one of {{< figure "corpus.comparable" >}} comparable corpus files, and on the {{< figure "corpus.bothFold" >}} that fold on both sides the export namespaces are identical.
 
+## What it does not establish
+
+The guarantee is per file and per profile. Under `data-host` nothing is invoked at all. Under `full` what runs is a bounded named set of the packages' code, so "nothing executed" is a claim about your file rather than about the build. A file that cannot be folded is executed, and the verdict says which files those were.
+
 ## Where the rule lives
 
-`F-NoOwnExecution` in `judgments.md` J4 states it, with the grammar's `S-*` productions for the lint. [The specification](/typescript-as-data/spec/normative/) is the full text.
+`F-NoOwnExecution` in `observables.md`, J4, states it, with the grammar's `S-*` productions for the lint. [The specification](/typescript-as-data/spec/normative/) is the full text.
 
 This rule has no fixture, and `spec/fixtures/UNCOVERED.md` gives the reason: an adapter reports verdicts, and a verdict cannot say what ran. The conformance suite reaches the property's observable instead. `F-Obs-Counters` requires a build to report `projectFactoryInvocations`, which is zero across every folded file, and [that one is tested](/typescript-as-data/spec/conformance/coverage/). The recordings above are the direct evidence, measured on the process rather than read off a verdict.

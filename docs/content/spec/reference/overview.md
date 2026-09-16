@@ -17,7 +17,7 @@ be read with that partiality in mind.
 ## What it covers
 
 The core of it is the expression layer: the `S-*` productions of
-`spec/grammar.md` §2 and the `F-Eval-*` rules of `spec/judgments.md` J1, over
+`spec/grammar.md` §2 and the `F-Eval-*` rules of `spec/evaluation.md`, J1, over
 the value domain of `spec/values.md`. `packages/reference/README.md` lists
 shape classification and expression evaluation, then the value domain's
 envelope shapes. The host interface, `F-Host-Interface`, is taken whole from
@@ -26,7 +26,7 @@ names rather than a host of its own.
 
 Since then the module and build layers have been written too.
 `packages/reference/src/project.ts` implements J2 (the per-file verdict) and J3
-(the identity-taint fixpoint) from `spec/judgments.md` rather than from any
+(the identity-taint fixpoint) from `spec/taint.md` rather than from any
 implementation. A project there is a map of path to source, with no filesystem
 and no real module system, which is enough for both judgments because each is
 defined over a finite set of files and the edges between them.
@@ -52,7 +52,7 @@ The source layout is small enough to read:
 
 ## Where it came from
 
-The reference was written from `grammar.md` and `judgments.md` without
+The reference was written from the grammar and the judgments without
 consulting chant's source, by an author who had read chant closely while
 writing the specification from it. Writing it found three places where the
 text was not complete enough:

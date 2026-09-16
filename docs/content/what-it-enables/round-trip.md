@@ -32,6 +32,10 @@ A second scenario, `fold-equals-run`, holds the guarantee the others rest on: fo
 
 chant has three generators through one pipeline. `chant import` reads a template file, `--from <env>` imports live through each lexicon's `exportResources()`, and carve-out reads Terraform. The Kubernetes lexicon carries a round-trip suite. forgejo-warden's reconcile direction is the same idea for an org, with live reality read back and diffed against declared source.
 
+## What it does not establish
+
+The round trip is stated per profile, and the two are different equations: `fold(generate(v)) = revive(v)` in `full` against `fold(generate(v)) = v` in `data-host`. The fixture kind tests one generator's output against its own input. It does not establish that a generator you write round-trips, which is the obligation `F-Val-Source` places on the generator rather than a property this specification can discharge for you.
+
 ## Where the rule lives
 
 The completeness half is [`F-Val-Source`](/typescript-as-data/spec/normative/values/): one source form per case of the value domain, each folding back by a rule the table cites.

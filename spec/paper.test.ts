@@ -27,6 +27,19 @@ const PAPER = join(ROOT, "paper");
 
 const read = (p: string) => readFileSync(p, "utf8");
 const paperFiles = readdirSync(PAPER).filter((f) => f.endsWith(".md"));
+
+/**
+ * The site's authored pages, which cite rules the same way the paper does and
+ * drifted the same way. `content/spec/normative/` is generated from `spec/` by
+ * `sync-spec.mjs` and is checked at its source, so it is skipped here.
+ */
+function authoredDocs(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) return p.endsWith(join("spec", "normative")) ? [] : authoredDocs(p);
+    return p.endsWith(".md") ? [p] : [];
+  });
+}
 const specFiles = new Set(readdirSync(SPEC).filter((f) => f.endsWith(".md")));
 
 const VERSION = read(join(SPEC, "VERSION")).trim();
@@ -66,6 +79,50 @@ const definesRule = (text: string, id: string): boolean =>
 
 const IDENTIFIER = /\b([SF]-[A-Z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*)\b/g;
 const SPEC_FILE = /`(?:spec\/)?([a-z-]+\.md)`/g;
+
+/** Every sentence citing a rule file must cite one that defines a rule it names. */
+function staleCitations(text: string): string[] {
+  const offences: string[] = [];
+  // Sentence-sized windows. A citation and the identifiers it is for sit in one
+  // sentence; a paragraph would let an unrelated rule three sentences away
+  // satisfy the check.
+  const sentences = text.split(/(?<=[.!?])\s+|\n\n+/);
+  for (const sentence of sentences) {
+    const cited = [...sentence.matchAll(SPEC_FILE)].map((m) => m[1]).filter((f) => specFiles.has(f));
+    if (cited.length === 0) continue;
+    // A prefix glob is not an identifier. `F-Eval-*` names a family and no file
+    // defines a bare `F-Eval`, so reading one out of the glob reports every
+    // page that writes the family name.
+    const ids = [
+      ...new Set(
+        [...sentence.matchAll(IDENTIFIER)]
+          .filter((m) => !sentence.slice(m.index! + m[0].length).startsWith("-*"))
+          .map((m) => m[1]),
+      ),
+    ];
+    if (ids.length === 0) continue;
+    // Lenient on purpose: one sentence may cite one file and name several
+    // rules, only some of which live there. What it must not do is name a file
+    // that defines none of them.
+    const satisfied = cited.some((f) => ids.some((id) => definesRule(read(join(SPEC, f)), id)));
+    if (!satisfied) {
+      offences.push(`${cited.join(", ")} defines none of ${ids.join(", ")} — "${sentence.trim().slice(0, 100)}…"`);
+    }
+  }
+  return offences;
+}
+
+describe("the site's authored pages cite a file that defines the rule (#181)", () => {
+  // #168 split `judgments.md` five ways and left it a 14-line index. Ten
+  // references across the authored pages kept pointing at it, so a reader
+  // following one landed on a table of contents. The paper had the same drift
+  // and #214 gated it there; the site was outside that gate.
+  for (const file of authoredDocs(join(ROOT, "docs", "content"))) {
+    test(`${file.slice(ROOT.length + 1)}`, () => {
+      expect(staleCitations(read(file))).toEqual([]);
+    });
+  }
+});
 
 describe("the paper's rule citations name a file that defines the rule", () => {
   for (const file of paperFiles) {
