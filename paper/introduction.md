@@ -8,6 +8,8 @@ Infrastructure and build configuration is increasingly written in a general-purp
 
 This paper describes a different answer, specified and implemented: carve a fragment out of TypeScript whose value is fixed by its source, reduce source inside the fragment to data without executing it, and let source outside the fragment fall back to real execution, with the two paths required to agree. This is offline partial evaluation with a binding-time analysis, where the shape classifier is the analysis and the reducer is the specializer.
 
+We call the operation *folding*, after constant folding. That is the one classical technique that produces a build-time value without executing the program, and the difference here is scale rather than kind. Constant folding is expression-local and optional, and on its own it reaches nothing; a whole file reduces to a closed value domain, with cross-file object identity and a per-file fallback. Every other neighbour that reaches a whole function or a whole unit gets there by running it.
+
 Graceful fallback from static evaluation to execution is not itself new; compile-time function execution has it per call site and per-page static optimisation has it per page. What is new is the combination of per-file granularity with shared object identity across the fold and run boundary, and the bidirectional fixpoint required to keep a shared entity from becoming two objects. We give a specification of that combination, a reference implementation written from it, and a conformance suite that a production system passes alongside the reference.
 
 ## The problem
