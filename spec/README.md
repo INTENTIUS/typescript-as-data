@@ -152,6 +152,20 @@ fixtures citing it move to the successor in the same change, which the
 coverage gate enforces, since a struck identifier is no longer defined and
 a citation of it fails.
 
+**A host obligation moves the minor.** The major exists for the reason
+*narrowed* gives. That reason is about a project's source. An obligation on
+the host is not about source at all. It constrains the implementation. Every
+file that folded still folds under any host that still conforms. What narrows
+is the set of conforming hosts. That is the *added* case. Claiming the new
+version requires meeting the obligation. Implementing a new rule requires the
+same. Withdrawal is the reverse and is also minor.
+
+`F-Host-Interface` item 1 is the case that settled it. Bounding what an entity
+constructor may do at 2.1 stopped a validating host from conforming. No source
+changed verdict. The everyday reading of "a host that conformed no longer
+does" says major. The four kinds do not say it. 2.1 landed minor on the
+reading above and this paragraph is what records it (#204).
+
 **Two profiles.** `objective.md`
 defines `full` and `data-host` (F-Profile, F-Profile-DataHost); the second is
 the first with nothing that needs a JavaScript runtime for an evaluator

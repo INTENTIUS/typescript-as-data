@@ -29,8 +29,8 @@ markers, stores `props`, and builds one `AttrRef` per `attrMap` entry.
 source that folded no longer does or a verdict changes. No source changes
 verdict here. Under a conforming host every file that folded still folds; what
 shrinks is the set of conforming *hosts*, which is an added obligation rather
-than a narrowed rule. The policy does not name that axis and #204 asks whether
-it should.
+than a narrowed rule. The policy did not name that axis when this landed.
+`README.md` names it now and a host obligation moves the minor (#204).
 
 ## 2.0, 2026-09-14
 
