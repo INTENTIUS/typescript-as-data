@@ -141,6 +141,13 @@ from `g` the re-export arm of F-Declarator records `h ⇝ g` alongside `h → g`
 and `f` importing that binding from `h` records `f ⇝ h` alongside `f → h`.
 The closure composes the two.
 
+The fixpoint and this proposition are checked over every build of four files
+by `spec/taint-model.test.ts` (#179). That is 8,503,056 builds: every import
+relation excluding self-imports, every capture relation inside it, and every
+assignment of tentative verdicts. The scope is stated for the same reason
+F-Depth's bounds are. The check carries its own vacuity guards. One of them is
+the instance case 2 of the sketch below originally got wrong.
+
 *Sketch.* Let `e` be produced by file `g` and let `f` be any file referring
 to `e`.
 
