@@ -2,7 +2,7 @@
 <div class="shell">
   {{ partial "sidebar.html" . }}
   <article class="doc">
-    {{ if ne .FirstSection .Parent }}<p class="crumb"><a href="{{ .FirstSection.RelPermalink }}">{{ .FirstSection.Title }}</a> · <a href="{{ .Parent.RelPermalink }}">{{ .Parent.Title }}</a></p>{{ else }}<p class="crumb"><a href="{{ .FirstSection.RelPermalink }}">{{ .FirstSection.Title }}</a></p>{{ end }}
+    {{ if ne .FirstSection .Parent }}<p class="crumb"><a href="{{ .FirstSection.RelPermalink }}">{{ .FirstSection.Title }}</a> · <a href="{{ .Parent.RelPermalink }}">{{ .Parent.LinkTitle }}</a></p>{{ else }}<p class="crumb"><a href="{{ .FirstSection.RelPermalink }}">{{ .FirstSection.Title }}</a></p>{{ end }}
     {{ if not (findRE "(?m)^# " .RawContent) }}<h1>{{ .Title }}</h1>{{ end }}
     {{ with .Params.lead }}<p class="lead">{{ . | markdownify }}</p>{{ end }}
     {{ .Content }}
