@@ -1,6 +1,6 @@
 ---
 title: "typescript-as-data"
-description: "Compiling TypeScript to configuration."
+description: "TypeScript configuration, read as data and never run."
 ---
 
 Your configuration is a TypeScript file. A separate program reads it and works out the values itself, refusing anything it would have to run.
