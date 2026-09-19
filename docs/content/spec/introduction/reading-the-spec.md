@@ -11,31 +11,45 @@ one introduced.
 
 ## The reading order
 
-1. Start with [`grammar.md`](/typescript-as-data/spec/normative/grammar/), which owns the
-   `S-*` rules. It is the statement gate and the expression productions,
-   decidable from syntax alone. Every `F-*` rule in the next file is keyed to a
-   production in this one.
-2. Read [`judgments.md`](/typescript-as-data/spec/normative/judgments/) next; it owns the
-   `F-*` judgments: J1 expression evaluation and J2 the per-file verdict; J3 the
-   identity-taint fixpoint and J4 properties and observables. Its preamble
-   states the objective the whole mechanism serves.
-3. Then comes [`values.md`](/typescript-as-data/spec/normative/values/), which owns
-   `F-Val-*`, the value domain. It says what a fold produces: the closed union
-   of cases a folded value can be, and the envelope shapes that stand in for
-   things the build has not resolved yet.
-4. The fourth file, [`divergence.md`](/typescript-as-data/spec/normative/divergence/),
-   owns `F-Direction`, `F-Div-*` and `F-Exc-*`. One subset has two consumers
-   with unequal information, the shape classifier and the folder. This file
-   states the direction in which they may disagree, enumerates every known
-   divergence, and gives the two tolerated exceptions with a reason each.
-5. Last is [`hosts.md`](/typescript-as-data/spec/normative/hosts/), which owns
-   `F-Host-*`, the host interface. Seven things a host supplies, and the rule by
-   which each is admitted.
+**Start with [`objective.md`](/typescript-as-data/spec/normative/objective/).** It
+states the objective the whole mechanism serves, names the two profiles an
+implementation may claim, and carries the notation guide. That last part
+matters if the judgments look like nothing you have read before. The guide is
+non-normative and self-contained: it says what `⊢` and `⇓` and the bracket
+pairs mean, with one worked reading of each shape, and a reader who has met
+none of them can read every rule from it alone.
 
-Each of those five ends with a non-normative Rationale section, where the
-reasoning lives; the rule text above it is deliberately terse.
+Then the rules, in order.
 
-Two further files are not rule files.
+1. The `S-*` rules are [`grammar.md`](/typescript-as-data/spec/normative/grammar/),
+   the statement gate and the expression productions, decidable from syntax
+   alone. Every `F-*` rule is keyed to a production here.
+2. J1 is [`evaluation.md`](/typescript-as-data/spec/normative/evaluation/), which owns
+   `F-Eval-*` and takes one expression at a time.
+3. J2 is [`verdict.md`](/typescript-as-data/spec/normative/verdict/), the per-file
+   verdict: this file folds, or it runs and here is why.
+4. J3 is [`taint.md`](/typescript-as-data/spec/normative/taint/), the identity-taint
+   fixpoint, which decides a whole build rather than a file.
+5. J4 is [`observables.md`](/typescript-as-data/spec/normative/observables/), the
+   properties that are about the mechanism rather than about any one judgment.
+6. The value domain is [`values.md`](/typescript-as-data/spec/normative/values/). It
+   says what a fold produces: the closed union of cases a folded value can be,
+   and the envelope shapes that stand in for what the build has not resolved
+   yet.
+7. Where the two consumers of the subset may disagree is
+   [`divergence.md`](/typescript-as-data/spec/normative/divergence/). The shape
+   classifier and the folder hold unequal information, and this file states the
+   direction of any disagreement and enumerates every known one.
+8. What a host supplies is [`hosts.md`](/typescript-as-data/spec/normative/hosts/):
+   seven things, and the rule by which each is admitted.
+9. The contract for a rule running over folded values is
+   [`rules.md`](/typescript-as-data/spec/normative/rules/).
+
+The rule text is deliberately terse.
+[`rationale.md`](/typescript-as-data/spec/normative/rationale/) carries the reasoning
+for all of them in one place, a note per rule family, and is not normative.
+
+Three further files are not rule files.
 
 [`inventory.md`](/typescript-as-data/spec/normative/inventory/) is the coverage ledger.
 A decision point is anywhere the mechanism chooses between admitting and
@@ -44,11 +58,14 @@ row per decision point, derived from a complete read of chant core's fold path,
 and the last column names the `S-*` or `F-*` rule that governs the row, or
 `GAP` with an out-of-scope reason.
 
-[`prior-art.md`](/typescript-as-data/spec/normative/prior-art/) is a survey
-rather than a rule. Graceful fallback from static evaluation to execution is
-well established. What the sweep found no precedent for is the combination of
+[`prior-art.md`](/typescript-as-data/spec/normative/prior-art/) is a survey rather
+than a rule. Every neighbour that reaches a whole function or unit reaches it by
+running the source. What the sweep found no precedent for is the combination of
 per-file granularity with shared object identity across the boundary, which is
 what forces J3.
+
+[`changelog.md`](/typescript-as-data/spec/normative/changelog/) is the versioned
+history of the rule set.
 
 ## The process rules
 

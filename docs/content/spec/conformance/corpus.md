@@ -145,7 +145,7 @@ namespace, envelopes included.
 
 ## The isolation column
 
-The corpus runs a fourth time under `ι = isolated`. `F-IsolatedRefusal` refuses
+The corpus runs a fourth time under isolation. `F-IsolatedRefusal` refuses
 every project-owned invocation there. A file whose fold would invoke project
 code runs instead. The difference between the two runs is what the guarantee
 costs.
