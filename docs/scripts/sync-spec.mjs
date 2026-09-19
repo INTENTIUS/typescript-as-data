@@ -52,9 +52,16 @@ for (const file of readdirSync(specDir).filter((f) => f.endsWith(".md"))) {
   }
   const desc = (body.find((l) => l.trim() && !l.startsWith("#") && !l.startsWith("<a") && !l.startsWith("|") && !l.startsWith(">")) ?? "").replace(/[`*_]/g, "").slice(0, 160);
   const order = ORDER.indexOf(name);
+  // The nav title, without the judgment form. `evaluation.md`'s heading is
+  // "J1. Expression evaluation `Γ, H ⊢ e ⇓ v`", which belongs at the top of
+  // the rule file and does not belong in a sidebar, a browser tab or a link
+  // somebody sends a colleague. Hugo's `linkTitle` is exactly this: the page
+  // keeps its full heading and every list of pages uses the short one.
+  const linkTitle = title.replace(/\s*`[^`]*`\s*$/, "").trim();
   const fm = [
     "---",
     `title: ${JSON.stringify(name === "README" ? "Normative text" : title)}`,
+    ...(linkTitle && linkTitle !== title ? [`linkTitle: ${JSON.stringify(linkTitle)}`] : []),
     `description: ${JSON.stringify(desc)}`,
     `weight: ${order === -1 ? 99 : order + 1}`,
     ...(name === "README" ? ["hideChildren: false", 'aliases: ["/spec/"]'] : [`aliases: ["/spec/${name.toLowerCase()}/"]`]),
