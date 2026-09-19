@@ -5,7 +5,7 @@ weight: 3
 diataxis: explanation
 ---
 
-Folding goes one way, source to data, and a generator goes the other. Put them together and an existing artifact becomes TypeScript that folds back to exactly the data it came from, whether that artifact is a CloudFormation template, a live Kubernetes namespace or an org's current settings. The property is `fold(generate(v)) = v` in `data-host` and `fold(generate(v)) = revive(v)` in `full`. The fold of a resource's form is a live instance there rather than the envelope it came from.
+Folding goes one way, source to data, and a generator goes the other. Put them together and an existing artifact becomes TypeScript that folds back to exactly the data it came from, whether that artifact is a CloudFormation template, a live Kubernetes namespace or an org's current settings. Under `data-host` you get back exactly what you put in. Under `full` you get it as live objects instead, because that is what the profile turns a resource into.
 
 ## Why the language matters here
 
@@ -34,7 +34,7 @@ chant has three generators through one pipeline. `chant import` reads a template
 
 ## What it does not establish
 
-The round trip is stated per profile, and the two are different equations: `fold(generate(v)) = revive(v)` in `full` against `fold(generate(v)) = v` in `data-host`. The fixture kind tests one generator's output against its own input. It does not establish that a generator you write round-trips, which is the obligation `F-Val-Source` places on the generator rather than a property this specification can discharge for you.
+The round trip is stated per profile and the two statements are not the same one, which is the distinction above. The fixture kind tests one generator's output against its own input. It does not establish that a generator you write round-trips, which is the obligation `F-Val-Source` places on the generator rather than a property this specification can discharge for you.
 
 ## Where the rule lives
 

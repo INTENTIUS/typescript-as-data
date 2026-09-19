@@ -9,7 +9,7 @@ A TypeScript file whose values are fixed by its source can be reduced to data by
 
 For a file that folds, the build executes none of its top-level statements. The rule bounds what still runs to four named cases. Every one of them is code the file imported rather than code the file wrote.
 
-In the `data-host` profile nothing is invoked to produce the values. `F-Profile-DataHost` redefines revival as serialization and removes every rule that needs a JavaScript runtime. Each envelope reaches the serializer as data and no constructor is invoked. That is the profile the Rust evaluator implements and the one [the browser demo](/typescript-as-data/try-it/in-the-browser/) runs.
+In the `data-host` profile nothing is invoked to produce the values. That profile redefines revival as serialization and removes every rule that needs a JavaScript runtime. Each envelope reaches the serializer as data and no constructor is invoked. That is the profile the Rust evaluator implements and the one [the browser demo](/typescript-as-data/try-it/in-the-browser/) runs.
 
 The alternative is the run path: the build executes the file as a program and takes its exports. Same artifact, at the cost of everything below.
 
@@ -23,7 +23,7 @@ A tool that executes your program cannot offer this. Until the program has run t
 
 The artifact is a function of the source and of the build-parameter binding. The same file gives the same output on any machine at any time, in whatever language the evaluator happens to be written in. A tool that cannot run JavaScript at all gets the same value the author sees in the editor, whether it is a Go binary, a WASM module or a CI job with no runtime.
 
-That guarantee is unconditional in `data-host`, where nothing is invoked to produce them. In `full` it is as good as the host's lexicons and the isolation mode. `F-IsolatedRefusal` refuses every project-owned invocation under `isolated`. The default `open` mode reaches one thing no purity criterion covers: `F-Call` step 6 may invoke a project factory that nobody registered. An entity constructor holds its props and does no more (`F-Host-Interface` item 1).
+That guarantee is unconditional in `data-host`, where nothing is invoked to produce them. In `full` it is as good as the host's lexicons and the isolation mode. Under `isolated` every invocation of your own code is refused. The default `open` mode reaches one thing no purity check covers, which is a factory a project file published and nobody registered. A constructor the host supplies holds its props and does no more.
 
 ## See it hold
 
@@ -46,16 +46,16 @@ Both profiler recordings are readable in the browser. [The `cdk synth` recording
 
 A profile is the wrong instrument for the claim, because the claim is closure rather than volume. A `--cpu-prof` figure has a sampling floor, so 0 MB means everything the profiler could see. So the reference counts instead. Every site in it that invokes code it did not write records the invocation and the rule that admits it, and a counting proxy around the host's callables counts the same invocations without being told what they are. Across {{< figure "execution.foldingFixtures" >}} fully folding whole-build fixtures the ledger holds {{< figure "execution.foldingInvocations" >}} invocations and the two counts agree. Each one names an arm of `F-NoOwnExecution`. An invocation either observer sees and the other does not is an unmapped frame and fails the build. There are {{< figure "execution.unmapped" >}}.
 
-The arms are the rule's own closed list:
+The list is closed and short:
 
-- revival of an envelope (`F-Val-Fate`)
-- an eager intrinsic (`F-Eval-CallEager`)
-- a method on a real receiver (`F-Eval-CallMethod`)
-- a package's factory at `F-Call` step 6
+- reviving a value the file wrote as data
+- an intrinsic the host registered to run at fold time
+- a method on a value that is already real
+- a factory a package published
 
-Nothing reached any other, and a listed arm that nothing reaches fails too, so the list has no dead entry.
+Nothing reached anything else. An entry nothing reaches fails too, so the list has no dead members.
 
-Two things the profile cannot show, and this does. Under `data-host` the count is zero across {{< figure "execution.dataHostFixtures" >}} fixtures, which is `F-Profile-DataHost` made visible rather than measured. And {{< figure "execution.mixedFixtures" >}} fixtures are estates that do not fold completely, where a file that folds sits beside one that runs. chant's harness fails unless every file folds, so it has never recorded one.
+Two things the profile cannot show, and this does. Under `data-host` the count is zero across {{< figure "execution.dataHostFixtures" >}} fixtures, which is the profile's own promise made visible rather than measured. And {{< figure "execution.mixedFixtures" >}} fixtures are estates that do not fold completely, where a file that folds sits beside one that runs. chant's harness fails unless every file folds, so it has never recorded one.
 
 The reference implementation folds with no runtime at all. At spec {{< figure "specVersion" >}} it agrees with chant {{< figure "chantPin" >}} on every one of {{< figure "corpus.comparable" >}} comparable corpus files, and on the {{< figure "corpus.bothFold" >}} that fold on both sides the export namespaces are identical.
 
