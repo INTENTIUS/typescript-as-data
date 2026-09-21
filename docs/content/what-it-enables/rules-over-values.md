@@ -5,31 +5,29 @@ weight: 2
 diataxis: explanation
 ---
 
-The editor catches a misspelt key and a value of the wrong kind as you type. That is TypeScript's type checker, and it is not linting.
+You set `requirePullRequestReviews: true` and `requiredApprovingReviewCount: 0` in the same block. Those contradict each other. Nothing tells you, because each one is fine on its own and the type checker only ever sees them one at a time.
 
-A type can say a field is a number in a range. No type can say that `requirePullRequestReviews: true` with `requiredApprovingReviewCount: 0` is a contradiction, or that an owned org has no branch protection on its default branch. Those are conditions over the values, and over several resources at once.
+A check that reads the values catches it. It can also catch what no single file shows on its own: an org you own with no branch protection on its default branch, or a plan that would delete three of the four variables you have.
 
-A rule over values is a check over what a project declares. The specification defines no such check. It defines the contract a host's checks run under, [`rules.md`](/typescript-as-data/spec/normative/rules/), which says what a check sees and when it runs, and then what a check may do and what a finding is. chant's lexicon rules and forgejo-warden's guardrails are checks; what they have in common is that contract.
+That kind of check is what this page is about. It runs before anything is built, it sees what every file declares, and none of your code runs to produce what it sees.
 
 ## What the fold adds
 
-There are two phases, and the fold matters to one of them.
+Checks that read the finished YAML are ordinary. Any tool that emits YAML can run one, and nothing here is needed for it.
 
-A **post-synthesis** rule reads the emitted artifact. Any tool that emits YAML can run one, from a YAML source or a TypeScript one, and nothing about the fold is needed for it. The contract covers the phase because chant serves both phases from one hook.
+The useful ones run earlier, on the values themselves, before a line of YAML exists. That is what folding makes possible. The values are already there without running your files, so the check is a plain function of your source and runs anywhere the fold runs, your editor included.
 
-A **pre-synthesis** rule reads what every file declares, before anything is emitted. That is the phase the fold enables: the values are there without running project code, so the check is a pure function of the source and runs wherever the fold does.
+It also sees things the finished YAML has lost. A reference is still a reference rather than a copied string, and one resource is still one resource wherever it appears. The answer is the same whether the file folded or had to be run.
 
-It also sees structure the artifact loses. A reference is still a reference at that point, and one entity is still one entity wherever it is used. Its findings are the same whether the file folded or ran, which the contract states as a property.
+What a check reports is fixed too. Every finding carries:
 
-The contract also fixes what a check reports. A finding names:
+- which rule fired
+- what it fired on
+- where in the value
+- how bad it is
+- the source line, when the tool tracks that
 
-- the rule that fired
-- the subject it fired on
-- a path into the value
-- a severity
-- the source line, where the host tracks provenance
-
-That shape is what makes a finding actionable, by a person or by an agent asked to fix it: it says which rule and which value, which is enough to propose the edit.
+Enough for a person to act on. Enough for an agent asked to fix it to find the edit.
 
 ## See it hold
 
@@ -52,7 +50,7 @@ chant's lexicons carry rules over values for each target, running over the folde
 
 ## What it does not establish
 
-A rule sees the values at one build-parameter binding. It proves a property of the estate that binding produces and says nothing about the others, so quantifying over the binding space is still a model-checking problem. What the fold removes is the need to model the program, not the need to model the policy space.
+A check sees the values one build produces. Change a build parameter and you get a different estate, which the check has said nothing about. It proves things about the estate in front of it rather than about every estate your source could produce.
 
 ## Where the rule lives
 

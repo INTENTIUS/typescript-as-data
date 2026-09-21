@@ -5,13 +5,13 @@ weight: 1
 diataxis: explanation
 ---
 
-A TypeScript file whose values are fixed by its source can be reduced to data by reading it. The specification calls this folding, and `F-NoOwnExecution` states the property.
+Your config says a repo has no wiki and squash merges on. A tool reads it and tells you what it will deploy.
 
-For a file that folds, the build executes none of its top-level statements. The rule bounds what still runs to four named cases. Every one of them is code the file imported rather than code the file wrote.
+It does that by reading. It never runs your code. A line that deletes something never happens. Neither does one that phones an API or reads the clock. Nothing is executed to find out what you declared.
 
-In the `data-host` profile nothing is invoked to produce the values. That profile redefines revival as serialization and removes every rule that needs a JavaScript runtime. Each envelope reaches the serializer as data and no constructor is invoked. That is the profile the Rust evaluator implements and the one [the browser demo](/typescript-as-data/try-it/in-the-browser/) runs.
+The specification calls this folding, and it is what the rest of this page is about.
 
-The alternative is the run path: the build executes the file as a program and takes its exports. Same artifact, at the cost of everything below.
+Not every file can be read this way. One that computes its values in a loop or calls out to something is run instead. It runs properly, as a program. You are told which ones those were, so what you never get is something reported as read when it was quietly run.
 
 ## Checked before anything runs
 
@@ -23,7 +23,7 @@ A tool that executes your program cannot offer this. Until the program has run t
 
 The artifact is a function of the source and of the build-parameter binding. The same file gives the same output on any machine at any time, in whatever language the evaluator happens to be written in. A tool that cannot run JavaScript at all gets the same value the author sees in the editor, whether it is a Go binary, a WASM module or a CI job with no runtime.
 
-That guarantee is unconditional in `data-host`, where nothing is invoked to produce them. In `full` it is as good as the host's lexicons and the isolation mode. Under `isolated` every invocation of your own code is refused. The default `open` mode reaches one thing no purity check covers, which is a factory a project file published and nobody registered. A constructor the host supplies holds its props and does no more.
+How far that holds depends on what the tool is allowed to run. With no JavaScript runtime at all, nothing runs, which is the setting [the browser demo](/typescript-as-data/try-it/in-the-browser/) uses. Normally the libraries your config imports do run. Your own code does not. One gap remains: a factory your own project published and never registered with the tool still runs, and there is a stricter mode that refuses even that.
 
 ## See it hold
 
@@ -55,13 +55,13 @@ The list is closed and short:
 
 Nothing reached anything else. An entry nothing reaches fails too, so the list has no dead members.
 
-Two things the profile cannot show, and this does. Under `data-host` the count is zero across {{< figure "execution.dataHostFixtures" >}} fixtures, which is the profile's own promise made visible rather than measured. And {{< figure "execution.mixedFixtures" >}} fixtures are estates that do not fold completely, where a file that folds sits beside one that runs. chant's harness fails unless every file folds, so it has never recorded one.
+Two things a profiler cannot show, and this does. With no JavaScript runtime the count is zero across {{< figure "execution.dataHostFixtures" >}} projects, which is a promise made visible rather than measured. And {{< figure "execution.mixedFixtures" >}} fixtures are estates that do not fold completely, where a file that folds sits beside one that runs. chant's harness fails unless every file folds, so it has never recorded one.
 
 The reference implementation folds with no runtime at all. At spec {{< figure "specVersion" >}} it agrees with chant {{< figure "chantPin" >}} on every one of {{< figure "corpus.comparable" >}} comparable corpus files, and on the {{< figure "corpus.bothFold" >}} that fold on both sides the export namespaces are identical.
 
 ## What it does not establish
 
-The guarantee is per file and per profile. Under `data-host` nothing is invoked at all. Under `full` what runs is a bounded named set of the packages' code, so "nothing executed" is a claim about your file rather than about the build. A file that cannot be folded is executed, and the verdict says which files those were.
+It is a claim about your file rather than about the whole build. Library code does run. The list of what may is short and closed. A file that cannot be read this way is executed instead. You are told which ones those were.
 
 ## Where the rule lives
 

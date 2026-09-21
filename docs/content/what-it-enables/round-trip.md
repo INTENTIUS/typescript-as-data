@@ -5,13 +5,19 @@ weight: 3
 diataxis: explanation
 ---
 
-Folding goes one way, source to data, and a generator goes the other. Put them together and an existing artifact becomes TypeScript that folds back to exactly the data it came from, whether that artifact is a CloudFormation template, a live Kubernetes namespace or an org's current settings. Under `data-host` you get back exactly what you put in. Under `full` you get it as live objects instead, because that is what the profile turns a resource into.
+You already have infrastructure. A CloudFormation template, a live Kubernetes namespace, an org whose settings somebody clicked into a web UI years ago. You want it as TypeScript without hand-copying a thousand lines and hoping.
+
+A generator reads what is there and writes the TypeScript. Read that TypeScript back and you get exactly what it was generated from. Nothing drifted in the trip.
+
+That second half is the part worth checking, and it is why the language matters.
 
 ## Why the language matters here
 
-A YAML-to-YAML round trip is the identity and proves nothing. Going through TypeScript is worthwhile because the generator decides what each value *is*. This string is a literal; that one is a reference to another resource's attribute; a third is a build parameter; a repetition across forty resources is one `const`, spread where it is used.
+Turning YAML into YAML proves nothing, because you could have copied the file. Going through TypeScript is worth something because the generator has to decide what each value actually is.
 
-Each decision needs a source form the subset can express and the fold can reverse. YAML cannot express the first three. TypeScript expresses all four with object literals and constants, plus spreads and member access.
+This string is just a string. That one is a reference to another resource. A third is a setting you pass in at build time. The same block repeated across forty resources is one name, written once and spread where it is used.
+
+Those are four different things and YAML cannot tell three of them apart. TypeScript can. Then the fold has to turn every one of them back into the value it started as, which is what makes the round trip a test rather than a copy.
 
 ## See it hold
 
