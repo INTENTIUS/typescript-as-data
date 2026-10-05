@@ -1,6 +1,6 @@
 {
   "_comment": "Written by scripts/consumer-skew.mjs from the weekly demo workflow (#192): what specification version the consumer's own installed evaluator declares, against this repository's spec/VERSION. Reported, never gated — the version a consumer pins is that repository's decision.",
-  "date": "2026-09-28",
+  "date": "2026-10-05",
   "specVersion": "2.1",
   "consumer": {
     "name": "@intentius/forgejo-warden",
