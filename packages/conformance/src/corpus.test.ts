@@ -16,7 +16,7 @@ import {
   findChantCheckout, discoverCorpus, runCorpusEntry, summarize, renderCorpusReport,
   findExternalCheckouts, discoverExternal,
   type ChantCheckout, type CorpusSummary, type EntryReport, type ExternalRun,
-  isolationRefusalOf,
+  isolationRefusalOf, addOracleColumn,
 } from "./corpus";
 
 const checkout = findChantCheckout();
@@ -31,6 +31,8 @@ describe.skipIf(!checkout)("the corpus against both implementations (#25)", () =
     const entries = await discoverCorpus(checkout as ChantCheckout);
     reports = [];
     for (const entry of entries) reports.push(await runCorpusEntry(checkout as ChantCheckout, entry));
+    // #233: the checker column, one tsc batch over every entry, resolving packages from the checkout.
+    reports = addOracleColumn(reports, { nodeModules: resolve((checkout as ChantCheckout).root, "node_modules") });
     summary = summarize(reports);
     // #129: codebases nobody here maintains, each its own row. A checkout the
     // manifest names and the directory lacks fails here by name rather than
@@ -58,6 +60,13 @@ describe.skipIf(!checkout)("the corpus against both implementations (#25)", () =
     const dis = summary.dataHost.disagreements.map((d) => `${d.entry}/${d.file}: reference ${d.dataHost!.reference}, evaluator ${d.dataHost!.rust} ${d.dataHost!.diff ?? ""}`);
     expect(dis, dis.join("\n")).toEqual([]);
     expect(summary.dataHost.files).toBe(summary.files);
+  });
+
+  test("the checker column is present and no export fails it (#233)", () => {
+    expect(summary.oracle, "no checker column").toBeDefined();
+    expect(summary.oracle!.exports - summary.oracle!.outOfScope).toBeGreaterThan(0);
+    const lines = summary.oracle!.failures.map((f) => `${f.entry}/${f.file}#${f.exportName}: ${f.diagnostics.join(" | ")}`);
+    expect(lines, lines.join("\n")).toEqual([]);
   });
 
   test("the corpus is the whole one, not a fragment of it", () => {
@@ -131,5 +140,55 @@ describe("isolation refusals are classified by what chant refused (#171)", () =>
     for (const r of ["refused", "project code", "sandbox", ""]) {
       expect(isolationRefusalOf(r) === "factory" || isolationRefusalOf(r) === "constructor").toBe(false);
     }
+  });
+});
+
+/**
+ * The checker column's own path (#233), on a corpus of two entries written
+ * here, so it runs without a chant checkout. The entries' reports are what
+ * `runCorpusEntry` would return for them: comparisons, plus the sources and
+ * the reference's folds the column reads.
+ */
+describe("the checker column on a synthetic corpus (#233)", () => {
+  const entry = (name: string, sources: Record<string, string>, folds: Record<string, Record<string, unknown>>): EntryReport => ({
+    name,
+    files: Object.keys(sources).length,
+    comparisons: Object.keys(sources).map((file) => ({ file, chant: folds[file] ? "fold" : "run", reference: folds[file] ? "fold" : "run" })),
+    oracleInput: { sources: new Map(Object.entries(sources)), folds: new Map(Object.entries(folds)) },
+  });
+  const reports = addOracleColumn([
+    entry(
+      "service",
+      {
+        "defaults.ts": `export const labels = { team: "platform" };\nexport const port = 8080;\n`,
+        "app.ts": `import { labels, port } from "./defaults";\nexport const service = { labels, port, replicas: 2 * 2 };\n`,
+        "runs.ts": `export const bucket = new Bucket({});\n`,
+      },
+      {
+        "defaults.ts": { labels: { team: "platform" }, port: 8080 },
+        "app.ts": { service: { labels: { team: "platform" }, port: 8080, replicas: 4 } },
+      },
+    ),
+    entry("wrong", { "config.ts": `export default { target: "es5" };\n` }, { "config.ts": { default: { target: "esnext" } } }),
+  ]);
+  const summary = summarize(reports);
+
+  test("each folded file carries the column, and a file that runs does not", () => {
+    const service = reports[0].comparisons;
+    expect(service.find((c) => c.file === "defaults.ts")?.oracle?.map((o) => [o.exportName, o.verdict])).toEqual([["labels", "pass"], ["port", "pass"]]);
+    expect(service.find((c) => c.file === "app.ts")?.oracle?.[0]).toMatchObject({ verdict: "unchecked", uncheckedPaths: ["$.replicas"], leaves: 3, checkedLeaves: 2 });
+    expect(service.find((c) => c.file === "runs.ts")?.oracle).toBeUndefined();
+  });
+
+  test("the summary counts verdicts and coverage, and lists the failure by entry", () => {
+    expect(summary.oracle).toMatchObject({ files: 3, exports: 4, outOfScope: 0, pass: 2, unchecked: 1, leaves: 6, checkedLeaves: 5 });
+    expect(summary.oracle!.failures.map((f) => `${f.entry}/${f.file}#${f.exportName}`)).toEqual(["wrong/config.ts#default"]);
+  });
+
+  test("the report renders the column", () => {
+    const md = renderCorpusReport({ root: "/x", corpusVersion: "0.0.0", revision: "abc" }, { name: "chant", specVersion: "2.1" }, summary, reports);
+    expect(md).toContain("## The checker column");
+    expect(md).toContain("| 3 | 4 | 0 | 2 | 1 | 1 | 5 of 6 leaves (83.3%) |");
+    expect(md).toMatch(/- `wrong\/config.ts` export `default`: TS2322/);
   });
 });

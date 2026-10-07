@@ -34,6 +34,7 @@ import { foldProject as referenceFoldProject, findFactoryViolation, type Host } 
 import type { ConformanceAdapter } from "./adapter.js";
 import type { ConformanceHost } from "./host.js";
 import { rustAdapter, rustEvaluatorPath } from "./adapters/rust.js";
+import { runOracle, summarizeOracle, type OracleOptions, type OracleResult, type OracleSubject } from "./oracle.js";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
@@ -348,6 +349,13 @@ export interface FileComparison {
   readonly referenceRule?: string;
   readonly referenceReason?: string;
   readonly chantReason?: string;
+  /**
+   * The checker column (#233): each export of a file the reference folded,
+   * against the type `tsc` gives it. Set by `addOracleColumn`, which runs
+   * the whole corpus as one batch; absent on a file the reference did not
+   * fold.
+   */
+  readonly oracle?: readonly OracleResult[];
 }
 
 export interface EntryReport {
@@ -356,6 +364,8 @@ export interface EntryReport {
   readonly comparisons: readonly FileComparison[];
   /** Why this entry's isolated fold could not be taken, when it could not (#171). */
   readonly isolatedUnavailableReason?: string;
+  /** What the checker column reads: the build's sources and the reference's folds, by file. Not rendered. */
+  readonly oracleInput?: { readonly sources: ReadonlyMap<string, string>; readonly folds: ReadonlyMap<string, Readonly<Record<string, unknown>>> };
 }
 
 const isProjectSpecifier = (s: string) => s.startsWith(".") || s.startsWith("/");
@@ -711,7 +721,39 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
     const right = Object.fromEntries(rv.exports);
     return { ...base, ...compareData(left, right) };
   });
-  return { name: entry.name, files: paths.length, comparisons, isolatedUnavailableReason };
+  const folds = new Map<string, Record<string, unknown>>();
+  for (const abs of paths) {
+    const rv = reference.verdicts.get(keyOf(abs));
+    if (rv?.kind === "fold") folds.set(keyOf(abs), Object.fromEntries(rv.exports));
+  }
+  return { name: entry.name, files: paths.length, comparisons, isolatedUnavailableReason, oracleInput: { sources, folds } };
+}
+
+/**
+ * The checker column (#233), over every entry at once: one `tsc` run for the
+ * whole corpus. Each file the reference folded is a subject, its unit the
+ * entry, so an entry's files are type-checked together as the build they
+ * are. `nodeModules` is the checkout's, so a file importing a lexicon sees
+ * that lexicon's types. Plain-data exports only; the rest is out of scope.
+ */
+export function addOracleColumn(reports: readonly EntryReport[], opt: OracleOptions = {}): EntryReport[] {
+  const subjects: OracleSubject[] = [];
+  for (const r of reports) {
+    if (!r.oracleInput) continue;
+    for (const [file, exports] of r.oracleInput.folds) subjects.push({ unit: r.name, files: r.oracleInput.sources, file, exports });
+  }
+  const byFile = new Map<string, OracleResult[]>();
+  for (const res of runOracle(subjects, opt)) {
+    const k = `${res.unit}\u0000${res.file}`;
+    byFile.set(k, [...(byFile.get(k) ?? []), res]);
+  }
+  return reports.map((r) => ({
+    ...r,
+    comparisons: r.comparisons.map((c) => {
+      const oracle = byFile.get(`${r.name}\u0000${c.file}`);
+      return oracle ? { ...c, oracle } : c;
+    }),
+  }));
 }
 
 // ── the summary the paper cites ─────────────────────────────────────────────
@@ -739,6 +781,22 @@ export interface CorpusSummary {
   readonly referenceMorePermissive: readonly Disagreement[];
   /** The data-host column, when the evaluator with no JavaScript runtime was present. */
   readonly dataHost?: { readonly files: number; readonly agreed: number; readonly bothFold: number; readonly disagreements: readonly Disagreement[] };
+  /**
+   * The checker column (#233), when `addOracleColumn` ran: exports of folded
+   * files by verdict, and the literal coverage, which is how much the pass
+   * count is worth. A failure here is an evaluator bug, an oracle bug or a
+   * lying assertion, and each is triaged by name.
+   */
+  readonly oracle?: {
+    readonly files: number;
+    readonly exports: number;
+    readonly outOfScope: number;
+    readonly pass: number;
+    readonly unchecked: number;
+    readonly failures: readonly (OracleResult & { entry: string })[];
+    readonly leaves: number;
+    readonly checkedLeaves: number;
+  };
   /**
    * The isolation column (#171): what refusing every project-owned invocation
    * costs in coverage. `lost` is what folds under `open` and does not under
@@ -786,10 +844,13 @@ export function summarize(reports: readonly EntryReport[]): CorpusSummary {
   let isoFiles = 0, isoOpenFolds = 0, isoFolds = 0, isoUnavailable = 0, isoGained = 0;
   let isoUnavailableReason: string | undefined;
   const isoLostFiles: Disagreement[] = [];
+  const oracleResults: OracleResult[] = [];
+  let oracleFiles = 0;
   for (const report of reports) {
     files += report.files;
     isoUnavailableReason ??= report.isolatedUnavailableReason;
     for (const c of report.comparisons) {
+      if (c.oracle) { oracleFiles++; oracleResults.push(...c.oracle); }
       if (c.chantIsolated === undefined) isoUnavailable++;
       else {
         isoFiles++;
@@ -811,7 +872,15 @@ export function summarize(reports: readonly EntryReport[]): CorpusSummary {
       if (c.values === "not-data") comparableValuesNotData++;
     }
   }
+  // The fixtures' expected failures are keyed by fixture, so none applies here: every corpus failure is listed.
+  const oracle = summarizeOracle(oracleResults, {});
   return {
+    oracle: oracleFiles
+      ? {
+          files: oracleFiles, exports: oracle.exports, outOfScope: oracle.outOfScope, pass: oracle.pass, unchecked: oracle.unchecked,
+          failures: oracle.failUnexpected.map((r) => ({ ...r, entry: r.unit })), leaves: oracle.leaves, checkedLeaves: oracle.checkedLeaves,
+        }
+      : undefined,
     entries: reports.length, files, comparable, comparableAgreed, comparableBothFold,
     comparableValuesNotData, limited, disagreements, referenceMorePermissive,
     dataHost: dhFiles ? { files: dhFiles, agreed: dhAgreed, bothFold: dhBothFold, disagreements: dhDisagreements } : undefined,
@@ -892,6 +961,20 @@ export function renderCorpusReport(
       "The reference and the evaluator are both judged in `data-host`, on the same host description and no code. A file that folds on both sides has the same namespace on both, envelopes included.",
       "",
       summary.dataHost.disagreements.length === 0 ? "No disagreements." : summary.dataHost.disagreements.map((d) => `- \`${d.entry}/${d.file}\`: reference ${d.dataHost!.reference}, evaluator ${d.dataHost!.rust}${d.dataHost!.diff ? ` (${d.dataHost!.diff})` : ""}`).join("\n"),
+      "",
+    ] : []),
+    ...(summary.oracle ? [
+      "## The checker column",
+      "",
+      "Each export of a file the reference folded, against the type `tsc` gives it, with const inference forced (#233). Nothing is executed. Plain-data exports only: an export that constructs with `new`, or whose fold holds a live value or an envelope, is out of scope. A pass means the fold and the checker's literal type are mutually assignable at every node; where the checker has no literal the export is unchecked, never passed.",
+      "",
+      "| Files | Exports | Out of scope | Pass | Unchecked | Fail | Literal coverage |",
+      "|---|---|---|---|---|---|---|",
+      `| ${summary.oracle.files} | ${summary.oracle.exports} | ${summary.oracle.outOfScope} | ${summary.oracle.pass} | ${summary.oracle.unchecked} | ${summary.oracle.failures.length} | ${summary.oracle.checkedLeaves} of ${summary.oracle.leaves} leaves${summary.oracle.leaves ? ` (${((100 * summary.oracle.checkedLeaves) / summary.oracle.leaves).toFixed(1)}%)` : ""} |`,
+      "",
+      summary.oracle.failures.length === 0
+        ? "No export fails."
+        : summary.oracle.failures.map((f) => `- \`${f.entry}/${f.file}\` export \`${f.exportName}\`: ${f.diagnostics.join("; ").replace(/\s+/g, " ")}`).join("\n"),
       "",
     ] : []),
     ...(summary.isolated ? [

@@ -15,6 +15,7 @@
     "**/*.test.ts",
     "src/adapters/**",
     "src/corpus.ts",
+    "src/oracle.ts",
     "node_modules",
     "dist"
   ]
