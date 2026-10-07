@@ -239,7 +239,7 @@ evaluator is the whole checker. The `S-*` classifier needs syntax alone and
 
 The implementation shows the same limit at a smaller scale.
 `convertTypeIntoRawConfig` reads literal types and the shapes built from them.
-Those are primitive literals, tuples and objects. For any other type it returns `undefined` under a
+Those are primitive literals and the tuple and object types around them. For any other type it returns `undefined` under a
 `// TODO: Issue diagnostic`, and `JSON.stringify` of the result then drops the
 key. A `target` whose type was widened to `string`, or any non-literal value,
 silently disappears from the configuration. This is a sharper line than that
