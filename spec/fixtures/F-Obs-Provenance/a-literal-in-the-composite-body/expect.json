@@ -1,0 +1,43 @@
+{
+  "rules": [
+    "F-Obs-Provenance",
+    "F-Host-Composite",
+    "F-Call"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "store.ts": "run",
+    "app.ts": "fold"
+  },
+  "rejectRule": {
+    "store.ts": "F-Eval-Function"
+  },
+  "provenance": {
+    "app.ts": {
+      "store.data.props.versioned": {
+        "kind": "composite-literal",
+        "composite": "Store"
+      },
+      "store.data.props.name": {
+        "kind": "composite-parameter",
+        "composite": "Store",
+        "parameters": [
+          "name"
+        ]
+      },
+      "data.props.versioned": {
+        "kind": "composite-literal",
+        "composite": "Store"
+      },
+      "data.props.name": {
+        "kind": "composite-parameter",
+        "composite": "Store",
+        "parameters": [
+          "name"
+        ]
+      }
+    }
+  },
+  "note": "F-Obs-Provenance's composite-literal origin. versioned is fixed inside Store's body, so no argument at the call changes it and the edit for a drifted value belongs in the composite. Its neighbour name, read from the parameter, keeps the composite-parameter origin, so the two kinds are told apart on one entity."
+}

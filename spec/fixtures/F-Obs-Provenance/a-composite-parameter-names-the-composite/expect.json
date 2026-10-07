@@ -1,0 +1,35 @@
+{
+  "rules": [
+    "F-Obs-Provenance",
+    "F-Host-Composite",
+    "F-Call"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "store.ts": "run",
+    "app.ts": "fold"
+  },
+  "rejectRule": {
+    "store.ts": "F-Eval-Function"
+  },
+  "provenance": {
+    "app.ts": {
+      "store.data.props.name": {
+        "kind": "composite-parameter",
+        "composite": "Store",
+        "parameters": [
+          "name"
+        ]
+      },
+      "data.props.name": {
+        "kind": "composite-parameter",
+        "composite": "Store",
+        "parameters": [
+          "name"
+        ]
+      }
+    }
+  },
+  "note": "F-Obs-Provenance's composite-parameter origin. Store's body reads props.name into the Bucket's name, so that field's origin names the composite by its export name and the parameter path the value was read from, relative to the argument. The instance exported whole and the member destructured from a second call report the same origin; what tells them apart is the call, which a fixture does not compare. Judged only for an adapter that claims provenance, and reported skipped for one that does not."
+}

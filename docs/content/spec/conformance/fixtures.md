@@ -110,6 +110,12 @@ The fields, in the order a fixture usually carries them:
   findings as data.
 - `counters`, F-Obs-Counters' three integers for the build. An adapter
   reporting none is skipped rather than failed.
+- `provenance`, F-Obs-Provenance's origins for named paths, per file:
+  `"store.data.props.name": { "kind": "composite-parameter", "composite":
+  "Store", "parameters": ["name"] }`. The kind is always compared, and
+  `composite` and `parameters` when given, so an `unknown` reported as
+  `direct` fails. Judged only for an adapter that declares the capability,
+  and reported skipped for one that does not.
 - `profiles`, the profiles the case is judged in. A case that needs the
   runtime is `full` only, which naming a host or asserting a taint edge
   implies. Anything else is judged in both.

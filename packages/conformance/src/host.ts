@@ -84,6 +84,13 @@ const Composite = <P>(factory: (props: P) => Record<string, unknown>, name = "an
 /** A host-published composite (L7.1: never interpreted, invoked at a declarator or read through a const, F-Eval-CompositeConst). */
 const Stack = Composite((props: { left: unknown; right: unknown }) => ({ pair: new Pair(props.left, props.right) }), "Stack");
 
+/**
+ * A host-published composite whose members are entities with props. Invoked,
+ * never interpreted, so an implementation that reports provenance cannot say
+ * which argument produced a member's field (F-Obs-Provenance's `unknown`).
+ */
+const Archive = Composite((props: { name: string }) => ({ bucket: new Bucket({ name: props.name, versioned: true }) }), "Archive");
+
 /** A host-published factory (F-Call step 6): invoked with the resolved arguments, it returns an entity. */
 const makePair = (left: unknown, right: unknown): Pair => new Pair(left, right);
 /** A host export that is a function but returns plain data: step 7 refuses its result. */
@@ -140,6 +147,7 @@ const SHAPES: ConformanceHost = {
         ["Composite", Composite],
         ["makePair", makePair],
         ["Stack", Stack],
+        ["Archive", Archive],
         ["describe", describe],
       ]),
     ],

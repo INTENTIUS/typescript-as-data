@@ -16,12 +16,15 @@ describe("chant provenance mapping (#236)", () => {
       many: [bucket({ name: "m0" }), bucket({ name: "m1" })],
       store: { data: bucket({ name: "app" }) },
       my_thing: bucket({ name: "u" }),
+      site: { main: { bucket: bucket({ name: "web" }) } },
     };
     const out = mapFoldProvenance({
       b: { fields: { name: { kind: "direct" }, "tags.a.b": { kind: "direct" }, "tags.list": { kind: "unknown", reason: "no-provenance" } } },
       many_1: { fields: { name: { kind: "direct" } } },
-      store_data: { composite: "Store", instance: "store", fields: { name: { kind: "composite-parameter", composite: "Store", instance: "store", parameters: ["name"] } } },
+      storeData: { composite: "Store", instance: "store", fields: { name: { kind: "composite-parameter", composite: "Store", instance: "store", parameters: ["name"] } } },
       my_thing: { fields: { name: { kind: "composite-literal", composite: "C" } } },
+      // A nested member: the instance, then each member with its first letter upper-cased.
+      siteMainBucket: { composite: "Inner", instance: "site", fields: { name: { kind: "composite-parameter", composite: "Inner", instance: "site", parameters: ["name"] } } },
       // An entity the namespace does not hold (a stack-prefixed name) is left out rather than guessed.
       PrefixedB: { fields: { name: { kind: "direct" } } },
     }, exports, "app.ts");
@@ -32,6 +35,7 @@ describe("chant provenance mapping (#236)", () => {
       "many[1].props.name": { kind: "direct" },
       "store.data.props.name": { kind: "composite-parameter", composite: "Store", instance: "store", parameters: ["name"] },
       "my_thing.props.name": { kind: "composite-literal", composite: "C" },
+      "site.main.bucket.props.name": { kind: "composite-parameter", composite: "Inner", instance: "site", parameters: ["name"] },
     });
   });
 

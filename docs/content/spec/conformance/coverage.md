@@ -65,8 +65,14 @@ rules waiting on a form the reference lacked, the composite factory and the
 isolation mode among them, and each of those left when the form landed.
 
 `F-NoOwnExecution` is measured by chant's `test/leftness` profile, because an
-adapter reports verdicts and cannot observe execution. `F-Obs-Provenance` is
-an optional capability, reported rather than asserted. `F-Host-Generality`
+adapter reports verdicts and cannot observe execution. `F-Host-Generality`
 says what a host may vary and what it may not, and no verdict exercises it.
 `F-NotProject` is about a file inside the host's own module tree, and the
-reference's project is a map with no outside. 
+reference's project is a map with no outside.
+
+`F-Obs-Provenance` is covered for the implementations that claim it. The
+capability is optional, so an adapter declares whether it reports origins,
+and a fixture's `provenance` assertions are judged for one that does and
+reported skipped for one that does not. The rule left the list on those
+terms: its fixtures exist and the reference passes them, but an
+implementation that makes no claim is not measured by them. 
