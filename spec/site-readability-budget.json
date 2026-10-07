@@ -3,7 +3,8 @@
   "for-your-platform/chant.md": 2,
   "for-your-platform/forgejo-warden.md": 1,
   "try-it/_index.md": 1,
-  "what-it-enables/no-execution.md": 4,
-  "what-it-enables/round-trip.md": 2,
-  "what-it-enables/rules-over-values.md": 2
+  "what-it-enables/adopt-what-you-have.md": 1,
+  "what-it-enables/checked-before-anything-runs.md": 1,
+  "what-it-enables/drift-to-source.md": 1,
+  "what-it-enables/no-execution.md": 3
 }

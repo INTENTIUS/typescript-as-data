@@ -1,27 +1,22 @@
 ---
-title: "Pure synthesis, no execution"
-description: "The build takes the values from the source without executing any statement the file wrote."
-weight: 1
+title: "No execution: the mechanism under all three"
+description: "The build takes the values from the source without executing any statement the file wrote. Each of the three claims rests on that."
+weight: 4
 diataxis: explanation
+mechanism: true
 ---
 
 Your config says a repo has no wiki and squash merges on. A tool reads it and tells you what it will deploy.
 
 It does that by reading. It never runs your code. A line that deletes something never happens. Neither does one that phones an API or reads the clock. Nothing is executed to find out what you declared.
 
-The specification calls this folding, and it is what the rest of this page is about.
+The specification calls this folding. It is the reason [a check can run before anything does](/typescript-as-data/what-it-enables/checked-before-anything-runs/), the reason [an imported estate can be compared with what it came from](/typescript-as-data/what-it-enables/adopt-what-you-have/), and the reason [a drifted field can be traced to an argument](/typescript-as-data/what-it-enables/drift-to-source/). This page is the evidence that it holds.
 
-Not every file can be read this way. One that computes its values in a loop or calls out to something is run instead. It runs properly, as a program. You are told which ones those were, so what you never get is something reported as read when it was quietly run.
-
-## Checked before anything runs
-
-The user never has to think about folding, and meets it as a lint. The editor says at the keystroke whether the file is data and points at the line that makes it not data. That lint is the shape classifier, the `S-*` rules of the grammar, and it needs no evaluator to run.
-
-A tool that executes your program cannot offer this. Until the program has run there is nothing to check. The earliest such a tool can answer is after the execution has already happened. `cdk synth` learns what an app builds by constructing it.
+Not every file can be read this way. One that computes its values in a loop or calls out to something is run instead. It runs properly, as a program. You are told which ones those were, so what you never get is something reported as read when it was in fact run.
 
 ## Consequences
 
-The artifact is a function of the source and of the build-parameter binding. The same file gives the same output on any machine at any time, in whatever language the evaluator happens to be written in. A tool that cannot run JavaScript at all gets the same value the author sees in the editor, whether it is a Go binary, a WASM module or a CI job with no runtime.
+The artifact is a function of the source and of the build-parameter binding. The same file gives the same output on any machine at any time, in whatever language the evaluator happens to be written in. A tool that cannot run JavaScript at all gets the same value the author sees in the editor, whether it is a Go binary, a WASM module or a build job with no runtime.
 
 How far that holds depends on what the tool is allowed to run. With no JavaScript runtime at all, nothing runs, which is the setting [the browser demo](/typescript-as-data/try-it/in-the-browser/) uses. Normally the libraries your config imports do run. Your own code does not. One gap remains: a factory your own project published and never registered with the tool still runs, and there is a stricter mode that refuses even that.
 
