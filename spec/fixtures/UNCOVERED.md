@@ -7,4 +7,4 @@ Deliberate, and this list may only shrink (#8). Each entry names the rule and wh
 - `F-Host-Generality` — says what a host may vary and what it may not; no verdict exercises it
 - `F-NoOwnExecution` — an adapter reports verdicts and cannot observe execution, so no fixture can carry this. Recorded instead against the reference by `packages/reference/src/recording.ts`, which ledgers every invocation with the rule admitting it and fails on one that maps to none (#178). chant's `test/leftness` profile measures the product comparison
 - `F-NotProject` — a file inside the host's own module tree; the reference's project is a map with no outside
-- `F-Obs-Provenance` — an optional capability, reported rather than asserted
+- `F-Obs-Provenance` — an optional capability; fixtures for implementations that claim it are pending (#234)

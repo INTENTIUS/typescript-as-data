@@ -45,11 +45,27 @@ you captured its objects", since nothing in the file's own source predicts
 it. (Was.)
 
 **F-Obs-Provenance.** Path provenance, which composite parameter produced
-which emitted field, first (innermost) writer wins, is an *optional*
-capability outside the equivalence objective: the run path does not
-uniformly produce it, so requiring it would oblige fold and run to agree on
-something one side lacks. Conformance reports whether it is supported.
-(Was.)
+which emitted field, is an *optional* capability outside the equivalence
+objective: the run path does not uniformly produce it, so requiring it would
+oblige fold and run to agree on something one side lacks. An implementation
+that claims it reports, for every emitted path, exactly one origin of four
+kinds:
+
+- `direct`: the path is written by the file's own code, outside any
+  composite;
+- a composite parameter: the path takes its value from a parameter of a
+  composite, and the report names the composite's export name and the
+  parameter;
+- a composite literal: the path takes a value fixed inside the composite's
+  body;
+- `unknown`: the implementation cannot say.
+
+When more than one writer touches a path, the innermost writer wins. An
+origin the implementation cannot determine is reported as `unknown` and is
+never reported as `direct`. An implementation that does not claim provenance
+reports that it does not. Fold and run are not required to agree on origins.
+The claim does not enter the equivalence objective. Conformance reports
+whether it is made.
 
 **F-Obs-Messages.** Message *stability* is not normative. Location and rule
 identifier are (F-Reason). One-builder-per-kind is a property of one
