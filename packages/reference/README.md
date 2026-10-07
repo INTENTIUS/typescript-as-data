@@ -22,6 +22,50 @@ of it.
 adapter and host types only. Its major and minor are the specification version
 it implements; the patch is its own.
 
+## Field provenance (F-Obs-Provenance)
+
+`foldProject` reports, for every file that folds, an origin for each path an
+export emits: `verdict.provenance` maps an export name to a record of path to
+`FoldFieldOrigin`. A path is the export name followed by the property path, as
+a TypeScript accessor writes it (`api.settings.topics[0]`,
+`b.props.tags["app.kubernetes.io/name"]`).
+
+An origin has one of four kinds. `direct` is a value written at the export.
+`composite-parameter` is a value read from a parameter of an interpreted
+project function or composite, with the parameter paths, where the call was
+written and where each argument was written. `composite-literal` is a value
+the function body fixes, with where it does. `unknown` is a value host code
+produced, such as a method call's result. The innermost call wins, and an
+`unknown` is never reported as `direct`.
+
+```ts
+// presets.ts
+export function repoPreset(opts: { name: string; private?: boolean }) {
+  return { name: opts.name, settings: { wiki: false } };
+}
+// repos.ts
+import { repoPreset } from "./presets";
+export const api = repoPreset({ name: "api", private: true });
+```
+
+```json
+{
+  "api.name": {
+    "kind": "composite-parameter", "composite": "repoPreset", "instance": "api", "parameters": ["name"],
+    "call": { "file": "repos.ts", "line": 2, "column": 20 },
+    "arguments": { "name": { "file": "repos.ts", "line": 2, "column": 39 } }
+  },
+  "api.settings.wiki": {
+    "kind": "composite-literal", "composite": "repoPreset", "instance": "api",
+    "call": { "file": "repos.ts", "line": 2, "column": 20 },
+    "literal": { "file": "presets.ts", "line": 2, "column": 47 }
+  }
+}
+```
+
+`src/provenance.ts` states the rules for parameter paths, defaults, spreads
+and derived values.
+
 ## Provenance
 
 From #19 until #50 these files were a *port* of chant's, kept current by a

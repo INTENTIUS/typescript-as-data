@@ -24,6 +24,72 @@ export interface ProjectResult {
   taintedBy?: Record<string, string>;
   /** F-Obs-Counters, per build. Omitted by an implementation whose public entry exposes none. */
   counters?: ExecutionCounters;
+  /**
+   * F-Obs-Provenance (spec 2.2), from an adapter that declares
+   * `provenance: true`: per file that folded, every emitted path to its
+   * origin. A file absent here reported none, which is never read as `direct`.
+   */
+  provenance?: Record<string, FileProvenance>;
+}
+
+/**
+ * F-Obs-Provenance's path: the export name, then the property path in the
+ * folded value written as a TypeScript accessor would be: `.key` for an
+ * identifier key, `["key"]` (JSON-quoted) for any other, `[n]` for an array
+ * element. `bucket.props.tags["app.kubernetes.io/name"]`, `ports[0]`.
+ *
+ * Leaves are reported. An implementation may report a coarser path than a
+ * leaf (chant attributes an array whole), and that origin then governs every
+ * path under it: {@link originAt} resolves a path against its nearest
+ * reported ancestor.
+ */
+export type ProvenancePath = string;
+
+/** A position in the build's source, 1-based; `file` as the fixture names it. */
+export interface SourceLocation { file: string; line: number; column: number }
+
+/**
+ * One emitted path's origin, in the four kinds spec 2.2 names. The shape
+ * follows chant's `FoldFieldOrigin`, so chant maps onto it unchanged; the
+ * source locations are optional additions.
+ *
+ * - `composite-parameter`: `composite` is the composite's (or project
+ *   function's) export name, `parameters` the dotted parameter paths the value
+ *   was read from, `call` where the call was written, `arguments` where each
+ *   parameter's argument was written at that call.
+ * - `composite-literal`: the composite's body fixes the value; `literal` is
+ *   where.
+ * - `unknown`: no attribution. `reason` is diagnostic and not compared.
+ *
+ * `instance` is the export a composite call initializes, when there is one.
+ */
+export type FieldOrigin =
+  | { kind: "direct" }
+  | {
+      kind: "composite-parameter";
+      composite: string;
+      instance?: string;
+      parameters: string[];
+      call?: SourceLocation;
+      arguments?: Record<string, SourceLocation>;
+    }
+  | { kind: "composite-literal"; composite: string; instance?: string; call?: SourceLocation; literal?: SourceLocation }
+  | { kind: "unknown"; reason: string };
+
+/** One file's provenance: path to origin. */
+export type FileProvenance = Record<ProvenancePath, FieldOrigin>;
+
+/**
+ * The origin governing `path`: the entry for the path itself, or for its
+ * nearest reported ancestor. Undefined when nothing covers it.
+ */
+export function originAt(file: FileProvenance, path: ProvenancePath): FieldOrigin | undefined {
+  const cuts = [...path.matchAll(/\.[A-Za-z_$][\w$]*|\[\d+\]|\["(?:[^"\\]|\\.)*"\]/g)].map((m) => m.index);
+  for (let i = cuts.length; i >= 0; i -= 1) {
+    const p = i === cuts.length ? path : path.slice(0, cuts[i]);
+    if (p in file) return file[p];
+  }
+  return undefined;
 }
 
 /**
@@ -61,6 +127,12 @@ export type IsolationMode = "open" | "isolated" | "executing";
 
 export interface ConformanceAdapter {
   readonly name: string;
+  /**
+   * F-Obs-Provenance is optional (spec 2.2). An adapter that sets this
+   * returns `ProjectResult.provenance` for every build it folds; one that
+   * does not has its provenance assertions reported as skipped.
+   */
+  readonly provenance?: boolean;
   /**
    * The specification version this implementation declares it implements,
    * as `spec/VERSION` spells it (`"1.0"`), or `"undeclared"`. Compared, never

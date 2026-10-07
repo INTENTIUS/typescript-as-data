@@ -1,5 +1,5 @@
-import type { ConformanceAdapter, Finding, RulePhase, ExecutionCounters, ProjectResult } from "./adapter.js";
-import type { ExpressionFixture, Fixture, ProjectFixture, RoundtripFixture } from "./fixture.js";
+import { originAt, type ConformanceAdapter, type Finding, type RulePhase, type ExecutionCounters, type ProjectResult } from "./adapter.js";
+import type { ExpectedOrigin, ExpressionFixture, Fixture, ProjectFixture, RoundtripFixture } from "./fixture.js";
 import { expressionFixtures, projectFixtures, roundtripFixtures } from "./fixture.js";
 import { requireHost } from "./host.js";
 
@@ -225,14 +225,23 @@ export async function runProjectFixture(adapter: ConformanceAdapter, f: ProjectF
   }
   failures.push(...(await purityProbe(adapter, f, r)));
 
+  // F-Obs-Provenance is optional (spec 2.2): judged for an adapter that claims
+  // it, reported skipped for one that does not, never silently passed.
+  const skips: string[] = [];
+  if (f.provenance) {
+    if (!adapter.provenance) skips.push("provenance unavailable");
+    else failures.push(...compareProvenance(f.provenance, r));
+  }
+  const skipped = (more?: string) => { const all = more ? [...skips, more] : skips; return all.length > 0 ? { skipped: all.join("; ") } : {}; };
+
   if (f.findings) {
     const got = await collectFindings(adapter, f);
-    if (got === "unavailable") return { ...base, pass: failures.length === 0, skipped: "rules unavailable", failures };
+    if (got === "unavailable") return { ...base, pass: failures.length === 0, ...skipped("rules unavailable"), failures };
     failures.push(...compareFindings(f.findings, got));
   }
   if (f.counters) {
     // F-Obs-Counters: the shape is normative, so all three must be present as non-negative integers; the fixture then pins the values it names.
-    if (!r.counters) return { ...base, pass: failures.length === 0, skipped: "counters unavailable", failures };
+    if (!r.counters) return { ...base, pass: failures.length === 0, ...skipped("counters unavailable"), failures };
     for (const k of ["factoryInvocations", "projectFactoryInvocations", "factoryInterpretations"] as const) {
       const v = r.counters[k];
       if (!Number.isInteger(v) || v < 0) failures.push(`counters.${k}: ${String(v)} is not a non-negative integer (F-Obs-Counters)`);
@@ -242,7 +251,31 @@ export async function runProjectFixture(adapter: ConformanceAdapter, f: ProjectF
       if (got !== want) failures.push(`counters.${k}: ${got} ≠ expected ${want}`);
     }
   }
-  return { ...base, pass: failures.length === 0, failures };
+  return { ...base, pass: failures.length === 0, ...skipped(), failures };
+}
+
+/**
+ * F-Obs-Provenance against a fixture (spec 2.2). A path resolves to its own
+ * origin or its nearest reported ancestor's. The kind is compared, so an
+ * `unknown` reported as `direct` fails; `composite` and `parameters` are
+ * compared when the fixture gives them.
+ */
+export function compareProvenance(want: Record<string, Record<string, ExpectedOrigin>>, r: ProjectResult): string[] {
+  const failures: string[] = [];
+  for (const [file, paths] of Object.entries(want)) {
+    const got = r.provenance?.[file];
+    if (!got) { failures.push(`${file}: the adapter claims provenance and reported none for this file`); continue; }
+    for (const [path, w] of Object.entries(paths)) {
+      const o = originAt(got, path);
+      if (!o) { failures.push(`${file}: ${path}: no origin reported`); continue; }
+      if (o.kind !== w.kind) { failures.push(`${file}: ${path}: origin ${o.kind}, expected ${w.kind}`); continue; }
+      if (w.composite !== undefined && "composite" in o && o.composite !== w.composite) failures.push(`${file}: ${path}: composite ${o.composite}, expected ${w.composite}`);
+      if (w.parameters !== undefined && o.kind === "composite-parameter" && [...o.parameters].sort().join(",") !== [...w.parameters].sort().join(",")) {
+        failures.push(`${file}: ${path}: parameters [${o.parameters.join(", ")}], expected [${w.parameters.join(", ")}]`);
+      }
+    }
+  }
+  return failures;
 }
 
 /** The key a finding is filed under: the file whose namespace holds the subject, or the artifact. */

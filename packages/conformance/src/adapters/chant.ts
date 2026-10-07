@@ -10,7 +10,7 @@ import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
 import * as ts from "typescript";
 import * as chant from "@intentius/chant";
-import type { ConformanceAdapter, ExecutionCounters, Finding, IsolationMode, ProjectResult, ProjectVerdict, RulePhase, Severity } from "../adapter.js";
+import type { ConformanceAdapter, ExecutionCounters, FieldOrigin, FileProvenance, Finding, IsolationMode, ProjectResult, ProjectVerdict, RulePhase, Severity } from "../adapter.js";
 import type { ConformanceHost } from "../host.js";
 
 function exportInitializer(sf: ts.SourceFile, name: string): ts.Expression | undefined {
@@ -53,7 +53,11 @@ type ChantVerdict = {
   reason?: string;
   taintedBy?: { from: string; kind: "importer" | "capture" };
   exports?: ReadonlyMap<string, unknown>;
+  /** chant#3598: per entity, an origin for every field it emits. Absent on an older chant, and on a `run` verdict. */
+  foldProvenance?: ChantFoldProvenance;
 };
+/** chant's `FoldProvenance` (fold-provenance.ts), restated so the adapter compiles against a pin that lacks it. */
+type ChantFoldProvenance = Record<string, { sourceFile?: string; composite?: string; instance?: string; fields: Record<string, FieldOrigin> }>;
 /**
  * Whether the pinned chant takes `FoldProjectOptions.lexiconPackages`
  * (chant#2438).
@@ -179,6 +183,103 @@ const projectFn = (
     ) => Promise<Map<string, ChantVerdict>>;
   }
 ).foldProject;
+
+/**
+ * Does this chant report fold provenance (chant#3598)?
+ *
+ * Probed, as the host-package support is: chant has exported
+ * `fold-provenance.ts`'s functions since well before `foldProject` carried
+ * their result, so the presence of an export proves nothing. One data file is
+ * folded and the verdict is asked whether it carries `foldProvenance`. Decided
+ * once, at load, because `ConformanceAdapter.provenance` is a declaration the
+ * runner reads without awaiting.
+ */
+async function probeProvenance(): Promise<boolean> {
+  if (!projectFn) return false;
+  const root = mkdtempSync(join(tmpdir(), "tsad-probe-provenance-"));
+  try {
+    const file = join(root, "probe.ts");
+    writeFileSync(file, "export const p = { a: 1 };\n", "utf8");
+    const v = (await projectFn([file], [], {})).get(file);
+    return v?.verdict === "fold" && v.foldProvenance !== undefined;
+  } catch {
+    return false;
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+const supportsProvenance = await probeProvenance();
+
+/**
+ * Where chant's entity sits in the file's namespace, by chant's own naming
+ * (`discovery/collect.ts`): an exported entity is its export name, an array
+ * element `name_i`, a composite member `instance_member`, nested members
+ * joined the same way, and a default export the file's base name. Built by
+ * walking the namespace rather than by splitting the name, since an export
+ * name may itself contain `_`.
+ *
+ * Not handled: the stack-directory prefix chant adds when one bare name
+ * repeats across sibling directories. Such an entity is not found and its
+ * fields are not reported.
+ */
+function entityPaths(exports: Record<string, unknown>, file: string): Map<string, { path: string; value: unknown }> {
+  const out = new Map<string, { path: string; value: unknown }>();
+  const walk = (name: string, path: string, value: unknown, depth: number) => {
+    if (!out.has(name)) out.set(name, { path, value });
+    if (depth >= 4 || value === null || typeof value !== "object") return;
+    // An entity's interior is its props, never a member.
+    if (!Array.isArray(value) && "props" in (value as object)) return;
+    for (const [k, v] of Object.entries(value as object)) {
+      walk(`${name}_${k}`, Array.isArray(value) ? `${path}[${k}]` : path + accessor(k), v, depth + 1);
+    }
+  };
+  for (const [name, value] of Object.entries(exports)) {
+    const key = name === "default" ? (file.split("/").pop() ?? file).replace(/\.ts$/, "").replace(/\.op$/, "") : name;
+    walk(key, name, value, 0);
+  }
+  return out;
+}
+
+const accessor = (k: string): string => (/^[A-Za-z_$][\w$]*$/.test(k) ? `.${k}` : `[${JSON.stringify(k)}]`);
+
+/**
+ * chant's dotted field path (relative to the entity's props, keys never
+ * escaped, arrays never indexed) as accessor segments, resolved against the
+ * props value so a key that contains a dot stays one segment.
+ */
+function fieldAccessor(props: unknown, dotted: string): string {
+  const resolve = (v: unknown, rest: string): string | undefined => {
+    if (rest === "") return "";
+    if (v === null || typeof v !== "object" || Array.isArray(v)) return undefined;
+    const keys = Object.keys(v).sort((a, b) => b.length - a.length);
+    for (const k of keys) {
+      if (rest !== k && !rest.startsWith(`${k}.`)) continue;
+      const tail = resolve((v as Record<string, unknown>)[k], rest.slice(k.length + 1));
+      if (tail !== undefined) return accessor(k) + tail;
+    }
+    return undefined;
+  };
+  return resolve(props, dotted) ?? dotted.split(".").map(accessor).join("");
+}
+
+/**
+ * chant's per-entity provenance as F-Obs-Provenance paths. The origin itself
+ * maps unchanged: the adapter's `FieldOrigin` is chant's `FoldFieldOrigin`
+ * with optional locations chant does not give. A field path is relative to
+ * the entity's props, so the path is the entity's place in the namespace,
+ * then `.props`, then the field.
+ */
+export function mapFoldProvenance(fp: ChantFoldProvenance, exports: Record<string, unknown>, file: string): FileProvenance {
+  const where = entityPaths(exports, file);
+  const out: FileProvenance = {};
+  for (const [entity, record] of Object.entries(fp)) {
+    const at = where.get(entity);
+    if (!at) continue;
+    const props = (at.value as { props?: unknown } | null)?.props;
+    for (const [field, origin] of Object.entries(record.fields)) out[`${at.path}.props${fieldAccessor(props, field)}`] = origin;
+  }
+  return out;
+}
 
 /**
  * F-Obs-Counters, as chant publishes them (chant#2446).
@@ -338,6 +439,12 @@ async function foldOnDisk(
           ? ({ kind: "fold", exports: Object.fromEntries(v.exports ?? new Map()) } as ProjectVerdict)
           : ({ kind: "run", reason: v.reason ?? "tainted" } as ProjectVerdict);
       out.tentative![key] = v.tentative;
+      // F-Obs-Provenance (chant#3598): a file that ran, or a chant that
+      // reports none, has no entry, which the runner never reads as `direct`.
+      if (supportsProvenance && v.verdict === "fold" && v.foldProvenance) {
+        out.provenance ??= {};
+        out.provenance[key] = mapFoldProvenance(v.foldProvenance, Object.fromEntries(v.exports ?? new Map()), key);
+      }
       if (v.taintedBy) out.taintedBy![key] = relOf(v.taintedBy.from);
     }
     return out;
@@ -449,6 +556,8 @@ export const chantAdapter: ConformanceAdapter = {
   // once it does so at all; a pin that exports none is reported as undeclared
   // rather than assumed current (#18).
   specVersion: (chant as unknown as { SPEC_VERSION?: string }).SPEC_VERSION ?? "undeclared",
+  // F-Obs-Provenance: claimed only when the installed chant's foldProject carries it (chant#3598).
+  provenance: supportsProvenance,
   shape(source, exportName) {
     if (!shapeFn) return "unavailable";
     const sf = parse(source); const init = exportInitializer(sf, exportName);

@@ -16,7 +16,7 @@
 import { posix } from "node:path";
 import * as ts from "typescript";
 import { EMPTY_HOST, type Host } from "./host.js";
-import { foldExpr, collectConsts, collectLocalFunctions, FoldRejection, FoldableFunction, isFoldableFunction, isLiveObject, CompositeFactory, isCompositeFactory, interpret, findFactoryViolation, type Scope, type EvalHost, type ExecutionCounters } from "./fold.js";
+import { foldExpr, collectConsts, collectLocalFunctions, FoldRejection, FoldableFunction, isFoldableFunction, isLiveObject, CompositeFactory, isCompositeFactory, interpret, findFactoryViolation, ProvState, type Scope, type EvalHost, type ExecutionCounters } from "./fold.js";
 import { registerHelpers, registerHostSpecifiers, isHostOwnedSpecifier, isFoldableHelperName } from "./foldable-helpers.js";
 
 /** Marks a declarator initializer that F-Call does not resolve, so J1 does. */
@@ -30,9 +30,21 @@ import { revive } from "./revive.js";
 import type { FnDecl } from "./fnbody.js";
 import { plainBindingKey } from "./fnbody.js";
 import { record } from "./trace.js";
+import { DIRECT, exportProvenance, leaf, project, type ExportProvenance, type OTree } from "./provenance.js";
 
 export type Verdict =
-  | { kind: "fold"; exports: Map<string, unknown>; captures: Set<string> }
+  | {
+      kind: "fold";
+      exports: Map<string, unknown>;
+      captures: Set<string>;
+      /**
+       * F-Obs-Provenance (spec 2.2): per export, every path it emits to that
+       * path's origin. Paths start with the export name (provenance.ts says
+       * how they are written). An exported function emits no path and has no
+       * entry.
+       */
+      provenance: Map<string, ExportProvenance>;
+    }
   | { kind: "run"; rule: string; reason: string };
 
 const parse = (path: string, source: string) => ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
@@ -147,6 +159,8 @@ interface Session {
    * index meaningful: one object per entity, so the first owner is the owner.
    */
   readonly owner: Map<object, string>;
+  /** F-Obs-Provenance: each folded file's per-export origin trees, so an importer carries them. */
+  readonly origins: Map<string, Map<string, OTree>>;
 }
 
 /**
@@ -262,6 +276,10 @@ function foldFile(path: string, session: Session): Verdict {
   session.locals.set(path, mine);
   /** F-Import: why a binding was left unresolved, "for diagnostics only". */
   const unresolved = new Map<string, { rule: string; reason: string }>();
+  /** F-Obs-Provenance at depth 0: the origins of names this file binds outside any call. */
+  const topNames = new Map<string, OTree>();
+  const prov = new ProvState();
+  const hostValue: OTree = leaf({ kind: "unknown", reason: "host-value" });
 
   // F-Import
   for (const st of sf.statements) {
@@ -278,7 +296,7 @@ function foldFile(path: string, session: Session): Verdict {
         for (const el of clause.namedBindings.elements) {
           if (el.isTypeOnly) continue;
           const imported = (el.propertyName ?? el.name).text;
-          if (supplied.has(imported)) { externals.set(el.name.text, supplied.get(imported)); hostBound.set(el.name.text, imported); }
+          if (supplied.has(imported)) { externals.set(el.name.text, supplied.get(imported)); hostBound.set(el.name.text, imported); topNames.set(el.name.text, hostValue); }
         }
       }
       continue;
@@ -305,12 +323,14 @@ function foldFile(path: string, session: Session): Verdict {
       // `import n from "./g"` binds the target's default export (S-ExportDefault, spec 1.2).
       const value = tv.exports.get("default");
       externals.set(clause.name.text, value);
+      topNames.set(clause.name.text, session.origins.get(target)?.get("default") ?? DIRECT);
       if (value !== null && typeof value === "object" && !isFoldableFunction(value)) captures.add(target);
     }
     if (clause.namedBindings && ts.isNamespaceImport(clause.namedBindings)) {
       // F-Namespace: a synthetic plain object of the target's entries.
       const ns = Object.fromEntries(tv.exports);
       externals.set(clause.namedBindings.name.text, ns);
+      topNames.set(clause.namedBindings.name.text, { t: "node", self: { kind: "direct" }, kids: new Map(session.origins.get(target) ?? []) });
       continue;
     }
     if (clause.namedBindings && ts.isNamedImports(clause.namedBindings)) {
@@ -320,6 +340,7 @@ function foldFile(path: string, session: Session): Verdict {
         if (!tv.exports.has(imported)) continue;
         const value = tv.exports.get(imported);
         externals.set(el.name.text, value);
+        topNames.set(el.name.text, session.origins.get(target)?.get(imported) ?? DIRECT);
         // F-Import: an imported value with identity is a capture at the
         // import, by F-Identity's reference test, whether or not it reaches
         // X(f). A project-local function is a callable, not a value, and
@@ -333,7 +354,7 @@ function foldFile(path: string, session: Session): Verdict {
   }
 
   // F-Declarator, into X
-  const scope: Scope = { consts, externals, depth: 0, captures };
+  const scope: Scope = { consts, externals, depth: 0, captures, prov: { writer: { kind: "direct" }, names: topNames } };
   const counters = session.counters;
   const evalHost: EvalHost = {
     intrinsics: session.host.intrinsics,
@@ -346,7 +367,8 @@ function foldFile(path: string, session: Session): Verdict {
     hostBound: new Set(hostBound.keys()),
     counters,
     fcall: (call) => fCall(call),
-    resolveArg: (a) => { const r = viaFCall(a); return r === NOT_FCALL ? undefined : { value: r }; },
+    resolveArg: (a) => { const r = viaFCall(a); return r === NOT_FCALL ? undefined : { value: r, origin: viaOrigin }; },
+    prov,
   };
   const exports = new Map<string, unknown>();
   /**
@@ -405,10 +427,11 @@ function foldFile(path: string, session: Session): Verdict {
         if (session.host.isolation === "isolated") throw new FoldRejection("F-IsolatedRefusal", ...locate(call), `isolation: "${c.text}" (${bound.file}) is not interpretable (${why}) and a project module is not invoked under ι = isolated`);
         throw new FoldRejection("F-Call", ...locate(call), `"${c.text}" (${bound.file}) is not interpretable (${why}); invoking a project module is not something this implementation does`);
       }
-      result = live(interpret(bound, folded, call, 0, evalHost), call, c.text);
+      result = live(interpret(bound, folded, call, 0, evalHost, call.arguments, consts), call, c.text);
     } else {
       // Step 6: invoked with the resolved arguments; a live argument passes through and an attribute reference stays symbolic (L6.9).
       const args = folded.map((v, i) => live(v, call.arguments[i], c.text));
+      prov.results.set(call, leaf({ kind: "unknown", reason: "host-call" }));
       counters.factoryInvocations += 1;
       record("F-Call", "package factory (step 6)", c.text);
       try {
@@ -452,6 +475,9 @@ function foldFile(path: string, session: Session): Verdict {
     seen.add(inner.text);
     return unalias(consts.get(inner.text)!, seen);
   };
+  /** The origin of what viaFCall last resolved (F-Obs-Provenance). */
+  let viaOrigin: OTree = DIRECT;
+  const callOrigin = (call: ts.Node): OTree => prov.results.get(call) ?? leaf({ kind: "unknown", reason: "host-call" });
   const viaFCall = (e: ts.Expression, indexed = false): unknown | undefined => {
     let inner = unalias(e);
     // A member access on an alias: `w.pair` where `w` is a const bound to a call.
@@ -462,15 +488,17 @@ function foldFile(path: string, session: Session): Verdict {
         if (value === null || typeof value !== "object") throw new FoldRejection("F-Declarator", ...locate(inner), "a member read on a call's result needs an indexable object");
         const key = ts.isPropertyAccessExpression(inner) ? inner.name.text : ts.isStringLiteral(inner.argumentExpression) || ts.isNumericLiteral(inner.argumentExpression) ? inner.argumentExpression.text : undefined;
         if (key === undefined) throw new FoldRejection("F-Eval-Index", ...locate(inner), "a non-literal element-access key is not foldable");
+        viaOrigin = project(callOrigin(base), key);
         return (value as Record<string, unknown>)[key];
       }
     }
-    if (ts.isCallExpression(inner) && fCallable(inner.expression)) return fCall(inner, indexed);
+    if (ts.isCallExpression(inner) && fCallable(inner.expression)) { const r = fCall(inner, indexed); viaOrigin = callOrigin(inner); return r; }
     if ((ts.isPropertyAccessExpression(inner) || ts.isElementAccessExpression(inner)) && ts.isCallExpression(inner.expression) && fCallable(inner.expression.expression)) {
       const base = fCall(inner.expression, true);
       if (base === null || typeof base !== "object") throw new FoldRejection("F-Call", ...locate(inner), "a member read on a call's result needs an indexable object");
       const key = ts.isPropertyAccessExpression(inner) ? inner.name.text : ts.isStringLiteral(inner.argumentExpression) || ts.isNumericLiteral(inner.argumentExpression) ? inner.argumentExpression.text : undefined;
       if (key === undefined) throw new FoldRejection("F-Eval-Index", ...locate(inner), "a non-literal element-access key is not foldable");
+      viaOrigin = project(callOrigin(inner.expression), key);
       return (base as Record<string, unknown>)[key];
     }
     return NOT_FCALL;
@@ -495,7 +523,7 @@ function foldFile(path: string, session: Session): Verdict {
         for (const el of d.name.elements) {
           if (el.dotDotDotToken || el.initializer || !ts.isIdentifier(el.name)) continue;
           const key = plainBindingKey(el);
-          if (key) externals.set(el.name.text, (base as Record<string, unknown>)[key]);
+          if (key) { externals.set(el.name.text, (base as Record<string, unknown>)[key]); topNames.set(el.name.text, project(callOrigin(d.initializer), key)); }
         }
       } catch (e) {
         if (!(e instanceof FoldRejection)) throw e;
@@ -518,29 +546,38 @@ function foldFile(path: string, session: Session): Verdict {
       const instance = live(foldExpr(init, scope, evalHost), init, name);
       prebuilt.set(init, instance);
       externals.set(name, instance);
+      topNames.set(name, prov.get(init) ?? DIRECT);
     } catch (e) {
       if (!(e instanceof FoldRejection)) throw e;
     }
   }
 
+  /** F-Obs-Provenance: each export's origin tree, and the initializer a call must be to name it as its instance. */
+  const trees = new Map<string, OTree>();
+  const declOf = new Map<string, ts.Node>();
+  const rootOrigin = (n: ts.Node): OTree => prov.get(n) ?? DIRECT;
   for (const d of scan.declarators) {
     try {
       if (d.kind === "resource") {
         // F-Count: the instance F-Prebuild built for this initializer is the
         // one exported; a second construction would be a second entity.
         exports.set(d.name, prebuilt.has(d.expr) ? prebuilt.get(d.expr) : live(foldExpr(d.expr, scope, evalHost), d.expr, d.name));
+        trees.set(d.name, rootOrigin(d.expr));
       } else if (d.kind === "single") {
         const viaCall = viaFCall(d.expr);
         const top = unwrap(d.expr);
         const hostFor = ts.isCallExpression(top) ? { ...evalHost, declaratorCall: top } : evalHost;
         exports.set(d.name, viaCall !== NOT_FCALL ? viaCall : live(foldExpr(d.expr, scope, hostFor), d.expr, d.name));
+        trees.set(d.name, viaCall !== NOT_FCALL ? viaOrigin : rootOrigin(d.expr));
+        declOf.set(d.name, d.expr);
       } else if (d.kind === "destructure") {
         const viaCall = viaFCall(d.expr, true);
         const base = viaCall !== NOT_FCALL ? viaCall : live(foldExpr(d.expr, scope, evalHost), d.expr, "a destructured declaration");
+        const baseTree = viaCall !== NOT_FCALL ? viaOrigin : rootOrigin(d.expr);
         if (base === null || typeof base !== "object") {
           return { kind: "run", rule: "F-Declarator", reason: "destructured source is not an object" };
         }
-        for (const el of d.elements) exports.set(el.as, (base as Record<string, unknown>)[el.key]);
+        for (const el of d.elements) { exports.set(el.as, (base as Record<string, unknown>)[el.key]); trees.set(el.as, project(baseTree, el.key)); }
       } else if (d.kind === "named-export") {
         for (const el of d.elements) {
           const init = consts.get(el.local);
@@ -560,6 +597,7 @@ function foldFile(path: string, session: Session): Verdict {
             return { kind: "run", rule: "F-Reference", reason: `unresolved identifier: ${el.local}` };
           }
           exports.set(el.as, v);
+          trees.set(el.as, topNames.get(el.local) ?? (init ? rootOrigin(init) : DIRECT));
         }
       } else if (d.kind === "re-export") {
         const target = resolveKey(path, d.specifier, session.files);
@@ -567,12 +605,14 @@ function foldFile(path: string, session: Session): Verdict {
         const tv = verdictOf(target, session);
         if (tv.kind !== "fold") return { kind: "run", rule: "F-Import", reason: `re-export source ${target} falls back to run` };
         // A re-export is a capture, and the owner index below records it as one.
-        for (const el of d.elements) exports.set(el.as, tv.exports.get(el.imported));
+        for (const el of d.elements) { exports.set(el.as, tv.exports.get(el.imported)); trees.set(el.as, session.origins.get(target)?.get(el.imported) ?? DIRECT); }
       } else if (d.kind === "function") {
         exports.set(d.name, externals.get(d.name));
       } else if (d.kind === "default") {
         const viaCall = viaFCall(d.expr);
         exports.set("default", viaCall !== NOT_FCALL ? viaCall : live(foldExpr(d.expr, scope, evalHost), d.expr, "default"));
+        trees.set("default", viaCall !== NOT_FCALL ? viaOrigin : rootOrigin(d.expr));
+        declOf.set("default", d.expr);
       }
     } catch (e) {
       // F-Total: one failed declarator is a failure of the whole file. F-Reason.
@@ -593,7 +633,13 @@ function foldFile(path: string, session: Session): Verdict {
   // F-Capture over X(f). F-CallLeak has already put its own edges in `captures`.
   for (const v of exports.values()) capturesIn(v, path, session, captures);
   for (const v of exports.values()) indexOwned(v, path, session);
-  return { kind: "fold", exports, captures };
+  session.origins.set(path, trees);
+  const provenance = new Map<string, ExportProvenance>();
+  for (const [name, value] of exports) {
+    if (typeof value === "function" || isFoldableFunction(value) || isCompositeFactory(value)) continue;
+    provenance.set(name, exportProvenance(name, value, trees.get(name) ?? DIRECT, declOf.get(name)));
+  }
+  return { kind: "fold", exports, captures, provenance };
 }
 
 // ── J3 ──────────────────────────────────────────────────────────────────────
@@ -613,7 +659,7 @@ export interface ProjectResult {
 export function foldProject(files: ReadonlyMap<string, string>, host: Host = EMPTY_HOST): ProjectResult {
   registerHelpers(host.helpers);
   registerHostSpecifiers(host.ownedSpecifierPrefixes);
-  const session: Session = { files, host, memo: new Map(), stack: [], locals: new Map(), owner: new Map(), counters: { factoryInvocations: 0, projectFactoryInvocations: 0, factoryInterpretations: 0 }, composites: new Map() };
+  const session: Session = { files, host, memo: new Map(), stack: [], locals: new Map(), owner: new Map(), origins: new Map(), counters: { factoryInvocations: 0, projectFactoryInvocations: 0, factoryInterpretations: 0 }, composites: new Map() };
 
   const tentative = new Map<string, Verdict>();
   for (const path of files.keys()) tentative.set(path, verdictOf(path, session));
