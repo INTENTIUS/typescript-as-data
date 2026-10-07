@@ -212,6 +212,12 @@ niceties like imports and spreads". The PR was closed unmerged on 2024-05-21. It
 diagnostics or language-service support. The thread records no reason for
 closing.
 
+The thread is short. It opened on 1 April and drew seven comments. The
+TypeScript bot left three and the author one. Readers left the other three.
+Two of them joke about the date and the third, eight days later, hopes it was
+not a joke. The author closed the PR and the repository locked it as resolved
+in October 2025.
+
 It is the nearest neighbor on the execution axis. The proposal makes this
 work's claim for one file name.
 
@@ -230,6 +236,52 @@ object, and tuple types matter here" and that an implementation would
 that set is lost or refused. Nothing falls back to running the file. Its
 evaluator is the whole checker. The `S-*` classifier needs syntax alone and
 `data-host` needs no checker and no JavaScript runtime (`evaluators/rust`).
+
+The implementation shows the same limit at a smaller scale.
+`convertTypeIntoRawConfig` reads literal types and the shapes built from them.
+Those are primitive literals, tuples and objects. For any other type it returns `undefined` under a
+`// TODO: Issue diagnostic`, and `JSON.stringify` of the result then drops the
+key. A `target` whose type was widened to `string`, or any non-literal value,
+silently disappears from the configuration. This is a sharper line than that
+types can lie. The fold produces the value or says why it cannot: a file that
+does not fold carries a located reason (F-Reason, verdict.md).
+
+The TypeScript design meeting of 2024-04-02 (microsoft/TypeScript#58043)
+discussed the PR and the notes record the team's reasons. It "is in an
+uncanny valley of 'a superset of JSON but also a subset of valid TypeScript'".
+One concern was "that the semantics of TypeScript change from version-to-version".
+They reframed the want as "imports and spreads" and asked for a way to bring
+that into `tsconfig.json`. The PR itself points at that discussion
+(microsoft/TypeScript#57486).
+
+This work sits in that valley on purpose. The edge of the subset is specified
+(grammar.md). Source past the edge falls back to running and the two paths
+must agree (objective.md). The semantics are versioned with the specification
+(`spec/VERSION`). A change in the checker's widening or contextual typing
+cannot move a folded value. Reading a configuration off checker inference
+inherits every such change.
+
+Ryan Cavanaugh refused executable configuration in 2019
+(microsoft/TypeScript#30400). He wrote that PRs to turn config "into an
+executable thing" were not accepted. That "opens up an enormous can of worms
+(is it safe to run this? what dependencies does the config file have? what
+does the config file assume about its environment?)". Each question has a rule
+that answers it here.
+
+| Question | Rule |
+|---|---|
+| Is it safe to run this? | F-NoOwnExecution (observables.md) bounds what executes and names every member of the bound. Under `ι = isolated`, F-IsolatedRefusal (hosts.md) turns a fold that would need project code into a fallback and the second counter of F-Obs-Counters stays zero. |
+| What dependencies does it have? | F-Host-Trust (hosts.md) admits an import only as an active package of the build or a path inside the host's own module tree, and nothing else. F-Import (verdict.md) says how each import binding is resolved. |
+| What does it assume about its environment? | A bare `process` is refused (F-Eval-Ident step 4, evaluation.md). The environment enters only through declared build parameters (F-Import), and the objective is stated at a fixed binding of them (objective.md), so the origin of a value is part of the statement. |
+
+### Conformance note: the checker oracle
+
+The checker oracle (INTENTIUS/typescript-as-data#233) does not call the
+checker API. It emits a file and type-checks it with public `tsc`. That keeps
+it on public `tsc` and it works the same under TypeScript 7's native
+compiler. To force exact literal types it borrows the trick from #58025's `config<const T>`:
+an identity wrapper with a `<const T>` parameter, so the checker infers the
+literal type of each value instead of its widened one.
 
 With one file and no cross-file identity the taint question does not arise.
 Cite the proposal for "TypeScript configuration without execution has been
