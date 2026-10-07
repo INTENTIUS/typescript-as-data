@@ -38,8 +38,8 @@ such an argument is still J1's rejection. `F-Declarator`,
 `F-Host-Closed-vs-Open` and inventory row L2.18 now agree with the rule.
 chant#3329 shipped this behavior before the rule existed.
 
-The user chose on 2026-10-07 to widen the rules to chant's behavior rather
-than narrow chant to the rules.
+Both were settled on 2026-10-07 by widening the rules to chant's behavior
+rather than narrowing chant to the rules.
 
 **Why this is minor.** The obligation binds only a claimant. That is the
 added case in `README.md`'s policy, and no source changes verdict for it.
