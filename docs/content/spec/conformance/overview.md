@@ -54,7 +54,7 @@ normative while the message wording is not.
 
 ## What the suite checks
 
-Five checks, in four places.
+The suite makes six checks.
 
 1. The reference passes every fixture, which
    `packages/conformance/src/runner.test.ts` checks against
@@ -77,12 +77,18 @@ Five checks, in four places.
    measured by `packages/conformance/src/corpus.test.ts` over chant's example
    corpus and over a codebase nobody here maintains, described in
    [the corpus cross-check](/typescript-as-data/spec/conformance/corpus/).
+6. Every plain-data export a `data-host` fixture folds agrees with the type
+   the TypeScript checker gives it, or is reported unchecked where the
+   checker has no literal, in `packages/conformance/src/oracle.test.ts`. The
+   corpus cross-check carries the same oracle as a column.
+   [The checker oracle](/typescript-as-data/spec/conformance/checker-oracle/)
+   has the method.
 
 Two stub adapters must also fail: one returns `run` for every file, one folds
 everything to `null`. An implementation that falls back on every file in a
 build is sound, so without the stub `F-Taint`'s "least set" would be untested.
 
-The first four run in `npm test` and `.github/workflows/ci.yml` on every pull
+The first four and the sixth run in `npm test` and `.github/workflows/ci.yml` on every pull
 request. The fifth has its own command and its own weekly workflow, because it
 needs a chant checkout with its lexicon artifacts generated.
 
