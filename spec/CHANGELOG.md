@@ -4,6 +4,24 @@ The versioned history of the rule set. The policy is in [`README.md`](./README.m
 
 Each entry lists the rules that changed and how in the four kinds the policy defines. A change confined to non-normative text is not versioned and is not listed here; the rationale sections and the inventory are the usual cases.
 
+## 2.2, 2026-10-07
+
+**Added. `F-Obs-Provenance`.** An implementation that claims path provenance
+reports exactly one origin per emitted path, of four kinds: `direct`, a
+composite parameter (naming the composite's export name and the parameter), a
+composite literal (a value fixed inside the composite body), or `unknown`. The
+innermost writer wins. An `unknown` origin is never reported as `direct`.
+
+The rule said only that provenance is optional and that conformance reports
+whether it is supported. A fixture asserting origins would have enforced an
+obligation the rule never stated. The obligation is stated first and the
+fixtures follow (#234). Provenance stays optional and outside the equivalence
+objective, so fold and run need not agree on it, and an implementation that
+does not claim it says so.
+
+**Why this is minor.** The obligation binds only a claimant. That is the
+added case in `README.md`'s policy, and no source changes verdict.
+
 ## 2.1, 2026-09-14
 
 **Added. `F-Host-Interface` item 1.** An entity constructor holds its props
