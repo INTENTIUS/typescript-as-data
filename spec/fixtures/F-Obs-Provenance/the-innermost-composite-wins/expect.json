@@ -1,0 +1,73 @@
+{
+  "rules": [
+    "F-Obs-Provenance",
+    "F-Host-Composite",
+    "F-Call"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "inner.ts": "run",
+    "outer.ts": "run",
+    "app.ts": "fold"
+  },
+  "rejectRule": {
+    "inner.ts": "F-Eval-Function",
+    "outer.ts": "F-Eval-Function"
+  },
+  "provenance": {
+    "app.ts": {
+      "site.main.bucket.props.name": {
+        "kind": "composite-parameter",
+        "composite": "Inner",
+        "parameters": [
+          "name"
+        ]
+      },
+      "site.fixed.bucket.props.name": {
+        "kind": "composite-parameter",
+        "composite": "Inner",
+        "parameters": [
+          "name"
+        ]
+      },
+      "site.main.bucket.props.tier": {
+        "kind": "composite-literal",
+        "composite": "Inner"
+      },
+      "site.side.props.name": {
+        "kind": "composite-parameter",
+        "composite": "Outer",
+        "parameters": [
+          "name"
+        ]
+      },
+      "main.bucket.props.name": {
+        "kind": "composite-parameter",
+        "composite": "Inner",
+        "parameters": [
+          "name"
+        ]
+      },
+      "fixed.bucket.props.name": {
+        "kind": "composite-parameter",
+        "composite": "Inner",
+        "parameters": [
+          "name"
+        ]
+      },
+      "fixed.bucket.props.tier": {
+        "kind": "composite-literal",
+        "composite": "Inner"
+      },
+      "side.props.name": {
+        "kind": "composite-parameter",
+        "composite": "Outer",
+        "parameters": [
+          "name"
+        ]
+      }
+    }
+  },
+  "note": "F-Obs-Provenance's tie-break: when more than one writer touches a path, the innermost wins. Outer passes its own parameter to Inner for main and a literal for fixed, and in both the Bucket's name is Inner's parameter, the writer nearest the field. A member Outer builds itself (side) is Outer's. Whole instance and destructured members agree."
+}

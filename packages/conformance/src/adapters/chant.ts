@@ -212,11 +212,13 @@ const supportsProvenance = await probeProvenance();
 
 /**
  * Where chant's entity sits in the file's namespace, by chant's own naming
- * (`discovery/collect.ts`): an exported entity is its export name, an array
- * element `name_i`, a composite member `instance_member`, nested members
- * joined the same way, and a default export the file's base name. Built by
- * walking the namespace rather than by splitting the name, since an export
- * name may itself contain `_`.
+ * (`discovery/collect.ts`, `expandComposite` in `composite.ts`): an exported
+ * entity is its export name, an array element `name_i`, a composite member
+ * the instance name followed by the member name with its first letter
+ * upper-cased (`store` and `data` give `storeData`), nested members joined
+ * the same way, and a default export the file's base name. Built by walking
+ * the namespace rather than by splitting the name, since an export name may
+ * itself contain `_` or capitals.
  *
  * Not handled: the stack-directory prefix chant adds when one bare name
  * repeats across sibling directories. Such an entity is not found and its
@@ -230,7 +232,8 @@ function entityPaths(exports: Record<string, unknown>, file: string): Map<string
     // An entity's interior is its props, never a member.
     if (!Array.isArray(value) && "props" in (value as object)) return;
     for (const [k, v] of Object.entries(value as object)) {
-      walk(`${name}_${k}`, Array.isArray(value) ? `${path}[${k}]` : path + accessor(k), v, depth + 1);
+      const child = Array.isArray(value) ? `${name}_${k}` : `${name}${k.charAt(0).toUpperCase()}${k.slice(1)}`;
+      walk(child, Array.isArray(value) ? `${path}[${k}]` : path + accessor(k), v, depth + 1);
     }
   };
   for (const [name, value] of Object.entries(exports)) {

@@ -1,0 +1,24 @@
+{
+  "rules": [
+    "F-Obs-Provenance"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "app.ts": "fold"
+  },
+  "provenance": {
+    "app.ts": {
+      "bucket.props.name": {
+        "kind": "direct"
+      },
+      "bucket.props.region": {
+        "kind": "direct"
+      },
+      "bucket.props.tags.team": {
+        "kind": "direct"
+      }
+    }
+  },
+  "note": "F-Obs-Provenance's direct origin: every field is written by the file's own code, outside any composite. A value reached through a top-level const (region) is still direct, since the const is the file's own code too."
+}

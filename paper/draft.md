@@ -22,7 +22,7 @@ Identity must survive the boundary. If one file folds and another runs, and both
 
 We provide the specification, versioned and tagged. A reference implementation is written from its text, covering the expression layer through the fixpoint, and a second evaluator in Rust serves the profile without a runtime and compiles to a WebAssembly module with no imports. A conformance suite holds every rule to a fixture and every fixture to a real rule. The measurements come from chant, the production system the subset was extracted from. Rule identifiers such as `F-Total` name rules of the specification; appendix A lists the ones used here, and appendix B the artifacts every number was taken from.
 
-The corpus is chant's own examples with one small external project beside it. Fixture coverage is 135 of 139 rules, the four left being properties no verdict can witness. The specification was written by reading chant, and the reference was rewritten from the text by an author who had read chant closely.
+The corpus is chant's own examples with one small external project beside it. Fixture coverage is 136 of 139 rules, the three left being properties no verdict can witness. The specification was written by reading chant, and the reference was rewritten from the text by an author who had read chant closely.
 
 ## 2. The mechanism
 

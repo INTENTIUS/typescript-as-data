@@ -50,8 +50,18 @@ describe("chant cross-check (#11)", () => {
     const projects = projectFixtures(fixtures);
     expect(projects.length).toBeGreaterThan(0);
     const reports = await Promise.all(projects.map((f) => runProjectFixture(chantAdapter, f)));
-    const skipped = reports.filter((r) => r.skipped).map((r) => r.fixture);
+    // F-Obs-Provenance is optional (spec 2.2): a chant that does not claim it
+    // still answers the build, and only the provenance assertions skip. That
+    // skip is a declaration rather than a gap, and it is the only one allowed.
+    const otherThanProvenance = (s: string | undefined) => (s ?? "").split("; ").filter((x) => x && !(x === "provenance unavailable" && !chantAdapter.provenance));
+    const skipped = reports.filter((r) => otherThanProvenance(r.skipped).length > 0).map((r) => `${r.fixture}: ${r.skipped}`);
     expect(skipped, `chant answered none of these:\n${skipped.join("\n")}`).toEqual([]);
+    const provenanceFixtures = projects.filter((f) => f.provenance).map((f) => f.id);
+    expect(provenanceFixtures.length).toBeGreaterThan(0);
+    if (!chantAdapter.provenance) {
+      const declared = reports.filter((r) => r.skipped?.split("; ").includes("provenance unavailable")).map((r) => r.fixture);
+      expect(declared.sort()).toEqual(provenanceFixtures.sort());
+    }
   });
 
   test("chant and the reference agree on every whole-build fixture chant can answer (#62)", async () => {

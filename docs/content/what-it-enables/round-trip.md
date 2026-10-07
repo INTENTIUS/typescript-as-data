@@ -34,6 +34,48 @@ The steps, in the order they print: the policy is applied; live is read back and
 
 A second scenario, `fold-equals-run`, holds the guarantee the others rest on: folding and running the same policy give the same plan, and a file that reads the environment is refused before either is trusted.
 
+## The return leg
+
+The plan says the wiki drifted. The next question is where to change it. When repositories are written through a shared preset, the field in the plan is not a line anyone wrote. It was built by a function from an argument somebody passed, and the fix belongs at that argument.
+
+```ts
+// presets.ts
+export function repoPreset(opts: { name: string; wiki?: boolean }) {
+  return { name: opts.name, settings: { wiki: opts.wiki ?? false, issues: true } };
+}
+
+// repos.ts
+import { repoPreset } from "./presets";
+export const api = repoPreset({ name: "api", wiki: false });
+```
+
+The reference folds `repos.ts` and reports an origin for every field it emits. These are the two under `settings`.
+
+```json
+{
+  "api.settings.wiki": {
+    "kind": "composite-parameter", "composite": "repoPreset", "instance": "api", "parameters": ["wiki"],
+    "call": { "file": "repos.ts", "line": 2, "column": 20 },
+    "arguments": { "wiki": { "file": "repos.ts", "line": 2, "column": 52 } }
+  },
+  "api.settings.issues": {
+    "kind": "composite-literal", "composite": "repoPreset", "instance": "api",
+    "call": { "file": "repos.ts", "line": 2, "column": 20 },
+    "literal": { "file": "presets.ts", "line": 2, "column": 75 }
+  }
+}
+```
+
+Drift on `wiki` points at the `false` on line 2 of `repos.ts`. That argument belongs to this one repository. Drift on `issues` points into the preset. The value is fixed there for every repository that uses it, so changing it changes all of them.
+
+Only the fold side can say this. Running `repoPreset` returns an object, and by then nothing records which argument became which field. Interpreting the function keeps the expression each field was written as, so the origin is in hand when the value is.
+
+An origin is one of four kinds. `direct` is a value written at the export, outside any composite. A composite parameter names the composite and the parameter the value came from. A composite literal is a value the composite's body fixes. `unknown` means the implementation cannot say, and it is never reported as `direct`. When composites nest, the innermost one that wrote the field is the origin.
+
+Provenance is optional by design. The run path does not produce it, so it sits outside the equivalence objective that fold and run must meet. An implementation reports whether it claims provenance, and the conformance fixtures for it are judged only for one that does.
+
+The limit is what the fold did not interpret. A composite the host publishes is invoked rather than read, so the fields it produces are `unknown`. Finding the argument behind one of them is still done by hand.
+
 ## Who has it today
 
 chant has three generators through one pipeline. `chant import` reads a template file, `--from <env>` imports live through each lexicon's `exportResources()`, and carve-out reads Terraform. The Kubernetes lexicon carries a round-trip suite. forgejo-warden's reconcile direction is the same idea for an org, with live reality read back and diffed against declared source.
