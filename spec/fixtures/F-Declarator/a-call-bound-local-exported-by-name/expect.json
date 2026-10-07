@@ -1,0 +1,42 @@
+{
+  "rules": [
+    "F-Declarator",
+    "S-ExportNamed",
+    "F-Call",
+    "F-Count"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "app.ts": "fold"
+  },
+  "exports": {
+    "app.ts": {
+      "stack": {
+        "pair": {
+          "left": 1,
+          "right": 2,
+          "entityType": "Pair",
+          "lexicon": "shapes"
+        }
+      },
+      "pair": {
+        "left": "l",
+        "right": "r",
+        "entityType": "Pair",
+        "lexicon": "shapes"
+      },
+      "again": {
+        "left": "l",
+        "right": "r",
+        "entityType": "Pair",
+        "lexicon": "shapes"
+      }
+    }
+  },
+  "counters": {
+    "factoryInvocations": 2,
+    "projectFactoryInvocations": 0
+  },
+  "note": "Since 2.2 a local bound to a call and exported by name resolves by F-Call, as the single declarator does, through any chain of const aliases (L7.7). It is not F-Eval-Ident re-folding the initializer, which has no rule for a call. pair and its alias again are one call resolved once (F-Count), so the build invokes two factories, Stack and makePair."
+}

@@ -48,8 +48,11 @@ interpreted under S-FactoryParams and S-FactoryBody against its defining
 module's scope; a host-bound export at a declarator, reached directly,
 through a const alias or as the declarator's direct argument, is invoked once
 per call site with the resolved arguments, and whatever it returns is the
-value. A package call anywhere else, nested inside an expression, is J1's
-rejection, which is what chant does too. What F-Call does not do here is
+value. A local bound to such a call and exported by name resolves the same
+way (spec 2.2). A package call written anywhere else, nested inside an
+expression, is J1's rejection, which is what chant does too. Its result may
+be read inside an argument of a call F-Call resolves, when the name is bound
+by a top-level `const` to the call (spec 2.2, F-Call's reads in an argument). What F-Call does not do here is
 step 6 for a *project* module: this package never imports project code, so
 in open mode a registered composite that step 4 cannot interpret runs for
 want of the invocation chant would perform.

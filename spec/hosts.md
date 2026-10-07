@@ -105,7 +105,11 @@ A call into a **package** folds only two ways:
 - At a declarator, by invocation (F-Call), reached directly or through a const
   alias (F-Declarator), where the result is a value whatever it is.
 
-A call nested inside an expression never folds through a package. A call into
+A call written inside an expression never folds through a package. Its
+*result* may be read in one place. Inside an argument of a call F-Call
+resolves, a reference to a top-level `const` bound to a package call reads
+the instance F-Call made for it (F-Call, *Reads in an argument*). The call
+itself is still made where it is bound, by F-Call, once per file. A call into
 a **project file** folds whenever the callee's body is itself in the subset
 with no allowlist.
 

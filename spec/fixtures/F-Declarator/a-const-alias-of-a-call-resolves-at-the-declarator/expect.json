@@ -46,5 +46,5 @@
       }
     }
   },
-  "note": "At a declarator a top-level const alias of a package call resolves through F-Call: a host-published composite invoked, a registered one interpreted, a plain factory invoked, an alias of an alias, and a destructure of one; the whole value or a member of it. The same read nested inside an expression (nested.ts) is J1's, which has no rule for a call, so it runs, as it does at chant."
+  "note": "At a declarator a top-level const alias of a package call resolves through F-Call: a host-published composite invoked, a registered one interpreted, a plain factory invoked, an alias of an alias, and a destructure of one; the whole value or a member of it. The same read nested in an object literal at the declarator (nested.ts) is J1's, which has no rule for a call, so it runs, as it does at chant. Since 2.2 a read inside an argument of a call F-Call resolves is the exception, which F-Call/a-call-result-read-inside-an-argument pins; nested.ts has no such call around the read."
 }

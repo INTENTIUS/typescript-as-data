@@ -1,0 +1,54 @@
+{
+  "rules": [
+    "F-Call",
+    "F-Declarator",
+    "F-Count"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "app.ts": "fold",
+    "plain.ts": "run"
+  },
+  "rejectRule": {
+    "plain.ts": "F-Eval-Reject"
+  },
+  "exports": {
+    "app.ts": {
+      "member": {
+        "left": {
+          "inner": 1
+        },
+        "right": "m",
+        "entityType": "Pair",
+        "lexicon": "shapes"
+      },
+      "listed": {
+        "left": [
+          {
+            "left": "a",
+            "right": "b",
+            "entityType": "Pair",
+            "lexicon": "shapes"
+          },
+          {
+            "again": {
+              "left": "a",
+              "right": "b",
+              "entityType": "Pair",
+              "lexicon": "shapes"
+            }
+          }
+        ],
+        "right": "l",
+        "entityType": "Pair",
+        "lexicon": "shapes"
+      }
+    }
+  },
+  "counters": {
+    "factoryInvocations": 5,
+    "projectFactoryInvocations": 0
+  },
+  "note": "Since 2.2 an argument of a call F-Call resolves may read a same-file call's result anywhere inside it: a member read in an object literal (second.left) or a bare reference in an array (first). The call is bound by a top-level const with a callee F-Call admits, and it is resolved once per file, so first is invoked once for both reads (F-Count): five invocations in all, first, second, member, listed, and describe in plain.ts. A result that is not an entity or a composite instance is left to F-Eval-Ident, which re-folds the call and rejects, so plain.ts, whose describe returns plain data, runs."
+}

@@ -58,7 +58,7 @@ Shape only.
 | L2.15 | call; `<call>(...).step` | admitted unconditionally at the property-access node | S-CompositeStep; F-Eval-Member step 2 |
 | L2.16 | any other call | violation, `callExpressionMessage` | S-Reject; F-Eval-Reject |
 | L2.17 | project-local call shape | the classifier rejected it while the build folded it until chant-v0.72.0 (chant#2435); `1.2` gives it S-CallLocal | S-CallLocal (grammar.md) |
-| L2.18 | a const alias of a package call at a declarator | `resolveLiveValue` follows a top-level const, through alias chains, to a call of any lexicon export or a member access on one, and resolves the call there; the same read nested inside an expression stays `callExpressionMessage`. `1.6` writes it into F-Declarator | F-Declarator; F-Call; F-Count |
+| L2.18 | a const alias of a package call at a declarator | `resolveLiveValue` follows a top-level const, through alias chains, to a call of any lexicon export or a member access on one, and resolves the call there, for `export const x = alias` and for `export { alias }` alike (`resolveDeclaratorValue`). The same read nested inside an expression stays `callExpressionMessage`, except inside an argument of a call `resolveCallArguments` resolves: there `resolveSameFileCallReferences` resolves each same-file `const n = c(…)` the argument mentions, through the shared memo, and `fold()` reads the instance when it is a `Declarable` or a `CompositeInstance`. `1.6` writes the alias case into F-Declarator; `2.2` writes the named-export case into F-Declarator and the argument case into F-Call | F-Declarator; F-Call; F-Count |
 
 ## L3. Expression reduction (`fold`)
 
