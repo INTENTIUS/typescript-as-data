@@ -101,6 +101,24 @@ try {
   const isolated = iso ? { files: +iso[1], openFolds: +iso[2], isolatedFolds: +iso[3], lost: +iso[4] } : null;
   if (rev && totals) corpus = { corpusVersion: rev[1], revision: rev[2], entries: +rev[3], files: +totals[1], comparable: +totals[2], agreed: +totals[3], bothFold: +totals[4], noHost: +totals[5], noInvocation: +totals[6], chantDeclares: declared ? declared[1] : null, dataHost, isolated };
 } catch {}
+// The provenance column (#237): every emitted field by origin, from its own
+// artifact, which is written only by a run whose chant reports provenance.
+let provenance = null;
+try {
+  const report = readFileSync(join(root, "packages", "conformance", "provenance-report.md"), "utf8");
+  const rev = /corpus: chant `([^`]+)` at `([^`]+)`, (\d+) entries, (\d+) files/.exec(report);
+  const row = (verdict) => {
+    const m = new RegExp(`\\n\\| ${verdict} \\| (\\d+) \\| (\\d+) \\| (\\d+) \\| (\\d+) \\| (\\d+) \\| (\\d+) \\| (\\d+) \\| (\\d+) \\| ([\\d.]+%|n/a) \\| ([\\d.]+%|n/a) \\|`).exec(report);
+    return m ? { files: +m[1], entities: +m[3], fields: +m[4], direct: +m[5], parameter: +m[6], literal: +m[7], unknown: +m[8], knownShare: m[9], compositeKnownShare: m[10] } : null;
+  };
+  // Unknown because a composite expanded the entity without its body being interpreted, per verdict: the denominator of the composite share.
+  const ni = /\| `composite-not-interpreted` \| (\d+) \| (\d+) \|/.exec(report);
+  const notInterpreted = { fold: ni ? +ni[1] : 0, run: ni ? +ni[2] : 0 };
+  notInterpreted.all = notInterpreted.fold + notInterpreted.run;
+  const derive = (r, k) => r && { ...r, known: r.direct + r.parameter + r.literal, compositeKnown: r.parameter + r.literal, compositeFields: r.parameter + r.literal + notInterpreted[k] };
+  const fold = derive(row("fold"), "fold"), run = derive(row("run"), "run"), all = derive(row("all"), "all");
+  if (rev && fold && run && all) provenance = { corpusVersion: rev[1], revision: rev[2], fold, run, all };
+} catch {}
 mkdirSync(dataDir, { recursive: true });
 // The evaluator's WebAssembly module, when scripts/build-wasm.sh has run: its size in kilobytes, so the page that loads it can say what it is asking the reader to download.
 let wasmKB = null;
@@ -131,6 +149,6 @@ try {
   const r = json(join(dataDir, "consumer-skew.json"));
   consumer = { name: r.consumer.name, declares: r.consumer.declares, evaluator: r.consumer.evaluator, skew: r.skew.kind, date: r.date };
 } catch {}
-const figures = { specVersion, chantPin, referenceVersion, conformanceVersion, rulesWithFixture, rulesTotal, fixtures, wholeBuildFixtures, corpus, execution, consumer, wasmKB };
+const figures = { specVersion, chantPin, referenceVersion, conformanceVersion, rulesWithFixture, rulesTotal, fixtures, wholeBuildFixtures, corpus, provenance, execution, consumer, wasmKB };
 writeFileSync(join(dataDir, "figures.json"), JSON.stringify(figures, null, 2) + "\n");
 console.log("figures.json:", JSON.stringify(figures));

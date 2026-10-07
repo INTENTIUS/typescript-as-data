@@ -11,6 +11,7 @@ import { describe, test, expect, beforeAll } from "vitest";
 import { writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { countOrigins, summarizeProvenance, renderProvenanceSection, knownShare, compositeKnownShare, projectCompositeNames, renderProvenanceReport, type FileOrigins } from "./corpus";
 import { chantAdapter } from "./adapters/chant";
 import {
   findChantCheckout, discoverCorpus, runCorpusEntry, summarize, renderCorpusReport,
@@ -47,6 +48,9 @@ describe.skipIf(!checkout)("the corpus against both implementations (#25)", () =
     if (process.env.TSAD_CORPUS_REPORT) {
       const out = resolve(dirname(fileURLToPath(import.meta.url)), "..", "corpus-report.md");
       writeFileSync(out, renderCorpusReport(checkout as ChantCheckout, { name: chantAdapter.name, specVersion: chantAdapter.specVersion }, summary, reports, external), "utf8");
+      // #237: the provenance column on its own, written only when the chant under test reports provenance.
+      const provenance = renderProvenanceReport(checkout as ChantCheckout, { name: chantAdapter.name, specVersion: chantAdapter.specVersion }, reports, external);
+      if (provenance) writeFileSync(resolve(dirname(out), "provenance-report.md"), provenance, "utf8");
     }
   }, 900_000);
 
@@ -116,6 +120,79 @@ describe.skipIf(!checkout)("the corpus against both implementations (#25)", () =
     // disagreement wherever it appears.
     const lines = summary.referenceMorePermissive.map((d) => `${d.entry}/${d.file}: ${d.chantReason ?? ""}`);
     expect(lines, lines.join("\n")).toEqual([]);
+  });
+});
+
+/**
+ * The provenance column (#237) on a corpus written here, so it runs without
+ * a chant checkout. The records are in chant's `FoldProvenance` shape; the
+ * reports are what `runCorpusEntry` returns for files carrying them.
+ */
+describe("the provenance column on a synthetic corpus (#237)", () => {
+  const fromFold = (record: Parameters<typeof countOrigins>[0], pkg: string[] = []): FileOrigins => ({ from: "fold", ...countOrigins(record, new Set(pkg)) });
+  const store = fromFold({
+    storeBucket: { composite: "Store", instance: "store", fields: { name: { kind: "composite-parameter" }, versioning: { kind: "composite-literal" }, tags: { kind: "composite-parameter" } } },
+    storeTable: { composite: "Store", instance: "store", fields: { name: { kind: "composite-parameter" }, billing: { kind: "unknown", reason: "composite-not-interpreted" } } },
+  }, ["Store"]);
+  const direct = fromFold({ b: { fields: { name: { kind: "direct" }, "tags.team": { kind: "direct" } } }, empty: { fields: {} } });
+  const ran: FileOrigins = { from: "build", ...countOrigins({ q: { composite: "Queue", instance: "q", fields: { name: { kind: "unknown", reason: "composite-not-interpreted" }, size: { kind: "unknown", reason: "no-provenance" } } } }, new Set(["Store"])) };
+  const reports: EntryReport[] = [{
+    name: "app",
+    files: 5,
+    comparisons: [
+      { file: "store.ts", chant: "fold", reference: "fold", origins: store },
+      { file: "direct.ts", chant: "fold", reference: "fold", origins: direct },
+      // A fold whose entities could not be collected carries no record and is not read as direct.
+      { file: "dup.ts", chant: "fold", reference: "fold" },
+      { file: "queue.ts", chant: "run", reference: "run", origins: ran },
+      { file: "broken.ts", chant: "run", reference: "run", originsUnavailable: "boom" },
+    ],
+  }];
+
+  test("a record is counted by kind, unknowns by reason, and an entity with no fields is not an entity", () => {
+    expect(store).toEqual({ from: "fold", entities: 2, direct: 0, parameter: 3, literal: 1, unknown: { "composite-not-interpreted": 1 }, unknownByComposite: { "Store (project)": 1 } });
+    expect(ran.unknownByComposite).toEqual({ "Queue (package)": 2 });
+    expect(direct).toMatchObject({ entities: 1, direct: 2 });
+    expect(countOrigins({ e: { fields: { x: { kind: "sideways" } } } }).unknown).toEqual({ "kind sideways": 1 });
+  });
+
+  test("files that fold and files that run are summed apart", () => {
+    const s = summarizeProvenance(reports);
+    expect(s.fold).toEqual({ files: 3, withRecord: 2, counts: { entities: 3, direct: 2, parameter: 3, literal: 1, unknown: { "composite-not-interpreted": 1 }, unknownByComposite: { "Store (project)": 1 } } });
+    expect(s.run).toMatchObject({ files: 2, withRecord: 1, counts: { entities: 1, direct: 0, parameter: 0, literal: 0, unknown: { "composite-not-interpreted": 1, "no-provenance": 1 } }, unavailable: ["app: boom"] });
+    // 6 of 7 fold fields have a known origin; 4 of the 5 a composite expanded do.
+    expect(knownShare(s.fold.counts)).toBe("85.7%");
+    expect(compositeKnownShare(s.fold.counts)).toBe("80.0%");
+  });
+
+  test("the report renders totals, reasons and the per-file rows", () => {
+    const md = renderProvenanceSection(reports).join("\n");
+    expect(md).toContain("## The provenance column");
+    expect(md).toContain("| fold | 3 | 2 | 3 | 7 | 2 | 3 | 1 | 1 | 85.7% | 80.0% |");
+    expect(md).toContain("| run | 2 | 1 | 1 | 2 | 0 | 0 | 0 | 2 | 0.0% | 0.0% |");
+    expect(md).toContain("| `composite-not-interpreted` | 1 | 1 |");
+    expect(md).toContain("| `no-provenance` | 0 | 1 |");
+    expect(md).toContain("- app: boom");
+    expect(md).toContain("| `Queue (package)` | 0 | 2 |\n| `Store (project)` | 1 | 0 |");
+    expect(md).toContain("| `app/store.ts` | fold | 2 | 5 | 0 | 3 | 1 | 1 | composite-not-interpreted 1 |");
+    // And the whole report carries it.
+    const whole = renderCorpusReport({ root: "/x", corpusVersion: "0.0.0", revision: "abc" }, { name: "chant", specVersion: "2.2" }, summarize(reports), reports);
+    expect(whole).toContain("## The provenance column");
+  });
+
+  test("a composite is the project's when its source names it to Composite, and a package's otherwise", () => {
+    const names = projectCompositeNames(new Map([
+      ["store.ts", 'import { Composite } from "@intentius/chant";\nexport const Store = Composite((p) => ({}), "Store");\nconst Inner = Composite((p) => ({}));\n'],
+      ["app.ts", 'import { ArgoAppFor } from "@intentius/chant-lexicon-k8s";\nexport const web = ArgoAppFor("web", {});\n'],
+    ]));
+    expect([...names].sort()).toEqual(["Store", "anonymous"]);
+  });
+
+  test("a corpus with no record anywhere renders no section and no report", () => {
+    const none: EntryReport[] = [{ name: "x", files: 1, comparisons: [{ file: "a.ts", chant: "fold", reference: "fold" }] }];
+    expect(renderProvenanceSection(none)).toEqual([]);
+    expect(renderProvenanceReport({ root: "/x", corpusVersion: "0.0.0", revision: "abc" }, { name: "chant", specVersion: "2.2" }, none)).toBeUndefined();
+    expect(renderProvenanceReport({ root: "/x", corpusVersion: "0.0.0", revision: "abc" }, { name: "chant", specVersion: "2.2" }, reports)).toContain("- corpus: chant `0.0.0` at `abc`, 1 entries, 5 files");
   });
 });
 
