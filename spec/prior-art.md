@@ -34,6 +34,7 @@ what its system does to obtain a value. Read together they say one thing.
 | Next.js and Astro | the page is rendered |
 | Nix import-from-derivation | a derivation is built and its output read |
 | Total configuration languages | the configuration program is evaluated by its own interpreter |
+| TypeScript #58025 | the checker infers the type of the default export |
 | **constant folding** | **expressions the compiler already holds are reduced** |
 
 D states it of itself in the quotation below. Prepack's first sentence is that
@@ -44,6 +45,10 @@ reducing `2 + 3` runs no function of the user's. The technique is
 expression-local. It preserves semantics and a compiler may skip it entirely.
 Nobody builds a configuration mechanism on it because on its own it reaches
 nothing.
+
+TypeScript #58025 is the other row that runs nothing. It reaches a whole file
+by reading the type checker. What it obtains is a type. Its section below says
+why that differs from the value the file builds when it runs.
 
 This work is that technique at the scale of the other family. A whole file
 reduces to a closed value domain. Cross-file object identity survives the
@@ -195,6 +200,94 @@ than partial evaluation. Item 4 below is narrower for it. The fixpoint is an
 ordinary closure over a finite lattice. The contribution is the obligation it
 discharges rather than the algorithm that discharges it.
 
+### Configuration read from the type checker (TypeScript #58025)
+
+Wesley Wigham opened microsoft/TypeScript#58025 ("Types as Configuration") on
+2024-04-01 as a proof of concept. The compiler would load its configuration
+from a code file such as `tsconfig.ts` or `tsconfig.d.ts` and take the type of
+its `default` export as the configuration object. Imports and spreads compose
+a configuration and the file is never executed. The description gives the
+reason in the author's words: they "really did just want the syntactic
+niceties like imports and spreads". The PR was closed unmerged on 2024-05-21. It had no tests or
+diagnostics or language-service support. The thread records no reason for
+closing.
+
+The thread is short. It opened on 1 April and drew seven comments. The
+TypeScript bot left three and the author one. Readers left the other three.
+Two of them joke about the date and the third, eight days later, hopes it was
+not a joke. The author closed the PR and the repository locked it as resolved
+in October 2025.
+
+It is the nearest neighbor on the execution axis. The proposal makes this
+work's claim for one file name.
+
+The type it obtains can describe a value the file never builds. An assertion
+such as `"es5" as "esnext"` yields a literal type the expression does not
+evaluate to. A `declare const` has a type and no value.
+A `.d.ts` configuration has no run path at all. A call contributes its
+declared return type whatever its body returns. Nothing in the proposal
+reconciles the type against an execution because there is no execution to
+reconcile against. That agreement is this work's obligation (the equivalence
+in objective.md, with F-NoOwnExecution bounding what runs).
+
+The proposal also draws no edge. The description notes that "only literal,
+object, and tuple types matter here" and that an implementation would
+"probably wanna error on types that contain anything else". A type outside
+that set is lost or refused. Nothing falls back to running the file. Its
+evaluator is the whole checker. The `S-*` classifier needs syntax alone and
+`data-host` needs no checker and no JavaScript runtime (`evaluators/rust`).
+
+The implementation shows the same limit at a smaller scale.
+`convertTypeIntoRawConfig` reads literal types and the shapes built from them.
+Those are primitive literals and the tuple and object types around them. For any other type it returns `undefined` under a
+`// TODO: Issue diagnostic`, and `JSON.stringify` of the result then drops the
+key. A `target` whose type was widened to `string`, or any non-literal value,
+silently disappears from the configuration. This is a sharper line than that
+types can lie. The fold produces the value or says why it cannot: a file that
+does not fold carries a located reason (F-Reason, verdict.md).
+
+The TypeScript design meeting of 2024-04-02 (microsoft/TypeScript#58043)
+discussed the PR and the notes record the team's reasons. It "is in an
+uncanny valley of 'a superset of JSON but also a subset of valid TypeScript'".
+One concern was "that the semantics of TypeScript change from version-to-version".
+They reframed the want as "imports and spreads" and asked for a way to bring
+that into `tsconfig.json`. The PR itself points at that discussion
+(microsoft/TypeScript#57486).
+
+This work sits in that valley on purpose. The edge of the subset is specified
+(grammar.md). Source past the edge falls back to running and the two paths
+must agree (objective.md). The semantics are versioned with the specification
+(`spec/VERSION`). A change in the checker's widening or contextual typing
+cannot move a folded value. Reading a configuration off checker inference
+inherits every such change.
+
+Ryan Cavanaugh refused executable configuration in 2019
+(microsoft/TypeScript#30400). He wrote that PRs to turn config "into an
+executable thing" were not accepted. That "opens up an enormous can of worms
+(is it safe to run this? what dependencies does the config file have? what
+does the config file assume about its environment?)". Each question has a rule
+that answers it here.
+
+| Question | Rule |
+|---|---|
+| Is it safe to run this? | F-NoOwnExecution (observables.md) bounds what executes and names every member of the bound. Under `ι = isolated`, F-IsolatedRefusal (hosts.md) turns a fold that would need project code into a fallback and the second counter of F-Obs-Counters stays zero. |
+| What dependencies does it have? | F-Host-Trust (hosts.md) admits an import only as an active package of the build or a path inside the host's own module tree, and nothing else. F-Import (verdict.md) says how each import binding is resolved. |
+| What does it assume about its environment? | A bare `process` is refused (F-Eval-Ident step 4, evaluation.md). The environment enters only through declared build parameters (F-Import), and the objective is stated at a fixed binding of them (objective.md), so the origin of a value is part of the statement. |
+
+### Conformance note: the checker oracle
+
+The checker oracle (INTENTIUS/typescript-as-data#233) does not call the
+checker API. It emits a file and type-checks it with public `tsc`. That keeps
+it on public `tsc` and it works the same under TypeScript 7's native
+compiler. To force exact literal types it borrows the trick from #58025's `config<const T>`:
+an identity wrapper with a `<const T>` parameter, so the checker infers the
+literal type of each value instead of its widened one.
+
+With one file and no cross-file identity the taint question does not arise.
+Cite the proposal for "TypeScript configuration without execution has been
+proposed upstream". The citation should add that it read types where this
+work reduces values and that it stated no agreement obligation.
+
 ### Evaluation that escapes into execution (Nix import-from-derivation)
 
 Nix evaluation is pure. IFD pauses it to realise a store object (a build) then
@@ -276,10 +369,12 @@ explicit in the language rather than inferred.
 
 1. Per-file partial evaluation with a fallback to executing the unit.
    Precedented in shape by Next.js and in principle by CTFE.
-1. A static path that does not execute the source. Constant folding is the
-   only precedent and it is expression-local. Every neighbor that reaches a
-   whole function or a whole unit gets there by running it. The earlier reading
-   of this document compared everything but this.
+1. A static path that does not execute the source. Constant folding is
+   expression-local. TypeScript #58025 reaches a whole file without running
+   it and obtains a type in place of the value. It states no agreement
+   against execution. Every other neighbor that reaches a whole function or a
+   whole unit gets there by running it. The earlier reading of this document
+   compared everything but this.
 2. Same-function agreement via revival through the file's own imports.
    Precedented by CTFE's design principle and citable as the same argument.
 3. Byte-identical agreement as a discharged obligation over a real corpus.
