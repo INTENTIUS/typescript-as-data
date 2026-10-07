@@ -129,6 +129,34 @@ Writing J2 and J3 from the specification found one more gap in it, which that te
 
 The port's own failure mode: chant-v0.69.0 extended an envelope check from three kinds to five while the port still had three, and because no fixture covered the shape, the suite stayed green against a stale port until the drift was found by reading the release diff. Two fixtures now cover it, and the port that made the drift possible is gone.
 
+## Field provenance
+
+`packages/conformance/provenance-report.md` counts every field chant's corpus emits by where its value came from (#237). F-Obs-Provenance names four kinds. A field is declared directly or comes from a composite, and a composite's field is either one of its parameters or a literal it fixes. The fourth kind is unknown, with the reason chant records. A field is one of chant's emitted property paths through plain objects; an array counts whole. Files that fold are counted from the record `foldProject` returns. A file that runs has no fold record. For those the harness builds the entry the way `chant build` does and counts the record that build keeps.
+
+This run was taken ahead of the pin, at chant `0.108.1` built from `a9ddd8a38d54fa1ed96f94fb48096eb506eb2ee5`, which is chant's main branch with fold provenance added (chant#3598). No chant release reports provenance yet. The numbers describe that build, and they are retaken at the release that carries it (#240).
+
+| Files | Count | Entities | Fields | Direct | Composite parameter | Composite literal | Unknown | Known share | Known among composite fields |
+|---|---|---|---|---|---|---|---|---|---|
+| fold | 373 | 1156 | 6693 | 3966 | 4 | 4 | 2719 | 59.4% | 0.3% |
+| run | 93 | 354 | 2178 | 1619 | 0 | 0 | 559 | 74.3% | 0.0% |
+| all | 466 | 1510 | 8871 | 5585 | 4 | 4 | 3278 | 63.0% | 0.2% |
+| `jhgaylor/infisical-chant`, run | 23 | 10 | 158 | 0 | 0 | 0 | 158 | 0.0% | 0.0% |
+
+The known share counts every field whose kind is not unknown, over all fields. A direct field is known by construction, and the third claim is about composites. So the last column leaves direct fields out of both sides: it is the attributed composite fields over every field a composite expanded. The external project's eight files that fold emit no field.
+
+Every unknown carries the reason `composite-not-interpreted`. The other reason, `no-provenance`, needs a build in a sandboxed child. Nothing here builds that way. The unknowns come from two places:
+
+| Source of the unknown fields | Fold | Run |
+|---|---|---|
+| a composite a lexicon package ships, 42 of them | 2719 | 490 |
+| a project composite in a file that runs, called through a project function in another file or through `withDefaults` with computed defaults | 0 | 69 |
+
+A lexicon's composite is host code. chant invokes its factory and interprets only a project's, so every field such a composite expands is unknown whichever path the file takes. Seven files of one example, `cockroachdb-multi-region-gke`, hold more than a third of the unknowns. One project composite is called in a file that folds. All eight of its fields are attributed: four to a parameter and four to a literal.
+
+**What this establishes.** chant's record reaches every file in the corpus, and no field falls through to `direct` without a record behind it. Where the fold interprets a composite's body, the attribution is complete on this corpus. That is one composite call.
+
+**What it does not.** It counts fields, not drift; how often each kind of field drifts in a running estate is not measured here. chant's examples mostly call composites a lexicon ships. A project that writes its own composites would score differently in either direction. The one external project emits all of its fields from files that run. A whole array counts as one field. The package and project split is decided from syntax: a composite is the project's when the declaring file or a project file it imports passes its name to `Composite`. The run row comes from executing those files in the harness's own process.
+
 ## What the specification found
 
 Writing the specification against the implementation found defects the implementation's own tests had not.

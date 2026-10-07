@@ -342,6 +342,17 @@ export interface FileComparison {
    * chant's own nor an active lexicon; those two are isolation's own cost.
    */
   readonly chantIsolatedRefusal?: IsolationRefusal;
+  /**
+   * The provenance column (#237): every field this file's entities emit, by
+   * origin kind. `fold` is chant's `foldProject` record for a file it folded;
+   * `build` is what a real build records for a file that runs, from chant's
+   * own `discover` and `foldProvenanceOfEntities`. Absent when there is no
+   * record: a chant without provenance, a fold whose entities could not be
+   * collected, or a run file whose entry could not be built.
+   */
+  readonly origins?: FileOrigins;
+  /** For a run file with no `origins`: why the build that would attribute it could not be taken. */
+  readonly originsUnavailable?: string;
   /** Both folded, and their export namespaces were compared as data. */
   readonly values?: "equal" | "differ" | "not-data";
   /** Where the two encodings first differ, with a little context either side, so a difference is a diff and not a verdict. */
@@ -678,6 +689,10 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
   const dataHostReference = rust ? referenceFoldProject(sources, description) : undefined;
   const dataHostRust = rust?.foldProject ? await rust.foldProject(new Map(sources), conformanceHost) : undefined;
 
+  // #237: what a build records for the files that run, which foldProject never attributes.
+  const projectComposites = (abs: string) => projectCompositeNames(importClosure(keyOf(abs), sources));
+  const runOrigins = await runFileOrigins(entry, paths.filter((abs) => chant.get(abs)?.verdict !== "fold"), projectComposites);
+
   const comparisons: FileComparison[] = paths.map((abs) => {
     const file = keyOf(abs);
     let dataHost: DataHostComparison | undefined;
@@ -709,6 +724,8 @@ export async function runCorpusEntry(checkout: ChantCheckout, entry: CorpusEntry
       chantIsolated: chantIsolated ? (chantIsolated.get(abs)?.verdict === "fold" ? "fold" : "run") : undefined,
       chantIsolatedReason: isolatedReason,
       chantIsolatedRefusal: isolationRefusalOf(isolatedReason),
+      origins: cv?.verdict === "fold" ? foldOrigins(cv, projectComposites(abs)) : runOrigins.byFile.get(abs),
+      originsUnavailable: cv?.verdict === "fold" ? undefined : runOrigins.unavailableReason,
       referenceRule: rv?.kind === "run" ? rv.rule : undefined,
       referenceReason: rv?.kind === "run" ? rv.reason : undefined,
       chantReason:
@@ -1004,6 +1021,7 @@ export function renderCorpusReport(
         : `Files that fold under \`open\` and run under \`isolated\`:\n\n${summary.isolated.lostFiles.map((d) => `- \`${d.entry}/${d.file}\`${d.chantIsolatedRefusal ? ` — ${d.chantIsolatedRefusal}` : ""}`).join("\n")}`,
       "",
     ] : []),
+    ...renderProvenanceSection(reports, external),
     ...(external.length ? [
       "## Codebases nobody here maintains",
       "",
@@ -1029,5 +1047,293 @@ export function renderCorpusReport(
     "|---|---|---|---|---|---|",
     ...rows,
     "",
+  ].join("\n");
+}
+
+// ── the provenance column (#237) ────────────────────────────────────────────
+
+/**
+ * One file's emitted fields by origin, in F-Obs-Provenance's four kinds.
+ * A field is one of chant's emitted property paths: dotted names through
+ * plain objects, an array or a class value attributed whole at its own path
+ * (`emittedFieldPaths`). Entities that emit no field are not counted.
+ */
+export interface OriginCounts {
+  readonly entities: number;
+  readonly direct: number;
+  readonly parameter: number;
+  readonly literal: number;
+  /** `unknown` fields by the reason chant gives (`UnknownOriginReason`). */
+  readonly unknown: Readonly<Record<string, number>>;
+  /**
+   * `unknown` fields by the composite that expanded their entity, keyed
+   * `<name> (project)` when the declaring file, or a project file it
+   * imports, defines a composite of that name; `<name> (package)` otherwise,
+   * a lexicon's composite, which chant invokes rather than interprets; and
+   * `(none)` when the record names no composite.
+   */
+  readonly unknownByComposite: Readonly<Record<string, number>>;
+}
+
+/** Where a file's counts came from: chant's fold record, or the record a build of the entry keeps for a file that runs. */
+export interface FileOrigins extends OriginCounts { readonly from: "fold" | "build" }
+
+/** chant's `FoldProvenance`, restated: the pinned chant may not export it (chant#3598). */
+type FoldProvenanceRecord = Record<string, { composite?: string; instance?: string; fields: Record<string, { kind: string; reason?: string }> }>;
+
+export const NO_ORIGINS: OriginCounts = { entities: 0, direct: 0, parameter: 0, literal: 0, unknown: {}, unknownByComposite: {} };
+
+export const unknownTotal = (c: OriginCounts): number => Object.values(c.unknown).reduce((n, k) => n + k, 0);
+export const fieldTotal = (c: OriginCounts): number => c.direct + c.parameter + c.literal + unknownTotal(c);
+
+function addCounts(a: Readonly<Record<string, number>>, b: Readonly<Record<string, number>>): Record<string, number> {
+  const out: Record<string, number> = { ...a };
+  for (const [k, n] of Object.entries(b)) out[k] = (out[k] ?? 0) + n;
+  return out;
+}
+
+export function addOrigins(a: OriginCounts, b: OriginCounts): OriginCounts {
+  return {
+    entities: a.entities + b.entities, direct: a.direct + b.direct, parameter: a.parameter + b.parameter, literal: a.literal + b.literal,
+    unknown: addCounts(a.unknown, b.unknown), unknownByComposite: addCounts(a.unknownByComposite, b.unknownByComposite),
+  };
+}
+
+/** Count a fold provenance record. An origin kind this report does not know is counted `unknown` under its own name rather than dropped. */
+export function countOrigins(record: FoldProvenanceRecord, projectComposites: ReadonlySet<string> = new Set()): OriginCounts {
+  let direct = 0, parameter = 0, literal = 0, entities = 0;
+  const unknown: Record<string, number> = {};
+  const unknownByComposite: Record<string, number> = {};
+  for (const entity of Object.values(record)) {
+    const fields = Object.values(entity.fields);
+    if (fields.length === 0) continue;
+    entities++;
+    for (const o of fields) {
+      if (o.kind === "direct") direct++;
+      else if (o.kind === "composite-parameter") parameter++;
+      else if (o.kind === "composite-literal") literal++;
+      else {
+        const reason = o.kind === "unknown" ? (o.reason ?? "unstated") : `kind ${o.kind}`;
+        unknown[reason] = (unknown[reason] ?? 0) + 1;
+        const by = entity.composite ? `${entity.composite} (${projectComposites.has(entity.composite) ? "project" : "package"})` : "(none)";
+        unknownByComposite[by] = (unknownByComposite[by] ?? 0) + 1;
+      }
+    }
+  }
+  return { entities, direct, parameter, literal, unknown, unknownByComposite };
+}
+
+/** A folded file's counts from foldProject's own record, or undefined when the verdict carries none. */
+function foldOrigins(verdict: unknown, projectComposites: ReadonlySet<string>): FileOrigins | undefined {
+  const record = (verdict as { foldProvenance?: FoldProvenanceRecord }).foldProvenance;
+  return record ? { from: "fold", ...countOrigins(record, projectComposites) } : undefined;
+}
+
+/** A file and every project file it reaches by relative import, transitively: the source its composites can come from. */
+function importClosure(key: string, sources: ReadonlyMap<string, string>): Map<string, string> {
+  const keys = new Set(sources.keys());
+  const out = new Map<string, string>();
+  const queue = [key];
+  while (queue.length) {
+    const k = queue.shift()!;
+    const source = sources.get(k);
+    if (source === undefined || out.has(k)) continue;
+    out.set(k, source);
+    for (const spec of specifiersOf(source, k).project) {
+      const target = resolveKey(k, spec, keys);
+      if (target && !out.has(target)) queue.push(target);
+    }
+  }
+  return out;
+}
+
+/**
+ * The composites a file's own source defines, by the name chant records
+ * for them: the literal a project passes as `Composite`'s second argument,
+ * plus `anonymous`, chant's name for one given none. Every other composite
+ * name came from a package, whether exported as a composite or built inside a
+ * package function (`ArgoAppFor` makes an `ArgoApplication`).
+ */
+export function projectCompositeNames(sources: ReadonlyMap<string, string>): Set<string> {
+  const out = new Set<string>(["anonymous"]);
+  for (const [path, source] of sources) {
+    if (!source.includes("Composite")) continue;
+    const visit = (n: ts.Node): void => {
+      if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === "Composite") {
+        const name = n.arguments[1];
+        if (name && ts.isStringLiteralLike(name)) out.add(name.text);
+      }
+      ts.forEachChild(n, visit);
+    };
+    visit(ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true));
+  }
+  return out;
+}
+
+type DiscoverFn = (path: string, options: Record<string, unknown>) => Promise<{ entities: Map<string, unknown> }>;
+type ProvenanceOfEntitiesFn = (entities: ReadonlyMap<string, unknown>, provenanceOf: (e: unknown) => unknown) => FoldProvenanceRecord;
+
+/**
+ * What a build of the entry records for its files that run. foldProject
+ * never executes a run file, so it has no entities to attribute; a build
+ * does execute it, and records an origin for every field anyway: `direct`
+ * for an entity the file declared, `unknown` for a composite whose body it
+ * did not interpret. This is chant's `build()` computation (`discover`, then
+ * `foldProvenanceOfEntities` with `getProvenance`), short of serializing,
+ * and it runs the entry's run files in this process the way `chant build`
+ * does. Each entity is assigned to the file that declared it.
+ */
+async function runFileOrigins(entry: CorpusEntry, runFiles: readonly string[], projectComposites: (abs: string) => ReadonlySet<string>): Promise<{ byFile: Map<string, FileOrigins>; unavailableReason?: string }> {
+  const byFile = new Map<string, FileOrigins>();
+  if (runFiles.length === 0) return { byFile };
+  const ns = (await import("@intentius/chant")) as unknown as { discover?: DiscoverFn; getProvenance?: (e: unknown) => { sourceFile?: string } | undefined; foldProvenanceOfEntities?: ProvenanceOfEntitiesFn };
+  if (!ns.discover || !ns.getProvenance || !ns.foldProvenanceOfEntities) return { byFile, unavailableReason: "the installed chant reports no fold provenance" };
+  try {
+    const result = await ns.discover(entry.srcDir, {
+      fold: true,
+      intrinsics: entry.intrinsics,
+      lexicons: entry.lexicons,
+      buildParams: Object.entries(entry.buildParams).map(([name, value]) => ({ name, value, source: "default" })),
+    });
+    const record = ns.foldProvenanceOfEntities(result.entities, ns.getProvenance);
+    const wanted = new Set(runFiles.map((f) => resolve(f)));
+    const perFile = new Map<string, FoldProvenanceRecord>();
+    for (const [name, entityRecord] of Object.entries(record)) {
+      const file = ns.getProvenance(result.entities.get(name))?.sourceFile;
+      if (!file || !wanted.has(resolve(file))) continue;
+      const k = resolve(file);
+      perFile.set(k, { ...(perFile.get(k) ?? {}), [name]: entityRecord });
+    }
+    for (const f of runFiles) byFile.set(f, { from: "build", ...countOrigins(perFile.get(resolve(f)) ?? {}, projectComposites(f)) });
+    return { byFile };
+  } catch (e) {
+    return { byFile, unavailableReason: e instanceof Error ? e.message.split("\n")[0] : String(e) };
+  }
+}
+
+/** The provenance column over a set of entries: files that fold and files that run, kept apart. */
+export interface ProvenanceSummary {
+  readonly fold: { readonly files: number; readonly withRecord: number; readonly counts: OriginCounts };
+  readonly run: { readonly files: number; readonly withRecord: number; readonly counts: OriginCounts; readonly unavailable: readonly string[] };
+}
+
+export function summarizeProvenance(reports: readonly EntryReport[]): ProvenanceSummary {
+  let foldFiles = 0, foldWith = 0, runFiles = 0, runWith = 0;
+  let fold = NO_ORIGINS, run = NO_ORIGINS;
+  const unavailable = new Set<string>();
+  for (const r of reports) {
+    for (const c of r.comparisons) {
+      if (c.chant === "fold") {
+        foldFiles++;
+        if (c.origins) { foldWith++; fold = addOrigins(fold, c.origins); }
+      } else {
+        runFiles++;
+        if (c.origins) { runWith++; run = addOrigins(run, c.origins); }
+        else if (c.originsUnavailable) unavailable.add(`${r.name}: ${c.originsUnavailable}`);
+      }
+    }
+  }
+  return { fold: { files: foldFiles, withRecord: foldWith, counts: fold }, run: { files: runFiles, withRecord: runWith, counts: run, unavailable: [...unavailable] } };
+}
+
+const pct = (n: number, d: number) => (d === 0 ? "n/a" : `${((100 * n) / d).toFixed(1)}%`);
+
+/** (direct + parameter + literal) / every field. */
+export const knownShare = (c: OriginCounts): string => pct(c.direct + c.parameter + c.literal, fieldTotal(c));
+
+/** Among fields a composite expanded: (parameter + literal) / (parameter + literal + unknown because the composite was not interpreted). */
+export const compositeKnownShare = (c: OriginCounts): string =>
+  pct(c.parameter + c.literal, c.parameter + c.literal + (c.unknown["composite-not-interpreted"] ?? 0));
+
+/** The section `renderCorpusReport` prints, or nothing when no file carries a record (a chant without provenance). */
+export function renderProvenanceSection(reports: readonly EntryReport[], external: readonly ExternalRun[] = []): string[] {
+  const all = [...reports, ...external.flatMap((x) => x.reports)];
+  if (!all.some((r) => r.comparisons.some((c) => c.origins))) return [];
+  const s = summarizeProvenance(reports);
+  const reasons = [...new Set([...Object.keys(s.fold.counts.unknown), ...Object.keys(s.run.counts.unknown)])].sort();
+  const cells = (c: OriginCounts) => `${c.entities} | ${fieldTotal(c)} | ${c.direct} | ${c.parameter} | ${c.literal} | ${unknownTotal(c)}`;
+  const shares = (c: OriginCounts) => `${knownShare(c)} | ${compositeKnownShare(c)}`;
+  const both = addOrigins(s.fold.counts, s.run.counts);
+  const byComposite = (c: OriginCounts) => Object.entries(c.unknownByComposite).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(", ");
+  const fileRows = all.flatMap((r) =>
+    r.comparisons
+      .filter((c) => c.origins && fieldTotal(c.origins) > 0)
+      .map((c) => `| \`${r.name}/${c.file}\` | ${c.chant} | ${cells(c.origins!)} | ${Object.entries(c.origins!.unknown).map(([k, n]) => `${k} ${n}`).join(", ")} |`),
+  );
+  return [
+    "## The provenance column",
+    "",
+    "Every field an entity emits, by where its value came from (F-Obs-Provenance): written directly, a composite's parameter, a literal a composite fixes, or unknown with the reason chant gives. A field is one of chant's emitted property paths, with an array attributed whole. Files that fold are counted from chant's fold record. Files that run have no fold record, so their row is what a build of the entry records for them, taken by executing them as `chant build` would; a build attributes a run file's composite fields as unknown.",
+    "",
+    "| Verdict | Files | With a record | Entities | Fields | Direct | Composite parameter | Composite literal | Unknown | Known share | Known among composite fields |",
+    "|---|---|---|---|---|---|---|---|---|---|---|",
+    `| fold | ${s.fold.files} | ${s.fold.withRecord} | ${cells(s.fold.counts)} | ${shares(s.fold.counts)} |`,
+    `| run | ${s.run.files} | ${s.run.withRecord} | ${cells(s.run.counts)} | ${shares(s.run.counts)} |`,
+    `| all | ${s.fold.files + s.run.files} | ${s.fold.withRecord + s.run.withRecord} | ${cells(both)} | ${shares(both)} |`,
+    "",
+    "Unknown fields by reason:",
+    "",
+    "| Reason | Fold | Run |",
+    "|---|---|---|",
+    ...(reasons.length ? reasons.map((k) => `| \`${k}\` | ${s.fold.counts.unknown[k] ?? 0} | ${s.run.counts.unknown[k] ?? 0} |`) : ["| none | 0 | 0 |"]),
+    "",
+    "Unknown fields by the composite that expanded them, largest first. `project` marks a composite defined in the declaring file or a project file it imports, by the name it gives `Composite`; `package` is every other, a lexicon's composite, which chant invokes rather than interprets.",
+    "",
+    "| Composite | Fold | Run |",
+    "|---|---|---|",
+    ...Object.keys(both.unknownByComposite)
+      .sort((a, b) => both.unknownByComposite[b] - both.unknownByComposite[a] || a.localeCompare(b))
+      .map((k) => `| \`${k}\` | ${s.fold.counts.unknownByComposite[k] ?? 0} | ${s.run.counts.unknownByComposite[k] ?? 0} |`),
+    "",
+    ...(s.run.unavailable.length ? ["Entries whose run files could not be attributed, because the build failed:", "", ...s.run.unavailable.map((u) => `- ${u}`), ""] : []),
+    ...(external.length ? [
+      "Codebases nobody here maintains, each kept out of the totals above:",
+      "",
+      "| Checkout | Verdict | Files | With a record | Entities | Fields | Direct | Composite parameter | Composite literal | Unknown | Known share | Known among composite fields | Unknown by composite |",
+      "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+      ...external.flatMap((x) => {
+        const e = summarizeProvenance(x.reports);
+        return [
+          `| \`${x.checkout.name}\` | fold | ${e.fold.files} | ${e.fold.withRecord} | ${cells(e.fold.counts)} | ${shares(e.fold.counts)} | ${byComposite(e.fold.counts)} |`,
+          `| \`${x.checkout.name}\` | run | ${e.run.files} | ${e.run.withRecord} | ${cells(e.run.counts)} | ${shares(e.run.counts)} | ${byComposite(e.run.counts)} |`,
+        ];
+      }),
+      "",
+    ] : []),
+    "Per file, every file that emits a field:",
+    "",
+    "| File | Verdict | Entities | Fields | Direct | Composite parameter | Composite literal | Unknown | Unknown by reason |",
+    "|---|---|---|---|---|---|---|---|---|",
+    ...fileRows,
+    "",
+  ];
+}
+
+/**
+ * The provenance column as an artifact of its own, `provenance-report.md`,
+ * for the evidence page to read. `corpus-report.md` is regenerated whole at a
+ * chant pin, and the column can be taken before the pin carries provenance,
+ * so it is written apart; undefined when no file carries a record, so a run at
+ * a pin without provenance leaves the last measurement in place rather than
+ * blanking it.
+ */
+export function renderProvenanceReport(
+  checkout: ChantCheckout,
+  engine: { name: string; specVersion: string },
+  reports: readonly EntryReport[],
+  external: readonly ExternalRun[] = [],
+): string | undefined {
+  const section = renderProvenanceSection(reports, external);
+  if (section.length === 0) return undefined;
+  const files = reports.reduce((n, r) => n + r.files, 0);
+  return [
+    "# Field provenance across the corpus",
+    "",
+    "Generated by `npm run corpus` (#237) when the chant under test reports fold provenance. Do not edit. The same section is in `corpus-report.md` once the pinned chant carries provenance.",
+    "",
+    `- engine under test: \`${engine.name}\`, declaring spec \`${engine.specVersion}\``,
+    `- corpus: chant \`${checkout.corpusVersion}\` at \`${checkout.revision}\`, ${reports.length} entries, ${files} files`,
+    "",
+    ...section,
   ].join("\n");
 }
