@@ -11,14 +11,16 @@
   {{ .Content }}
 </section>
 
-{{- /* The loop draws all three of what-it-enables', so it stands in place of
-       the beats row that used to repeat them: the zone is no-execution, the
-       return arc is the round trip, and rules over values is a box. The pages
-       keep their links, read from their own front matter, so the landing page
-       still cannot name a page that does not exist. */ -}}
+{{- /* The loop draws the three claims of what-it-enables, so it stands in
+       place of a beats row that would repeat them: the check is a box, the
+       import edge is adoption, and the return arc is drift read back to
+       source. The zone is the mechanism under all three, whose page carries
+       `mechanism: true` and is left out of the claim links. The links are
+       read from the pages' own front matter, so the landing page still cannot
+       name a page that does not exist. */ -}}
 <section class="loop-section">
   {{ partial "governance-loop.html" . }}
-  <p class="loop-links">{{ range (site.GetPage "/what-it-enables").RegularPages.ByWeight }}<a href="{{ .RelPermalink }}">{{ .Title }}</a>{{ end }}</p>
+  <p class="loop-links">{{ range where (site.GetPage "/what-it-enables").RegularPages.ByWeight "Params.mechanism" "!=" true }}<a href="{{ .RelPermalink }}">{{ .Title }}</a>{{ end }}</p>
 </section>
 
 <section class="platforms">

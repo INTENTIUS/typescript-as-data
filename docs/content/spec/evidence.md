@@ -26,7 +26,7 @@ No figure on this site was typed by hand. Each one below is read from an artifac
 
 ## The claims, and the scenarios that check them
 
-Each claim on [what it enables](/typescript-as-data/what-it-enables/) has a scenario under `scripts/smoke/scenarios/` that runs on a throwaway Forgejo and prints one verdict line per step. The weekly demo workflow runs every scenario twice and commits the result here. The second run sets `BREAK=1`, which sabotages the setup so the scenario has to catch it.
+The pages under [what it enables](/typescript-as-data/what-it-enables/) are checked by scenarios under `scripts/smoke/scenarios/`. Each one runs on a throwaway Forgejo and prints one verdict line per step. The weekly demo workflow runs every scenario twice and commits the result here. The second run sets `BREAK=1`, which sabotages the setup so the scenario has to catch it.
 
 {{< smoke-rows >}}
 

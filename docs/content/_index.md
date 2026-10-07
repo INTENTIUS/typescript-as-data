@@ -1,6 +1,6 @@
 ---
 title: "typescript-as-data"
-description: "TypeScript configuration, read as data and never run."
+description: "TypeScript configuration read as data, so it is checked before anything runs, adopted from what you already have, and traced to the line you wrote when it drifts."
 ---
 
 Your configuration is a TypeScript file. A separate program reads it and works out the values itself, refusing anything it would have to run.
@@ -39,4 +39,4 @@ export const policy = {
 } satisfies GovernanceConfig;
 ```
 
-The second one has completion and a type error on a misspelt key, and it reuses one helper across repositories. Both files give the tool the same object. Three things follow, one page each below. New to any of this? [Start here](/typescript-as-data/start-here/).
+The second one has completion and a type error on a misspelt key, and it reuses one helper across repositories. Both files give the tool the same object. Three claims follow. It is checked before anything runs, you can adopt what you already have, and drift lands on the line you wrote. Each has a page, linked under the loop below. New to any of this? [Start here](/typescript-as-data/start-here/).

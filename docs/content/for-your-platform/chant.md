@@ -17,7 +17,7 @@ Evaluability lint (is this file data) runs at the keystroke, then each lexicon's
 
 ## Generate
 
-Three generators share one pipeline. `chant import` reads an existing template, `--from <env>` imports live through each lexicon's `exportResources()`, and carve-out reads Terraform. Generated source folds back to the artifact it came from; the Kubernetes lexicon carries a round-trip suite, and [`F-Val-Source`](/typescript-as-data/spec/normative/values/) states the property since spec `1.5`.
+Three generators share one pipeline. `chant import` reads an existing template, `--from <env>` imports live through each lexicon's `exportResources()`, and carve-out reads Terraform. Rebuilding imported source gave back 19 of 22 public Kubernetes manifests byte for byte and none of 20 CloudFormation templates, measured on 2026-10-07 at chant `0.108.1` ([the adoption page](/typescript-as-data/what-it-enables/adopt-what-you-have/) has the reasons). The Kubernetes lexicon carries a round-trip suite, and [`F-Val-Source`](/typescript-as-data/spec/normative/values/) states the property since spec `1.5`.
 
 ## Proof
 

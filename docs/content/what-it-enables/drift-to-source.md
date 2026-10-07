@@ -1,23 +1,11 @@
 ---
-title: "Round-trip generation"
-description: "Live state or an existing artifact becomes source that folds back to exactly what it came from."
+title: "Drift lands on the line you wrote"
+description: "A field that drifted is reported against the composite argument and source line that produced it, because the composite was interpreted rather than run."
 weight: 3
 diataxis: explanation
 ---
 
-You already have infrastructure. A CloudFormation template, a live Kubernetes namespace, an org whose settings somebody clicked into a web UI years ago. You want it as TypeScript without hand-copying a thousand lines and hoping.
-
-A generator reads what is there and writes the TypeScript. Read that TypeScript back and you get exactly what it was generated from. Nothing drifted in the trip.
-
-That second half is the part worth checking, and it is why the language matters.
-
-## Why the language matters here
-
-Turning YAML into YAML proves nothing, because you could have copied the file. Going through TypeScript is worth something because the generator has to decide what each value actually is.
-
-This string is just a string. That one is a reference to another resource. A third is a setting you pass in at build time. The same block repeated across forty resources is one name, written once and spread where it is used.
-
-Those are four different things and YAML cannot tell three of them apart. TypeScript can. Then the fold has to turn every one of them back into the value it started as, which is what makes the round trip a test rather than a copy.
+Somebody changes a setting on the server. The next plan says which field drifted. The question you have then is where to change it, and when the field came out of a shared preset, the field in the plan is not a line anyone wrote. It was built by a function from an argument somebody passed, and the fix belongs at that argument.
 
 ## See it hold
 
@@ -34,9 +22,9 @@ The steps, in the order they print: the policy is applied; live is read back and
 
 A second scenario, `fold-equals-run`, holds the guarantee the others rest on: folding and running the same policy give the same plan, and a file that reads the environment is refused before either is trusted.
 
-## The return leg
+## From the field to the argument
 
-The plan says the wiki drifted. The next question is where to change it. When repositories are written through a shared preset, the field in the plan is not a line anyone wrote. It was built by a function from an argument somebody passed, and the fix belongs at that argument.
+When repositories are written through a shared preset, the plan's field has to be traced back through the preset.
 
 ```ts
 // presets.ts
@@ -74,18 +62,25 @@ An origin is one of four kinds. `direct` is a value written at the export, outsi
 
 Provenance is optional by design. The run path does not produce it, so it sits outside the equivalence objective that fold and run must meet. An implementation reports whether it claims provenance, and the conformance fixtures for it are judged only for one that does.
 
-The limit is what the fold did not interpret. A composite the host publishes is invoked rather than read, so the fields it produces are `unknown`. Finding the argument behind one of them is still done by hand.
+## In a cluster
+
+chant reports the same thing for Kubernetes. Its drift demo builds a small app whose `WebApp` composite sets a Deployment's replica count from an argument, applies it to a k3d cluster and scales the Deployment from 3 to 5 with `kubectl`. The live diff then reports the field on the call.
+
+```text
+spec.replicas: 3 → 5 [from: composite WebApp parameter replicas]
+  spec.replicas on K8s::Apps::Deployment webDeployment comes from WebApp({ replicas: 3 }) at src/app.ts:11
+```
+
+Line 11 of `src/app.ts` is `replicas: 3,` inside the call. The rendered YAML has a `replicas: 3` too, and editing it would change nothing, because the YAML is regenerated from the call on the next build. [chant's drift guide](https://intentius.io/chant/guide/drift-to-source/) has the demo and the command that runs it.
 
 ## Who has it today
 
-chant has three generators through one pipeline. `chant import` reads a template file, `--from <env>` imports live through each lexicon's `exportResources()`, and carve-out reads Terraform. The Kubernetes lexicon carries a round-trip suite. forgejo-warden's reconcile direction is the same idea for an org, with live reality read back and diffed against declared source.
+The reference implementation reports an origin for every field it folds, and passes the conformance fixtures for it. chant records the origin while it builds and puts it on each drifted field in `chant lifecycle diff --live`. forgejo-warden's plan names the drifted field. A preset in its example policy, with the plan naming the argument behind a field, is the next step there.
 
 ## What it does not establish
 
-The round trip is stated per profile and the two statements are not the same one, which is the distinction above. The fixture kind tests one generator's output against its own input. It does not establish that a generator you write round-trips, which is the obligation `F-Val-Source` places on the generator rather than a property this specification can discharge for you.
+Across chant's example corpus, {{< figure "provenance.fold.compositeKnown" >}} of the {{< figure "provenance.fold.compositeFields" >}} fields a composite expanded in files that fold have a known origin ({{< figure "provenance.fold.compositeKnownShare" >}}). Nearly all the others come from composites the lexicons ship. chant calls those factories and does not read their bodies, so their fields are unknown whether the file folds or runs, and finding the argument behind one of them is still done by hand. The one project composite called in a folding file has every field attributed. The count is of fields rather than of drift, taken at chant <code>{{< figure "provenance.corpusVersion" >}}</code> ahead of a release that reports it, and [the evidence page](/typescript-as-data/spec/evidence/) carries the rest of the column.
 
 ## Where the rule lives
 
-The completeness half is [`F-Val-Source`](/typescript-as-data/spec/normative/values/): one source form per case of the value domain, each folding back by a rule the table cites.
-
-The fidelity half is an obligation on generators, stated per profile: a generator's output folds to its input. The `roundtrip` fixture kind tests it. The input is a namespace as data; the generator writes the source; the fold of that source must equal the input. 
+`F-Obs-Provenance` in [`observables.md`](/typescript-as-data/spec/normative/observables/) states what an implementation that claims provenance must report: one origin of four kinds for every emitted field, the innermost writer winning when composites nest, and an unknown origin never reported as direct.
