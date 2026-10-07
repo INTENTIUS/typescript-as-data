@@ -115,14 +115,21 @@ F-IsolatedRefusal like any other.
   through any chain of such aliases (`L7.7`), to a call or to a member access
   on one, the same again, with the call resolved once per file (F-Count);
   otherwise J1 on `e`, revived (`L2.18`). A call reached any other way,
-  nested inside an expression, stays J1's rejection.
+  nested inside an expression, stays J1's rejection. The one read of a
+  call's result inside an expression is in an argument of a call F-Call
+  resolves, which F-Call states under *Reads in an argument*.
 - *destructure* `export const { a, b: c } = e`: `e`, through the same
   aliases, must resolve to a composite instance or an indexable object; each
   element indexes it.
-- *named-export* `export { a, b as c }`: each local name resolves through
-  `locals` then `externals`, by F-Eval-Ident and not by re-folding the
-  initializer, so a name bound to a same-file `new` reads F-Prebuild's
-  instance rather than building another.
+- *named-export* `export { a, b as c }`: a local name bound by a top-level
+  `const`, through any chain of such aliases (`L7.7`), to a call or to a
+  member access on one resolves as *single* does: F-Call for an
+  unregistered callee, then index for a member access, with the call
+  resolved once per file (F-Count). `const x = C(…); export { x }` and
+  `export const x = C(…)` are the same declarator. Every other local name
+  resolves through `locals` then `externals`, by F-Eval-Ident and not by
+  re-folding the initializer, so a name bound to a same-file `new` reads
+  F-Prebuild's instance rather than building another.
 - *re-export* `export { a } from "./g"`: `X_g[a]`, with `g ∈ L(f)` if it has
   identity, a re-export is a capture.
 - *function* `export function φ`: `X[φ]` is the `FoldableFunction` F-Bind
@@ -150,12 +157,35 @@ F-IsolatedRefusal like any other.
    the resolved arguments; `factoryInvocations += 1`, and
    `projectFactoryInvocations += 1` if the specifier is a project file.
    An argument is resolved as F-Declarator says, a direct package call by
-   this rule in turn and the rest by J1; a call nested deeper inside an
-   argument is J1's rejection. Arguments that are live objects pass
-   through unchanged; a `{__attrRef}` among them stays symbolic (`L6.9`).
+   this rule in turn and the rest by J1, with the reads below; a call
+   written deeper inside an argument is J1's rejection. Arguments that are
+   live objects pass through unchanged; a `{__attrRef}` among them stays
+   symbolic (`L6.9`).
 7. The result is a value, live or plain, and is what the declarator binds;
    a destructured declarator needs an indexable object (F-Declarator,
    `L8.19`).
+
+*Reads in an argument.* An argument that step 4 or step 6 resolves by J1
+may read a same-file call's result anywhere inside it. In `{ vpcId:
+network.vpc.VpcId }` the read is a member access, and in a `new Pipeline({
+exporters: [byTrace] })` written inside the argument it is a bare name. A
+read qualifies when the identifier `n` is bound by a top-level
+`const n = c′(…)`, exported or not, with neither destructuring nor an alias
+in between. The callee `c′` must be a bare identifier this rule would
+resolve at step 4 or step 6. That excludes a registered authoring helper, a
+registered intrinsic and a `FoldableFunction`. A reference inside a
+function or a type does not qualify. Neither does a property name.
+
+Each qualifying call is resolved by this rule before the argument is
+evaluated. It is resolved once per file and shares its result with any
+declarator that reads the same call (F-Count). When the result is an entity
+or a composite instance (a live object, F-Val-Live), `n` is bound to it for
+the evaluation of that argument. The binding is the one F-Eval-CallLocal
+gives a parameter. `n` is set in `externals` and removed from `consts`. F-Eval-Ident step 3
+then reads the instance and two reads of `n` are one object.
+When the call refuses or returns anything else, `n` stays as it was, and
+F-Eval-Ident re-folds the initializer and rejects. A read outside such an
+argument (an object literal at a declarator, say) is still J1's rejection. Inside an interpreted factory body no read qualifies.
 
 **F-Count.** Within `f`, a composite call reached by several member accesses
 or destructured names is resolved once (`ResolveCtx.memo`); a same-file

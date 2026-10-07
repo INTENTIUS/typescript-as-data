@@ -415,7 +415,7 @@ function foldFile(path: string, session: Session): Verdict {
     const folded = call.arguments.map((a) => {
       if (ts.isSpreadElement(a)) throw new FoldRejection("F-Call", ...locate(a), `a spread argument to "${c.text}" is not foldable`);
       const resolved = viaFCall(a);
-      return resolved !== NOT_FCALL ? resolved : foldExpr(a, scope, evalHost);
+      return resolved !== NOT_FCALL ? resolved : foldExpr(a, callResultScope(a), evalHost);
     });
     let result: unknown;
     if (isCompositeFactory(bound)) {
@@ -503,6 +503,49 @@ function foldFile(path: string, session: Session): Verdict {
     }
     return NOT_FCALL;
   };
+  /**
+   * F-Call step 6 (spec 2.2): an argument J1 folds may read a same-file
+   * call's result anywhere inside it, `{ vpcId: network.vpc.VpcId }` or
+   * `[byTrace]`, where the name is bound by `const n = c(…)` with a callee
+   * F-Call admits. The call is resolved by F-Call once per file (F-Count,
+   * `callMemo`) and the name reads its result while this argument folds. A
+   * result that is not a live object (F-Val-Live), or a call that refuses,
+   * leaves the name to F-Eval-Ident, which rejects as before. A reference
+   * inside a function, a type, or in a property-name position is not a read.
+   */
+  const callResultScope = (a: ts.Expression): Scope => {
+    const names = new Set<string>();
+    const visit = (n: ts.Node): void => {
+      if (ts.isIdentifier(n)) {
+        const init = consts.get(n.text);
+        if (init && ts.isCallExpression(init) && fCallable(init.expression)) names.add(n.text);
+        return;
+      }
+      if (ts.isFunctionLike(n) || ts.isTypeNode(n)) return;
+      if (ts.isPropertyAccessExpression(n)) return visit(n.expression);
+      if (ts.isPropertyAssignment(n)) {
+        if (ts.isComputedPropertyName(n.name)) visit(n.name);
+        return visit(n.initializer);
+      }
+      ts.forEachChild(n, visit);
+    };
+    visit(a);
+    if (names.size === 0) return scope;
+    const bound = new Map<string, unknown>();
+    for (const name of names) {
+      const call = consts.get(name) as ts.CallExpression;
+      let value: unknown;
+      try { value = fCall(call); } catch (e) { if (e instanceof FoldRejection) continue; throw e; }
+      if (!isLiveObject(value) || typeof value === "function") continue;
+      bound.set(name, value);
+    }
+    if (bound.size === 0) return scope;
+    const argConsts = new Map([...consts].filter(([n]) => !bound.has(n)));
+    const argExternals = new Map([...externals, ...bound]);
+    const argNames = new Map(topNames);
+    for (const name of bound.keys()) argNames.set(name, callOrigin(consts.get(name)!));
+    return { ...scope, consts: argConsts, externals: argExternals, prov: { writer: scope.prov!.writer, names: argNames } };
+  };
 
   for (const fn of collectLocalFunctions(sf, path, consts, externals)) {
     mine.push(fn);
@@ -585,6 +628,15 @@ function foldFile(path: string, session: Session): Verdict {
           // bound to a same-file `new` reads F-Prebuild's instance, and a
           // failed one reproduces step 1's rejection rather than building a
           // second entity here.
+          // Spec 2.2: a local bound to a call, through any chain of const
+          // aliases, resolves by F-Call as the single declarator does (L7.7),
+          // once per file (F-Count), rather than by re-folding the initializer.
+          const viaCall = init && !ts.isNewExpression(init) ? viaFCall(init) : NOT_FCALL;
+          if (viaCall !== NOT_FCALL) {
+            exports.set(el.as, viaCall);
+            trees.set(el.as, viaOrigin);
+            continue;
+          }
           const v =
             init && ts.isNewExpression(init)
               ? prebuilt.has(init)

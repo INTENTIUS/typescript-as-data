@@ -19,8 +19,32 @@ fixtures follow (#234). Provenance stays optional and outside the equivalence
 objective, so fold and run need not agree on it, and an implementation that
 does not claim it says so.
 
+**Widened. `F-Declarator` named-export.** `const x = C(…); export { x }`
+now folds wherever `export const x = C(…)` folds. The local resolves by F-Call
+once per file through any chain of const aliases (`L7.7`) as the *single*
+declarator does. The bullet used to send the name to F-Eval-Ident (whose
+step 2 re-folds the initializer and rejects a call). chant has resolved the
+name through its alias path since before 0.73.0, but the corpus did not
+contain the form until chant 0.108, where the cross-check disagreed on five
+files.
+
+**Widened. `F-Call` step 6 and its reads in an argument.** An argument that
+step 4 or step 6 resolves may now read a same-file call's result anywhere
+inside it (`{ vpcId: network.vpc.VpcId }`). The name must be bound by
+`const n = c′(…)` with a callee F-Call admits. That call is resolved once per
+file (F-Count) and the name reads its instance when the result is an entity
+or a composite instance. Any other result rejects as before. A read outside
+such an argument is still J1's rejection. `F-Declarator`,
+`F-Host-Closed-vs-Open` and inventory row L2.18 now agree with the rule.
+chant#3329 shipped this behavior before the rule existed.
+
+The user chose on 2026-10-07 to widen the rules to chant's behavior rather
+than narrow chant to the rules.
+
 **Why this is minor.** The obligation binds only a claimant. That is the
-added case in `README.md`'s policy, and no source changes verdict.
+added case in `README.md`'s policy, and no source changes verdict for it.
+The two widened rules are the widened case. Source that ran now folds.
+Nothing that folded runs or changes value.
 
 ## 2.1, 2026-09-14
 
