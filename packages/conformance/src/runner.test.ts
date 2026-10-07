@@ -1,7 +1,7 @@
 import { describe, test, expect } from "vitest";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadFixtures, runFixtures, projectFixtures } from "./index";
+import { loadFixtures, runFixtures, projectFixtures, runProjectFixture, originAt, type ConformanceAdapter, type ProjectFixture } from "./index";
 import { referenceAdapter, referenceDataHostAdapter } from "@intentius/tsad-reference";
 
 const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "spec", "fixtures");
@@ -47,5 +47,50 @@ describe("conformance runner (#7) over the reference implementation (#10)", () =
     const stub = { name: "stub", specVersion: "1.1", shape: () => ({ accepted: true } as const), foldExport: () => ({ ok: true as const, value: null }) };
     const reports = await runFixtures(stub, fixtures);
     expect(reports.some((r) => !r.pass)).toBe(true);
+  });
+});
+
+describe("F-Obs-Provenance plumbing (#236)", () => {
+  const files = new Map([
+    ["lib.ts", "export function svc(o: { port: number }) { return { port: o.port, proto: \"tcp\" }; }\n"],
+    ["app.ts", "import { svc } from \"./lib\";\nexport const web = svc({ port: 80 });\nexport const direct = { n: 1 };\n"],
+  ]);
+  const fixture: ProjectFixture = {
+    kind: "project", id: "inline/provenance", dir: "", rules: ["F-Obs-Provenance"], profiles: ["data-host"], files,
+    verdicts: { "lib.ts": "fold", "app.ts": "fold" },
+    provenance: { "app.ts": {
+      "web.port": { kind: "composite-parameter", composite: "svc", parameters: ["port"] },
+      "web.proto": { kind: "composite-literal", composite: "svc" },
+      "direct.n": { kind: "direct" },
+    } },
+  };
+  const folding = (provenance?: Record<string, Record<string, unknown>>, claims = true): ConformanceAdapter => ({
+    name: "stub", specVersion: "2.2", ...(claims ? { provenance: true } : {}), shape: () => "unavailable", foldExport: () => ({ ok: true, value: null }),
+    foldProject: () => ({ verdicts: { "lib.ts": { kind: "fold", exports: {} }, "app.ts": { kind: "fold", exports: {} } }, ...(provenance ? { provenance: provenance as never } : {}) }),
+  });
+
+  test("an adapter that does not claim provenance has the assertions skipped and reported", async () => {
+    const r = await runProjectFixture(folding(undefined, false), fixture);
+    expect(r).toMatchObject({ pass: true, skipped: "provenance unavailable", failures: [] });
+  });
+  test("an adapter that claims it and reports none fails", async () => {
+    const r = await runProjectFixture(folding(undefined), fixture);
+    expect(r.pass).toBe(false);
+    expect(r.failures.join("\n")).toMatch(/claims provenance and reported none/);
+  });
+  test("an unknown reported as direct fails; a coarser ancestor governs the paths under it", async () => {
+    const r = await runProjectFixture(folding({ "app.ts": { web: { kind: "unknown", reason: "x" }, direct: { kind: "direct" } } }), fixture);
+    expect(r.failures).toEqual(["app.ts: web.port: origin unknown, expected composite-parameter", "app.ts: web.proto: origin unknown, expected composite-literal"]);
+    expect(originAt({ 'a.tags': { kind: "direct" } }, 'a.tags["x.y"][0]')).toEqual({ kind: "direct" });
+    expect(originAt({ 'a.tags["x.y"]': { kind: "direct" } }, 'a.tags["x.y"].z')).toEqual({ kind: "direct" });
+    expect(originAt({ a: { kind: "direct" } }, "b.c")).toBeUndefined();
+  });
+  test("the reference claims provenance and passes the inline fixture in both profiles", async () => {
+    for (const adapter of [referenceAdapter, referenceDataHostAdapter]) {
+      expect(adapter.provenance).toBe(true);
+      const r = await runProjectFixture(adapter, fixture);
+      expect(r, r.failures.join("\n")).toMatchObject({ pass: true, failures: [] });
+      expect(r.skipped).toBeUndefined();
+    }
   });
 });

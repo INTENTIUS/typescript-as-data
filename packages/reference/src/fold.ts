@@ -17,6 +17,7 @@ import { isFoldableHelperName } from "./foldable-helpers.js";
 import { isLiteralKey, isLiteralElementKey, isUnclaimedCallee } from "./subset.js";
 import { findFnBodyViolation, plainBindingKey, type FnDecl } from "./fnbody.js";
 import { record } from "./trace.js";
+import { collapse, derive, leaf, project, writerOrigin, type OTree, type ParamRef, type Writer } from "./provenance.js";
 
 /** A located rejection, per R9.3: the node and the rule, wording unconstrained. */
 export class FoldRejection extends Error {
@@ -44,6 +45,23 @@ export interface Scope {
   readonly captures?: Set<string>;
   /** Inside an interpreted factory body (S-FactoryBody): `new` and a call through a bare identifier are admitted at depth > 0. */
   readonly factory?: boolean;
+  /** F-Obs-Provenance: who writes a literal here, and the origins of names this scope binds (parameters, body consts). */
+  readonly prov?: ProvScope;
+}
+export interface ProvScope { readonly writer: Writer; readonly names: Map<string, OTree> }
+
+/**
+ * F-Obs-Provenance's side channel for one file's fold. Each `foldExpr` call
+ * gets a frame that collects its direct sub-evaluations, so the origin of a
+ * node is computed from its children's, after the value is. The evaluator's
+ * own logic is untouched.
+ */
+export class ProvState {
+  readonly frames: Map<ts.Node, { v: unknown; o: OTree }>[] = [new Map()];
+  /** A call node to the origin of what its interpreted body returned. */
+  readonly results = new Map<ts.Node, OTree>();
+  get(n: ts.Node): OTree | undefined { return this.frames[this.frames.length - 1].get(n)?.o; }
+  record(n: ts.Node, v: unknown, o: OTree): void { this.frames[this.frames.length - 1].set(n, { v, o }); }
 }
 /** H = (ρ, helpers). The helper allowlist is consulted through foldable-helpers. */
 /**
@@ -76,7 +94,9 @@ export interface EvalHost {
    * them; `resolveArg` answers `undefined` for an argument that is not one.
    */
   readonly declaratorCall?: ts.CallExpression;
-  readonly resolveArg?: (a: ts.Expression) => { value: unknown } | undefined;
+  readonly resolveArg?: (a: ts.Expression) => { value: unknown; origin?: OTree } | undefined;
+  /** F-Obs-Provenance, when the module layer records it. */
+  readonly prov?: ProvState;
 }
 
 /**
@@ -295,16 +315,21 @@ function callLocal(callee: FoldableFunction, node: ts.CallExpression, scope: Sco
   const consts = new Map(callee.consts);
   const externals = new Map(callee.externals);
   const bind = (n: string, v: unknown) => { consts.delete(n); externals.set(n, v); };
-  const inner: Scope = { consts, externals, depth: scope.depth + 1 };
+  const prov = host.prov ? callProv(callee.name, node, callee.fn, scope, host) : undefined;
+  const inner: Scope = { consts, externals, depth: scope.depth + 1, prov: prov?.scope };
+  const bindO = (n: string, o: OTree | undefined) => { prov?.scope.names.set(n, o ?? leaf(writerOrigin(prov.scope.writer, node))); };
   callee.fn.parameters.forEach((param, i) => {
     let value = args[i];
+    const defaulted = value === undefined && !!param.initializer;
     if (value === undefined && param.initializer) value = foldExpr(param.initializer, inner, host);
-    if (ts.isIdentifier(param.name)) { bind(param.name.text, value); return; }
+    const ref = prov?.param(i, defaulted);
+    if (ts.isIdentifier(param.name)) { bind(param.name.text, value); if (ref) bindO(param.name.text, ref); return; }
     if (value === null || typeof value !== "object") {
       reject("F-Eval-CallLocal", node, `${label} is not foldable: a destructured parameter's argument is not an object`);
     }
     for (const el of (param.name as ts.ObjectBindingPattern).elements) {
       bind((el.name as ts.Identifier).text, (value as Record<string, unknown>)[plainBindingKey(el)!]);
+      if (ref) bindO((el.name as ts.Identifier).text, project(ref, plainBindingKey(el)!));
     }
   });
   // 5. a concise body is its expression; a block folds its consts then returns
@@ -313,17 +338,20 @@ function callLocal(callee: FoldableFunction, node: ts.CallExpression, scope: Sco
     const body = callee.fn.body as ts.ConciseBody;
     if (!ts.isBlock(body)) {
       result = foldExpr(body, inner, host);
+      prov?.done(body);
     } else {
       result = undefined;
       for (const st of body.statements) {
-        if (ts.isReturnStatement(st)) { result = st.expression ? foldExpr(st.expression, inner, host) : undefined; break; }
+        if (ts.isReturnStatement(st)) { result = st.expression ? foldExpr(st.expression, inner, host) : undefined; prov?.done(st.expression); break; }
         for (const d of (st as ts.VariableStatement).declarationList.declarations) {
           const v = foldExpr(d.initializer!, inner, host);
-          if (ts.isIdentifier(d.name)) bind(d.name.text, v);
+          const o = host.prov?.get(d.initializer!);
+          if (ts.isIdentifier(d.name)) { bind(d.name.text, v); bindO(d.name.text, o); }
           else {
             if (v === null || typeof v !== "object") reject("F-Eval-CallLocal", node, `${label} is not foldable: a destructured const's source is not an object`);
             for (const el of (d.name as ts.ObjectBindingPattern).elements) {
               bind((el.name as ts.Identifier).text, (v as Record<string, unknown>)[plainBindingKey(el)!]);
+              bindO((el.name as ts.Identifier).text, o && project(o, plainBindingKey(el)!));
             }
           }
         }
@@ -351,7 +379,7 @@ function callLocal(callee: FoldableFunction, node: ts.CallExpression, scope: Sco
  * and bare-identifier calls are admitted inside, and the result is the
  * members record, which J2 revives.
  */
-export function interpret(factory: CompositeFactory, args: unknown[], node: ts.Node, depth: number, host: EvalHost): unknown {
+export function interpret(factory: CompositeFactory, args: unknown[], node: ts.Node, depth: number, host: EvalHost, argNodes?: readonly ts.Node[], argConsts?: ReadonlyMap<string, ts.Expression>): unknown {
   const label = `composite "${factory.name}" (${factory.file})`;
   const why = findFactoryViolation(factory.fn);
   if (why) reject("F-Call", node, `${label} is not interpretable: ${why}`);
@@ -360,29 +388,39 @@ export function interpret(factory: CompositeFactory, args: unknown[], node: ts.N
   const consts = new Map(factory.consts);
   const externals = new Map(factory.externals);
   const bind = (n: string, v: unknown) => { consts.delete(n); externals.set(n, v); };
-  const inner: Scope = { consts, externals, depth: depth + 1, factory: true };
+  const prov = host.prov ? callProv(factory.name, node, factory.fn, { consts: argConsts ?? new Map() }, host, argNodes) : undefined;
+  const inner: Scope = { consts, externals, depth: depth + 1, factory: true, prov: prov?.scope };
+  const bindO = (n: string, o: OTree | undefined) => { prov?.scope.names.set(n, o ?? leaf(writerOrigin(prov.scope.writer, node))); };
   const param = factory.fn.parameters[0];
   if (param) {
     const value = args[0];
-    if (ts.isIdentifier(param.name)) bind(param.name.text, value);
+    const ref = prov?.param(0, false);
+    if (ts.isIdentifier(param.name)) { bind(param.name.text, value); bindO(param.name.text, ref); }
     else {
       if (value === null || typeof value !== "object") reject("F-Call", node, `${label} is not interpretable: its argument is not an object`);
-      for (const el of (param.name as ts.ObjectBindingPattern).elements) bind((el.name as ts.Identifier).text, (value as Record<string, unknown>)[plainBindingKey(el)!]);
+      for (const el of (param.name as ts.ObjectBindingPattern).elements) {
+        bind((el.name as ts.Identifier).text, (value as Record<string, unknown>)[plainBindingKey(el)!]);
+        if (ref) bindO((el.name as ts.Identifier).text, project(ref, plainBindingKey(el)!));
+      }
     }
   }
   // The members revive through the DEFINING module's imports, since the body folded in its scope.
   const done = (members: unknown) => (host.reviveIn ? host.reviveIn(factory.externals, members, node, label) : members);
   try {
     const body = factory.fn.body as ts.ConciseBody;
-    if (!ts.isBlock(body)) return done(foldExpr(body, inner, host));
+    if (!ts.isBlock(body)) { const v = foldExpr(body, inner, host); prov?.done(body); return done(v); }
     for (const st of body.statements) {
-      if (ts.isReturnStatement(st)) return done(foldExpr(st.expression!, inner, host));
+      if (ts.isReturnStatement(st)) { const v = foldExpr(st.expression!, inner, host); prov?.done(st.expression); return done(v); }
       for (const d of (st as ts.VariableStatement).declarationList.declarations) {
         const v = foldExpr(d.initializer!, inner, host);
-        if (ts.isIdentifier(d.name)) bind(d.name.text, v);
+        const o = host.prov?.get(d.initializer!);
+        if (ts.isIdentifier(d.name)) { bind(d.name.text, v); bindO(d.name.text, o); }
         else {
           if (v === null || typeof v !== "object") reject("F-Call", node, `${label} is not interpretable: a destructured const's source is not an object`);
-          for (const el of (d.name as ts.ObjectBindingPattern).elements) bind((el.name as ts.Identifier).text, (v as Record<string, unknown>)[plainBindingKey(el)!]);
+          for (const el of (d.name as ts.ObjectBindingPattern).elements) {
+            bind((el.name as ts.Identifier).text, (v as Record<string, unknown>)[plainBindingKey(el)!]);
+            bindO((el.name as ts.Identifier).text, o && project(o, plainBindingKey(el)!));
+          }
         }
       }
     }
@@ -423,8 +461,20 @@ export function findFactoryViolation(fn: FnDecl): string | undefined {
   return undefined;
 }
 
-/** Γ, H ⊢ e ⇓ v. */
+/** Γ, H ⊢ e ⇓ v. With provenance on, the value's origin is recorded beside it (F-Obs-Provenance). */
 export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unknown {
+  const p = host.prov;
+  if (!p) return foldRaw(node, scope, host);
+  const frame = new Map<ts.Node, { v: unknown; o: OTree }>();
+  p.frames.push(frame);
+  p.results.delete(node);
+  let v: unknown;
+  try { v = foldRaw(node, scope, host); } finally { p.frames.pop(); }
+  p.record(node, v, originOf(node, v, scope, frame, p));
+  return v;
+}
+
+function foldRaw(node: ts.Expression, scope: Scope, host: EvalHost): unknown {
   const F = (n: ts.Expression) => foldExpr(n, scope, host);
 
   // F-Eval-Unwrap
@@ -638,7 +688,10 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
 
       // At a declarator, a direct argument that is itself a package call is F-Call's (F-Declarator, spec 1.6).
       const arg = (a: ts.Expression, fallback: (a: ts.Expression) => unknown): unknown => {
-        if (node === host.declaratorCall && host.resolveArg) { const r = host.resolveArg(a); if (r) return r.value; }
+        if (node === host.declaratorCall && host.resolveArg) {
+          const r = host.resolveArg(a);
+          if (r) { host.prov?.record(a, r.value, r.origin ?? leaf({ kind: "unknown", reason: "host-call" })); return r.value; }
+        }
         return fallback(a);
       };
 
@@ -669,7 +722,7 @@ export function foldExpr(node: ts.Expression, scope: Scope, host: EvalHost): unk
       // S-FactoryBody rule 5: inside a factory body a call through a bare
       // identifier is admitted: a nested composite, registered or host-published.
       if (scope.factory) {
-        if (isCompositeFactory(local)) return interpret(local, node.arguments.map((a) => F(a)), node, scope.depth, host);
+        if (isCompositeFactory(local)) return interpret(local, node.arguments.map((a) => F(a)), node, scope.depth, host, node.arguments, scope.consts);
         if (isCompositeDefinition(local) && host.fcall) return host.fcall(node);
       }
     }
@@ -745,4 +798,138 @@ export function collectLocalFunctions(
     }
   }
   return out;
+}
+
+// ── F-Obs-Provenance ────────────────────────────────────────────────────────
+
+/** The provenance half of entering an interpreted call: its writer, its parameters, and where its result's origin goes. */
+function callProv(composite: string, call: ts.Node, fn: FnDecl, caller: { consts: ReadonlyMap<string, ts.Expression> }, host: EvalHost, argNodes?: readonly ts.Node[]) {
+  const prov = host.prov!;
+  const writer: Writer = { kind: "call", composite, call };
+  const scope: ProvScope = { writer, names: new Map() };
+  const nodes = argNodes ?? (ts.isCallExpression(call) ? call.arguments : []);
+  const multi = fn.parameters.length > 1;
+  return {
+    scope,
+    param(i: number, defaulted: boolean): OTree {
+      const p = fn.parameters[i];
+      const declared = p && ts.isIdentifier(p.name) ? p.name.text : undefined;
+      const ref: ParamRef = { composite, call, prefix: multi ? declared : undefined, whole: declared, segments: [], arg: defaulted ? undefined : nodes[i], argConsts: caller.consts };
+      return { t: "param", ref };
+    },
+    done(ret: ts.Node | undefined): void {
+      prov.results.set(call, (ret && prov.get(ret)) ?? leaf(writerOrigin(writer, call)));
+    },
+  };
+}
+
+const DIRECT_WRITER: Writer = { kind: "direct" };
+const isObjectValue = (v: unknown): boolean => v !== null && typeof v === "object";
+
+/**
+ * The origin of `node`'s value, from its direct sub-evaluations in `frame`.
+ * Mirrors foldRaw's branches; a child absent from the frame was not evaluated.
+ */
+function originOf(node: ts.Expression, v: unknown, scope: Scope, frame: Map<ts.Node, { v: unknown; o: OTree }>, p: ProvState): OTree {
+  const w = scope.prov?.writer ?? DIRECT_WRITER;
+  const at = (n: ts.Node | undefined): OTree | undefined => (n ? frame.get(n)?.o : undefined);
+  const lit = (): OTree => leaf(writerOrigin(w, node));
+  const der = (ns: readonly (ts.Node | undefined)[]): OTree => derive(w, node, ns.flatMap((n) => { const o = at(n); return o ? [o] : []; }));
+  const hostCall: OTree = leaf({ kind: "unknown", reason: "host-call" });
+
+  if (ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isSatisfiesExpression(node) || ts.isNonNullExpression(node)) return at(node.expression) ?? lit();
+
+  if (ts.isIdentifier(node)) {
+    const name = node.text;
+    const bound = scope.prov?.names.get(name);
+    if (bound) return bound;
+    if (scope.consts.has(name)) return at(scope.consts.get(name)) ?? lit();
+    return lit();
+  }
+
+  if (ts.isTaggedTemplateExpression(node)) return ts.isNoSubstitutionTemplateLiteral(node.template) ? lit() : der(node.template.templateSpans.map((s) => s.expression));
+  if (ts.isTemplateExpression(node)) return der(node.templateSpans.map((s) => s.expression));
+
+  if (ts.isObjectLiteralExpression(node)) {
+    const kids = new Map<string, OTree>();
+    for (const m of node.properties) {
+      if (ts.isPropertyAssignment(m)) { kids.set((m.name as ts.Identifier).text, at(m.initializer) ?? lit()); continue; }
+      if (ts.isShorthandPropertyAssignment(m)) { kids.set(m.name.text, at(m.name) ?? lit()); continue; }
+      if (ts.isSpreadAssignment(m)) {
+        const src = frame.get(m.expression);
+        if (!src || !isObjectValue(src.v)) continue;
+        for (const k of Object.keys(src.v as object)) kids.set(k, project(src.o, k));
+      }
+    }
+    return { t: "node", self: writerOrigin(w, node), kids };
+  }
+
+  if (ts.isArrayLiteralExpression(node)) {
+    const kids = new Map<string, OTree>();
+    let i = 0;
+    for (const el of node.elements) {
+      if (ts.isSpreadElement(el)) {
+        const src = frame.get(el.expression);
+        if (!src || !Array.isArray(src.v)) continue;
+        for (let j = 0; j < src.v.length; j += 1) kids.set(String(i++), project(src.o, String(j)));
+      } else kids.set(String(i++), at(el) ?? lit());
+    }
+    return { t: "node", self: writerOrigin(w, node), kids };
+  }
+
+  if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
+    if (ts.isPropertyAccessExpression(node) && isEnvelope(v) && "__compositeStep" in (v as object)) return der((node.expression as ts.CallExpression).arguments);
+    const obj = frame.get(node.expression);
+    // An attribute reference by name (F-Eval-Member steps 1 and 5) is written here.
+    if (!obj || (isEnvelope(obj.v) && "__resource" in (obj.v as object))) return lit();
+    const key = ts.isPropertyAccessExpression(node) ? node.name.text : (node.argumentExpression as ts.StringLiteral).text;
+    return project(obj.o, key);
+  }
+
+  if (ts.isPrefixUnaryExpression(node)) return der([node.operand]);
+
+  if (ts.isBinaryExpression(node)) {
+    const K = ts.SyntaxKind;
+    const op = node.operatorToken.kind;
+    if (op === K.AmpersandAmpersandToken || op === K.BarBarToken || op === K.QuestionQuestionToken) {
+      // The value is one side's; a structured one keeps that side's tree, a
+      // primitive is governed by every side that was read.
+      const right = frame.has(node.right);
+      const chosen = right && frame.get(node.right)!.v === v ? node.right : node.left;
+      if (!isObjectValue(v)) return der([node.left, right ? node.right : undefined]);
+      // A structured default taken because a parameter was absent is still
+      // that parameter's: passing it is how the field changes.
+      if (chosen === node.right && der([node.left]).t === "leaf" && collapse(der([node.left])).kind === "param") return der([node.left, node.right]);
+      return at(chosen) ?? lit();
+    }
+    return der([node.left, node.right]);
+  }
+
+  if (ts.isConditionalExpression(node)) {
+    const chosen = frame.has(node.whenTrue) ? node.whenTrue : node.whenFalse;
+    return isObjectValue(v) ? (at(chosen) ?? lit()) : der([node.condition, chosen]);
+  }
+
+  if (ts.isNewExpression(node)) {
+    const args = node.arguments ?? [];
+    const kids = new Map<string, OTree>([["__resource", lit()]]);
+    const o = v as Record<string, unknown>;
+    if (isObjectValue(v) && "props" in o) {
+      const propsArg = args.find((a) => ts.isObjectLiteralExpression(a));
+      kids.set("props", at(propsArg) ?? lit());
+      if ("attributes" in o) kids.set("attributes", at(args[1]) ?? lit());
+      if ("args" in o) kids.set("args", { t: "node", self: writerOrigin(w, node), kids: new Map(args.map((a, i) => [String(i), at(a) ?? lit()])) });
+    }
+    return { t: "node", self: writerOrigin(w, node), kids };
+  }
+
+  if (ts.isCallExpression(node)) {
+    const r = p.results.get(node);
+    if (r) return r;
+    if (isEnvelope(v) && ("__helper" in (v as object) || "__intrinsic" in (v as object))) return der(node.arguments);
+    // An eager intrinsic, a method on a real receiver, a host composite: host code produced it.
+    return hostCall;
+  }
+
+  return lit();
 }

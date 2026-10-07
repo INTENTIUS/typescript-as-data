@@ -33,6 +33,8 @@ function adapterFor(profile: Profile): ConformanceAdapter {
   // Bumped by hand when the rule set this package implements moves; the
   // conformance suite fails when it and spec/VERSION disagree (#18).
   specVersion: "2.2",
+  // F-Obs-Provenance: reported in both profiles, since the reference interprets every project function it folds through.
+  provenance: true,
   shape(source, exportName) {
     const v = shapeOfExport(source, exportName, { ...EMPTY_HOST, profile });
     if (v === "no-such-export") return { accepted: false, line: 1, column: 1, message: `no export named ${exportName}` };
@@ -45,9 +47,11 @@ function adapterFor(profile: Profile): ConformanceAdapter {
     // `executing` (spec 1.8) invokes a declared project function; this package never imports or runs project code (CAVEATS.md), so the mode is reported as unavailable rather than answered wrongly.
     if (mode === "executing") return "unavailable";
     const r = foldProject(files, hostOf(host, profile, mode));
-    const out: ProjectResult = { verdicts: {}, tentative: {}, taintedBy: {} };
+    const out: ProjectResult = { verdicts: {}, tentative: {}, taintedBy: {}, provenance: {} };
     for (const [path, v] of r.verdicts) {
       out.verdicts[path] = v.kind === "fold" ? { kind: "fold", exports: Object.fromEntries(v.exports) } : { kind: "run", rule: v.rule, reason: v.reason };
+      // Per file, the exports' paths together: each path already starts with its export name.
+      if (v.kind === "fold") out.provenance![path] = Object.assign({}, ...v.provenance.values());
     }
     for (const [path, v] of r.tentative) out.tentative![path] = v.kind;
     for (const [path, from] of r.taintSource) out.taintedBy![path] = from;

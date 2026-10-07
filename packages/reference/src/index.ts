@@ -9,3 +9,4 @@ export { referenceAdapter, referenceDataHostAdapter } from "./adapter.js";
 export { runRules, RULES, namespaceOf, artifactOf, type Finding } from "./rules.js";
 export { generate, NoSourceForm } from "./generate.js";
 export { recording, record, type ExecutionEvent } from "./trace.js";
+export type { FoldFieldOrigin, ExportProvenance, SourceLocation, UnknownOriginReason } from "./provenance.js";
