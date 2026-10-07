@@ -98,3 +98,33 @@ export default {
 } satisfies GovernanceConfig;
 TS
 }
+
+# The same repo's settings through a preset, the way examples/governance.ts
+# in forgejo-warden writes them: one review policy sets several fields, so a
+# drifted field can be traced back to the argument it came from. The call
+# sits on a line of its own, so a scenario can find its line with grep.
+write_preset_policy() { # $1 path, $2 org, $3 repo
+  cat > "$1" <<TS
+import type { GovernanceConfig } from "@intentius/forgejo-warden";
+
+const reviewPreset = (review: { squashOnly: boolean }) => ({
+  allowSquashMerge: true,
+  allowMergeCommits: !review.squashOnly,
+  allowRebase: !review.squashOnly,
+});
+
+export default {
+  orgs: {
+    "$2": {
+      repos: {
+        $3: {
+          ...reviewPreset({ squashOnly: true }),
+          hasWiki: false,
+          topics: ["service", "api"],
+        },
+      },
+    },
+  },
+} satisfies GovernanceConfig;
+TS
+}
