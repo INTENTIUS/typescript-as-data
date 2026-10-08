@@ -175,7 +175,6 @@ const ALLOWLIST: Record<string, string> = {
   // coinciding with a number in a sentence about something else, which is
   // worse than being listed: the gate accepted them for a reason unrelated to
   // what they are.
-  "measurements.md:16": "the private second checkout's entries, run once locally and not in the weekly record",
   "measurements.md:12": "the same run's comparable files",
   "measurements.md:19": "the same run's files, and the 19 entries with build parameters chant's entry point could not be given before chant#2422",
   "measurements.md:22": "files the reference refused that chant folded, before F-Prebuild",
@@ -186,7 +185,6 @@ const ALLOWLIST: Record<string, string> = {
   "measurements.md:52": "files probed shape by shape at chant-v0.72.1",
   "measurements.md:290": "same probe",
   "measurements.md:68": "same probe",
-  "draft.md:15": "the day in appendix B's date, not a count; the previous day coincided with a computable value and passed by luck",
   "draft.md:52": "same probe, restated in the draft",
   "draft.md:290": "same probe",
   "draft.md:68": "same probe",
