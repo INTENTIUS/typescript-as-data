@@ -3,10 +3,10 @@
 Every decision point in chant core's fold path with the requirement that covers
 it. Derived from a complete read of the four files below.
 
-A **decision point** is anywhere the mechanism chooses between admitting and
-rejecting, between evaluation modes, or between representations. One row each.
-Rows are not lines of code; several rows can live in one function and one row
-can span several.
+A **decision point** is anywhere the mechanism admits or rejects or chooses
+an evaluation mode or a representation. Each gets one row. A row
+is not a line of code; several rows can live in one function and one row can
+span several.
 
 | File | Read |
 |---|---|
@@ -224,8 +224,8 @@ module is never imported.
 
 **The rule for the column.** A row is *covered* only when a specific rule
 (`S-Template`, `F-Eval-Member step 4`, `F-Val-Fate`) governs what the row
-does. A citation of a whole file or judgment is not coverage. A partially
-covered row is GAP. There is no double counting, and the coverage gate checks
+does. A citation of a whole file or judgment is not coverage. Partial
+coverage is GAP. There is no double counting, and the coverage gate checks
 that every cited identifier is defined in a spec file.
 
 | | Rows | Covered | GAP |
@@ -244,7 +244,7 @@ that every cited identifier is defined in a spec file.
 | L12 generators | 4 | 4 | 0 |
 | **total** | **128** | **128** | **0** |
 
-**Row identifiers are stable and append-only.** `L3.10` names one decision
+The numbering is stable and append-only. `L3.10` names one decision
 point forever; a new row in a layer takes the next number and nothing is ever
 renumbered. A row that turns out to be wrong is struck through with a note, not
 removed, so a citation of it stays resolvable. Row identifiers are as stable as rule identifiers and for the same reason:

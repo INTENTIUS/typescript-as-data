@@ -30,12 +30,27 @@ admissibility rules and an implementer will conflate them.
 
 **S-Module, S-Disqualify** *(Admissibility is decided at two layers: the statement gate runs first and disqualifies whole files)*
 
-`scanExports` (L1.1–L1.6) recognizes exactly: `export const X = new Type(...)`,
-`export const X = <expr>`, `export const {a, b} = <expr>`, `export {a, b}`,
-`export {a, b} from "./m"`, and `export function f() {}`. Anything else
-disqualifies the file: `export default`, `export * from`, an exported class,
-`let`/`var`, a destructured export with a rest, nested or defaulted element.
-`export type {...}` and type-only re-export elements are erased (L1.6).
+`scanExports` (L1.1–L1.6) recognizes exactly the forms in the first table.
+Anything else disqualifies the file. The second table has examples.
+
+| Recognized |
+|---|
+| `export const X = new Type(...)` |
+| `export const X = <expr>` |
+| `export const {a, b} = <expr>` |
+| `export {a, b}` |
+| `export {a, b} from "./m"` |
+| `export function f() {}` |
+
+| Disqualifying |
+|---|
+| `export default` |
+| `export * from` |
+| an exported class |
+| `let`/`var` |
+| a destructured export with a rest, nested or defaulted element |
+
+Both `export type {...}` and type-only re-export elements are erased (L1.6).
 
 **§2** *(The expression layer)*
 
@@ -73,7 +88,7 @@ resource is a live instance in `full` and an envelope in `data-host`
 one would make its answer depend on which profile ran. That is the thing
 `F-Host-Generality` exists to prevent.
 
-Two more are decided on their own terms. `==` and `!=` coerce. A subset whose
+Two more are decided on their own terms. The operators `==` and `!=` coerce. A subset whose
 point is that a value is fixed by its source should not carry an operator
 whose answer turns on a conversion the reader has to know. `delete`, `++` and
 `--` mutate, and nothing in the subset has a place to put the effect.
@@ -106,9 +121,8 @@ own statements (`fold-import.ts` module doc).
 
 **F-IsolatedRefusal** *(Isolation changes what folds so it is part of the mechanism)*
 
-Under sandboxed execution a fold whose revival would invoke *project-owned*
-code is refused and the file falls back to run (L9.5,
-INTENTIUS/chant#1093). The fold/run decision is therefore parameterized by
+Sandboxed execution refuses a fold whose revival would invoke *project-owned*
+code and the file falls back to run (L9.5, INTENTIUS/chant#1093). The fold/run decision is therefore parameterized by
 whether project code may execute in this process.
 
 Isolation is an optional capability, modelled in the
@@ -118,8 +132,8 @@ is `run`, not `fold` (F-IsolatedRefusal, judgments.md). `executing` is the
 opposite opt-in, under which a declared project function whose body
 cannot fold is invoked at a declarator (F-Call step 2), so the fold may
 depend on the folding process. It is never the default since a fold that reads the
-environment silently is what chant#2453 found. An implementation declares
-which modes it supports; conformance reports them separately and requires
+environment silently is what chant#2453 found. Which modes are supported is
+declared by each implementation; conformance reports them separately and requires
 neither `isolated` nor `executing`. The observable is `projectFactoryInvocations`
 counter which must be zero for every folded file under `isolated`. Nix
 import-from-derivation is the cited precedent for evaluation escaping into a
@@ -141,8 +155,8 @@ requirement is checked rather than trusted.
 Two entry points exist. `tryFoldFile` returns a `FoldFileResult` (L8.1)
 either ok with the complete export namespace or a reason. One unrecognized export disqualifies the file (L8.2). `foldModule`
 (L8.3) is per-export, carries an ok/false entry per declaration, and silently
-skips non-`new` exports. **The per-file entry point is normative**; the
-per-export one is a diagnostic surface.
+skips non-`new` exports. **The per-file entry point is normative**;
+`foldModule` is a diagnostic surface.
 
 The reason fallback is per-module rather than per-declaration is stated in the
 statement gate itself (L1.7) and belongs in the spec: an unfoldable export can
@@ -152,16 +166,16 @@ reference or be referenced by a foldable one in ways only running proves safe.
 
 `planFoldTaint` (L8.6–L8.8):
 
-- **Forward along imports.** A tainted file taints every file it imports or
+- **Forward along imports**. A tainted file taints every file it imports or
   re-exports from: if `f` runs, its real import of `g` constructs `g`'s
   entities, and a folded `g` would be a second copy, so `g` runs even if it
   would have folded alone. Reading it the other way round, as an importer of a
   non-folding file being tainted, describes J2's resolution failure putting
   the importer in the seed. That happens earlier than this walk.
-- **Reverse.** A file whose *objects were captured* by an already-folded file
+- **Reverse**. A file whose *objects were captured* by an already-folded file
   taints the capturer. `liveSources` records only non-primitive captures
   (L8.5) because a primitive has no identity to disagree about.
-- **Through calls.** A project-local function whose call *returns* a live
+- **Through calls**. A project-local function whose call *returns* a live
   object the body produced (not one merely passed through the arguments)
   records the same taint edge (L5.9, `leakedIdentity`). Identity propagates
   through invocation as well as through import.
@@ -232,8 +246,8 @@ relationship folds while the other runs.
 **F-Eval-New, F-Eval-Tagged, F-Eval-CallHelper, F-Eval-CallIntrinsic, F-Eval-Member step 2** *(Admissibility depends on where the expression sits)*
 
 Five constructs that fold at a file's top level are refused inside a folded
-function body: `new`, a tagged template, a helper call, an intrinsic call, and
-`.step` (L3.16, `functionBodyDepth`). Each produces an envelope revived against
+function body (L3.16, `functionBodyDepth`). They are `new` and `.step`, a
+tagged template, and a helper or intrinsic call. Each produces an envelope revived against
 the *caller's* imports which is not the scope the body was written in.
 `new ns.Type(...)` is refused everywhere because a namespace-qualified
 constructor cannot be resolved through named imports (L3.15).
@@ -248,7 +262,7 @@ const of the same name.
 **F-Bind, F-Eval-Ident, F-Eval-CallLocal** *(What a binding is and the order names resolve in)*
 
 **A top-level binding is a `const` with an identifier name and an initializer**
-(`collectConsts`, L5.1). A top-level destructured `const`
+(`collectConsts`, L5.1). A destructured `const` at top level
 (`const { a } = …`) does not bind `a` for the folder and a non-exported
 `const` is collected exactly like an exported one. The spec must say this
 because the first is a surprise. The declaration is valid TypeScript and the
@@ -256,12 +270,12 @@ name is invisible.
 
 **Lookup order is `consts`, then `externals`** (L5.2, `fold.ts` identifier
 branch). A name in the file's own `consts` is never looked up in `externals`.
-The order is the rule and shadowing is its consequence.
+Shadowing follows from the order and the order is the rule.
 
 **A project-local function's body folds in the defining module's scope**
 (L5.5, `callFoldableFunction`): the arguments fold in the caller's `consts`/
-`externals`; the body folds against a copy of the *callee's* `consts` and
-`externals`, with each parameter bound by deleting the name from that copy of
+`externals`; a copy of the *callee's* `consts` and `externals` is what the
+body folds against, with each parameter bound by deleting the name from that copy of
 `consts` and setting it in `externals` (so a parameter shadows a module-level
 const of the same name); `externals` are read live, so a function declared
 before a const it reads still sees the const's value. states the same
@@ -304,9 +318,9 @@ ordinary use coerces the result to string during folding, before any revival
 would run.
 
 A method call on a real receiver (L2.14) is the same mode. The receiver is the
-same object either way so calling it is what running would do. Both are
-places where fold time and revival time are observably different and the spec
-must name them as such.
+same object either way so calling it is what running would do. In both, fold
+time and revival time are observably different, and the spec must name them
+as such.
 
 ---
 
@@ -333,7 +347,7 @@ states.
 
 `setPathProvenance` (L10.2) records, during fold, which composite parameter
 produced which emitted field; the first (innermost) writer wins. It is real
-output and it is useful. It is **not** part of the objective: the run path
+output and useful but **not** part of the objective: the run path
 obtains provenance, where it has any, by a different mechanism, and making
 provenance normative would oblige fold and run to agree on a thing the run path
 does not uniformly produce.
@@ -352,16 +366,16 @@ invocations under isolation.
 
 **F-Obs-Report, F-Reason** *(Fallback reporting is normative)*
 
-A fallback must be reported. An unreported fallback is indistinguishable
+A fallback must be reported since an unreported one is indistinguishable
 from a fold and the guarantee becomes unauditable. A conforming implementation must report, per file, the
 decision taken and, for a fallback, a located reason (L10.3). The reason's
 wording is unconstrained.
 
 **Which location when there are two.** A rejection inside a project-local
 function body has a position in the callee's file and a call site in the
-caller's. The implementation re-throws at the **call site**, naming the callee and its
-file, the position inside it, and the reason, preserving the rule
-identifier (L5.10, `callFoldableFunction`). The reported location is the call;
+caller's. `callFoldableFunction` re-throws at the **call site** and preserves the rule
+identifier (L5.10). Its message names the callee with
+its file plus the position inside it and the reason. The reported location is the call;
 the callee position travels in the message. The spec must say which is
 primary because R-spec.3's "located" is otherwise ambiguous for exactly this
 case. Whether the report is summarized or verbose by default is a
@@ -387,8 +401,8 @@ wrong by assuming it.
 **F-Eval-Unary, F-Eval-Binary** *(Operators are ECMAScript's on the folded operand values)*
 
 The supported binary operators (L2.8, L3.14) are `+` `-` `*` `/` `===` `!==`
-`>` `<` `>=` `<=` and the lazy `&&` `||` `??` (L3.13). Unary `!` and `-`
-(L3.12). Conditional `?:`.
+`>` `<` `>=` `<=` and the lazy `&&` `||` `??` (L3.13). Unary `!` and `-` are
+supported too (L3.12) and so is the conditional `?:`.
 
 For every one of these the implementation applies the host JavaScript operator
 to the folded values, so the semantics are ECMAScript's: `+`'s
@@ -419,26 +433,26 @@ is the permitted direction, and the divergence list carries it.
 
 Property or element access on an identifier bound to a same-file `new` yields
 `{__attrRef: {entity, attribute}}` keyed by the identifier (L3.9). Access on a
-value that folded to a `{__resource}` envelope yields the same, but only when
-the object expression is a plain identifier, any other shape is refused,
+value that folded to a `{__resource}` envelope yields the same only when
+the object expression is a plain identifier. Any other shape is refused
 because there is no name to key the reference on and silently indexing the
 envelope produced wrong output (L3.11, chant#1535).
 
 **F-Eval-Template** *(Template spans coerce by ECMAScript `ToString`)*
 
-`String(fold(span))` (L3.2). For scalars that is ECMAScript. For a symbolic
+`String(fold(span))` (L3.2). On scalars this matches ECMAScript. For a symbolic
 envelope it is `"[object Object]"`, and the run path produces the same,
 because `AttrRef` defines no `toString`.
 
-So fold and run agree and the output is silently wrong on both. That is why
+Fold and run therefore agree and the output is silently wrong on both. That is why
 `F-Div-TemplateEnvelope` refuses an envelope in a plain template span instead
 of inheriting `ToString` (L3.23).
 
 **F-Eval-Object, F-Eval-Array** *(Key and element ordering are ECMAScript's and byte-identity depends on it)*
 
-Object literals evaluate members in source order; spread is `Object.assign`
-so spread keys land in the source's insertion order and a later key wins
-(L3.3). Arrays preserve element order; spread splices in place. This is
+Object literals evaluate members in source order. Their spread is
+`Object.assign` so its keys land in the source's insertion order and a later
+key wins (L3.3). Arrays preserve element order and splice a spread in place. This is
 ECMAScript object-literal evaluation and "as ECMAScript" is available here.
 
 Whether order is *observable* depends on the emitter.
@@ -458,8 +472,8 @@ which hosts those are.
 
 **F-Eval-Object, F-Eval-Array** *(Spread departs from ECMAScript in one direction)*
 
-Object spread requires a non-null object; array spread requires
-`Array.isArray` (L3.4, L3.5). ECMAScript array spread accepts any iterable.
+Object spread requires a non-null object and an array spread here requires
+`Array.isArray` (L3.4, L3.5) where ECMAScript accepts any iterable.
 `[...'ab']` is `['a','b']` there and a rejection here. A deliberate narrowing
 and one a second implementation would not infer from "as ECMAScript".
 
@@ -471,7 +485,7 @@ and one a second implementation would not infer from "as ECMAScript".
 
 The spec must define what a fold produces. Every other requirement quantifies
 over it and it is currently defined only by a TypeScript union
-(`FoldedValue`, `fold.ts`; L4.1).
+(`FoldedValue` in `fold.ts`, L4.1).
 
 The scalars with `undefined` beside them, plus arrays and plain objects, are
 ordinary JSON. The rest carry envelopes.
@@ -577,9 +591,9 @@ build-parameters documentation true ("dropped from the output in both JSON and
 YAML rather than shipped as `null`").
 
 The two facts are the difference between "absent" and "null" which platforms
-treat differently. For the six YAML-native
-lexicons above, the walker's `undefined` reaches *their* emitter directly, so
-the rule there is each serializer's and not `JSON.stringify`'s.
+treat differently. In the six YAML-native lexicons above the walker's
+`undefined` reaches *their* emitter directly. The rule there is each
+serializer's own rather than `JSON.stringify`'s.
 
 **F-Val-Arity** *(Constructor arity)*
 
@@ -651,7 +665,7 @@ state.
 
 **What it does not catch.** A network call that answers the same twice. A
 read of an environment name the probe does not set. A constructor that is
-heavy but deterministic. Item 1 answers that one at 2.1.
+heavy but deterministic. Item 1 has answered that one since spec `2.1`.
 
 Partial in the way F-Obs-Counters is partial and shipped for the same
 reason. A check that catches the cheap cases beats an obligation nothing
@@ -665,7 +679,7 @@ those would measure the harness.
 **F-Host-Interface item 1** *(What a constructor may do)*
 
 Item 1 enumerated what an entity carries and said nothing about what building
-one may do. Revival invokes that constructor (F-Val-Fate). Item 1 was the
+one may do. Since revival invokes that constructor (F-Val-Fate), item 1 was the
 one place code runs during a fold with no bound on it. An intrinsic has
 F-Host-Admission and a rule has F-Rule-Pure. A constructor had only the shape
 of its output and a host could build a dependency graph behind one and
@@ -684,7 +698,7 @@ author at the keystroke.
 
 The published measurement is a separate question. `paper/measurements.md`'s
 0 MB row records what a CPU profile could see and carries that instrument's
-floor. What 2.1 requires is the thinness that row reflects rather than the row
+floor. What `2.1` requires is the thinness that row reflects rather than the row
 itself. A constructor still runs under revival and counting one exactly is
 F-Obs-Counters' job.
 

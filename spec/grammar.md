@@ -1,9 +1,10 @@
 # Grammar of the fold subset
 
 Normative draft. Identifiers are `S-*`. Every production here is
-decidable from syntax alone. Where the folder is stricter than the shape rule,
-because it also resolves names or consults a registry, the production says
-so and names the `F-*` rule (evaluation.md, verdict.md) that adds the condition. That is
+decidable from syntax alone. The folder can be stricter than the shape rule
+because it also resolves names or consults a registry. Where it is, the
+production says so and names the `F-*` rule (evaluation.md, verdict.md) that
+adds the condition. That is
 the one direction F-Direction permits; a production must never be stricter
 than the folder.
 
@@ -12,9 +13,10 @@ Derived from `findSubsetViolation` (`subset.ts`), `fold()`
 `findFunctionSubsetViolation` and `findFactorySubsetViolation`, at
 `e4074c17`, with the `?.` forms from chant-v0.63.0 (`11572c7a`, #2328). Node kinds are TypeScript's.
 
-In the notation below, `⟨X⟩` is a nonterminal; `|` alternation; `*` zero or
-more; `+` one or more. Terminals are TypeScript tokens or node kinds. Each production cites
-its inventory row.
+In the notation below `⟨X⟩` is a nonterminal and `|` separates alternatives.
+Postfix `*` repeats an item any number of times including none and postfix
+`+` repeats it at least once. A terminal is a TypeScript token or a node
+kind. Each production cites its inventory row.
 
 ---
 
@@ -56,13 +58,13 @@ S-ExportTypeOnly    ::= export type { … }  |  a type-only element of S-ExportN
 
 Notes. Under S-ExportFunction an overload signature (no body) is skipped, not
 a disqualifier, and the bodied declaration that follows is the export.
-S-ReExport takes named elements only. Under S-ExportNamed a local name must be
-an identifier, and the TS 4.5 string module-export-name form disqualifies.
+S-ReExport takes named elements only. A local name under S-ExportNamed must be
+an identifier and the TS 4.5 string module-export-name form disqualifies.
 
 S-ExportDefault is the declarator named `default`, admitted in the
 `data-host` profile; in `full` it stays a disqualifier
 until chant admits it, which the profile table records as permitted and not
-required. `export default function` and `export =` disqualify in both.
+required. Both profiles disqualify `export default function` and `export =`.
 
 ```
 S-Disqualify ::= export default …                              -- full only; data-host admits S-ExportDefault
@@ -154,12 +156,23 @@ Only the bare-identifier part is decidable from syntax. The four conditions
 are resolution so S-CompositeStep admits any call at shape level and
 F-Eval-Member step 2 applies the full test.
 
-**Explicitly outside the subset** (S-Reject at shape level, and rejected by
-the folder): an arrow or function expression as a value (L3.1); class
-expressions; `await`, `yield`; assignment and compound assignment; the comma
-operator; `typeof`, `void`, `delete`, `++`, `--`; `==`, `!=`, `%`, `**`, the
-bitwise operators, `in`, `instanceof`; a computed property name; a
-non-literal element-access key; a call not matching any S-Call form. Optional chaining is
+The table below is what is explicitly outside the subset. S-Reject rejects
+each entry at shape level and the folder rejects it as well.
+
+| Explicitly outside the subset |
+|---|
+| an arrow or function expression as a value (L3.1) |
+| class expressions |
+| `await`, `yield` |
+| assignment and compound assignment |
+| the comma operator |
+| `typeof`, `void`, `delete`, `++`, `--` |
+| `==`, `!=`, `%`, `**`, the bitwise operators, `in`, `instanceof` |
+| a computed property name |
+| a non-literal element-access key |
+| a call not matching any S-Call form |
+
+Optional chaining is
 specified rather than merely admitted: since chant-v0.63.0 a `?.` on a nullish object
 produces a chain-short-circuit value that propagates through the remaining
 `.`/`[]`/`!`/`?.()` of the same chain and becomes `undefined` at its end
@@ -194,7 +207,7 @@ S-FactoryBody   ::= ⟨Expr⟩
                   | { ( const … = ⟨Expr⟩ )*  return ⟨Expr⟩ }      -- must end in return; empty body rejected
 ```
 
-Inside S-FactoryBody the expression grammar **gains** `new` in any value
+The expression grammar of S-FactoryBody **gains** `new` in any value
 position and a call through a bare identifier (a nested composite, a
 registered helper, an opted-in intrinsic), and a method call stays out (per
 the contract above `resolveInterpretableFactory`; `checkFactoryExpression`'s
@@ -208,7 +221,8 @@ inherits.
 
 ## What this grammar does not decide
 
-Resolution, registration, trust, the fold/run verdict and
-its taint (verdict.md, taint.md), and every semantic rule. A string that
+Outside it are resolution, registration and trust. The fold/run verdict and
+its taint (verdict.md, taint.md) are outside it as well and so is every
+semantic rule. A string that
 parses under this grammar is *shape-admissible*; whether it folds is the
 judgments' question.

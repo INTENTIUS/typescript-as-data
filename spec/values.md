@@ -31,9 +31,9 @@ live instance is a `v`, a live instance is what an envelope becomes
 
 ## F-Val-Envelope (six envelopes recognized by key)
 
-A value is an *envelope* iff it is a non-array object carrying one of the keys
-`__attrRef`, `__intrinsic`, `__helper`, `__resource`, `__compositeStep`,
-`__symbol` (`isFoldSymbolicEnvelope`). An envelope is a finished value that
+Any non-array object carrying one of the keys `__attrRef`, `__intrinsic`,
+`__helper`, `__resource`, `__compositeStep`, `__symbol`
+(`isFoldSymbolicEnvelope`) is an *envelope*, and no other value is. Each one is a finished value that
 *denotes* something not yet constructed; it is never a thunk and an
 implementation must not attempt to force it.
 
@@ -51,9 +51,10 @@ envelope by its fate.
 | `__compositeStep` | revived: the composite is resolved (J2 F-Call), then `.step` is read off the real result (L6.5) |
 | `__symbol` | revived: the text must match a simple dotted chain; its root resolves through the file's imports and the rest is real property access (L6.2) |
 
-In the `data-host` profile (F-Profile-DataHost, objective.md) none of these
-fates runs. Revival is serialization, every envelope is the output, and the
-host's serialization mapping is what turns it into the artifact.
+None of these fates runs in the `data-host` profile (F-Profile-DataHost,
+objective.md). That profile treats revival as serialization: the output is
+the envelopes themselves, and the host's serialization mapping is what turns
+them into the artifact.
 
 **Exactly one envelope survives to serialization: `__attrRef`.** The other
 five must never reach a serializer. An implementation that emits a
@@ -72,15 +73,15 @@ Revival carries a flag `requireLiveRefs`.
   resource's props (L6.9). A composite stores its props rather than
   inspecting them and the serializer resolves the envelope by name.
 
-So the same `v` is valid in one position and a rejection in another. A
+The same `v` is therefore valid in one position and a rejection in another. A
 specification of the domain alone does not capture this; the rule is part of
 the domain.
 
 ## F-Val-Live (liveness)
 
-A value *carries a live object* iff it, or anything reachable through plain
-objects and arrays, has a prototype other than `Object`, `Array`, or `null`,
-or is a function (`carriesLiveObject`, L4.5).
+A value *carries a live object* iff it is a function or has a prototype other
+than `Object`, `Array` or `null`, or anything reachable from it through plain
+objects and arrays does (`carriesLiveObject`, L4.5).
 
 Live objects reached through cross-file resolution, an `AttrRef` instance, a
 `Declarable`, a `CompositeInstance`, an `Intrinsic` instance, **pass through
@@ -124,8 +125,8 @@ whose contract is selective-by-omission depends on.
 
 Emission is where the key is dropped, and an `undefined` array element becomes
 `null` there, for both JSON and YAML, because YAML is round-tripped through
-the JSON emitter. For a lexicon that serializes YAML itself, the rule is that
-serializer's own.
+the JSON emitter. A lexicon that serializes YAML itself follows that
+serializer's own rule.
 
 ## F-Val-Symbol-Scope (where `__symbol` may appear)
 

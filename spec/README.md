@@ -5,27 +5,29 @@ one rule set.
 
 **At a fixed build-parameter binding folding a file and running it are
 observationally equivalent.** That is the objective every rule here serves.
-[`objective.md`](./objective.md) states it with the two profiles an
+The file [`objective.md`](./objective.md) states it with the two profiles an
 implementation may claim and the notation the judgments are written in. Start
 there.
 
 The rules in reading order:
 
-- [`grammar.md`](./grammar.md) (`S-*`) the grammar of the fold subset.
-- [`evaluation.md`](./evaluation.md) (`F-Eval-*`) J1 expression evaluation.
-- [`verdict.md`](./verdict.md) (bare `F-*`) J2 the per-file verdict.
-- [`taint.md`](./taint.md) (bare `F-*`) J3 the identity-taint fixpoint.
-- [`observables.md`](./observables.md) (`F-Obs-*`) J4 properties and observables.
-- [`values.md`](./values.md) (`F-Val-*`) the value domain.
-- [`divergence.md`](./divergence.md) (`F-Direction`, `F-Div-*`, `F-Exc-*`) divergence between the shape classifier and the folder.
-- [`hosts.md`](./hosts.md) (`F-Host-*`) the host interface.
-- [`rules.md`](./rules.md) (`F-Rule-*`) rules over values.
+| File | Identifiers | Contents |
+|---|---|---|
+| [`grammar.md`](./grammar.md) | `S-*` | the grammar of the fold subset |
+| [`evaluation.md`](./evaluation.md) | `F-Eval-*` | J1 expression evaluation |
+| [`verdict.md`](./verdict.md) | bare `F-*` | J2 the per-file verdict |
+| [`taint.md`](./taint.md) | bare `F-*` | J3 the identity-taint fixpoint |
+| [`observables.md`](./observables.md) | `F-Obs-*` | J4 properties and observables |
+| [`values.md`](./values.md) | `F-Val-*` | the value domain |
+| [`divergence.md`](./divergence.md) | `F-Direction`, `F-Div-*`, `F-Exc-*` | divergence between the shape classifier and the folder |
+| [`hosts.md`](./hosts.md) | `F-Host-*` | the host interface |
+| [`rules.md`](./rules.md) | `F-Rule-*` | rules over values |
 
-[`judgments.md`](./judgments.md) indexes J1 through J4.
+J1 through J4 are indexed in [`judgments.md`](./judgments.md).
 
-Nothing in the three appendices is normative.
-[`rationale.md`](./rationale.md) carries the reasoning that motivated each
-rule. [`inventory.md`](./inventory.md) is the coverage ledger. Every decision
+Nothing in the three appendices is normative. The reasoning that motivated
+each rule is in [`rationale.md`](./rationale.md).
+[`inventory.md`](./inventory.md) is the coverage ledger. Every decision
 point in chant core cites the rule that governs it and CI gates on it.
 [`prior-art.md`](./prior-art.md) surveys the neighboring systems and says
 where each one is nearest.
@@ -36,7 +38,7 @@ These govern the document set rather than the mechanism. CI structure enforces t
 
 - **Every normative rule carries a stable identifier**.
 - **Every identifier is exercised by at least one fixture and every fixture
-   cites a real identifier.** Both directions in CI.
+   cites a real identifier**. Both directions in CI.
 - **Rejections are located.** Node and rule. Message stability is not normative.
 - **The subset is versioned**. The policy is the Versioning section below; the current version is `VERSION` and the history is `CHANGELOG.md`.
 
@@ -99,21 +101,25 @@ The ordering above is a policy. What follows is the record of where it was
 exercised. It exists so that "extracted from chant" can be checked rather than
 assumed.
 
-**`S-ExportDefault`.** A default export is the declarator named `default`.
+### `S-ExportDefault`
+
+A default export is the declarator named `default`.
 The profile table admits it in `data-host`. In `full` it is permitted rather
 than required, and chant does not yet admit it. forgejo-warden's loader asks
 for that form. Its error message tells a user to export the policy as
 `export default`. It accepts `export const policy` as a fallback. That form
-folds as an ordinary `S-TopConst` export. So the form warden instructs its
-users to write is one chant cannot fold.
+folds as an ordinary `S-TopConst` export. That leaves chant unable to fold the form warden instructs its users
+to write.
 
-**`F-Profile-DataHost`.** chant has no equivalent mode. The profile exists for
+### `F-Profile-DataHost`
+
+chant has no equivalent mode. The profile exists for
 an evaluator with no JavaScript runtime. warden names it explicitly and folds
 with an empty host.
 
 Those two answer the transcription charge. A document transcribed from chant
-would carry neither. warden would still run because its fallback form folds
-without `S-ExportDefault`. The form it teaches would not fold and the profile
+would carry neither. With its fallback form folding without
+`S-ExportDefault`, warden would still run. The form it teaches would not fold and the profile
 it names would not exist.
 
 The rest are smaller and none has a consumer yet.
@@ -135,35 +141,35 @@ The rest are smaller and none has a consumer yet.
 and their normative text at a point in time recorded in
 [`VERSION`](./VERSION) as `major.minor` and tagged `spec-<major>.<minor>`
 on the commit that set it. It is not a chant release: chant declares which
-specification version it implements and the two move separately. It is not
-a revision of the rationale, the inventory, a note or a fixture, none of
-which is normative; a change confined to those does not move the version
+specification version it implements and the two move separately. A revision
+of the rationale, the inventory, a note or a fixture is not a version either,
+since none of those is normative; a change confined to those does not move the version
 and is not entered in [`CHANGELOG.md`](./CHANGELOG.md).
 
 **Four kinds of change.** A rule is *added* or
 *widened* when source that did not fold now does; the minor version moves,
 existing source is unaffected, and an implementation claiming the new
-version must implement the rule. A rule is *narrowed* when source that
-folded no longer does, or a verdict changes; the major version moves,
-because a project that folded under the old version may not under the new.
-A rule is *retired* when it is struck through in place with a note naming
-its successor (the identifier rules above); that is also major, and the
+version must implement the rule. When source that folded no longer does or
+a verdict changes, the rule is *narrowed*; the major version moves, because
+a project that folded under the old version may not under the new. Striking
+a rule through in place with a note naming its successor (the identifier
+rules above) *retires* it; that is also major, and the
 fixtures citing it move to the successor in the same change, which the
 coverage gate enforces, since a struck identifier is no longer defined and
 a citation of it fails.
 
 **A host obligation moves the minor.** The major exists for the reason
-*narrowed* gives. That reason is about a project's source. An obligation on
-the host is not about source at all. It constrains the implementation. Every
+*narrowed* gives. That reason is about a project's source, and an obligation
+on the host is not about source at all. It constrains the implementation. Every
 file that folded still folds under any host that still conforms. What narrows
 is the set of conforming hosts. That is the *added* case. Claiming the new
 version requires meeting the obligation. Implementing a new rule requires the
 same. Withdrawal is the reverse and is also minor.
 
-`F-Host-Interface` item 1 is the case that settled it. Bounding what an entity
-constructor may do at 2.1 stopped a validating host from conforming. No source
+The case that settled it is `F-Host-Interface` item 1. At `2.1`, bounding what
+an entity constructor may do stopped a validating host from conforming. No source
 changed verdict. The everyday reading of "a host that conformed no longer
-does" says major. The four kinds do not say it. 2.1 landed minor on the
+does" says major. The four kinds do not say it. `2.1` landed minor on the
 reading above and this paragraph is what records it (#204).
 
 **Two profiles.** `objective.md`
@@ -210,7 +216,7 @@ TypeScript as data.
 ### Fixed to TypeScript
 
 The syntax is the TypeScript AST as the `typescript`
-compiler package parses it; the module system is ES modules; and the semantics
+compiler package parses it and the module system is ES modules. The semantics
 of every admitted operator are ECMAScript's, stated per operator, because a
 second implementation in another language must reproduce ECMAScript coercion
 rather than its host's. Two places depart from
@@ -263,11 +269,12 @@ partial.
 
 Two families of identifier and the family is part of the meaning:
 
-- **`S-*`** is a *shape* rule decidable from syntax alone by a classifier
-  with no binding resolver and no registry. Lives in `grammar.md`. An `S-`
+- Shape rules, decidable from syntax alone by a classifier with no binding
+  resolver and no registry, carry `S-*`. They live in `grammar.md`. An `S-`
   rule may accept what an `F-` rule later rejects; never the reverse
   (`F-Direction`).
-- **`F-*`** is a *fold* rule. It cannot be decided from syntax alone. Its sub-prefix names the file that owns it.
+- Syntax alone cannot decide a *fold* rule and fold rules carry `F-*`. The
+  sub-prefix names the file that owns the rule.
 
 | Prefix | Owner |
 |---|---|
@@ -284,10 +291,10 @@ read alone, like `F-Eval-Member`. A rule with numbered steps is
 cited as `F-Eval-Member step 4`; the step number is not part of the
 identifier.
 
-**Stability.** An identifier names one rule for the life of the spec. A rule
+**Stability.** For the life of the spec, an identifier names one rule. A rule
 that is split keeps its identifier on the part closest to its original
-meaning and the new part gets a new one. A rule that is removed or renamed
-is struck through in place with a note naming its successor; the identifier
+meaning and the new part gets a new one. One that is removed or renamed is
+struck through in place with a note naming its successor; the identifier
 is never reused. Inventory row identifiers (`L3.10`) follow the same rule.
 
 **Enforcement.** `spec/coverage.test.ts` asserts every inventory row
@@ -295,6 +302,6 @@ cites a defined rule. The reverse, every defined rule has a conformance
 fixture, is the other. Together they make an identifier that nothing
 exercises, or a citation of nothing, a CI failure rather than a drift.
 
-One vocabulary. `S-*` and `F-*` are the only normative identifiers, each
+One vocabulary. The only normative identifiers are `S-*` and `F-*`, each
 rule's reasoning is a non-normative note under it, and `inventory.md` cites
 rules only.
