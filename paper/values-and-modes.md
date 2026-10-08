@@ -4,7 +4,7 @@ Draft for #58, split out of the mechanism section. What reduction produces, and 
 
 ## The value domain
 
-Reduction yields a value from a closed domain (`F-Val-Domain`). Six cases are ordinary JSON, from scalars through arrays to plain objects. The other six are **envelopes**, non-array objects carrying one marker key, each denoting something the build has not yet constructed (`F-Val-Envelope`).
+A reduced value comes from a closed domain (`F-Val-Domain`). Six cases are ordinary JSON, from scalars through arrays to plain objects. The other six are **envelopes**, non-array objects carrying one marker key, each denoting something the build has not yet constructed (`F-Val-Envelope`).
 
 | Envelope | Denotes | Fate under revival |
 |---|---|---|
@@ -29,11 +29,11 @@ Revival replaces five of the six, resolving each name through the folding file's
 
 Inside the arguments of an intrinsic or an authoring helper, an `__attrRef` is refused rather than passed (`F-Val-Position`). The receiving function inspects what it is given, checking types and dereferencing weak references, and a look-alike plain object makes it produce wrong output rather than absent output. One position out, in a construction's props, the same value passes untouched, because there the serializer resolves it by name.
 
-The same value is therefore valid in one position and a rejection in another. A definition of the domain alone does not capture that, so the rule is part of the domain rather than a note about it.
+Position therefore decides whether the same value is valid or a rejection. A definition of the domain alone does not capture that, so the rule is part of the domain rather than a note about it.
 
 ### Liveness, and why it matters
 
-A value *carries a live object* when it, or anything reachable through plain objects and arrays, has a prototype other than the plain ones, or is a function (`F-Val-Live`). Live objects reached through cross-file resolution pass through revival untouched, because the generic walk would rebuild them as plain copies and destroy the identity the fixpoint exists to preserve.
+A value *carries a live object* when it is a function or has a prototype other than the plain ones, or when anything reachable from it through plain objects and arrays does (`F-Val-Live`). Live objects reached through cross-file resolution pass through revival untouched, because the generic walk would rebuild them as plain copies and destroy the identity the fixpoint exists to preserve.
 
 This predicate is what makes the identity rules statable at all. Without a definition of *this value is a live entity rather than plain data*, there is nothing for identity to be a property of, and the capture edge of the fixpoint has nothing to test.
 
@@ -43,13 +43,13 @@ Three smaller rules complete the domain.
 
 A **callable** is in the domain and is never a value. A project-local function may be called during reduction, but `{ resolver: f }` does not reduce though `f(x)` does, because nothing can serialize a function (`F-Val-Callable`).
 
-**Constructor arity is contractual.** The common shape is a props object, optionally followed by resource-level attributes. When the argument list is neither, the positional argument list is authoritative and the entity is built by spreading it (`F-Val-Arity`). An implementation that assumed the props object comes first would construct a real lexicon's parameter type wrongly.
+**Constructor arity is contractual**. The common shape is a props object, optionally followed by resource-level attributes. When the argument list is neither, the positional argument list is authoritative and the entity is built by spreading it (`F-Val-Arity`). An implementation that assumed the props object comes first would construct a real lexicon's parameter type wrongly.
 
-**Absence has two forms.** `undefined` in a property position is dropped at emission; in an array position it becomes `null` (R10.7). Both follow from the host's JSON semantics and both must be stated, because platforms act on the difference between an absent field and a null one.
+**Absence has two forms**. A property whose value is `undefined` is dropped at emission, and an `undefined` array element becomes `null` (R10.7). Both follow from the host's JSON semantics and both must be stated, because platforms act on the difference between an absent field and a null one.
 
 ## Three evaluation modes
 
-Reduction reaches a value by three different mechanisms. Conflating them is the easiest way to misread the design, and the second has no counterpart in the first.
+There are three different mechanisms by which reduction reaches a value. Conflating them is the easiest way to misread the design, and the second has no counterpart in the first.
 
 ### Envelope, then revive
 
