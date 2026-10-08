@@ -1,13 +1,13 @@
 // The counts, computed from the tree, in one place.
 //
 // Every figure the site renders is read from `docs/data/figures.json`, which
-// `docs/scripts/sync-spec.mjs` writes. Prose elsewhere restates some of those
+// `docs/scripts/figures.mjs` writes. Prose elsewhere restates some of those
 // counts by hand, and the restatements drift: `paper/measurements.md` carried
 // "76 of the 122" against a tree holding 127 (#174), and `spec/inventory.md`'s
 // summary carried 111 rows against a file holding 128 (#182). Both sat beside
 // a correct count in the same document.
 //
-// So the counting lives here and has two consumers: sync-spec.mjs, which feeds
+// So the counting lives here and has two consumers: figures.mjs, which feeds
 // the site, and spec/figures.test.ts, which holds the prose to it. A single
 // definition is the point. A second implementation inside the gate would drift
 // from this one the first time somebody adds a fixture kind or nests a

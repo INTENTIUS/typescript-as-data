@@ -31,7 +31,7 @@ const paperFiles = readdirSync(PAPER).filter((f) => f.endsWith(".md"));
 /**
  * The site's authored pages, which cite rules the same way the paper does and
  * drifted the same way. `content/spec/normative/` is generated from `spec/` by
- * `sync-spec.mjs` and is checked at its source, so it is skipped here.
+ * `figures.mjs` and is checked at its source, so it is skipped here.
  */
 function authoredDocs(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {

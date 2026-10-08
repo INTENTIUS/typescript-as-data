@@ -16,7 +16,7 @@ site:
 # `just site-serve 8001` picks another port when a second checkout is serving.
 site-serve port="8000":
     bash scripts/build-wasm.sh
-    node docs/scripts/sync-spec.mjs
+    node docs/scripts/figures.mjs
     cd docs && hugo server --bind 127.0.0.1 --port {{port}} --openBrowser
 
 # The corpus cross-check and the citation gate, against a chant checkout.

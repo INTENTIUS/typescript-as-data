@@ -1,63 +1,116 @@
 {
+ "spec/CHANGELOG.md": {
+  "anaphora/repeated-opening": 2
+ },
  "spec/README.md": {
-  "anaphora/repeated-opening": 1
+  "anaphora/repeated-opening": 11,
+  "discourse/conjunction-opener": 3
  },
  "spec/divergence.md": {
-  "tricolon/comma-series": 2
+  "tricolon/comma-series": 2,
+  "discourse/conjunction-opener": 1,
+  "anaphora/repeated-opening": 1
  },
  "spec/grammar.md": {
+  "anaphora/repeated-opening": 5,
   "tricolon/comma-series": 2,
   "discourse/punchy-fragments": 2,
+  "discourse/epistrophe": 1,
   "tricolon/density": 1,
-  "anaphora/repeated-opening": 1
+  "discourse/conjunction-opener": 1
  },
  "spec/hosts.md": {
+  "anaphora/repeated-opening": 7,
   "claude/colon-reveal": 3,
-  "tricolon/comma-series": 3
+  "tricolon/comma-series": 3,
+  "discourse/epistrophe": 1,
+  "discourse/conjunction-opener": 2
+ },
+ "spec/inventory.md": {
+  "tricolon/comma-series": 1,
+  "anaphora/repeated-opening": 2
+ },
+ "spec/judgments.md": {
+  "discourse/epistrophe": 1,
+  "anaphora/repeated-opening": 1
  },
  "spec/prior-art.md": {
-  "anaphora/repeated-opening": 1
+  "anaphora/repeated-opening": 6,
+  "discourse/epistrophe": 2,
+  "discourse/conjunction-opener": 1,
+  "tricolon/comma-series": 1
  },
  "spec/rationale.md": {
+  "anaphora/repeated-opening": 16,
+  "discourse/conjunction-opener": 3,
   "tricolon/comma-series": 4,
   "tricolon/density": 1,
-  "discourse/punchy-fragments": 2,
-  "anaphora/repeated-opening": 1
+  "discourse/punchy-fragments": 2
+ },
+ "spec/rules.md": {
+  "tricolon/comma-series": 1
  },
  "spec/taint.md": {
-  "tricolon/comma-series": 2,
-  "anaphora/repeated-opening": 1
+  "tricolon/comma-series": 4,
+  "formatting/em-dash-density": 2,
+  "anaphora/repeated-opening": 2,
+  "discourse/conjunction-opener": 1,
+  "discourse/epistrophe": 1
  },
  "spec/values.md": {
+  "anaphora/repeated-opening": 3,
+  "discourse/conjunction-opener": 1,
+  "tricolon/comma-series": 1
+ },
+ "spec/verdict.md": {
   "anaphora/repeated-opening": 1,
   "tricolon/comma-series": 1
  },
+ "paper/discussion.md": {
+  "discourse/epistrophe": 1,
+  "anaphora/repeated-opening": 1
+ },
+ "paper/draft.md": {
+  "anaphora/repeated-opening": 15,
+  "discourse/conjunction-opener": 11,
+  "tricolon/comma-series": 1,
+  "discourse/epistrophe": 1
+ },
+ "paper/enables.md": {
+  "anaphora/repeated-opening": 2
+ },
+ "paper/introduction.md": {
+  "anaphora/repeated-opening": 3,
+  "discourse/conjunction-opener": 1
+ },
  "paper/measurements.md": {
+  "anaphora/repeated-opening": 7,
+  "discourse/conjunction-opener": 6,
+  "discourse/epistrophe": 1,
   "repetition/near-duplicate": 1
  },
  "paper/mechanism.md": {
+  "discourse/epistrophe": 1,
+  "discourse/conjunction-opener": 2,
+  "anaphora/repeated-opening": 8,
   "claude/colon-reveal": 5
  },
  "paper/related-work.md": {
+  "anaphora/repeated-opening": 2,
+  "discourse/conjunction-opener": 1,
   "tricolon/comma-series": 1,
   "discourse/punchy-fragments": 1
  },
+ "paper/theorem.md": {
+  "anaphora/repeated-opening": 3,
+  "tricolon/comma-series": 2
+ },
  "paper/values-and-modes.md": {
+  "anaphora/repeated-opening": 4,
   "tricolon/comma-series": 1
  },
- "docs/content/for-your-platform/_index.md": {
-  "anaphora/repeated-opening": 1
- },
- "docs/content/spec/conformance/corpus.md": {
-  "anaphora/repeated-opening": 1,
-  "claude/colon-reveal": 2
- },
- "docs/content/spec/conformance/fixtures.md": {
-  "claude/colon-reveal": 4,
-  "anaphora/repeated-opening": 2
- },
- "docs/content/spec/conformance/overview.md": {
-  "claude/colon-reveal": 2,
+ "README.md": {
+  "tricolon/comma-series": 1,
   "anaphora/repeated-opening": 1
  }
 }

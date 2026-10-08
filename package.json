@@ -7,8 +7,8 @@
     "packages/*"
   ],
   "scripts": {
-    "docs": "node docs/scripts/sync-spec.mjs && hugo server -s docs --bind 127.0.0.1 --port 8000 --openBrowser",
-    "docs:build": "bash scripts/build-wasm.sh && node docs/scripts/sync-spec.mjs && rm -rf docs/public && hugo -s docs --minify",
+    "docs": "node docs/scripts/figures.mjs && hugo server -s docs --bind 127.0.0.1 --port 8000 --openBrowser",
+    "docs:build": "bash scripts/build-wasm.sh && node docs/scripts/figures.mjs && rm -rf docs/public && hugo -s docs --minify",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
     "corpus": "TSAD_CORPUS_REPORT=1 vitest run packages/conformance/src/corpus.test.ts packages/conformance/src/rules.test.ts",
@@ -20,7 +20,7 @@
   "devDependencies": {
     "@intentius/chant": "0.109.0",
     "@types/node": "^24.0.0",
-    "sentences": "0.2.0",
+    "sentences": "0.5.1",
     "typescript": "^5.9.0",
     "vitest": "^4.0.0"
   }

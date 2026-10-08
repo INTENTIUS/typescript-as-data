@@ -5,16 +5,11 @@ disableKinds = ["taxonomy", "term"]
 
 [params]
   repo = "https://github.com/INTENTIUS/typescript-as-data"
-  description = "TypeScript configuration read as data, so it is checked before anything runs, adopted from what you already have, and traced to the line you wrote when it drifts."
+  spec = "https://github.com/INTENTIUS/typescript-as-data/tree/main/spec"
+  description = "TypeScript configuration, read as data."
 
-# The header's fixed entries. Consumers are not listed here: the header
-# renders a "For your platform" menu from data/consumers.yaml, so a new
-# consumer is a roster entry, never a menu edit. Every figure a page quotes
-# comes from data/figures.json, written by scripts/sync-spec.mjs.
-[[menus.main]]
-  name = "Start here"
-  pageRef = "/start-here"
-  weight = 5
+# Every figure a page quotes comes from data/figures.json, written by
+# scripts/figures.mjs.
 [[menus.main]]
   name = "What it enables"
   pageRef = "/what-it-enables"
@@ -25,12 +20,8 @@ disableKinds = ["taxonomy", "term"]
   weight = 20
 [[menus.main]]
   name = "Specification"
-  pageRef = "/spec"
-  weight = 40
-[[menus.main]]
-  name = "Glossary"
-  pageRef = "/glossary"
-  weight = 45
+  url = "https://github.com/INTENTIUS/typescript-as-data/tree/main/spec"
+  weight = 30
 
 [markup.goldmark.renderer]
   unsafe = true
@@ -44,15 +35,6 @@ disableKinds = ["taxonomy", "term"]
 [markup.tableOfContents]
   startLevel = 2
   endLevel = 3
-
-[outputs]
-  home = ["HTML", "RSS", "searchindex"]
-
-[outputFormats.searchindex]
-  mediaType = "application/json"
-  baseName = "searchindex"
-  isPlainText = true
-  notAlternative = true
 
 [minify]
   disableJSON = true

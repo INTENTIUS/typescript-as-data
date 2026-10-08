@@ -68,17 +68,6 @@ th { background: var(--surface-2); font-weight: 600; }
 .site-nav { display: flex; align-items: center; gap: 1.1rem; flex-wrap: wrap; }
 .site-nav a { color: var(--ink-2); text-decoration: none; font-size: 0.95rem; padding: 0.2rem 0; border-bottom: 2px solid transparent; }
 .site-nav a:hover, .site-nav a[aria-current] { color: var(--ink); border-bottom-color: var(--accent); }
-.search-toggle { font: inherit; font-size: 0.9rem; color: var(--ink-2); background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 0.25rem 0.7rem; cursor: pointer; }
-.search-toggle:hover { border-color: var(--accent); color: var(--ink); }
-
-/* search */
-.search-panel { position: fixed; inset: 0; background: color-mix(in srgb, var(--bg) 92%, transparent); z-index: 10; padding: 4rem clamp(1rem, 4vw, 2.5rem); overflow: auto; }
-.search-box { display: flex; gap: 0.6rem; max-width: 40rem; margin: 0 auto 1rem; }
-.search-box input { flex: 1; font: inherit; font-size: 1.1rem; padding: 0.6rem 0.9rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
-.search-box button { font: inherit; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 0 0.9rem; color: var(--ink-2); cursor: pointer; }
-.search-results { list-style: none; max-width: 40rem; margin: 0 auto; padding: 0; }
-.search-results li { padding: 0.5rem 0.2rem; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 1rem; }
-.search-section { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
 
 /* footer */
 .site-footer { margin-top: 4rem; padding: 1.5rem clamp(1rem, 4vw, 2.5rem) 3rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; }
@@ -99,44 +88,8 @@ th { background: var(--surface-2); font-weight: 600; }
 .beat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1.2rem 1.3rem; }
 .beat h2 { margin: 0 0 0.5rem; font-size: 1.12rem; }
 .beat p { margin: 0; color: var(--ink-2); font-size: 0.97rem; }
-.platforms, .proof-strip { max-width: 60rem; margin: 2.5rem auto 0; padding: 0 clamp(1rem, 4vw, 2.5rem); }
-.platforms h2, .proof-strip h2 { margin-top: 0; font-size: 1.15rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
-.picker { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0.6rem 0.6rem 0.4rem; max-width: 40rem; }
-.picker input { width: 100%; font: inherit; padding: 0.5rem 0.8rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); margin-bottom: 0.4rem; }
-.picker input[hidden] { display: none; }
-.picker-list { list-style: none; margin: 0; padding: 0; max-height: 24rem; overflow: auto; }
-.picker-row { display: grid; grid-template-columns: auto auto 1fr; align-items: baseline; gap: 0.6rem; padding: 0.6rem 0.6rem; border-top: 1px solid var(--line); }
-.picker-row:first-child { border-top: 0; }
-.picker-row[hidden] { display: none; }
-.picker-row a { text-decoration: none; color: var(--ink); }
-.picker-row a:hover .picker-name { color: var(--accent-ink); }
-.picker-name { font-weight: 650; font-size: 1.05rem; }
-.picker-status { color: var(--muted); font-size: 0.88rem; line-height: 1.4; grid-column: 1 / -1; }
-.picker-status p { margin: 0; }
-.picker-row.status-soon .picker-name { color: var(--ink-2); }
-.picker-empty { color: var(--muted); font-size: 0.9rem; margin: 0.4rem 0.6rem; }
-.badge-proven { color: var(--pass); border-color: var(--pass); }
-/* header platforms menu */
-.menu { position: relative; }
-.menu summary { list-style: none; cursor: pointer; color: var(--ink-2); font-size: 0.95rem; padding: 0.2rem 0; border-bottom: 2px solid transparent; }
-.menu summary::-webkit-details-marker { display: none; }
-.menu summary::after { content: " ▾"; font-size: 0.8em; color: var(--muted); }
-.menu summary:hover, .menu[data-current] summary { color: var(--ink); border-bottom-color: var(--accent); }
-.menu-list { position: absolute; left: 0; top: 2rem; min-width: 14rem; max-height: 22rem; overflow: auto; list-style: none; margin: 0; padding: 0.4rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,0.08); z-index: 6; }
-.menu-list li { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.6rem; border-radius: 6px; font-size: 0.95rem; }
-.menu-list li.current { background: var(--accent-soft); }
-.menu-list li a { color: var(--ink); text-decoration: none; border: 0; padding: 0; }
-.menu-list li:hover { background: var(--surface-2); }
-.menu-list .badge { margin: 0; }
-/* platform switcher at the top of a hub's sidebar */
-.switcher { display: block; margin-bottom: 0.6rem; }
-.switcher span { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 700; margin-bottom: 0.2rem; }
-.switcher select { width: 100%; font: inherit; font-weight: 600; padding: 0.35rem 0.5rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
-.stats { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.8rem; }
-.stats li { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.9rem 1rem; font-size: 0.95rem; color: var(--ink-2); }
-.stats a { text-decoration: none; color: inherit; }
-.stats strong { display: block; font-size: 1.7rem; color: var(--ink); line-height: 1.1; margin-bottom: 0.25rem; }
-.run-it { color: var(--ink-2); }
+.platforms { max-width: 60rem; margin: 2.5rem auto 0; padding: 0 clamp(1rem, 4vw, 2.5rem); }
+.platforms h2 { margin-top: 0; font-size: 1.15rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
 
 /* hub */
 .hub { max-width: 52rem; margin: 0 auto; padding: 2.5rem clamp(1rem, 4vw, 2.5rem) 0; }
@@ -203,9 +156,6 @@ th { background: var(--surface-2); font-weight: 600; }
 .claims td.status-restated { color: var(--warn-line); }
 .claims td.status-n-a, .claims td.status-open { color: var(--muted); }
 .needs-go { font-size: 0.75rem; color: var(--muted); }
-.status-dot { display: inline-block; width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--notrun); vertical-align: middle; margin-left: 0.3rem; }
-.status-dot.status-proven { background: var(--pass); }
-.status-dot.status-soon { background: var(--warn-line); }
 .gauntlet-missing, .data-missing { color: var(--muted); font-style: italic; }
 .gauntlet-bars { margin: 1rem 0; }
 .gauntlet-bar-block { margin-bottom: 1rem; }
@@ -236,42 +186,7 @@ th { background: var(--surface-2); font-weight: 600; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chroma .s, :root:not([data-theme="light"]) .chroma .s1, :root:not([data-theme="light"]) .chroma .s2, :root:not([data-theme="light"]) .chroma .sb, :root:not([data-theme="light"]) .chroma .dl { color: #b7c78f; } }
 :root[data-theme="dark"] .chroma .s, :root[data-theme="dark"] .chroma .s1, :root[data-theme="dark"] .chroma .s2, :root[data-theme="dark"] .chroma .sb, :root[data-theme="dark"] .chroma .dl { color: #b7c78f; }
 
-.badge { display: inline-block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--warn-line); border: 1px solid var(--warn-line); border-radius: 999px; padding: 0.05rem 0.5rem; margin-bottom: 0.35rem; }
-
-/* typescript-as-data additions: consumer status dots and captioned fences. */
-.status-dot.status-reference { background: var(--pass); }
-.status-dot.status-merged { background: var(--warn-line); }
 figure.code { margin: 1rem 0; }
 figure.code figcaption { font-size: 0.85rem; color: var(--muted); padding: 0.25rem 0.75rem; border: 1px solid var(--line); border-bottom: 0; border-radius: 8px 8px 0 0; background: var(--surface); }
 figure.code figcaption + .highlight pre, figure.code figcaption + pre { margin-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
 
-/* The landing page's loop section takes the same measure as .beats and
-   .platforms above. Without it the section is unconstrained and the SVG runs
-   to the full viewport, wider than every other band on the page. */
-.loop-section { max-width: 60rem; margin: 2.5rem auto 0; padding: 0 clamp(1rem, 4vw, 2.5rem); }
-
-/* The governance loop (shortcodes/governance-loop.html). Inlined SVG, so it
-   takes the tokens above and reads in both themes. The boundary is the one
-   place a literal hue would be wrong: it uses --warn-line, which is the only
-   token defined identically on both grounds. */
-.loop-fig { margin: 1.6rem 0 1rem; }
-.loop-links { display: flex; flex-wrap: wrap; gap: 0 1.4rem; margin: 0 0 2rem; font-size: .92rem; }
-.loop { display: block; width: 100%; min-width: 0; height: auto; }
-.loop-fig figcaption { margin-top: .7rem; font-size: .88rem; color: var(--muted); }
-@media (max-width: 760px) { .loop-fig { overflow-x: auto; } .loop { min-width: 680px; } }
-
-.lp-box { fill: var(--surface-2); stroke: var(--line); stroke-width: 1.25; }
-.lp-box-out { fill: none; stroke: var(--line); stroke-width: 1.25; stroke-dasharray: 4 3; }
-.lp-title { fill: var(--ink); font-size: 16px; font-weight: 600; font-family: var(--font); }
-.lp-sub { fill: var(--muted); font-size: 12.5px; font-family: var(--font); }
-.lp-edge { stroke: var(--ink-2); stroke-width: 1.3; fill: none; }
-.lp-edge-label { fill: var(--muted); font-size: 13px; font-family: var(--mono); }
-.lp-head { fill: var(--ink-2); }
-.lp-head-a { fill: var(--accent-ink); }
-.lp-zone { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.25; stroke-dasharray: 5 4; }
-.lp-zone-label { fill: var(--accent-ink); font-size: 13px; letter-spacing: .1em; font-family: var(--mono); }
-.lp-note { fill: var(--muted); font-size: 13.5px; font-family: var(--font); }
-.lp-boundary { stroke: var(--warn-line); stroke-width: 2; stroke-dasharray: 6 4; }
-.lp-boundary-label { fill: var(--warn-line); font-size: 13.5px; letter-spacing: .06em; font-family: var(--mono); }
-.lp-arc { stroke: var(--accent-ink); stroke-width: 1.4; fill: none; }
-.lp-arc-label { fill: var(--accent-ink); font-size: 13px; font-family: var(--font); }
