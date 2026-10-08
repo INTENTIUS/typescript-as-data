@@ -18,7 +18,7 @@
     "smoke:published": "bash scripts/smoke-published.sh"
   },
   "devDependencies": {
-    "@intentius/chant": "0.109.0",
+    "@intentius/chant": "0.110.0",
     "@types/node": "^24.0.0",
     "sentences": "0.5.1",
     "typescript": "^5.9.0",
