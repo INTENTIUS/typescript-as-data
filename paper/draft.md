@@ -268,8 +268,9 @@ The conformance package runs chant's example corpus through both implementations
 | chant 0.72.3, specification 1.8 | 441 | 440 | 440 | 304 |
 | chant 0.73.0, specification 2.1 | 441 | 440 | 440 | 304 |
 | chant 0.109.0, specification 2.2 | 467 | 466 | 466 | 310 |
+| chant 0.110.0, specification 2.3 | 467 | 466 | 466 | 310 |
 
-The last row crosses a major. Specification 2.0 narrowed the call rule so that a project-file callee is refused outside the executing mode, and 2.1 bounded what an entity constructor may do. Neither moved the comparable set or the agreement.
+The specification crosses a major version between chant `0.72.3` and chant `0.73.0`, where 2.0 narrowed the call rule so that a project-file callee is refused outside the executing mode, and 2.1 bounded what an entity constructor may do. Neither moved the comparable set or the agreement.
 
 A file is comparable when nothing disarmed either implementation before the comparison. Four things did at the first pin and one remains, the single file that imports a package the reference's host cannot load. Two were limits of chant's entry point, 52 files reading a host export that needed a lexicon list and 19 in entries with build parameters the entry could not be given, until chant `0.71.0` took both; one held 290 files reaching a host factory until the reference implemented the call rule; the last held 68 files calling a package export outside a declarator, until specification `1.6` wrote chant's behavior into the declarator and call rules.
 
@@ -373,4 +374,4 @@ The subset is not the contribution; six languages have carved one more completel
 
 ## Appendix B. Artifacts
 
-The specification is at version `2.3`, tagged `spec-2.3`, in the typescript-as-data repository under the INTENTIUS organization. The reference implementation and the conformance suite sit beside it with the Rust evaluator, and the two packages are published to npm at `2.3.0`. Every number in section 6 was taken on 7 October 2026 with chant pinned at `0.109.0` and the corpus at that release's revision, from the corpus report committed there; the external checkouts are pinned by revision in the conformance package's manifest. The documentation site renders every figure from those artifacts at build time, and one of its pages folds a file in the reader's browser with the WebAssembly evaluator.
+The specification is at version `2.3`, tagged `spec-2.3`, in the typescript-as-data repository under the INTENTIUS organization. The reference implementation and the conformance suite sit beside it with the Rust evaluator, and the two packages are published to npm at `2.3.0`. Every number in section 6 was taken on 8 October 2026 with chant pinned at `0.110.0` and the corpus at that release's revision, from the corpus report committed there; the external checkouts are pinned by revision in the conformance package's manifest. The documentation site renders every figure from those artifacts at build time, and one of its pages folds a file in the reader's browser with the WebAssembly evaluator.
