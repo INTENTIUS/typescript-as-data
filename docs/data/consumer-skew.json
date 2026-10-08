@@ -1,15 +1,15 @@
 {
   "_comment": "Written by scripts/consumer-skew.mjs from the weekly demo workflow (#192): what specification version the consumer's own installed evaluator declares, against this repository's spec/VERSION. Reported, never gated — the version a consumer pins is that repository's decision.",
-  "date": "2026-10-05",
-  "specVersion": "2.1",
+  "date": "2026-10-08",
+  "specVersion": "2.2",
   "consumer": {
     "name": "@intentius/forgejo-warden",
-    "evaluator": "1.4.0",
-    "declares": "1.4"
+    "evaluator": "2.2.0",
+    "declares": "2.2"
   },
   "skew": {
-    "kind": "major-behind",
-    "majors": 1,
-    "minors": null
+    "kind": "current",
+    "majors": 0,
+    "minors": 0
   }
 }
