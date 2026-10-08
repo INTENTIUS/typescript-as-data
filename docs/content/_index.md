@@ -3,28 +3,7 @@ title: "typescript-as-data"
 description: "TypeScript configuration read as data, so it is checked before anything runs, adopted from what you already have, and traced to the line you wrote when it drifts."
 ---
 
-Your configuration is a TypeScript file. A separate program reads it and works out the values itself, refusing anything it would have to run.
-
-Not the type system, so no `tsc` and no types involved. Not a sandbox either. Think a JSON parser that also understands `1 + 1`, spread, and references into other files.
-
-A call to `Date.now()` is refused rather than executed, and that file falls back to being run normally. You are told which files those were. What comes back is reproducible from the source alone, which is the thing running it can never give you.
-
-## A policy in YAML and in TypeScript
-
-```yaml {title="governance.yml"}
-orgs:
-  my-org:
-    repos:
-      api:
-        hasWiki: false
-        allowSquashMerge: true
-        topics: [service, api]
-        branchProtection:
-          - ruleName: main
-            requiredApprovals: 1
-            enableStatusCheck: true
-            statusCheckContexts: [ci]
-```
+Your configuration is a TypeScript file. The build reads it and works out the values without running any statement you wrote. A file that loops or calls `Date.now()` cannot be read that way. Those files are run instead, and you are told which they were.
 
 ```ts {title="governance.ts"}
 import type { GovernanceConfig } from "@intentius/forgejo-warden";
@@ -39,4 +18,10 @@ export const policy = {
 } satisfies GovernanceConfig;
 ```
 
-The second one has completion and a type error on a misspelt key, and it reuses one helper across repositories. Both files give the tool the same object. Three claims follow. It is checked before anything runs, you can adopt what you already have, and drift lands on the line you wrote. Each has a page, linked under the loop below. New to any of this? [Start here](/typescript-as-data/start-here/).
+The editor gives you completion and catches a misspelt key. CDK and Pulumi give you that too, but they have to run the program to learn what it declares. Reading it instead gives you three things they cannot:
+
+- [Checked before anything runs](/typescript-as-data/what-it-enables/checked-before-anything-runs/)
+- [Adopt what you already have](/typescript-as-data/what-it-enables/adopt-what-you-have/)
+- [Drift lands on the line you wrote](/typescript-as-data/what-it-enables/drift-to-source/)
+
+The rules are in [the specification](https://github.com/INTENTIUS/typescript-as-data/tree/main/spec). A reference implementation written from it agrees with chant {{< figure "chantPin" >}} on all {{< figure "corpus.agreed" >}} comparable files of chant's examples. [chant](https://intentius.io/chant/) and [forgejo-warden](https://github.com/INTENTIUS/forgejo-warden) build on it.

@@ -2,7 +2,7 @@
 // Regenerate the F-NoOwnExecution recording (#178).
 //
 // Writes packages/conformance/no-own-execution.json from the committed
-// fixtures, which docs/scripts/sync-spec.mjs reads into figures.json. JSON and
+// fixtures, which docs/scripts/figures.mjs reads into figures.json. JSON and
 // not a markdown report on purpose: the corpus report is slurped back with
 // regexes and #190 is the bug that habit produced, so this artifact is read
 // with JSON.parse and has no table to drift from.

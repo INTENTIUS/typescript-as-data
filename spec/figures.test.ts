@@ -137,7 +137,7 @@ function computable(): Set<number> {
 
 /**
  * The corpus report's own published figures: the corpus line, the totals row,
- * the data-host row and the isolation row. The same values `sync-spec.mjs`
+ * the data-host row and the isolation row. The same values `figures.mjs`
  * reads for the site, so the paper and the site quote one set.
  *
  * A section absent from a partial run contributes nothing rather than

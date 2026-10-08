@@ -1,79 +1,16 @@
-// Generate docs/content/spec/normative/*.md from ../spec/*.md, and
-// docs/data/figures.json from the artifacts every figure on the site
+// Write docs/data/figures.json from the artifacts every figure on the site
 // comes from (spec/VERSION, the chant pin, the corpus report, the fixture
 // tree). A page reads a figure from that file; it never types one, so a bump
 // is one edit and no page quietly names the previous number (#85).
-// spec/*.md is normative; this directory is build output and is gitignored.
-// Anchors: every heading that starts with a rule or row identifier
-// (R3.3, R-spec.3, L3.10) gets an explicit <a id> so citations are stable
-// across heading-text edits.
-import { statSync, readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
-import { join, dirname, basename } from "node:path";
+// The specification itself is not on the site; pages link to spec/*.md on GitHub.
+import { statSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { fixtureCounts, coverageCounts } from "../../scripts/lib/figures.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const specDir = join(here, "..", "..", "spec");
-const outDir = join(here, "..", "content", "spec", "normative");
 const dataDir = join(here, "..", "data");
-const SITE = "/typescript-as-data/spec/normative";
-
-rmSync(outDir, { recursive: true, force: true });
-mkdirSync(outDir, { recursive: true });
-
-// Only genuine identifiers: R<n>, R<n>.<m>, L<n>.<m>. A word starting with R
-// ("Requirements", "Read") must not become an anchor.
-const ID = /^(#{1,6})\s+((?:[SF]-[A-Za-z0-9-]+|L\d+\.\d+))\b(.*)$/;
-// Rules written as bold-leading paragraphs ("**F-Eval-Ident.**", "**S-Module.**")
-// get an anchor too, so a citation resolves whether the rule is a heading or not.
-const BOLD_ID = /^\*\*((?:[SF]-[A-Za-z0-9-]+))[.\s]/;
-// Sidebar order. The set of files is whatever spec/ holds; this list only says
-// where a known one sorts, and anything unlisted falls to the end. CHANGELOG is
-// listed ahead of its arrival (#18): spec/CHANGELOG.md does not exist yet, and
-// naming it here is inert until it does, because the loop below iterates the
-// directory rather than this list.
-const ORDER = ["README", "objective", "grammar", "judgments", "evaluation", "verdict", "taint", "observables", "values", "divergence", "hosts", "rules", "rationale", "inventory", "CHANGELOG", "prior-art"];
-
-for (const file of readdirSync(specDir).filter((f) => f.endsWith(".md"))) {
-  const name = basename(file, ".md");
-  const src = readFileSync(join(specDir, file), "utf8");
-  const lines = src.split("\n");
-  let title = name;
-  const body = [];
-  let seenH1 = false;
-  for (const raw of lines) {
-    if (!seenH1 && /^#\s+/.test(raw)) { title = raw.replace(/^#\s+/, "").trim(); seenH1 = true; continue; }
-    // A link to a sibling file (`./grammar.md`) becomes the page it renders as.
-    const ln = raw.replace(/\]\(\.\/([A-Za-z-]+)\.md(#[^)]*)?\)/g, (_, n, h) => `](${SITE}/${n === "README" ? "" : n.toLowerCase() + "/"}${h ?? ""})`)
-      .replace(/\]\(\.\/VERSION\)/g, "](https://github.com/INTENTIUS/typescript-as-data/blob/main/spec/VERSION)");
-    const m = ID.exec(ln) || BOLD_ID.exec(ln);
-    if (m) body.push(`<a id="${m[2] ?? m[1]}"></a>`);
-    body.push(ln);
-  }
-  const desc = (body.find((l) => l.trim() && !l.startsWith("#") && !l.startsWith("<a") && !l.startsWith("|") && !l.startsWith(">")) ?? "").replace(/[`*_]/g, "").slice(0, 160);
-  const order = ORDER.indexOf(name);
-  // The nav title, without the judgment form. `evaluation.md`'s heading is
-  // "J1. Expression evaluation `Γ, H ⊢ e ⇓ v`", which belongs at the top of
-  // the rule file and does not belong in a sidebar, a browser tab or a link
-  // somebody sends a colleague. Hugo's `linkTitle` is exactly this: the page
-  // keeps its full heading and every list of pages uses the short one.
-  const linkTitle = title.replace(/\s*`[^`]*`\s*$/, "").trim();
-  const fm = [
-    "---",
-    `title: ${JSON.stringify(name === "README" ? "Normative text" : title)}`,
-    ...(linkTitle && linkTitle !== title ? [`linkTitle: ${JSON.stringify(linkTitle)}`] : []),
-    `description: ${JSON.stringify(desc)}`,
-    `weight: ${order === -1 ? 99 : order + 1}`,
-    ...(name === "README" ? ["hideChildren: false", 'aliases: ["/spec/"]'] : [`aliases: ["/spec/${name.toLowerCase()}/"]`]),
-    "---",
-    "",
-    `<!-- GENERATED from spec/${file} by docs/scripts/sync-spec.mjs. Edit the source, not this file. -->`,
-    "",
-  ].join("\n");
-  const out = name === "README" ? "_index.md" : `${name.toLowerCase()}.md`;
-  writeFileSync(join(outDir, out), fm + body.join("\n"));
-  console.log(`spec/${file} -> content/spec/normative/${out}`);
-}
 
 // ── figures.json ────────────────────────────────────────────────────────────
 const root = join(here, "..", "..");
