@@ -6,7 +6,7 @@ disableKinds = ["taxonomy", "term"]
 [params]
   repo = "https://github.com/INTENTIUS/typescript-as-data"
   spec = "https://github.com/INTENTIUS/typescript-as-data/tree/main/spec"
-  description = "TypeScript configuration read as data, so it is checked before anything runs, adopted from what you already have, and traced to the line you wrote when it drifts."
+  description = "TypeScript configuration, read as data."
 
 # Every figure a page quotes comes from data/figures.json, written by
 # scripts/figures.mjs.
