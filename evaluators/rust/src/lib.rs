@@ -18,7 +18,7 @@ use std::collections::HashMap;
 use serde_json::{json, Value};
 
 /// The specification version this evaluator declares (spec/VERSION).
-const SPEC_VERSION: &str = "2.2";
+const SPEC_VERSION: &str = "2.3";
 const PROFILE: &str = "data-host";
 
 #[derive(serde::Deserialize)]
