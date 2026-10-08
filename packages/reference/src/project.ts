@@ -269,6 +269,8 @@ function foldFile(path: string, session: Session): Verdict {
   // F-Bind
   const consts = collectConsts(sf);
   const externals = new Map<string, unknown>();
+  /** F-Obs-Provenance: the export name each project function or composite binding resolved (Scope.exportNames). */
+  const exportNames = new Map<string, string>();
   /** Names bound by an import from a host package, with the export each names (F-Host-Trust arm 1). F-Call may invoke these. */
   const hostBound = new Map<string, string>();
   const captures = new Set<string>();
@@ -312,8 +314,9 @@ function foldFile(path: string, session: Session): Verdict {
       const registered = session.composites.get(target);
       if (clause.namedBindings && ts.isNamedImports(clause.namedBindings)) {
         for (const el of clause.namedBindings.elements) {
-          const factory = registered?.get((el.propertyName ?? el.name).text);
-          if (factory) externals.set(el.name.text, factory);
+          const imported = (el.propertyName ?? el.name).text;
+          const factory = registered?.get(imported);
+          if (factory) { externals.set(el.name.text, factory); exportNames.set(el.name.text, imported); }
         }
       }
       for (const n of bindingNames(clause)) if (!externals.has(n)) unresolved.set(n, { rule: tv.rule, reason: tv.reason });
@@ -340,6 +343,7 @@ function foldFile(path: string, session: Session): Verdict {
         if (!tv.exports.has(imported)) continue;
         const value = tv.exports.get(imported);
         externals.set(el.name.text, value);
+        if (isFoldableFunction(value) || isCompositeFactory(value)) exportNames.set(el.name.text, imported);
         topNames.set(el.name.text, session.origins.get(target)?.get(imported) ?? DIRECT);
         // F-Import: an imported value with identity is a capture at the
         // import, by F-Identity's reference test, whether or not it reaches
@@ -354,7 +358,7 @@ function foldFile(path: string, session: Session): Verdict {
   }
 
   // F-Declarator, into X
-  const scope: Scope = { consts, externals, depth: 0, captures, prov: { writer: { kind: "direct" }, names: topNames } };
+  const scope: Scope = { consts, externals, depth: 0, captures, prov: { writer: { kind: "direct" }, names: topNames }, exportNames };
   const counters = session.counters;
   const evalHost: EvalHost = {
     intrinsics: session.host.intrinsics,
@@ -393,7 +397,7 @@ function foldFile(path: string, session: Session): Verdict {
     const [fn, label] = init.arguments;
     if (!fn || !(ts.isArrowFunction(fn) || ts.isFunctionExpression(fn))) continue;
     if (label && !ts.isStringLiteral(label)) continue;
-    externals.set(name, new CompositeFactory(name, fn, path, consts, externals));
+    externals.set(name, new CompositeFactory(name, fn, path, consts, externals, exportNames));
   }
   for (const name of [...consts.keys()]) if (isCompositeFactory(externals.get(name))) consts.delete(name);
   session.composites.set(path, new Map([...externals].filter((e): e is [string, CompositeFactory] => isCompositeFactory(e[1]))));
@@ -427,7 +431,7 @@ function foldFile(path: string, session: Session): Verdict {
         if (session.host.isolation === "isolated") throw new FoldRejection("F-IsolatedRefusal", ...locate(call), `isolation: "${c.text}" (${bound.file}) is not interpretable (${why}) and a project module is not invoked under ι = isolated`);
         throw new FoldRejection("F-Call", ...locate(call), `"${c.text}" (${bound.file}) is not interpretable (${why}); invoking a project module is not something this implementation does`);
       }
-      result = live(interpret(bound, folded, call, 0, evalHost, call.arguments, consts), call, c.text);
+      result = live(interpret(bound, folded, call, 0, evalHost, call.arguments, consts, exportNames.get(c.text)), call, c.text);
     } else {
       // Step 6: invoked with the resolved arguments; a live argument passes through and an attribute reference stays symbolic (L6.9).
       const args = folded.map((v, i) => live(v, call.arguments[i], c.text));
@@ -449,7 +453,7 @@ function foldFile(path: string, session: Session): Verdict {
   };
   const byName = (callee: string, args: unknown[]): unknown => {
     const bound = externals.get(callee);
-    if (isCompositeFactory(bound)) return live(interpret(bound, args, sf, 0, evalHost), sf, callee);
+    if (isCompositeFactory(bound)) return live(interpret(bound, args, sf, 0, evalHost, undefined, undefined, exportNames.get(callee)), sf, callee);
     if (hostBound.has(callee) && typeof bound === "function") {
       counters.factoryInvocations += 1;
       record("F-Call", "package factory (step 6)", callee);
@@ -547,9 +551,19 @@ function foldFile(path: string, session: Session): Verdict {
     return { ...scope, consts: argConsts, externals: argExternals, prov: { writer: scope.prov!.writer, names: argNames } };
   };
 
-  for (const fn of collectLocalFunctions(sf, path, consts, externals)) {
+  for (const fn of collectLocalFunctions(sf, path, consts, externals, exportNames)) {
     mine.push(fn);
     externals.set(fn.name, fn);
+  }
+  // A function or composite this module declares and exports under another
+  // name is named by that export name, here and in the bodies it calls from.
+  for (const d of scan.declarators) {
+    if (d.kind !== "named-export") continue;
+    for (const { local, as } of d.elements) {
+      const v = externals.get(local);
+      if (exportNames.has(local) || !((isFoldableFunction(v) || isCompositeFactory(v)) && v.file === path)) continue;
+      exportNames.set(local, as);
+    }
   }
 
   // F-Bind: destructured locals from a composite call, `const { a } = C({…})`,

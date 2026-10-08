@@ -165,6 +165,36 @@ export const a = svc("api", { port: 80, replicas: 2 });
     expect(brief(p.s)).toBe("direct");
   });
 
+  test("a composite is named by the export name the call site resolved, not the name it was declared with (#250)", () => {
+    const p = provenanceOf({
+      "presets.ts": `${PRESETS}export { repoPreset as preset };\n`,
+      "again.ts": `export { preset as rp } from "./presets";\n`,
+      "repos.ts": `import { preset } from "./presets";\nimport { rp as other } from "./again";\nexport const api = preset({ name: "api" });\nexport const web = other({ name: "web" });\n`,
+    }, "repos.ts");
+    expect(brief(p["api.name"])).toBe("composite-parameter preset [name]");
+    expect(brief(p["api.settings.wiki"])).toBe("composite-literal preset");
+    expect(brief(p["web.name"])).toBe("composite-parameter rp [name]");
+    // In its own module, an aliased export is named by its export name; an unexported function keeps its declared one.
+    const q = provenanceOf({ "app.ts": `function f(x: number) { return { v: x }; }\nfunction g(x: number) { return { w: f(x) }; }\nexport { f as made };\nexport const n = f(3);\nexport const m = g(4);\n` }, "app.ts");
+    expect(brief(q["n.v"])).toBe("composite-parameter made [x]");
+    expect(brief(q["m.w.v"])).toBe("composite-parameter made [x]");
+  });
+
+  test("a local alias at the import does not rename the composite (#250)", () => {
+    const host = { ...DATA, ownedSpecifierPrefixes: ["@host"], values: new Map([["@host/core", new Map<string, unknown>([["Composite", () => undefined]])]]) };
+    const r = foldProject(new Map(Object.entries({
+      "presets.ts": PRESETS,
+      "lib.ts": `import { Composite } from "@host/core";\nexport const Site = Composite((p: { name: string }) => ({ bucket: { name: p.name, acl: "private" } }), "Site");\n`,
+      "app.ts": `import { Site as Web } from "./lib";\nimport { repoPreset as mine } from "./presets";\nexport const blog = Web({ name: "blog" });\nexport const api = mine({ name: "api" });\n`,
+    })), host);
+    const v = r.verdicts.get("app.ts");
+    if (v?.kind !== "fold") throw new Error(JSON.stringify(v));
+    const p: ExportProvenance = Object.assign({}, ...v.provenance.values());
+    expect(brief(p["blog.bucket.name"])).toBe("composite-parameter Site [name]");
+    expect(brief(p["blog.bucket.acl"])).toBe("composite-literal Site");
+    expect(brief(p["api.name"])).toBe("composite-parameter repoPreset [name]");
+  });
+
   test("the reference adapter claims provenance and reports it per file", async () => {
     const { referenceDataHostAdapter } = await import("./index");
     expect(referenceDataHostAdapter.provenance).toBe(true);
