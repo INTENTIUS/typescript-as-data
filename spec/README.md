@@ -232,7 +232,7 @@ A host supplies seven things listed under `F-Host-Interface` in
 - an intrinsic registry
 - an allowlist of authoring helpers
 - a trust set of packages
-- the registration form that makes a project-defined factory interpretable
+- the registration form that makes a composite factory interpretable
 - rules over the folded values
 
 chant's lexicons are one instantiation of it. The generality this buys covers

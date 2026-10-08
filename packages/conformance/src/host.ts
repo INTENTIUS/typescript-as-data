@@ -81,13 +81,15 @@ const Composite = <P>(factory: (props: P) => Record<string, unknown>, name = "an
   return Object.assign(definition, { compositeName: name });
 };
 
-/** A host-published composite (L7.1: never interpreted, invoked at a declarator or read through a const, F-Eval-CompositeConst). */
+/** A host-published composite with no TypeScript source behind it, so L7.1 does not admit it: invoked at a declarator or read through a const, F-Eval-CompositeConst. */
 const Stack = Composite((props: { left: unknown; right: unknown }) => ({ pair: new Pair(props.left, props.right) }), "Stack");
 
 /**
  * A host-published composite whose members are entities with props. Invoked,
- * never interpreted, so an implementation that reports provenance cannot say
- * which argument produced a member's field (F-Obs-Provenance's `unknown`).
+ * never interpreted, since this host supplies it in memory and no TypeScript
+ * source module stands behind it (F-Host-Composite). An implementation that
+ * reports provenance therefore cannot say which argument produced a member's
+ * field (F-Obs-Provenance's `unknown`).
  */
 const Archive = Composite((props: { name: string }) => ({ bucket: new Bucket({ name: props.name, versioned: true }) }), "Archive");
 

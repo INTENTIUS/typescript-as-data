@@ -1069,7 +1069,8 @@ export interface OriginCounts {
    * `unknown` fields by the composite that expanded their entity, keyed
    * `<name> (project)` when the declaring file, or a project file it
    * imports, defines a composite of that name; `<name> (package)` otherwise,
-   * a lexicon's composite, which chant invokes rather than interprets; and
+   * a lexicon's composite, which chant interprets when its body is in the
+   * subset and invokes otherwise; and
    * `(none)` when the record names no composite.
    */
   readonly unknownByComposite: Readonly<Record<string, number>>;
@@ -1277,7 +1278,7 @@ export function renderProvenanceSection(reports: readonly EntryReport[], externa
     "|---|---|---|",
     ...(reasons.length ? reasons.map((k) => `| \`${k}\` | ${s.fold.counts.unknown[k] ?? 0} | ${s.run.counts.unknown[k] ?? 0} |`) : ["| none | 0 | 0 |"]),
     "",
-    "Unknown fields by the composite that expanded them, largest first. `project` marks a composite defined in the declaring file or a project file it imports, by the name it gives `Composite`; `package` is every other, a lexicon's composite, which chant invokes rather than interprets.",
+    "Unknown fields by the composite that expanded them, largest first. `project` marks a composite defined in the declaring file or a project file it imports, by the name it gives `Composite`; `package` is every other, a lexicon's composite, which chant interprets when its body is in the subset and invokes otherwise.",
     "",
     "| Composite | Fold | Run |",
     "|---|---|---|",

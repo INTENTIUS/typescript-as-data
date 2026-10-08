@@ -1,0 +1,35 @@
+{
+  "rules": [
+    "F-Call",
+    "F-Count"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "after.ts": "run",
+    "before.ts": "run",
+    "inside.ts": "fold"
+  },
+  "rejectRule": {
+    "after.ts": "F-Eval-Reject",
+    "before.ts": "F-Eval-Reject"
+  },
+  "exports": {
+    "inside.ts": {
+      "wrapped": {
+        "left": {
+          "inner": {
+            "left": "a",
+            "right": "b",
+            "entityType": "Pair",
+            "lexicon": "shapes"
+          }
+        },
+        "right": 0,
+        "entityType": "Pair",
+        "lexicon": "shapes"
+      }
+    }
+  },
+  "note": "F-Call binds a same-file call's result for the evaluation of the argument that reads it, and for nothing after (chant#3610). inside.ts reads p only inside makePair's argument and folds. after.ts and before.ts add plain, which reads p in an object literal at a declarator, outside any argument. That read is J1's rejection whichever declarator comes first, so both files run: an argument that resolved p earlier does not leave it bound."
+}

@@ -1,0 +1,46 @@
+{
+  "rules": [
+    "F-Call",
+    "F-Host-Composite",
+    "F-Count"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "app.ts": "fold",
+    "shapes.ts": "run"
+  },
+  "rejectRule": {
+    "shapes.ts": "F-Eval-Function"
+  },
+  "exports": {
+    "app.ts": {
+      "s": {
+        "bucket": {
+          "entityType": "Bucket",
+          "lexicon": "shapes",
+          "props": {
+            "name": "a"
+          },
+          "attributes": {}
+        }
+      },
+      "w": {
+        "inner": {
+          "entityType": "Bucket",
+          "lexicon": "shapes",
+          "props": {
+            "name": "a"
+          },
+          "attributes": {}
+        }
+      }
+    }
+  },
+  "counters": {
+    "factoryInterpretations": 2,
+    "factoryInvocations": 0,
+    "projectFactoryInvocations": 0
+  },
+  "note": "A composite registered with the host's Composite form is interpreted (F-Call step 4), and its result is a composite instance, so a read of it inside another such composite's argument qualifies (chant#3610). Store is interpreted once for both s and the read of s.bucket in Wrap's argument (F-Count), which makes two interpretations in all. The bucket in w is the one in s."
+}

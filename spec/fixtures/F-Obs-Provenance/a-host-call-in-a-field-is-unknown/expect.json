@@ -1,0 +1,22 @@
+{
+  "rules": [
+    "F-Obs-Provenance",
+    "F-Eval-CallEager"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "app.ts": "fold"
+  },
+  "provenance": {
+    "app.ts": {
+      "bucket.props.name": {
+        "kind": "direct"
+      },
+      "bucket.props.replicas": {
+        "kind": "unknown"
+      }
+    }
+  },
+  "note": "Since 2.3 a value a host call produces is unknown wherever it is written (#248). The file's own code writes both fields, outside any composite, but replicas takes its value from count, which the host defines. name beside it is a literal and stays direct."
+}

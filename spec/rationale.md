@@ -294,7 +294,8 @@ makes folding under isolation possible.
 
 A composite factory is *interpreted* (L7.1–L7.8) when all five hold:
 
-1. The calling file imports it from a project file, by text, never a package.
+1. The calling file imports it from a project file or from an active
+   package. A package import must resolve to TypeScript source.
 2. The defining module has `export const N = Composite(<fn>, "N")` with
    `Composite` bound in *that* module to chant's own.
 3. `<fn>` takes at most one plainly-bound parameter.
