@@ -14,11 +14,13 @@ Clone https://github.com/INTENTIUS/typescript-as-data. Confirm Docker is
 running (docker info) and Node 22 or later is installed. From the repo root
 run `just smoke round-trip` and explain each SMOKE verdict line to me as it
 prints. Then run `BREAK=1 just smoke round-trip` and report the "caught"
-line: one field is changed on the server behind the policy's back, and the
-next plan names exactly that field.
+line: a field is changed on the server behind the policy's back, and the
+plan has to say which part of the source set it.
 ```
 
-The steps, in the order they print: the policy is applied; live is read back and diffed against the declared source, and every cycle reports no changes. Under `BREAK=1` the repo's wiki is switched on through the API, and the next plan proposes the one change back.
+The steps, in the order they print. The policy is applied. Live is read back and diffed against the declared source, and every cycle reports no changes. Then comes the return leg: `allowMergeCommits` is switched back on through the API, and the next plan proposes the one change back. It also says where the value was written. The policy sets that field through a preset, so the plan line reads `reviewPreset(...) argument squashOnly at governance.ts:14:41`. The scenario finds that line in the file it wrote and requires the plan to agree.
+
+Under `BREAK=1` the drift lands on `hasWiki` instead, which the policy writes directly. The plan says `<- direct`, the check for a preset attribution cannot be met, and the scenario reports it caught. A plan that named no origin at all would fail the same check.
 
 A second scenario, `fold-equals-run`, holds the guarantee the others rest on: folding and running the same policy give the same plan, and a file that reads the environment is refused before either is trusted.
 
@@ -75,7 +77,7 @@ Line 11 of `src/app.ts` is `replicas: 3,` inside the call. The rendered YAML has
 
 ## Who has it today
 
-The reference implementation reports an origin for every field it folds, and passes the conformance fixtures for it. chant records the origin while it builds and puts it on each drifted field in `chant lifecycle diff --live`. forgejo-warden's plan names the drifted field. A preset in its example policy, with the plan naming the argument behind a field, is the next step there.
+The reference implementation reports an origin for every field it folds, and passes the conformance fixtures for it. chant records the origin while it builds and puts it on each drifted field in `chant lifecycle diff --live`. forgejo-warden's plan names the drifted field, and under it the origin it reads from the reference's provenance: the preset call, argument and line for a field its example policy sets through `reviewPreset`, and `direct` for one written on the repo.
 
 ## What it does not establish
 
