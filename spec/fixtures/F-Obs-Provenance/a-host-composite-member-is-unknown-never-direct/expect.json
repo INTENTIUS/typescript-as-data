@@ -24,5 +24,5 @@
       }
     }
   },
-  "note": "F-Obs-Provenance's unknown origin. Archive is a composite the host publishes, so F-Call invokes it rather than interpreting its body (step 6), and nothing in the build says which argument became which field. The fields are written inside a composite, so they are not direct, and the implementation cannot name the parameter or the literal either: the origin is unknown, and an adapter that reports direct here fails."
+  "note": "F-Obs-Provenance's unknown origin. Archive is a composite the host publishes with no TypeScript source behind it, so F-Call invokes it rather than interpreting its body (step 6), and nothing in the build says which argument became which field. The fields are written inside a composite, so they are not direct, and the implementation cannot name the parameter or the literal either: the origin is unknown, and an adapter that reports direct here fails."
 }

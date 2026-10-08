@@ -142,7 +142,7 @@ module is never imported.
 
 | # | Decision | Behavior | Covers |
 |---|---|---|---|
-| L7.1 | rule 1; project files only | text check on the specifier; a lexicon-published composite is deliberately never interpreted | F-Call step 4; F-Host-Composite |
+| L7.1 | rule 1; project files and active lexicon packages | text check on the specifier; a lexicon package is then resolved and interpreted only when the module is TypeScript source, so compiled JavaScript or a declaration file keeps invoking (chant 0.102.0, chant#3247) | F-Call step 4; F-Host-Composite |
 | L7.2 | rule 2; `export const N = Composite(<fn>, "N")` | and `Composite` must be chant's own **in the defining module** | F-Host-Composite |
 | L7.3 | rule 3; at most one parameter, bound plainly | no rest, default, nested, or array pattern | S-FactoryBody |
 | L7.4 | rule 4; body shape | concise expression, or `const`s then a final `return`; empty body rejected; **must end in `return`** (unlike L5.7) | S-FactoryBody |

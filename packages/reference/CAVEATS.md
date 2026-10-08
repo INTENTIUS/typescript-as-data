@@ -57,6 +57,13 @@ step 6 for a *project* module: this package never imports project code, so
 in open mode a registered composite that step 4 cannot interpret runs for
 want of the invocation chant would perform.
 
+Spec 2.3 lets step 4 interpret a composite an active package registers in
+TypeScript source. That arm never applies here: the conformance host supplies
+its exports in memory and no source module stands behind them, so a host's
+composite is always invoked. An interpreted composite's result counts as a
+composite instance for F-Call's reads in an argument, although its members
+object has a plain prototype (chant#3610).
+
 ## Isolation is observable at one step
 
 `Host.isolation` is `open` or `isolated`, and a project fixture asks for one

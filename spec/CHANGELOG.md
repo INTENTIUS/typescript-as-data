@@ -4,6 +4,33 @@ The versioned history of the rule set. The policy is in [`README.md`](./README.m
 
 Each entry lists the rules that changed and how in the four kinds the policy defines. A change confined to non-normative text is not versioned and is not listed here; the rationale sections and the inventory are the usual cases.
 
+## 2.3, 2026-10-07
+
+**Widened. `F-Call` step 4 rule 1 with `F-Host-Composite`.** A composite that
+an active package registers in TypeScript source is now interpretable the way
+a project file's composite is. The package is matched by text as F-Host-Trust
+arm 1 matches it and only then resolved. A module that resolves to compiled
+JavaScript or a declaration file is still invoked. Inside the body the
+package's own imports are trusted under arm 1 and never folded as project
+files. When interpreting a package's composite declines, F-Call continues at
+step 5. F-Host-Trust is unchanged because arm 1 already trusts every subpath
+of an active package. Reading that source adds no trust. `F-Host-Interface`
+item 6 and `F-Host-Closed-vs-Open` now agree with the rule as inventory row
+L7.1 does. chant has interpreted these composites since 0.102.0 (chant#3247) and
+the text had not caught up (chant#3607).
+
+**Added. `F-Obs-Provenance` host values.** A value that a host call returns
+or a host's plain-data export supplies is `unknown` and never `direct`. That
+holds at an export and in a field alike. The rule defined `direct` as the
+file's own code and left open whether a host call outside any composite is
+that code (#248).
+
+**Why this is minor.** No verdict changes. A package composite that step 6
+used to invoke folds whether it is interpreted or invoked. One whose
+interpretation declines is still invoked at step 6. Only an implementation
+that claims provenance is bound by the new obligation, and that is the added
+case in `README.md`'s policy.
+
 ## 2.2, 2026-10-07
 
 **Added. `F-Obs-Provenance`.** An implementation that claims path provenance

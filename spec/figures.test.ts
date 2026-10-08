@@ -192,7 +192,6 @@ const ALLOWLIST: Record<string, string> = {
   "draft.md:79": "same coverage history",
   "draft.md:10": "same coverage history",
   "draft.md:107": "the corpus size during the coverage-history analysis being described",
-  "measurements.md:77": "fixtures tagged data-host, computed by the conformance package's profilesOf rather than from the tree",
   "measurements.md:79": "entries the fourth run moved, from the coverage history",
   "measurements.md:10": "same coverage history",
   "measurements.md:21": "same coverage history",

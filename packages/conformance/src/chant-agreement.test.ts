@@ -29,8 +29,20 @@ const all = loadFixtures(join(dirname(fileURLToPath(import.meta.url)), "..", "..
 // a chant issue as its reason, the way each of these had.
 // chant#3329 held F-Call/a-call-result-read-inside-an-argument out until
 // chant-v0.109.0: the pin predated the fold of a same-file call's result read
-// inside an argument (spec 2.2, F-Call step 6). Nothing is held out now.
-const HELD: readonly (readonly [string, Set<string>])[] = [];
+// inside an argument (spec 2.2, F-Call step 6).
+//
+// chant#3610 holds two F-Call fixtures out until the pin carries chant#3618.
+// chant-v0.109.0 keeps a call result an argument resolved bound for the rest
+// of the file, and it does not count a host composite's result as an instance.
+//
+// tsad#248 holds three provenance fixtures out. chant-v0.109.0 reports a host
+// value written outside any composite as direct, or reports no origin for it,
+// where spec 2.3 says unknown. Those differ from the fixture only, never from
+// the reference's verdict, so the guard below reads chant's own report too.
+const HELD: readonly (readonly [string, Set<string>])[] = [
+  ["chant#3610", new Set(["F-Call/a-read-in-an-argument-binds-for-that-argument-only", "F-Call/a-host-composite-result-read-in-an-argument-folds"])],
+  ["tsad#248", new Set(["F-Obs-Provenance/a-host-call-in-a-field-is-unknown", "F-Obs-Provenance/a-host-call-at-an-export-is-unknown", "F-Obs-Provenance/a-host-value-is-unknown"])],
+];
 const heldIds = new Set(HELD.flatMap(([, names]) => [...names]));
 const fixtures = all.filter((f) => !heldIds.has(f.id));
 
@@ -92,8 +104,14 @@ describe("chant cross-check (#11)", () => {
       const skipped = reports.filter((r) => r.skipped).map((r) => r.fixture);
       expect(skipped, `${reason}: chant answered none of these, so agreement cannot be read from them:\n${skipped.join("\n")}`).toEqual([]);
 
-      const dis = await compareAdapters(referenceAdapter, chantAdapter, held);
-      expect(dis.length, `${reason} looks settled — drop its hold-out`).toBeGreaterThan(0);
+      // Each fixture on its own, so one that still disagrees cannot excuse
+      // another that has settled. A fixture still disagrees when chant differs
+      // from the reference or fails the fixture's own assertions.
+      for (const f of held) {
+        const dis = await compareAdapters(referenceAdapter, chantAdapter, [f]);
+        const report = reports.find((r) => r.fixture === f.id)!;
+        expect(dis.length > 0 || !report.pass, `${reason}: ${f.id} looks settled — drop its hold-out`).toBe(true);
+      }
     }
   });
   test("chant's shape classifier is available (chant-v0.64.0+, chant#2362) and agrees on every fixture", async () => {

@@ -21,7 +21,7 @@ Unknown fields by reason:
 |---|---|---|
 | `composite-not-interpreted` | 5249 | 962 |
 
-Unknown fields by the composite that expanded them, largest first. `project` marks a composite defined in the declaring file or a project file it imports, by the name it gives `Composite`; `package` is every other, a lexicon's composite, which chant invokes rather than interprets.
+Unknown fields by the composite that expanded them, largest first. `project` marks a composite defined in the declaring file or a project file it imports, by the name it gives `Composite`; `package` is every other, a lexicon's composite, which chant interprets when its body is in the subset and invokes otherwise.
 
 | Composite | Fold | Run |
 |---|---|---|

@@ -32,7 +32,7 @@ function adapterFor(profile: Profile): ConformanceAdapter {
   name: profile === "full" ? "reference" : `reference/${profile}`,
   // Bumped by hand when the rule set this package implements moves; the
   // conformance suite fails when it and spec/VERSION disagree (#18).
-  specVersion: "2.2",
+  specVersion: "2.3",
   // F-Obs-Provenance: reported in both profiles, since the reference interprets every project function it folds through.
   provenance: true,
   shape(source, exportName) {

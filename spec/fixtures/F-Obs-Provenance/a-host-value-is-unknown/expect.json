@@ -1,0 +1,25 @@
+{
+  "rules": [
+    "F-Obs-Provenance",
+    "F-Host-DataExports"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "app.ts": "fold"
+  },
+  "provenance": {
+    "app.ts": {
+      "bucket.props.name": {
+        "kind": "direct"
+      },
+      "bucket.props.replicas": {
+        "kind": "unknown"
+      },
+      "large": {
+        "kind": "unknown"
+      }
+    }
+  },
+  "note": "Since 2.3 a host value is unknown wherever it is written, as a host call's value is (#248). SIZES is plain data the host package exports, so SIZES.large folds as a value, in a field and at an export alike, and neither is direct."
+}

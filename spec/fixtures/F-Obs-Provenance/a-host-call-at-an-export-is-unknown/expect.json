@@ -1,0 +1,19 @@
+{
+  "rules": [
+    "F-Obs-Provenance",
+    "F-Eval-CallEager"
+  ],
+  "project": true,
+  "host": "shapes",
+  "verdicts": {
+    "app.ts": "fold"
+  },
+  "provenance": {
+    "app.ts": {
+      "k": {
+        "kind": "unknown"
+      }
+    }
+  },
+  "note": "Since 2.3 a host call's value written at an export is unknown, never direct (#248). The export is the path itself and no composite is involved. The value is still the host's, so the file's own code did not write it."
+}

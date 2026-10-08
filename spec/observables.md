@@ -62,8 +62,10 @@ kinds:
 
 When more than one writer touches a path, the innermost writer wins. An
 origin the implementation cannot determine is reported as `unknown` and is
-never reported as `direct`. An implementation that does not claim provenance
-reports that it does not. Fold and run are not required to agree on origins.
+never reported as `direct`. A value that a host call returns or a host's
+plain-data export supplies (`SIZES.large`) is `unknown` and never `direct`
+where the file's own code writes it at an export or into a field. An
+implementation that does not claim provenance reports that it does not. Fold and run are not required to agree on origins.
 The claim does not enter the equivalence objective. Conformance reports
 whether it is made.
 

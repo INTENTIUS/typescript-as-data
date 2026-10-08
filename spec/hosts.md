@@ -40,8 +40,8 @@ what the trust rules need, and the last is the rules contract's.
 5. A trust set of the package specifiers this build resolved and loaded
    (arm 1) plus the host's own module tree (arm 2).
 6. A composite registration form, `export const N = Composite(fn, "N")`
-   with `Composite` imported from the host, that makes a project-defined
-   factory *interpretable*.
+   with `Composite` imported from the host, that makes a factory
+   *interpretable* (F-Host-Composite).
 7. Rules (the host's semantic checks over the folded namespace and the
    artifact) under the contract of `rules.md` (F-Rule-Supply). A project may
    supply more as a policy.
@@ -99,12 +99,14 @@ Explicitly excluded by chant with the reason each fails:
 
 ## F-Host-Closed-vs-Open (why packages are closed and project files are open)
 
-A call into a **package** folds only two ways:
+A call into a **package** folds only three ways:
 
 - Through a closed allowlist, a registered intrinsic or helper, checked by
   name *and* by the provenance of the binding (F-Div-Provenance).
 - At a declarator, by invocation (F-Call), reached directly or through a const
   alias (F-Declarator), where the result is a value whatever it is.
+- By interpretation (F-Call step 4) at a declarator when an active package
+  registers the composite in TypeScript source (F-Host-Composite).
 
 Nothing folds through a package from a call written inside an expression. Its
 *result* may be read in one place. Inside an argument of a call F-Call
@@ -117,7 +119,9 @@ with no allowlist.
 The asymmetry is the trust boundary. Package code is already
 loaded and executed by the build before discovery begins; admitting a call
 into it costs no execution the process was not performing so it is admitted
-by declaration and verified by registration. The untrusted input is project
+by declaration and verified by registration. Reading an active package's
+source to interpret a composite adds no trust either: F-Host-Trust arm 1
+already trusts every subpath of the package. The untrusted input is project
 code. It is admitted only when it can be *evaluated without being executed*
 (folded or interpreted) and a syntactic body check decides that where an
 allowlist could not.
@@ -141,10 +145,21 @@ This is the CTFE principle ([`prior-art.md`](./prior-art.md)) made a rule.
 
 ## F-Host-Composite (the registration that admits interpretation)
 
-A project file's composite is interpretable (rule 2) iff its defining module
-has `export const N = Composite(fn, "N")`, where `Composite` is bound, *in
-that module*, to an import of the host's own, `fn` is an arrow or function
-expression, and the name argument is absent or a string literal.
+A composite is interpretable (rule 2) iff its defining module has
+`export const N = Composite(fn, "N")` and all three of these hold:
+
+- `Composite` is bound *in that module* to an import of the host's own;
+- `fn` is an arrow or function expression;
+- the name argument is absent or a string literal.
+
+The defining module (rule 1) is either a project file or a TypeScript source
+module inside an active package of this build. The package is matched by text first, as F-Host-Trust arm 1 matches a
+specifier or a subpath, and only then resolved. A package module that
+resolves to compiled JavaScript or a declaration file is not interpreted. The
+body of a package's composite reads the package's own imports as trusted
+under arm 1 and never as project files. A relative import that leaves the
+package is not followed. When interpreting a package's composite declines,
+F-Call continues at step 5.
 
 A plain helper that returns a composite is not registered and stays on the
 invoking path. A host that offers interpretation must define an equivalent

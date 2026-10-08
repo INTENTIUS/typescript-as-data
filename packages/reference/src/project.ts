@@ -513,7 +513,8 @@ function foldFile(path: string, session: Session): Verdict {
    * `[byTrace]`, where the name is bound by `const n = c(…)` with a callee
    * F-Call admits. The call is resolved by F-Call once per file (F-Count,
    * `callMemo`) and the name reads its result while this argument folds. A
-   * result that is not a live object (F-Val-Live), or a call that refuses,
+   * result that is neither a live object (F-Val-Live) nor the instance an
+   * interpreted composite (step 4) returns, or a call that refuses,
    * leaves the name to F-Eval-Ident, which rejects as before. A reference
    * inside a function, a type, or in a property-name position is not a read.
    */
@@ -540,7 +541,10 @@ function foldFile(path: string, session: Session): Verdict {
       const call = consts.get(name) as ts.CallExpression;
       let value: unknown;
       try { value = fCall(call); } catch (e) { if (e instanceof FoldRejection) continue; throw e; }
-      if (!isLiveObject(value) || typeof value === "function") continue;
+      // An interpreted composite's members object is a composite instance
+      // although its prototype is plain (chant#3610).
+      const instance = isCompositeFactory(externals.get((call.expression as ts.Identifier).text)) && value !== null && typeof value === "object";
+      if (typeof value === "function" || !(instance || isLiveObject(value))) continue;
       bound.set(name, value);
     }
     if (bound.size === 0) return scope;
