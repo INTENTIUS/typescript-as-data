@@ -27,13 +27,10 @@ const all = loadFixtures(join(dirname(fileURLToPath(import.meta.url)), "..", "..
 // `executing` is a build option the adapter maps ι onto — so all three fixtures
 // answer and agree, and nothing about them is held out. A future hold-out needs
 // a chant issue as its reason, the way each of these had.
-// chant#3329 folds a same-file call's result read inside an argument (spec 2.2,
-// F-Call step 6). It shipped after the chant-v0.73.0 pin, so at the pin chant
-// runs F-Call/a-call-result-read-inside-an-argument and the reference folds it.
-// The hold-out retires when the pin moves to a release that carries #3329.
-const HELD: readonly (readonly [string, Set<string>])[] = [
-  ["chant#3329 (the pin predates it)", new Set(["F-Call/a-call-result-read-inside-an-argument"])],
-];
+// chant#3329 held F-Call/a-call-result-read-inside-an-argument out until
+// chant-v0.109.0: the pin predated the fold of a same-file call's result read
+// inside an argument (spec 2.2, F-Call step 6). Nothing is held out now.
+const HELD: readonly (readonly [string, Set<string>])[] = [];
 const heldIds = new Set(HELD.flatMap(([, names]) => [...names]));
 const fixtures = all.filter((f) => !heldIds.has(f.id));
 
