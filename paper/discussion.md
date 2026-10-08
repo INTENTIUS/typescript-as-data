@@ -16,7 +16,7 @@ Nothing answers "will this produce the same output tomorrow" short of
 declining to run the source. A run returns a value and says nothing about
 where the value came from, so no inspection of the artifact recovers the
 difference. The security consequence is real and downstream. A build that
-reproduces from source alone is one that never executed the source. Pitching
+reproduces from source alone is one whose source never ran. Pitching
 it the other way round invites a substitution that does not hold.
 
 ## What is unresolved
@@ -35,7 +35,7 @@ A specification that presented these as designed would be easier to read and les
 
 The identity theorem is the paper's center, so here is what would break it. Three things would.
 
-**A single fold/run disagreement on a mixed build.** The differential requires identical errors and byte-identical output for every corpus entry, including the twelve with at least one file that falls back. One disagreement there is either a bug in the fixpoint or a gap in the argument, and the entry would name itself.
+**A single fold/run disagreement on a mixed build**. The differential requires identical errors and byte-identical output for every corpus entry, including the twelve with at least one file that falls back. One disagreement there is either a bug in the fixpoint or a gap in the argument, and the entry would name itself.
 
 **An entity reachable by two paths with different verdicts.** The theorem's case analysis rules this out given `F-Memo` and `F-Count`. Two implementation choices would produce it anyway: memoising per referrer instead of per build, or invoking a composite once per member access. The corpus would not necessarily catch either.
 

@@ -6,7 +6,7 @@ Draft for #27. Rule identifiers refer to `spec/`. The order follows #31: the nea
 
 D, Zig, Rust and C++ evaluate a function at compile time when its inputs are static and at run time otherwise. D's specification states the principle this work relies on: a function's semantics cannot depend on compile-time values, so the calling context alone decides where it runs. `F-Host-NoSubstitution` is the same principle as a rule. The function revival invokes is the one the file imported, never a reimplementation.
 
-Two differences. CTFE decides per call site; this work decides per file (`F-Total`). A CTFE'd value is copied into the compiled program, so nothing at run time shares identity with a compile-time object. Here a folded entity is the object other files hold references to, which is why J3 exists. The D compiler also treats an unevaluable required context as an error; `F-Depth` and `F-Total` require a fallback.
+Two differences. CTFE decides per call site; this work decides per file (`F-Total`). A value computed by CTFE is copied into the compiled program, so nothing at run time shares identity with a compile-time object. Here a folded entity is the object other files hold references to, which is why J3 exists. The D compiler also treats an unevaluable required context as an error; under `F-Depth` and `F-Total` the same case falls back.
 
 ## Separate partial evaluation
 
@@ -14,7 +14,7 @@ Heldal and Hughes treat a program as modules that can be specialized independent
 
 ## Partial evaluation and binding-time analysis
 
-The shape classifier of `grammar.md` is a binding-time analysis and `fold` is the specializer, in the sense of Jones, Gomard and Sestoft. The static and dynamic split is theirs. The per-file verdict with taint (J2, J3) is closer to an online decision over a coarse unit than to an offline BTA. Forcing a folded file back to run is a coarse form of the lift operation. Multi-stage programming makes staging explicit in the language instead of inferring it (Taha and Sheard, MetaML).
+In Jones, Gomard and Sestoft's terms the shape classifier of `grammar.md` is a binding-time analysis and `fold` is the specializer. The static and dynamic split is theirs. The per-file verdict with taint (J2, J3) is closer to an online decision over a coarse unit than to an offline BTA. Forcing a folded file back to run is a coarse form of the lift operation. Multi-stage programming makes staging explicit in the language instead of inferring it (Taha and Sheard, MetaML).
 
 ## Partial evaluation of JavaScript
 
@@ -41,7 +41,7 @@ Nix import-from-derivation pauses evaluation, realises a store object, and resum
 
 Every row answers unsupported source with an error and so has no two-path agreement problem and no identity problem. This work's fallback (`F-Total`) is what removes that simplification.
 
-Pkl and CUE deserve one more sentence each, because a reader will have them open in the next tab. Both give a platform typed, deterministic configuration that emits YAML or JSON, and Pkl puts value constraints in the type where this work puts them in a separate semantic pass over folded values. What neither gives is the authoring surface being the artifact's own shape: a Pkl or CUE file is a second grammar pointed at the spec, where a typed object literal is the spec with its keys unquoted. On the fourteen operational properties chant's own comparison scores, the configuration languages answer the first three and leave the rest to a second abstraction that shares no types with what was authored; this work's claim to a platform is exactly those three, with the same file carrying the rest when the platform is chant. Pkl's bindings for other languages shell out to an evaluator binary; the `data-host` profile is what lets an evaluator for this subset be a library in the platform's own language instead.
+A reader will have Pkl and CUE open in the next tab, so they get one more sentence each. Both give a platform typed, deterministic configuration that emits YAML or JSON, and Pkl puts value constraints in the type where this work puts them in a separate semantic pass over folded values. What neither gives is the authoring surface being the artifact's own shape: a Pkl or CUE file is a second grammar pointed at the spec, where a typed object literal is the spec with its keys unquoted. On the fourteen operational properties chant's own comparison scores, the configuration languages answer the first three and leave the rest to a second abstraction that shares no types with what was authored; this work's claim to a platform is exactly those three, with the same file carrying the rest when the platform is chant. Pkl's bindings for other languages shell out to an evaluator binary; the `data-host` profile is what lets an evaluator for this subset be a library in the platform's own language instead.
 
 ## Infrastructure tools
 
@@ -53,4 +53,8 @@ Per-file partial evaluation with a fallback is precedented in shape (Next.js) an
 
 ## Citations to confirm before submission
 
-Jones, Gomard, Sestoft 1993. Taha and Sheard 1997. Heldal and Hughes 1997 and 2000, full text. The D specification's CTFE section, primary text. Siek et al. 2015 for the gradual guarantee, if the analogy is used.
+- Jones, Gomard, Sestoft 1993.
+- Taha and Sheard 1997.
+- Heldal and Hughes 1997 and 2000, full text.
+- The D specification's CTFE section, primary text.
+- Siek et al. 2015 for the gradual guarantee, if the analogy is used.

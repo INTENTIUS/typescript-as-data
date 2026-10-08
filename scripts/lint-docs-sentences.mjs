@@ -1,22 +1,13 @@
 // Prose lint for spec/*.md and README.md (copied from chant's scripts/lint-docs-sentences.mjs),
 //
-// Posture here: README.md, spec/README.md and spec/prior-art.md are prose and
-// carry no real findings. Four baselined entries in them are heading-run
-// artifacts: a table or bullet list between two headings blanks out, so the
-// headings read as consecutive sentences opening with "##". A fifth, in
-// paper/measurements.md, is a lone sentence between a table and a heading
-// read as a fragment pair; it follows the position, not the words. A sixth,
-// in paper/README.md, is the heading run again: the rule counts "##" lines
-// whatever sits between them, so adding a sentence raised the count. Those
-// six are the only tolerated findings in the prose and paper files. The rule files (grammar, judgments, values, divergence, hosts,
-// inventory) are formal text: every rule opens with its identifier in bold,
-// case analyses open with "If"/"with"/"otherwise", and definitions are short
-// lines. The linter reads those as anaphora, fragments and colon reveals;
-// they are structure, not tells. Those files are baselined and may only
-// shrink, same ratchet as chant. on the `sentences` trope ruleset — the
+// Posture here: the rules run on the `sentences` trope ruleset, the
 // AI-writing tells (em-dash density, colon reveals, tricolons, anaphora,
-// bold-first bullets, …) that tropes.fyi catalogs and the package detects
-// per sentence with real parse trees, not regexes.
+// bold-first bullets, ...) that tropes.fyi catalogs and the package detects
+// per sentence with real parse trees, not regexes. The baseline is empty:
+// spec/, paper/, README.md and docs/content carry no gated finding, the rule
+// files included. Their formal shapes (a bolded identifier opening each rule,
+// case analyses, judgment notation) are blanked by scripts/lib/doc-prose.mjs
+// before the rules see them.
 //
 // Same posture as scripts/typecheck.ts: a RATCHET, not a purity gate. The
 // docs corpus predates the linter; every existing finding is baselined

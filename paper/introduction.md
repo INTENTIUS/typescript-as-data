@@ -14,7 +14,7 @@ Graceful fallback from static evaluation to execution is not itself new; compile
 
 ## The problem
 
-Configuration as data is auditable: every value traces to a line of source, and the build makes no network call and holds no credential. Configuration as code is expressive: types, imports, refactoring, a language people already know. Existing designs pick one. A configuration language gives up the general-purpose ecosystem; a program that emits configuration gives up the property that made data auditable, because the graph exists only as the output of a run.
+Configuration as data is auditable: every value traces to a line of source, and the build makes no network call and holds no credential. As code, configuration is expressive: types, imports and refactoring come with a language people already know. Existing designs pick one. Choosing a configuration language gives up the general-purpose ecosystem; a program that emits configuration gives up the property that made data auditable, because the graph exists only as the output of a run.
 
 The fragment approach promises both. Its difficulty is not defining the fragment, which is routine, but defining the edge.
 
@@ -22,17 +22,17 @@ The fragment approach promises both. Its difficulty is not defining the fragment
 
 A total language never has to answer what happens to source it cannot evaluate, because that source does not compile. A system with a fallback must answer it, and three obligations follow.
 
-**The two paths must agree.** Folding a file and running it must be observationally equivalent, at a fixed build-parameter binding. Stating this precisely means stating what still executes when a file folds: the file's own statements do not, but resolving a name to its real constructor and invoking it does.
+**The two paths must agree**. Folding a file and running it must be observationally equivalent, at a fixed build-parameter binding. Stating this precisely means stating what still executes when a file folds: the file's own statements do not, but resolving a name to its real constructor and invoking it does.
 
-**The decision must be total per unit.** A file folds entirely or runs entirely. Partial folding would mean holding a half-built namespace.
+**The decision must be total per unit**. A file folds entirely or runs entirely. Partial folding would mean holding a half-built namespace.
 
-**Identity must survive the boundary.** This is the obligation with no precedent we found. If one file folds and another runs, and both refer to an entity the first produced, the build holds two objects for one entity. Attribute references cannot both receive a logical name; a reference to one silently inlines rather than referring. Every comparable system avoids this by construction: compile-time function execution copies values across its boundary, per-page rendering shares no runtime objects, and a whole-program partial evaluator has a single heap. Only a per-unit decision over a shared object graph has the problem at all.
+**Identity must survive the boundary**. This is the obligation with no precedent we found. If one file folds and another runs, and both refer to an entity the first produced, the build holds two objects for one entity. Attribute references cannot both receive a logical name; a reference to one silently inlines rather than referring. Every comparable system avoids this by construction: compile-time function execution copies values across its boundary, per-page rendering shares no runtime objects, and a whole-program partial evaluator has a single heap. Only a per-unit decision over a shared object graph has the problem at all.
 
 The answer is a fixpoint over the module graph, closed under two edges: a running file taints what it imports, and a file whose objects were captured taints the capturer. A third edge runs through calls rather than imports.
 
 ## What we provide
 
-A specification of the subset and its edge, as a grammar and four judgments with identified rules. A reference implementation of the expression layer, written from the specification text. A conformance suite in which every rule is cited by the fixtures that exercise it, and a ledger in which every decision point of a production implementation cites the rule that governs it. And measurements from that production implementation: a differential over 116 corpus entries requiring identical errors and byte-identical output, an execution-boundary measurement, and a build designed to make the fixpoint fire in both directions.
+A specification of the subset and its edge, as a grammar and four judgments with identified rules. A reference implementation of the expression layer, written from the specification text. A conformance suite in which every rule is cited by the fixtures that exercise it, and a ledger in which every decision point of a production implementation cites the rule that governs it. We also report measurements from that production implementation: a differential over 116 corpus entries requiring identical errors and byte-identical output, an execution-boundary measurement, and a build designed to make the fixpoint fire in both directions.
 
 ## What we do not claim
 
