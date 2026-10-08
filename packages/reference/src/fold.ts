@@ -47,6 +47,13 @@ export interface Scope {
   readonly factory?: boolean;
   /** F-Obs-Provenance: who writes a literal here, and the origins of names this scope binds (parameters, body consts). */
   readonly prov?: ProvScope;
+  /**
+   * F-Obs-Provenance: the export name a binding to a project function or
+   * composite resolved, where it differs from the declared name. An import
+   * maps its local name to the name it imports; a module's own function
+   * maps to the name it is exported under.
+   */
+  readonly exportNames?: ReadonlyMap<string, string>;
 }
 export interface ProvScope { readonly writer: Writer; readonly names: Map<string, OTree> }
 
@@ -114,6 +121,7 @@ export function isCompositeDefinition(v: unknown): boolean {
  * bound in that module to an import of the host's own. A call folds the body
  * against the defining module's scope (F-Call step 4) and never imports.
  */
+const NO_NAMES: ReadonlyMap<string, string> = new Map();
 export class CompositeFactory {
   constructor(
     readonly name: string,
@@ -121,6 +129,8 @@ export class CompositeFactory {
     readonly file: string,
     readonly consts: Map<string, ts.Expression>,
     readonly externals: ReadonlyMap<string, unknown>,
+    /** The defining module's `Scope.exportNames`, for calls the body makes. */
+    readonly exportNames: ReadonlyMap<string, string> = NO_NAMES,
   ) {}
 }
 export const isCompositeFactory = (v: unknown): v is CompositeFactory => v instanceof CompositeFactory;
@@ -143,6 +153,8 @@ export class FoldableFunction {
     /** The DEFINING module's scope: a body folds there, not in the caller's (R6.6). */
     readonly consts: Map<string, ts.Expression>,
     readonly externals: ReadonlyMap<string, unknown>,
+    /** The defining module's `Scope.exportNames`, for calls the body makes. */
+    readonly exportNames: ReadonlyMap<string, string> = NO_NAMES,
   ) {}
 }
 export const isFoldableFunction = (v: unknown): v is FoldableFunction => v instanceof FoldableFunction;
@@ -298,7 +310,7 @@ function foldAccess(
 export const MAX_CALL_DEPTH = 32;
 
 /** F-Eval-CallLocal: evaluate a call to a project-local function, seven steps. */
-function callLocal(callee: FoldableFunction, node: ts.CallExpression, scope: Scope, host: EvalHost): unknown {
+function callLocal(callee: FoldableFunction, node: ts.CallExpression, scope: Scope, host: EvalHost, exportName = callee.name): unknown {
   const label = `call to "${callee.name}" (${callee.file})`;
   // 1. the declaration must satisfy S-FnBody
   const violation = findFnBodyViolation(callee.fn);
@@ -315,8 +327,8 @@ function callLocal(callee: FoldableFunction, node: ts.CallExpression, scope: Sco
   const consts = new Map(callee.consts);
   const externals = new Map(callee.externals);
   const bind = (n: string, v: unknown) => { consts.delete(n); externals.set(n, v); };
-  const prov = host.prov ? callProv(callee.name, node, callee.fn, scope, host) : undefined;
-  const inner: Scope = { consts, externals, depth: scope.depth + 1, prov: prov?.scope };
+  const prov = host.prov ? callProv(exportName, node, callee.fn, scope, host) : undefined;
+  const inner: Scope = { consts, externals, depth: scope.depth + 1, prov: prov?.scope, exportNames: callee.exportNames };
   const bindO = (n: string, o: OTree | undefined) => { prov?.scope.names.set(n, o ?? leaf(writerOrigin(prov.scope.writer, node))); };
   callee.fn.parameters.forEach((param, i) => {
     let value = args[i];
@@ -379,7 +391,7 @@ function callLocal(callee: FoldableFunction, node: ts.CallExpression, scope: Sco
  * and bare-identifier calls are admitted inside, and the result is the
  * members record, which J2 revives.
  */
-export function interpret(factory: CompositeFactory, args: unknown[], node: ts.Node, depth: number, host: EvalHost, argNodes?: readonly ts.Node[], argConsts?: ReadonlyMap<string, ts.Expression>): unknown {
+export function interpret(factory: CompositeFactory, args: unknown[], node: ts.Node, depth: number, host: EvalHost, argNodes?: readonly ts.Node[], argConsts?: ReadonlyMap<string, ts.Expression>, exportName = factory.name): unknown {
   const label = `composite "${factory.name}" (${factory.file})`;
   const why = findFactoryViolation(factory.fn);
   if (why) reject("F-Call", node, `${label} is not interpretable: ${why}`);
@@ -388,8 +400,8 @@ export function interpret(factory: CompositeFactory, args: unknown[], node: ts.N
   const consts = new Map(factory.consts);
   const externals = new Map(factory.externals);
   const bind = (n: string, v: unknown) => { consts.delete(n); externals.set(n, v); };
-  const prov = host.prov ? callProv(factory.name, node, factory.fn, { consts: argConsts ?? new Map() }, host, argNodes) : undefined;
-  const inner: Scope = { consts, externals, depth: depth + 1, factory: true, prov: prov?.scope };
+  const prov = host.prov ? callProv(exportName, node, factory.fn, { consts: argConsts ?? new Map() }, host, argNodes) : undefined;
+  const inner: Scope = { consts, externals, depth: depth + 1, factory: true, prov: prov?.scope, exportNames: factory.exportNames };
   const bindO = (n: string, o: OTree | undefined) => { prov?.scope.names.set(n, o ?? leaf(writerOrigin(prov.scope.writer, node))); };
   const param = factory.fn.parameters[0];
   if (param) {
@@ -697,7 +709,7 @@ function foldRaw(node: ts.Expression, scope: Scope, host: EvalHost): unknown {
 
       // F-Eval-CallLocal, before the two registered shapes (spec 1.7, #126): a name the project bound is the project's.
       const local = scope.externals.get(name);
-      if (isFoldableFunction(local)) return callLocal(local, node, scope, host);
+      if (isFoldableFunction(local)) return callLocal(local, node, scope, host, scope.exportNames?.get(name));
 
       // F-Eval-CallHelper
       if (isFoldableHelperName(name)) {
@@ -722,7 +734,7 @@ function foldRaw(node: ts.Expression, scope: Scope, host: EvalHost): unknown {
       // S-FactoryBody rule 5: inside a factory body a call through a bare
       // identifier is admitted: a nested composite, registered or host-published.
       if (scope.factory) {
-        if (isCompositeFactory(local)) return interpret(local, node.arguments.map((a) => F(a)), node, scope.depth, host, node.arguments, scope.consts);
+        if (isCompositeFactory(local)) return interpret(local, node.arguments.map((a) => F(a)), node, scope.depth, host, node.arguments, scope.consts, scope.exportNames?.get(name));
         if (isCompositeDefinition(local) && host.fcall) return host.fcall(node);
       }
     }
@@ -783,17 +795,18 @@ export function collectLocalFunctions(
   file: string,
   consts: Map<string, ts.Expression>,
   externals: ReadonlyMap<string, unknown>,
+  exportNames?: ReadonlyMap<string, string>,
 ): FoldableFunction[] {
   const out: FoldableFunction[] = [];
   for (const st of sf.statements) {
     if (ts.isFunctionDeclaration(st) && st.name && st.body && !st.modifiers?.some((m) => m.kind === ts.SyntaxKind.DefaultKeyword)) {
-      out.push(new FoldableFunction(st.name.text, st, file, consts, externals));
+      out.push(new FoldableFunction(st.name.text, st, file, consts, externals, exportNames));
       continue;
     }
     if (!ts.isVariableStatement(st) || (st.declarationList.flags & ts.NodeFlags.Const) === 0) continue;
     for (const d of st.declarationList.declarations) {
       if (ts.isIdentifier(d.name) && d.initializer && isFunctionInitializer(d.initializer)) {
-        out.push(new FoldableFunction(d.name.text, d.initializer, file, consts, externals));
+        out.push(new FoldableFunction(d.name.text, d.initializer, file, consts, externals, exportNames));
       }
     }
   }
