@@ -183,7 +183,7 @@ or a composite instance (a live object, F-Val-Live), `n` is bound to it for
 the evaluation of that argument. The binding is the one F-Eval-CallLocal
 gives a parameter. `n` is set in `externals` and removed from `consts`. F-Eval-Ident step 3
 then reads the instance and two reads of `n` are one object.
-When the call refuses or returns anything else, `n` stays as it was, and
+If the call refuses or returns anything else, `n` stays as it was and
 F-Eval-Ident re-folds the initializer and rejects. A read outside such an
 argument (an object literal at a declarator, say) is still J1's rejection. Inside an interpreted factory body no read qualifies.
 
@@ -213,6 +213,6 @@ call site with the callee's file and position in the message.
 ### What J2 does not decide
 
 Whether `f` *finally* folds. A file with `B, ι ⊢ f ⇓ fold(X, L)` may still be
-`run` after J3, because a file it imports runs (forward taint) or because a
-file it captured from runs (backward taint). J2's `fold` is a proposal; J3
+`run` after J3, because a file it imports runs (forward taint) or a file it
+captured from runs (backward taint). J2's `fold` is a proposal; J3
 disposes.

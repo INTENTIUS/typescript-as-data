@@ -11,9 +11,9 @@ of every file in the build before anything is emitted and without running any
 of them so it runs wherever the fold runs and gives the answer a run would
 have given.
 
-Derived from chant's post-synthesis engine (`packages/core/src/lint/post-synth.ts`),
-its policy layer (`lint/policy.ts`), and its severity configuration
-(`lint/config.ts`), at `chant-v0.71.0`. chant's declarative `rule({…})`
+Derived from chant's post-synthesis engine
+(`packages/core/src/lint/post-synth.ts`) at `chant-v0.71.0` with the policy
+layer in `lint/policy.ts` and the severity configuration in `lint/config.ts`. chant's declarative `rule({…})`
 format matches AST nodes and is the classifier's territory (grammar.md);
 it is not a rule over values and is not covered here.
 

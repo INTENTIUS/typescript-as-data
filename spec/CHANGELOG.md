@@ -1,6 +1,6 @@
 # Changelog
 
-The versioned history of the rule set. The policy is in [`README.md`](./README.md) under "Versioning". A version names a set of rules, `S-*` and `F-*` with their normative text, and nothing else: not a chant release, not a revision of the rationale. The current version is the single line in [`VERSION`](./VERSION).
+The versioned history of the rule set. The policy is in [`README.md`](./README.md) under "Versioning". A version names a set of rules, `S-*` and `F-*` with their normative text, and nothing else: not a chant release, not a revision of the rationale. The single line in [`VERSION`](./VERSION) holds the current version.
 
 Each entry lists the rules that changed and how in the four kinds the policy defines. A change confined to non-normative text is not versioned and is not listed here; the rationale sections and the inventory are the usual cases.
 
@@ -55,10 +55,10 @@ F-Rule-Finding already carries the result to the author.
 
 Item 1 named what an entity *carries* and never what constructing one may
 *do*, so a host could put a validating, graph-building constructor behind it
-and violate no rule. Folding invokes that constructor through revival
-(F-Val-Fate). Item 1 was the one place code runs during a fold with nothing
-said about it: F-Host-Admission bounds an intrinsic and F-Rule-Pure bounds a
-rule. #203 made F-Host-Admission's clause observable and left this
+and violate no rule. Since folding invokes that constructor through revival
+(F-Val-Fate), item 1 was the one place code runs during a fold with nothing
+said about it: F-Host-Admission bounds an intrinsic and F-Rule-Pure bounds
+the code a rule runs. #203 made F-Host-Admission's clause observable and left this
 half of #173 open. This closes it.
 
 The bound was already implicit in the construction form item 1 names. A class

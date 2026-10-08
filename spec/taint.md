@@ -7,11 +7,11 @@ Derived from `planFoldTaint` (`fold-import.ts`),
 ### Why this judgment exists
 
 Per-file partial evaluation is unsound in the presence of object identity
-unless something makes it sound. If file `A` folds and file `B` runs, and both
-refer to an entity `e` that `A` produced, then `B`'s real import of `A`
-constructs a second `e`, and the build holds two objects for one entity,
-whose `AttrRef`s cannot both receive a logical name and whose `Ref`s silently
-inline instead of referencing.
+unless something makes it sound. Suppose file `A` folds while file `B` runs and
+both refer to an entity `e` that `A` produced. The real import of `A` by `B` then
+constructs a second `e`. The build holds two objects for one entity.
+That entity's `AttrRef`s cannot both receive a logical name and its `Ref`s
+silently inline instead of referencing.
 
 Every comparable system avoids the problem by not having it
 ([`prior-art.md`](./prior-art.md)). Compile-time function execution copies
@@ -42,8 +42,8 @@ are not interchangeable.
 - The **reference test** (F-Import) is `typeof` object **or** function. It does
   not recurse and it admits a plain `{ a: 1 }` that the entity test rejects.
 
-The proposition below is about *entities* — the values a build names and
-serializes — and the entity test is the normative one for it. Two structurally
+The proposition below is about *entities* (the values a build names and
+serializes) and the entity test is the normative one for it. Two structurally
 equal plain objects that no `AttrRef` points at cannot be told apart in the
 output so
 duplicating one breaks nothing claimed here. Recursion is what makes that test
@@ -130,8 +130,8 @@ The fixpoint itself is indifferent to cycles in `→`.
 
 **Proposition (one instance per entity).** In a build whose verdicts are
 `F-Verdict`, every entity `e` produced by the build is represented by exactly
-one object, and every reference to `e`, from a folded file's `X`, from a run
-file's import, from an `AttrRef`, is that object.
+one object. A reference to `e` in a folded file's `X` or a run file's import
+or an `AttrRef` is that object.
 
 **Lemma (capture implies import).** `f ⇝ g` implies `f → g`. F-Capture
 requires the captured value be reached through `f`'s resolved imports of `g`.
@@ -142,9 +142,9 @@ and `f` importing that binding from `h` records `f ⇝ h` alongside `f → h`.
 The closure composes the two.
 
 The fixpoint and this proposition are checked over every build of four files
-by `spec/taint-model.test.ts` (#179). That is 8,503,056 builds: every import
-relation excluding self-imports, every capture relation inside it, and every
-assignment of tentative verdicts. The scope is stated for the same reason
+by `spec/taint-model.test.ts` (#179). That is 8,503,056 builds, one per
+combination of import relation excluding self-imports, capture relation
+inside it and assignment of tentative verdicts. The scope is stated for the same reason
 F-Depth's bounds are. The check carries its own vacuity guards. One of them is
 the instance case 2 of the sketch below originally got wrong.
 
@@ -154,13 +154,13 @@ to `e`.
 1. If `g ∉ T(B)` then `g` folded and `e` is the object in `X(g)`, unique by
    F-Memo and F-Count. Suppose `f` folded. It obtained `e` through its
    resolved imports of `g` and therefore `f ⇝ g`. Were `f ∈ T(B)` the lemma
-   would give `f → g` and the forward edge would put `g ∈ T(B)`. So
-   `f ∉ T(B)` and its reference is the F-Memo object. Suppose instead `f`
-   runs. Then `f ∈ T(B)` and `f → g`, and the forward edge puts `g ∈ T(B)`
+   would give `f → g` and the forward edge would put `g ∈ T(B)`.
+   Hence `f ∉ T(B)` and its reference is the F-Memo object.
+   If `f` runs instead, then `f ∈ T(B)` and `f → g`, and the forward edge puts `g ∈ T(B)`
    again. Every referrer therefore folded and holds the one object.
 2. If `g ∈ T(B)` then `g` runs and `e` is constructed by real execution. `f`
    holds `e` through a binding imported from `g` or from a file that
-   re-exports it. Let `g'` be the first file on that chain whose verdict is
+   re-exports it. Let `g'` be the first file on that chain to have the verdict
    `run`. That is `g` itself for a direct import and is reached by the
    backward edge otherwise. J2 resolves a binding from `g'` only where `g'`
    folds. F-Import leaves it unresolved and records `g'`'s reason against it.
@@ -216,19 +216,18 @@ The evidence has two sources.
   The entry's own test asserts which file folds and which runs and the
   differential holds fold-versus-run across it.
 
-Four of the nine exercise this judgment on purpose, in one build:
+Four of the nine exercise this judgment on purpose in one build.
 
-- `taint-run-only-importer.ts`, F-Seed. An early `return` in a project-local
-  function puts the importer in the seed.
-- `taint-shared-config.ts`, F-Succ forward. The running importer pulls a
-  foldable config back.
-- `taint-capturing-sibling.ts`, F-Succ backward. The source of a captured
-  object pulls the capturer back.
-- `taint-independent.ts`, F-Taint/F-Fix. The control that no edge reaches and
-  that must still fold.
+| File | Rule | What it exercises |
+|---|---|---|
+| `taint-run-only-importer.ts` | F-Seed | An early `return` in a project-local function puts the importer in the seed. |
+| `taint-shared-config.ts` | F-Succ forward | The running importer pulls a foldable config back. |
+| `taint-capturing-sibling.ts` | F-Succ backward | The source of a captured object pulls the capturer back. |
+| `taint-independent.ts` | F-Taint/F-Fix | The control that no edge reaches and that must still fold. |
 
-The other five cover the `?.` short-circuit under F-Div-Nullish, plus
-F-Eval-Ident shadowing, F-Div-SpreadType and F-Depth.
+Among the other five are files for the `?.` short-circuit under
+F-Div-Nullish and for F-Eval-Ident shadowing; the rest cover F-Div-SpreadType
+and F-Depth.
 
 The incidental mixed entries and the one designed to fire both taint
 directions all agree. The corpus is still chant's own and the adversarial entry is one

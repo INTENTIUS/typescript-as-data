@@ -8,7 +8,7 @@ decidable from syntax.
 The objective all three serve, the two profiles, and the notation they are
 written in are [`objective.md`](./objective.md).
 
-- [`evaluation.md`](./evaluation.md), J1, expression evaluation `Γ, H ⊢ e ⇓ v`.
-- [`verdict.md`](./verdict.md), J2, the per-file verdict `B, ι ⊢ f ⇓ fold(X, L) | run(reason)`.
-- [`taint.md`](./taint.md), J3, the identity-taint fixpoint.
-- [`observables.md`](./observables.md), J4, properties and observables.
+- J1, expression evaluation `Γ, H ⊢ e ⇓ v`, is [`evaluation.md`](./evaluation.md).
+- J2, the per-file verdict `B, ι ⊢ f ⇓ fold(X, L) | run(reason)`, is [`verdict.md`](./verdict.md).
+- J3, the identity-taint fixpoint, is [`taint.md`](./taint.md).
+- J4, properties and observables, is [`observables.md`](./observables.md).

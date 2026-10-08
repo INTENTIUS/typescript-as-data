@@ -31,12 +31,11 @@ predicate a downstream tool asks "will this fold?", a tool with no registry
 must get an answer that is safe to act on, which means erring toward "it may
 run" (`subset.ts` module doc, point 2c).
 
-**Discharge.** By construction, both consumers import one classifier
-(`subset.ts`), so they cannot disagree on node kinds, operators or key shapes;
+**Discharge.** By construction both consumers import one classifier
+(`subset.ts`) and so cannot disagree on node kinds, operators or key shapes;
 every remaining disagreement is a *resolution* the classifier does not
-perform, enumerated below. And by fixture, one accepting and one rejecting
-fixture per row of F-Div, asserting the classifier's and the folder's verdicts
-side by side. chant's `subset-doc-parity.test.ts` is the precedent.
+perform, enumerated below. One accepting and one rejecting fixture per row of
+F-Div assert the classifier's and the folder's verdicts side by side. chant's `subset-doc-parity.test.ts` is the precedent.
 
 ## F-Div (the divergences in the permitted direction)
 
@@ -63,7 +62,7 @@ one.
 
 ## F-Exc (the two exceptions)
 
-Shape rejects; the folder accepts. Each is stated with why it is tolerated
+Two constructs are rejected by shape and accepted by the folder. Each is stated with why it is tolerated
 rather than fixed.
 
 **F-Exc-Lazy.** Short-circuit laziness. The folder evaluates `&&`, `||`,

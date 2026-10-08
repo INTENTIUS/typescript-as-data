@@ -42,7 +42,7 @@ it evaluates global code. Next.js prerenders a page by rendering it.
 
 Constant folding is the exception and it is the shallow end. A compiler
 reducing `2 + 3` runs no function of the user's. The technique is
-expression-local. It preserves semantics and a compiler may skip it entirely.
+expression-local. Semantics are preserved and a compiler may skip it entirely.
 Nobody builds a configuration mechanism on it because on its own it reaches
 nothing.
 
@@ -81,11 +81,11 @@ CTFE decides per *call site*. The specification (dlang/dmd,
 `spec/function.dd`, "Compile Time Function Execution") lists the contexts
 "where a compile time value is required" and states the principle this work
 relies on: "All functions that execute in CTFE must also be executable at run
-time. The compile time evaluation of a function does the equivalent of running
-the function at run time. The semantics of a function cannot depend on compile
-time values of the function."
+time." It adds that compile time evaluation "does the equivalent of running
+the function at run time" and that "the semantics of a function cannot depend
+on compile time values of the function".
 
-CTFE obtains the value by running the function. The quoted sentence says so
+Running the function is how CTFE obtains the value. The quoted sentence says so
 and it is the difference this work turns on rather than a detail of it.
 
 A required context that cannot be evaluated is illegal and there is no
@@ -96,7 +96,7 @@ operations which are forbidden in CTFE". chant decides per *file* and a file
 that cannot be folded is run.
 
 A CTFE'd value is *copied* into the compiled program so nothing at run time
-shares identity with a compile-time object. chant's folded entities are the
+shares identity with a compile-time object. The entities chant folds are the
 same objects the run path would have built and other files hold references to
 them. That is the whole reason the taint fixpoint exists and CTFE has no
 analogue because it has no such sharing.
@@ -114,9 +114,8 @@ at build time and per-request rendering runs it later.
 
 There, the decision is by a *syntactic marker the author
 writes*, and an analysis of whether the unit is statically evaluable plays no
-part; and
-statically-rendered and server-rendered pages share no runtime object identity
-across the boundary, so there is nothing to taint. The equivalence obligation
+part. Since statically-rendered and server-rendered pages share no runtime
+object identity across the boundary, nothing is left to taint either. The equivalence obligation
 is also never stated as a discharged property.
 
 ### Partial evaluation of JavaScript (Prepack)
@@ -132,7 +131,7 @@ and keeps identity trivially because the residual program is one program with
 one heap. chant's choice of a coarse per-file decision is what makes identity
 non-trivial. Prepack's own limitation is instructive for the paper: it has no
 model of `document` or `window` and such reads "evaluate to `undefined`".
-That is the silent-undefined hazard INTENTIUS/chant#2328 records in `fold()`'s
+INTENTIUS/chant#2328 records the same silent-undefined hazard in `fold()`'s
 property-access branch.
 
 On the identity question specifically: Prepack's `ResidualHeapVisitor`
@@ -208,9 +207,9 @@ from a code file such as `tsconfig.ts` or `tsconfig.d.ts` and take the type of
 its `default` export as the configuration object. Imports and spreads compose
 a configuration and the file is never executed. The description gives the
 reason in the author's words: they "really did just want the syntactic
-niceties like imports and spreads". The PR was closed unmerged on 2024-05-21. It had no tests or
-diagnostics or language-service support. The thread records no reason for
-closing.
+niceties like imports and spreads". The PR was closed unmerged on 2024-05-21, with no tests or
+diagnostics or language-service support, and no reason for closing is
+recorded.
 
 The thread is short. It opened on 1 April and drew seven comments. The
 TypeScript bot left three and the author one. Readers left the other three.
@@ -255,8 +254,8 @@ that into `tsconfig.json`. The PR itself points at that discussion
 (microsoft/TypeScript#57486).
 
 This work sits in that valley on purpose. The edge of the subset is specified
-(grammar.md). Source past the edge falls back to running and the two paths
-must agree (objective.md). The semantics are versioned with the specification
+(`grammar.md`). Source past the edge falls back to running and the two paths
+must agree (`objective.md`). The semantics are versioned with the specification
 (`spec/VERSION`). A change in the checker's widening or contextual typing
 cannot move a folded value. Reading a configuration off checker inference
 inherits every such change.
@@ -295,7 +294,7 @@ resumes with the contents. The community's own framing is that
 IFD "is bind" for Nix builds. It is an escape from pure evaluation that keeps
 the result deterministic because the build is sandboxed and content-addressed.
 
-IFD escapes into a *build* of something else; chant's
+What it escapes into is a *build* of something else; chant's
 fallback executes *the source file itself*. IFD is the better precedent for
 `--sandbox` than for folding and belongs in the isolation discussion.
 
@@ -378,8 +377,8 @@ explicit in the language rather than inferred.
 2. Same-function agreement via revival through the file's own imports.
    Precedented by CTFE's design principle and citable as the same argument.
 3. Byte-identical agreement as a discharged obligation over a real corpus.
-   Not found in this sweep as a stated, tested property, and not searched for
-   specifically. A methodological contribution.
+   This sweep did not find it as a stated and tested property nor search
+   for it specifically. A methodological contribution.
 4. Bidirectional identity taint over the module graph so that a shared entity
    is never two objects when one side folds and the other runs. No precedent
    found. It follows from per-file granularity with shared identity. No
