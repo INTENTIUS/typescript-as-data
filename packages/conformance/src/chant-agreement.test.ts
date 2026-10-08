@@ -39,12 +39,11 @@ const all = loadFixtures(join(dirname(fileURLToPath(import.meta.url)), "..", "..
 // tsad#248 held three provenance fixtures out until chant-v0.110.0. chant#3619
 // reports a host call or host value in a resource field as unknown, so the
 // field fixture agrees. A non-resource export such as `export const k =
-// count([1, 2])` still has no provenance record in chant at all, a limit
-// chant#3619 states, so the two fixtures that assert an export's origin stay
-// held. Those differ from the fixture only, never from the reference's
+// count([1, 2])` still has no provenance record in chant at all (chant#3635),
+// so the two fixtures that assert an export's origin stay held. Those differ from the fixture only, never from the reference's
 // verdict, so the guard below reads chant's own report too.
 const HELD: readonly (readonly [string, Set<string>])[] = [
-  ["chant#3619 (no provenance for a non-resource export)", new Set(["F-Obs-Provenance/a-host-call-at-an-export-is-unknown", "F-Obs-Provenance/a-host-value-is-unknown"])],
+  ["chant#3635 (no provenance for a non-resource export)", new Set(["F-Obs-Provenance/a-host-call-at-an-export-is-unknown", "F-Obs-Provenance/a-host-value-is-unknown"])],
 ];
 const heldIds = new Set(HELD.flatMap(([, names]) => [...names]));
 const fixtures = all.filter((f) => !heldIds.has(f.id));
