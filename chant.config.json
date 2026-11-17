@@ -3,12 +3,18 @@
     "tag": "tsad-v{version}",
     "green": "forge-checks",
     "version": { "packages": ["packages/conformance", "packages/reference"], "ranges": "exact" },
-    "publish": [{ "type": "npm", "access": "public", "packages": ["packages/conformance", "packages/reference"] }],
+    "publish": [{ "type": "npm", "access": "public", "stage": false, "packages": ["packages/conformance", "packages/reference"] }],
+    "verify": [
+      { "name": "typecheck", "run": "npm run typecheck" },
+      { "name": "tests", "run": "npm test" },
+      { "name": "prose", "run": "npm run lint:prose" },
+      { "name": "smoke-published", "run": "npm run smoke:published" }
+    ],
     "workflow": {
       "trigger": "dispatch",
       "file": ".github/workflows/publish.yml",
       "chant": "npx --yes @intentius/chant@0.124.103",
-      "build": "npm run build && bash scripts/release-spec-version.sh && npm run typecheck && npm test && npm run lint:prose && npm run smoke:published"
+      "build": "npm run build && bash scripts/release-spec-version.sh"
     }
   }
 }
