@@ -65,7 +65,7 @@ jobs:
       - run: |
           git config user.name "chant release"
           git config user.email "chant-release@localhost"
-          npx --yes @intentius/chant@0.124.104 release cut "$CHANT_RELEASE_LABEL" --at "$CHANT_RELEASE_COMMIT" --yes --build 'npm run build && bash scripts/release-spec-version.sh' --json > "$RUNNER_TEMP/chant-cut.json"
+          npx --yes @intentius/chant@0.124.104 release cut "$CHANT_RELEASE_LABEL" --at "$CHANT_RELEASE_COMMIT" --yes --build 'npm ci && npm run build && bash scripts/release-spec-version.sh' --json > "$RUNNER_TEMP/chant-cut.json"
           tag="$(node -e 'const f=process.argv[1];const t=f?require("fs").readFileSync(f,"utf8"):require("fs").readFileSync(0,"utf8");const d=JSON.parse(t);process.stdout.write(String(d.tag?.name??""))' "$RUNNER_TEMP/chant-cut.json")"
           if [ -n "$tag" ]; then git push origin "refs/tags/$tag"; fi
   publish:
@@ -92,5 +92,5 @@ jobs:
       - run: git fetch origin 'refs/tags/ci/*:refs/tags/ci/*'
       - run: git fetch origin chant/lifecycle:chant/lifecycle
       - run: npx --yes @intentius/chant@0.124.104 release stamp "$CHANT_RELEASE_LABEL"
-      - run: npm run build && bash scripts/release-spec-version.sh
+      - run: npm ci && npm run build && bash scripts/release-spec-version.sh
       - run: npx --yes @intentius/chant@0.124.104 release publish "$CHANT_RELEASE_LABEL" --yes
