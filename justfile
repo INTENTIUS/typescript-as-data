@@ -29,6 +29,31 @@ corpus repo:
 smoke-published:
     npm run smoke:published
 
+# Releases go through `chant release`, set up in chant.config.json. One
+# release publishes @intentius/tsad-conformance and @intentius/tsad-reference
+# at one version, tagged tsad-v<version>, from .github/workflows/publish.yml.
+# The cut refuses a version whose major.minor is not spec/VERSION, and the
+# suite and the pack-install-run smoke pass before either package publishes.
+# The version is still committed first, in both package.json files, the lock
+# file and the paper's "published to npm at" line, which spec/paper.test.ts
+# holds to the packages; then `just release 2.3.1` starts the release of that
+# version. A label the commit does not carry fails the suite at the cut.
+release label:
+    gh workflow run publish.yml -f label={{label}}
+
+# The label the next release gets, from the conventional commits since the last one.
+release-next:
+    npx --yes @intentius/chant@0.124.103 release next
+
+# What a cut of HEAD would do, without writing anything. HEAD must be on origin/main.
+release-plan:
+    GH_TOKEN=$(gh auth token) npx --yes @intentius/chant@0.124.103 release cut auto --dry-run
+
+# Regenerate .github/workflows/publish.yml from chant.config.json. chant writes
+# that file; change the config and run this rather than editing it.
+release-workflow:
+    npx --yes @intentius/chant@0.124.103 release workflow
+
 # The smokeable claims (#146): `just smoke` lists them, `just smoke <claim>`
 # runs one against a throwaway Forgejo on Docker Compose, and `BREAK=1 just
 # smoke <claim>` watches it catch the broken case. Needs Docker and Node.
