@@ -33,7 +33,7 @@ export default {
       doctor: false,
       file: ".github/workflows/publish.yml",
       chant: "npx --yes @intentius/chant@0.124.104",
-      build: "npm run build && bash scripts/release-spec-version.sh"
+      build: "npm ci && npm run build && bash scripts/release-spec-version.sh"
     }
   }
 };
