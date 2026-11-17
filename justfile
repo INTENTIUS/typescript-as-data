@@ -38,6 +38,9 @@ smoke-published:
 # file and the paper's "published to npm at" line, which spec/paper.test.ts
 # holds to the packages; then `just release 2.3.1` starts the release of that
 # version. A label the commit does not carry fails the suite at the cut.
+# Each release therefore lands a prep PR naming the new version first (the
+# files above, nothing else), and only then dispatches publish.yml with that
+# label, as `just release <version>` does.
 release label:
     gh workflow run publish.yml -f label={{label}}
 
