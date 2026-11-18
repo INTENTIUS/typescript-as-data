@@ -46,16 +46,16 @@ release label:
 
 # The label the next release gets, from the conventional commits since the last one.
 release-next:
-    npx --yes @intentius/chant@0.124.104 release next
+    npx --yes @intentius/chant@0.124.105 release next
 
 # What a cut of HEAD would do, without writing anything. HEAD must be on origin/main.
 release-plan:
-    GH_TOKEN=$(gh auth token) npx --yes @intentius/chant@0.124.104 release cut auto --dry-run
+    GH_TOKEN=$(gh auth token) npx --yes @intentius/chant@0.124.105 release cut auto --dry-run
 
 # Regenerate .github/workflows/publish.yml from chant.config.ts. chant writes
 # that file; change the config and run this rather than editing it.
 release-workflow:
-    npx --yes @intentius/chant@0.124.104 release workflow
+    npx --yes @intentius/chant@0.124.105 release workflow
 
 # The smokeable claims (#146): `just smoke` lists them, `just smoke <claim>`
 # runs one against a throwaway Forgejo on Docker Compose, and `BREAK=1 just
